@@ -1,3 +1,5 @@
+#include <pandora.hpp>
+
 #include <iostream>
 
 #include <GLFW/glfw3.h>
@@ -144,6 +146,8 @@ void Start()
 
 int main() 
 {
+    Pandora::Initialize();
+
     instance = wgpu::CreateInstance();
     GetAdapter([](wgpu::Adapter a) {
         adapter = a;
@@ -152,4 +156,6 @@ int main()
             Start();
         });
     });
+
+    Pandora::Shutdown();
 }
