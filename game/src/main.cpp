@@ -4,7 +4,12 @@
 
 #include <GLFW/glfw3.h>
 #include <webgpu/webgpu_cpp.h>
+
+#if defined(TARGET_PLATFORM_NATIVE)
 #include <webgpu/webgpu_glfw.h>
+#elif defined(TARGET_PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
 
 const uint32_t kWidth = 512;
 const uint32_t kHeight = 512;
@@ -131,10 +136,19 @@ void Start()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(kWidth, kHeight, "The Brightest Star", nullptr, nullptr);
 
+#if defined(TARGET_PLATFORM_NATIVE)
     surface = wgpu::glfw::CreateSurfaceForWindow(instance, window);
+#elif defined(TARGET_PLATFORM_WEB)
+    wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
+    canvasDesc.selector = "#canvas";
+
+    wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
+    surface = instance.CreateSurface(&surfaceDesc);
+#endif
 
     InitGraphics();
 
+#if defined(TARGET_PLATFORM_NATIVE)
     while (!glfwWindowShouldClose(window)) 
     {
         glfwPollEvents();
@@ -142,6 +156,9 @@ void Start()
         surface.Present();
         instance.ProcessEvents();
     }
+#elif defined(TARGET_PLATFORM_WEB)
+    emscripten_set_main_loop(Render, 0, false);
+#endif
 }
 
 int main() 

@@ -1,0 +1,12 @@
+# Building from source
+
+## Windows
+
+### Native
+
+You need Visual Studio Code.
+
+### Web
+
+Ninja needs to be installed and in the PATH.
+Run `tools\scripts\setup_emscripten.bat` to install and activate the latest Emscripten SDK and make the cmake toolchain available.

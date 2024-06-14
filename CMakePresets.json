@@ -12,9 +12,31 @@
           "binaryDir": "build/${presetName}"
         },
         {
+          "name": "native",
+          "hidden": true,
+          "cacheVariables": {
+            "TARGET_PLATFORM_NATIVE": "ON"
+          }
+        },
+        {
           "name": "windows",
           "hidden": true,
-          "generator": "Visual Studio 17 2022"
+          "generator": "Visual Studio 17 2022",
+          "cacheVariables": {
+            "TARGET_PLATFORM_WINDOWS": "ON"
+          },
+          "inherits":[
+            "native"
+          ]
+        },
+        {
+          "name": "web",
+          "hidden": true,
+          "generator": "Ninja",
+          "toolchainFile": "pandora/ext/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+          "cacheVariables": {
+            "TARGET_PLATFORM_WEB": "ON"
+          }
         },
         {
           "name": "debug",
@@ -30,6 +52,15 @@
             "core",
             "debug",
             "windows"
+          ]
+        },
+        {
+          "name": "debug-web",
+          "displayName": "Debug (Web)",
+          "inherits":[
+            "core",
+            "debug",
+            "web"
           ]
         }
     ],
