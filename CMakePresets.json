@@ -1,0 +1,45 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 23,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+          "name": "core",
+          "hidden": true,
+          "binaryDir": "build/${presetName}"
+        },
+        {
+          "name": "windows",
+          "hidden": true,
+          "generator": "Visual Studio 17 2022"
+        },
+        {
+          "name": "debug",
+          "hidden": true,
+          "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Debug"
+          }
+        },
+        {
+          "name": "debug-windows",
+          "displayName": "Debug (Windows)",
+          "inherits":[
+            "core",
+            "debug",
+            "windows"
+          ]
+        }
+    ],
+    "buildPresets": [
+      {
+        "name": "core",
+        "configurePreset": "core",
+        "displayName": "Default",
+        "description": "Default build",
+        "jobs": 16
+      }
+    ]
+}
