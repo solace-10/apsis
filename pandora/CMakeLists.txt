@@ -10,7 +10,7 @@ source_group(TREE ${CMAKE_CURRENT_LIST_DIR}/src FILES ${SOURCE_FILES})
 add_library(pandora STATIC ${SOURCE_FILES})
 include("cmake/shared/TargetPlatforms.cmake")
 target_include_directories(pandora PUBLIC src/)
-set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/libs/pandora/${CMAKE_HOST_SYSTEM_NAME}/${CMAKE_HOST_SYSTEM_PROCESSOR}/${CMAKE_BUILD_TYPE})
+set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
 if(TARGET_PLATFORM_WINDOWS)
     #add_library(pandora_static INTERFACE)
