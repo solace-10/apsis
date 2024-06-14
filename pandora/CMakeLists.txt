@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.23)
 project(pandora)
 set(CMAKE_CXX_STANDARD 20)
 
+include("cmake/shared/FetchExternalDependencies.cmake")
+
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR}/src FILES ${SOURCE_FILES})
 

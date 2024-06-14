@@ -1,3 +1,0 @@
-[submodule "pandora/ext/dawn"]
-	path = pandora/ext/dawn
-	url = https://dawn.googlesource.com/dawn
