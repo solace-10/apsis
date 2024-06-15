@@ -9,6 +9,7 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#include "core/log.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -164,8 +165,12 @@ void Start()
 #endif
 }
 
+void InitializeLogging();
+
 void Initialize()
 {
+    InitializeLogging();
+
     instance = wgpu::CreateInstance();
     GetAdapter([](wgpu::Adapter a) {
         adapter = a;
@@ -184,6 +189,17 @@ void Run()
 void Shutdown()
 {
 
+}
+
+void InitializeLogging()
+{
+    Log::AddLogTarget( std::make_shared<StdOutLogger>() );
+
+#if defined(TARGET_PLATFORM_NATIVE)
+    Log::AddLogTarget( std::make_shared<FileLogger>( "log.txt" ) );
+#endif
+
+    Log::Info() << "Logging initialized.";
 }
 
 } // namespace WingsOfSteel::Pandora
