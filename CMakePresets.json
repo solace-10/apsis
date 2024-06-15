@@ -7,70 +7,90 @@
     },
     "configurePresets": [
         {
-          "name": "core",
-          "hidden": true,
-          "binaryDir": "build/${presetName}"
+            "name": "core",
+            "hidden": true,
+            "binaryDir": "build/${presetName}"
         },
         {
-          "name": "native",
-          "hidden": true,
-          "cacheVariables": {
-            "TARGET_PLATFORM_NATIVE": "ON"
-          }
+            "name": "native",
+            "hidden": true,
+            "cacheVariables": {
+                "TARGET_PLATFORM_NATIVE": "ON"
+            }
         },
         {
-          "name": "windows",
-          "hidden": true,
-          "generator": "Visual Studio 17 2022",
-          "cacheVariables": {
-            "TARGET_PLATFORM_WINDOWS": "ON"
-          },
-          "inherits":[
-            "native"
-          ]
+            "name": "windows",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "cacheVariables": {
+                "TARGET_PLATFORM_WINDOWS": "ON"
+            },
+            "inherits": [
+                "native"
+            ]
         },
         {
-          "name": "web",
-          "hidden": true,
-          "generator": "Ninja",
-          "toolchainFile": "pandora/ext/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-          "cacheVariables": {
-            "TARGET_PLATFORM_WEB": "ON"
-          }
+            "name": "web",
+            "hidden": true,
+            "generator": "Ninja",
+            "toolchainFile": "pandora/ext/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+            "cacheVariables": {
+                "TARGET_PLATFORM_WEB": "ON"
+            }
         },
         {
-          "name": "debug",
-          "hidden": true,
-          "cacheVariables": {
-            "CMAKE_BUILD_TYPE": "Debug"
-          }
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
         },
         {
-          "name": "debug-windows",
-          "displayName": "Debug (Windows)",
-          "inherits":[
-            "core",
-            "debug",
-            "windows"
-          ]
+            "name": "debug-windows",
+            "displayName": "Debug (Windows)",
+            "inherits": [
+                "core",
+                "debug",
+                "windows"
+            ]
         },
         {
-          "name": "debug-web",
-          "displayName": "Debug (Web)",
-          "inherits":[
-            "core",
-            "debug",
-            "web"
-          ]
+            "name": "debug-web",
+            "displayName": "Debug (Web)",
+            "inherits": [
+                "core",
+                "debug",
+                "web"
+            ]
         }
     ],
     "buildPresets": [
-      {
-        "name": "core",
-        "configurePreset": "core",
-        "displayName": "Default",
-        "description": "Default build",
-        "jobs": 16
-      }
+        {
+            "name": "core",
+            "configurePreset": "core",
+            "hidden": true,
+            "jobs": 16,
+            "targets": [
+                "game"
+            ]
+        },
+        {
+            "name": "debug-windows",
+            "description": "Build The Brightest Star in Debug",
+            "displayName": "Debug (Windows)",
+            "configurePreset": "debug-windows",
+            "inherits":[
+              "core"
+            ]
+        },
+        {
+            "name": "debug-web",
+            "description": "Build The Brightest Star in Debug",
+            "displayName": "Debug (Web)",
+            "configurePreset": "debug-web",
+            "inherits":[
+              "core"
+            ]
+        }
     ]
 }

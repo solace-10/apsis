@@ -16,11 +16,12 @@ if(TARGET_PLATFORM_WINDOWS)
     #add_library(pandora_static INTERFACE)
     #target_compile_options(pandora_static INTERFACE $<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)
 
-    target_compile_definitions(pandora PRIVATE UNICODE _UNICODE _HASEXCEPTIONS=0 NOMINMAX)
+    target_compile_definitions(pandora PUBLIC UNICODE _UNICODE _HASEXCEPTIONS=0 NOMINMAX)
     target_compile_options(pandora PUBLIC $<$<CONFIG:Release>:/Ob2 /GL>)
     target_compile_options(pandora PUBLIC /Zi) # Debug information format: Program database.
     target_compile_options(pandora PUBLIC /MP) # Enable parallel compilation.
+    target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
     #target_link_libraries(pandora PRIVATE pandora_static)
 elseif(TARGET_PLATFORM_WEB)
-
+    target_link_options(pandora PUBLIC "-sUSE_WEBGPU=1" "-sUSE_GLFW=3")
 endif()

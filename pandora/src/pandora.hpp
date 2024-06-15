@@ -1,11 +1,10 @@
 #pragma once
 
-namespace Pandora
+namespace WingsOfSteel::Pandora
 {
 
 void Initialize();
+void Run();
 void Shutdown();
-bool IsRunning();
-void Update();
 
-} // namespace Pandora
+} // namespace WingsOfSteel::Pandora
