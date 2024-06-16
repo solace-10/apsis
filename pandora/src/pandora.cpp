@@ -13,6 +13,7 @@
 
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
+#include "render/window.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -21,11 +22,10 @@ namespace WingsOfSteel::Pandora
 const uint32_t kWidth = 512;
 const uint32_t kHeight = 512;
 
-wgpu::Surface surface;
-wgpu::TextureFormat format;
 wgpu::RenderPipeline pipeline;
 
 std::unique_ptr<RenderSystem> g_pRenderSystem;
+std::unique_ptr<Window> g_pWindow;
 
 const char shaderCode[] = R"(
     @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
@@ -48,7 +48,9 @@ void CreateRenderPipeline()
     };
     wgpu::ShaderModule shaderModule = GetRenderSystem()->GetDevice().CreateShaderModule(&shaderModuleDescriptor);
 
-    wgpu::ColorTargetState colorTargetState{.format = format};
+    wgpu::ColorTargetState colorTargetState{
+        .format = GetWindow()->GetTextureFormat()
+    };
 
     wgpu::FragmentState fragmentState{.module = shaderModule,
                                     .targetCount = 1,
@@ -60,30 +62,48 @@ void CreateRenderPipeline()
     pipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
-void ConfigureSurface() 
+void Start() 
 {
-    wgpu::SurfaceCapabilities capabilities;
-    surface.GetCapabilities(GetRenderSystem()->GetAdapter(), &capabilities);
-    format = capabilities.formats[0];
+    if (!glfwInit()) 
+    {
+        return;
+    }
 
-    wgpu::SurfaceConfiguration config{
-        .device = GetRenderSystem()->GetDevice(),
-        .format = format,
-        .width = kWidth,
-        .height = kHeight};
-    surface.Configure(&config);
-}
+    g_pWindow = std::make_unique<Window>();
 
-void InitGraphics() 
-{
-    ConfigureSurface();
     CreateRenderPipeline();
+
+#if defined(TARGET_PLATFORM_NATIVE)
+    while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
+    {
+        glfwPollEvents();
+        Pandora::Update();
+        GetWindow()->GetSurface().Present();
+        GetRenderSystem()->GetInstance().ProcessEvents();
+    }
+#elif defined(TARGET_PLATFORM_WEB)
+    emscripten_set_main_loop(Pandora::Update, 0, false);
+#endif
 }
 
-void Render() 
+void InitializeLogging();
+
+void Initialize()
+{
+    InitializeLogging();
+
+    g_pRenderSystem = std::make_unique<RenderSystem>();
+    g_pRenderSystem->Initialize(
+        []() -> void {
+            Start();
+        }
+    );
+}
+
+void Update()
 {
     wgpu::SurfaceTexture surfaceTexture;
-    surface.GetCurrentTexture(&surfaceTexture);
+    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
 
     wgpu::RenderPassColorAttachment attachment{
         .view = surfaceTexture.texture.CreateView(),
@@ -102,56 +122,6 @@ void Render()
     GetRenderSystem()->GetDevice().GetQueue().Submit(1, &commands);
 }
 
-void Start() 
-{
-    if (!glfwInit()) 
-    {
-        return;
-    }
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(kWidth, kHeight, "The Brightest Star", nullptr, nullptr);
-
-#if defined(TARGET_PLATFORM_NATIVE)
-    surface = wgpu::glfw::CreateSurfaceForWindow(GetRenderSystem()->GetInstance(), window);
-#elif defined(TARGET_PLATFORM_WEB)
-    wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
-    canvasDesc.selector = "#canvas";
-
-    wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
-
-    surface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
-#endif
-
-    InitGraphics();
-
-#if defined(TARGET_PLATFORM_NATIVE)
-    while (!glfwWindowShouldClose(window)) 
-    {
-        glfwPollEvents();
-        Render();
-        surface.Present();
-        GetRenderSystem()->GetInstance().ProcessEvents();
-    }
-#elif defined(TARGET_PLATFORM_WEB)
-    emscripten_set_main_loop(Render, 0, false);
-#endif
-}
-
-void InitializeLogging();
-
-void Initialize()
-{
-    InitializeLogging();
-
-    g_pRenderSystem = std::make_unique<RenderSystem>();
-    g_pRenderSystem->Initialize(
-        []() -> void {
-            Start();
-        }
-    );
-}
-
 void Shutdown()
 {
     g_pRenderSystem.reset();
@@ -160,6 +130,11 @@ void Shutdown()
 RenderSystem* GetRenderSystem()
 {
     return g_pRenderSystem.get();
+}
+
+Window* GetWindow()
+{
+    return g_pWindow.get();
 }
 
 void InitializeLogging()
