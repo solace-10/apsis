@@ -19,3 +19,12 @@ if(TARGET_PLATFORM_NATIVE)
     )
     FetchContent_MakeAvailable(dawn)
 endif()
+
+FetchContent_Declare(
+    magic_enum
+    GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+    GIT_TAG e55b9b54d5cf61f8e117cafb17846d7d742dd3b4 # v0.9.5
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/magic_enum
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(magic_enum)

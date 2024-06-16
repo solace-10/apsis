@@ -12,6 +12,8 @@ include("cmake/shared/TargetPlatforms.cmake")
 target_include_directories(pandora PUBLIC src/)
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
+target_link_libraries(pandora PUBLIC magic_enum::magic_enum)
+
 if(TARGET_PLATFORM_WINDOWS)
     #add_library(pandora_static INTERFACE)
     #target_compile_options(pandora_static INTERFACE $<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)

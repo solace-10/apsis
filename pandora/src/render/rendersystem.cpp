@@ -1,6 +1,7 @@
 #include "render/rendersystem.hpp"
 
 #include <cassert>
+#include <magic_enum.hpp>
 #include "core/log.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -98,7 +99,7 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
             {
                 Log::Info() << " - Driver: " << properties.driverDescription;
             }
-            Log::Info() << " - Backend type: " << (int)properties.backendType;
+            Log::Info() << " - Backend type: " << magic_enum::enum_name(properties.backendType);
 
             g_Adapter.RequestDevice(
                 nullptr,
