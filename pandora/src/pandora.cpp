@@ -9,7 +9,10 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#include <memory>
+
 #include "core/log.hpp"
+#include "render/rendersystem.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -18,12 +21,11 @@ namespace WingsOfSteel::Pandora
 const uint32_t kWidth = 512;
 const uint32_t kHeight = 512;
 
-wgpu::Instance instance;
-wgpu::Adapter adapter;
-wgpu::Device device;
 wgpu::Surface surface;
 wgpu::TextureFormat format;
 wgpu::RenderPipeline pipeline;
+
+std::unique_ptr<RenderSystem> g_pRenderSystem;
 
 const char shaderCode[] = R"(
     @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
@@ -44,7 +46,7 @@ void CreateRenderPipeline()
     wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
         .nextInChain = &wgslDesc
     };
-    wgpu::ShaderModule shaderModule = device.CreateShaderModule(&shaderModuleDescriptor);
+    wgpu::ShaderModule shaderModule = GetRenderSystem()->GetDevice().CreateShaderModule(&shaderModuleDescriptor);
 
     wgpu::ColorTargetState colorTargetState{.format = format};
 
@@ -55,47 +57,17 @@ void CreateRenderPipeline()
     wgpu::RenderPipelineDescriptor descriptor{
         .vertex = {.module = shaderModule},
         .fragment = &fragmentState};
-    pipeline = device.CreateRenderPipeline(&descriptor);
-}
-
-void GetAdapter(void (*callback)(wgpu::Adapter)) 
-{
-  instance.RequestAdapter(
-      nullptr,
-      [](WGPURequestAdapterStatus status, WGPUAdapter cAdapter,
-         const char* message, void* userdata) {
-        if (status != WGPURequestAdapterStatus_Success) {
-          exit(0);
-        }
-        wgpu::Adapter adapter = wgpu::Adapter::Acquire(cAdapter);
-        reinterpret_cast<void (*)(wgpu::Adapter)>(userdata)(adapter);
-  }, reinterpret_cast<void*>(callback));
-}
-
-void GetDevice(void (*callback)(wgpu::Device)) 
-{
-  adapter.RequestDevice(
-      nullptr,
-      [](WGPURequestDeviceStatus status, WGPUDevice cDevice,
-          const char* message, void* userdata) {
-        wgpu::Device device = wgpu::Device::Acquire(cDevice);
-        device.SetUncapturedErrorCallback(
-            [](WGPUErrorType type, const char* message, void* userdata) {
-              std::cout << "Error: " << type << " - message: " << message;
-            },
-            nullptr);
-        reinterpret_cast<void (*)(wgpu::Device)>(userdata)(device);
-  }, reinterpret_cast<void*>(callback));
+    pipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
 void ConfigureSurface() 
 {
     wgpu::SurfaceCapabilities capabilities;
-    surface.GetCapabilities(adapter, &capabilities);
+    surface.GetCapabilities(GetRenderSystem()->GetAdapter(), &capabilities);
     format = capabilities.formats[0];
 
     wgpu::SurfaceConfiguration config{
-        .device = device,
+        .device = GetRenderSystem()->GetDevice(),
         .format = format,
         .width = kWidth,
         .height = kHeight};
@@ -121,13 +93,13 @@ void Render()
     wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
                                         .colorAttachments = &attachment};
 
-    wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
+    wgpu::CommandEncoder encoder = GetRenderSystem()->GetDevice().CreateCommandEncoder();
     wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
     pass.SetPipeline(pipeline);
     pass.Draw(3);
     pass.End();
     wgpu::CommandBuffer commands = encoder.Finish();
-    device.GetQueue().Submit(1, &commands);
+    GetRenderSystem()->GetDevice().GetQueue().Submit(1, &commands);
 }
 
 void Start() 
@@ -141,13 +113,14 @@ void Start()
     GLFWwindow* window = glfwCreateWindow(kWidth, kHeight, "The Brightest Star", nullptr, nullptr);
 
 #if defined(TARGET_PLATFORM_NATIVE)
-    surface = wgpu::glfw::CreateSurfaceForWindow(instance, window);
+    surface = wgpu::glfw::CreateSurfaceForWindow(GetRenderSystem()->GetInstance(), window);
 #elif defined(TARGET_PLATFORM_WEB)
     wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
     canvasDesc.selector = "#canvas";
 
     wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
-    surface = instance.CreateSurface(&surfaceDesc);
+
+    surface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
 #endif
 
     InitGraphics();
@@ -158,7 +131,7 @@ void Start()
         glfwPollEvents();
         Render();
         surface.Present();
-        instance.ProcessEvents();
+        GetRenderSystem()->GetInstance().ProcessEvents();
     }
 #elif defined(TARGET_PLATFORM_WEB)
     emscripten_set_main_loop(Render, 0, false);
@@ -171,24 +144,22 @@ void Initialize()
 {
     InitializeLogging();
 
-    instance = wgpu::CreateInstance();
-    GetAdapter([](wgpu::Adapter a) {
-        adapter = a;
-        GetDevice([](wgpu::Device d) {
-            device = d;
+    g_pRenderSystem = std::make_unique<RenderSystem>();
+    g_pRenderSystem->Initialize(
+        []() -> void {
             Start();
-        });
-    });
-}
-
-void Run()
-{
-    
+        }
+    );
 }
 
 void Shutdown()
 {
+    g_pRenderSystem.reset();
+}
 
+RenderSystem* GetRenderSystem()
+{
+    return g_pRenderSystem.get();
 }
 
 void InitializeLogging()

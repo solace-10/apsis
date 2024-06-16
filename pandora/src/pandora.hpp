@@ -3,8 +3,11 @@
 namespace WingsOfSteel::Pandora
 {
 
+class RenderSystem;
+
 void Initialize();
-void Run();
 void Shutdown();
+
+RenderSystem* GetRenderSystem();
 
 } // namespace WingsOfSteel::Pandora
