@@ -25,5 +25,18 @@ if(TARGET_PLATFORM_WINDOWS)
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
     #target_link_libraries(pandora PRIVATE pandora_static)
 elseif(TARGET_PLATFORM_WEB)
-    target_link_options(pandora PUBLIC "-sUSE_WEBGPU=1" "-sUSE_GLFW=3")
+    target_compile_options(pandora PUBLIC 
+        "-O0"
+        "-pthread"
+    )
+    target_link_options(pandora PUBLIC 
+        "-sUSE_WEBGPU=1" 
+        "-sUSE_GLFW=3" 
+        "-sFETCH" 
+        #"-sSAFE_HEAP" 
+        "-sALLOW_MEMORY_GROWTH" 
+        "-sASSERTIONS=2" 
+        "-sSTACK_SIZE=10MB"
+        "-fsanitize=address"
+    )
 endif()

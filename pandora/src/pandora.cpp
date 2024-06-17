@@ -14,64 +14,49 @@
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
+#include "vfs/vfs.hpp"
+#include "vfs/file.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
-const uint32_t kWidth = 512;
-const uint32_t kHeight = 512;
-
-wgpu::RenderPipeline pipeline;
-
 std::unique_ptr<RenderSystem> g_pRenderSystem;
+VFS* g_pVFS = nullptr;
 std::unique_ptr<Window> g_pWindow;
 
-const char shaderCode[] = R"(
-    @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
-      @builtin(position) vec4f {
-        const pos = array(vec2f(0, 1), vec2f(-1, -1), vec2f(1, -1));
-        return vec4f(pos[i], 0, 1);
-    }
-    @fragment fn fragmentMain() -> @location(0) vec4f {
-        return vec4f(1, 0, 0, 1);
-    }
-)";
-
-void CreateRenderPipeline() 
+void TestCallback(FileReadResult result, File* pFile)
 {
-    wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-    wgslDesc.code = shaderCode;
 
-    wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
-        .nextInChain = &wgslDesc
-    };
-    wgpu::ShaderModule shaderModule = GetRenderSystem()->GetDevice().CreateShaderModule(&shaderModuleDescriptor);
-
-    wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
-    };
-
-    wgpu::FragmentState fragmentState{.module = shaderModule,
-                                    .targetCount = 1,
-                                    .targets = &colorTargetState};
-
-    wgpu::RenderPipelineDescriptor descriptor{
-        .vertex = {.module = shaderModule},
-        .fragment = &fragmentState};
-    pipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
 void Start() 
 {
     if (!glfwInit()) 
     {
+        Log::Error() << "Failed to initialize GLFW...";
+        exit(-1);
         return;
     }
 
     g_pWindow = std::make_unique<Window>();
 
-    CreateRenderPipeline();
+    // VFS test
+    GetVFS()->FileRead(
+        "data/core/shaders/test.wgsl",
+        &TestCallback
+        // [](FileReadResult result, File* pFile)
+        // {
+        //     if (result == FileReadResult::Ok)
+        //     {
+        //         Log::Info() << "File read OK.";
+        //     }
+        //     else
+        //     {
+        //         Log::Error() << "Failed to read file.";
+        //     }
+        // }
+    );
 
 #if defined(TARGET_PLATFORM_NATIVE)
     while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
@@ -92,9 +77,12 @@ void Initialize()
 {
     InitializeLogging();
 
+    g_pVFS = new VFS();
+
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
         []() -> void {
+            Log::Info() << "vfs: " << g_pVFS;
             Start();
         }
     );
@@ -102,34 +90,28 @@ void Initialize()
 
 void Update()
 {
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
-    wgpu::RenderPassColorAttachment attachment{
-        .view = surfaceTexture.texture.CreateView(),
-        .loadOp = wgpu::LoadOp::Clear,
-        .storeOp = wgpu::StoreOp::Store};
-
-    wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
-                                        .colorAttachments = &attachment};
-
-    wgpu::CommandEncoder encoder = GetRenderSystem()->GetDevice().CreateCommandEncoder();
-    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
-    pass.SetPipeline(pipeline);
-    pass.Draw(3);
-    pass.End();
-    wgpu::CommandBuffer commands = encoder.Finish();
-    GetRenderSystem()->GetDevice().GetQueue().Submit(1, &commands);
+    GetRenderSystem()->Update();
 }
 
 void Shutdown()
 {
-    g_pRenderSystem.reset();
+    // Although all the systems are unique pointers and will be cleaned up,
+    // this ensures they are shut down in a deterministic order.
+    g_pWindow.reset();
+    //g_pRenderSystem.reset();
+
+    delete g_pVFS;
+    g_pVFS = nullptr;
 }
 
 RenderSystem* GetRenderSystem()
 {
     return g_pRenderSystem.get();
+}
+
+VFS* GetVFS()
+{
+    return g_pVFS;
 }
 
 Window* GetWindow()

@@ -3,6 +3,8 @@
 #include <cassert>
 #include <magic_enum.hpp>
 #include "core/log.hpp"
+#include "render/window.hpp"
+#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -28,6 +30,7 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCallback)
 {
+    Log::Info() << "RSInit vfs " << GetVFS();
     g_OnRenderSystemInitializedCallback = onInitializedCallback;
 
     g_Instance = wgpu::CreateInstance();
@@ -44,8 +47,16 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
     AcquireDevice([](wgpu::Device device) {
         g_Device = device;
         Log::Info() << "WebGPU device acquired.";
+        Log::Info() << "AcquireDevice callback vfs " << GetVFS();
+        //Log::Info() << "Callback thread id: " << std::this_thread::get_id();
         OnRenderSystemInitializedWrapper();
     });
+    // Code here will never be reached until shutdown has started.
+}
+
+void RenderSystem::Update()
+{
+    RenderDefaultPipeline();
 }
 
 wgpu::Instance RenderSystem::GetInstance() const
@@ -117,6 +128,69 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
             );
         },
         reinterpret_cast<void*>(callback));
+}
+
+void RenderSystem::CreateDefaultPipeline()
+{
+    static const char shaderCode[] = R"(
+        @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
+        @builtin(position) vec4f {
+            const pos = array(vec2f(0, 1), vec2f(-1, -1), vec2f(1, -1));
+            return vec4f(pos[i], 0, 1);
+        }
+        @fragment fn fragmentMain() -> @location(0) vec4f {
+            return vec4f(1, 0, 0, 1);
+        }
+    )";
+
+    wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
+    wgslDesc.code = shaderCode;
+
+    wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
+        .nextInChain = &wgslDesc
+    };
+    wgpu::ShaderModule shaderModule = GetDevice().CreateShaderModule(&shaderModuleDescriptor);
+
+    wgpu::ColorTargetState colorTargetState{
+        .format = GetWindow()->GetTextureFormat()
+    };
+
+    wgpu::FragmentState fragmentState{.module = shaderModule,
+                                    .targetCount = 1,
+                                    .targets = &colorTargetState};
+
+    wgpu::RenderPipelineDescriptor descriptor{
+        .vertex = {.module = shaderModule},
+        .fragment = &fragmentState};
+    m_DefaultPipeline = GetDevice().CreateRenderPipeline(&descriptor);
+}
+
+void RenderSystem::RenderDefaultPipeline()
+{
+    if (!m_DefaultPipeline)
+    {
+        CreateDefaultPipeline();
+    }
+
+    wgpu::SurfaceTexture surfaceTexture;
+    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
+
+    wgpu::RenderPassColorAttachment attachment{
+        .view = surfaceTexture.texture.CreateView(),
+        .loadOp = wgpu::LoadOp::Clear,
+        .storeOp = wgpu::StoreOp::Store};
+
+    wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
+                                        .colorAttachments = &attachment};
+
+    wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder();
+    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
+
+    pass.SetPipeline(m_DefaultPipeline);
+    pass.Draw(3);
+    pass.End();
+    wgpu::CommandBuffer commands = encoder.Finish();
+    GetDevice().GetQueue().Submit(1, &commands);
 }
 
 } // namespace WingsOfSteel::Pandora

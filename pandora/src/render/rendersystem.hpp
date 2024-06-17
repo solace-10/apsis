@@ -16,6 +16,7 @@ public:
     ~RenderSystem();
 
     void Initialize(OnRenderSystemInitializedCallback onInitializedCallback);
+    void Update();
 
     wgpu::Instance GetInstance() const;
     wgpu::Adapter GetAdapter() const;
@@ -23,6 +24,10 @@ public:
 
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
+    void CreateDefaultPipeline();
+    void RenderDefaultPipeline();
+
+    wgpu::RenderPipeline m_DefaultPipeline;
 };
 
 } // namespace WingsOfSteel::Pandora

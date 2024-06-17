@@ -13,3 +13,11 @@ add_executable(game ${SOURCE_FILES})
 target_include_directories(game PRIVATE ${PANDORA_INCLUDE_DIRS})
 target_link_directories(game PRIVATE ${PANDORA_LIBRARY_DIRS})
 target_link_libraries(game PRIVATE pandora)
+
+if(TARGET_PLATFORM_WEB)
+    set_target_properties(game PROPERTIES SUFFIX ".html")
+endif()
+
+add_custom_command(TARGET game POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game> ${CMAKE_CURRENT_LIST_DIR}/bin
+)
