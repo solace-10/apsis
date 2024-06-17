@@ -27,7 +27,6 @@ if(TARGET_PLATFORM_WINDOWS)
 elseif(TARGET_PLATFORM_WEB)
     target_compile_options(pandora PUBLIC 
         "-O0"
-        "-pthread"
     )
     target_link_options(pandora PUBLIC 
         "-sUSE_WEBGPU=1" 
@@ -36,7 +35,7 @@ elseif(TARGET_PLATFORM_WEB)
         #"-sSAFE_HEAP" 
         "-sALLOW_MEMORY_GROWTH" 
         "-sASSERTIONS=2" 
-        "-sSTACK_SIZE=10MB"
+        "-sSTACK_SIZE=5MB"
         "-fsanitize=address"
     )
 endif()
