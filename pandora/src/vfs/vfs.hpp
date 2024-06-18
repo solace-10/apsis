@@ -34,7 +34,7 @@ public:
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
 
 private:
-    Private::VFSImpl* m_pImpl;
+    std::unique_ptr<Private::VFSImpl> m_pImpl;
 };
 
 } // namespace WingsOfSteel::Pandora

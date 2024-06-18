@@ -47,8 +47,6 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
     AcquireDevice([](wgpu::Device device) {
         g_Device = device;
         Log::Info() << "WebGPU device acquired.";
-        Log::Info() << "AcquireDevice callback vfs " << GetVFS();
-        //Log::Info() << "Callback thread id: " << std::this_thread::get_id();
         OnRenderSystemInitializedWrapper();
     });
     // Code here will never be reached until shutdown has started.

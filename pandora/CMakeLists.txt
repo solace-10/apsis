@@ -28,14 +28,17 @@ elseif(TARGET_PLATFORM_WEB)
     target_compile_options(pandora PUBLIC 
         "-O0"
     )
+    target_compile_definitions(pandora PRIVATE 
+        "VFS_WEB_HOST=\"http://127.0.0.1:8000\""
+    )
     target_link_options(pandora PUBLIC 
         "-sUSE_WEBGPU=1" 
         "-sUSE_GLFW=3" 
         "-sFETCH" 
-        #"-sSAFE_HEAP" 
+        "-sSAFE_HEAP" 
         "-sALLOW_MEMORY_GROWTH" 
         "-sASSERTIONS=2" 
         "-sSTACK_SIZE=5MB"
-        "-fsanitize=address"
+        #"-fsanitize=address"
     )
 endif()

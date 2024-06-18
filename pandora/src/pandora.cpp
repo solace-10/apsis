@@ -22,19 +22,14 @@ namespace WingsOfSteel::Pandora
 {
 
 std::unique_ptr<RenderSystem> g_pRenderSystem;
-VFS* g_pVFS = nullptr;
+std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
-
-void TestCallback(FileReadResult result, File* pFile)
-{
-
-}
 
 void Start() 
 {
     if (!glfwInit()) 
     {
-        Log::Error() << "Failed to initialize GLFW...";
+        Log::Error() << "Failed to initialize GLFW.";
         exit(-1);
         return;
     }
@@ -44,18 +39,17 @@ void Start()
     // VFS test
     GetVFS()->FileRead(
         "data/core/shaders/test.wgsl",
-        &TestCallback
-        // [](FileReadResult result, File* pFile)
-        // {
-        //     if (result == FileReadResult::Ok)
-        //     {
-        //         Log::Info() << "File read OK.";
-        //     }
-        //     else
-        //     {
-        //         Log::Error() << "Failed to read file.";
-        //     }
-        // }
+        [](FileReadResult result, File* pFile)
+        {
+            if (result == FileReadResult::Ok)
+            {
+                Log::Info() << "File read OK.";
+            }
+            else
+            {
+                Log::Error() << "Failed to read file.";
+            }
+        }
     );
 
 #if defined(TARGET_PLATFORM_NATIVE)
@@ -66,6 +60,7 @@ void Start()
         GetWindow()->GetSurface().Present();
         GetRenderSystem()->GetInstance().ProcessEvents();
     }
+    Shutdown();
 #elif defined(TARGET_PLATFORM_WEB)
     emscripten_set_main_loop(Pandora::Update, 0, false);
 #endif
@@ -77,12 +72,10 @@ void Initialize()
 {
     InitializeLogging();
 
-    g_pVFS = new VFS();
-
+    g_pVFS = std::make_unique<VFS>();
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
         []() -> void {
-            Log::Info() << "vfs: " << g_pVFS;
             Start();
         }
     );
@@ -98,10 +91,8 @@ void Shutdown()
     // Although all the systems are unique pointers and will be cleaned up,
     // this ensures they are shut down in a deterministic order.
     g_pWindow.reset();
-    //g_pRenderSystem.reset();
-
-    delete g_pVFS;
-    g_pVFS = nullptr;
+    g_pRenderSystem.reset();
+    g_pVFS.reset();
 }
 
 RenderSystem* GetRenderSystem()
@@ -111,7 +102,7 @@ RenderSystem* GetRenderSystem()
 
 VFS* GetVFS()
 {
-    return g_pVFS;
+    return g_pVFS.get();
 }
 
 Window* GetWindow()

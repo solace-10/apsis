@@ -1,5 +1,5 @@
 .vscode/settings.json
 build/
 pandora/ext/
-game/bin/game.exe
+game/bin/game*
 game/bin/log.txt

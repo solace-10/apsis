@@ -18,7 +18,6 @@ Game::~Game()
 void Game::EntryPoint()
 {
     Pandora::Initialize();
-    Pandora::Shutdown();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

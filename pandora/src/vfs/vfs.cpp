@@ -13,17 +13,14 @@ namespace WingsOfSteel::Pandora
 VFS::VFS()
 {
 #if defined(TARGET_PLATFORM_NATIVE)
-    m_pImpl = new Private::VFSNative();
+    m_pImpl = std::make_unique<Private::VFSNative>();
 #elif defined(TARGET_PLATFORM_WEB)
-    m_pImpl = new Private::VFSWeb();
+    m_pImpl = std::make_unique<Private::VFSWeb>();
 #endif
-    Log::Info() << "Impl new: " << m_pImpl;
 }
     
 VFS::~VFS()
 {
-    delete m_pImpl;
-    m_pImpl = nullptr;
 }
 
 bool VFS::FileExists(const std::string& path) const
@@ -33,9 +30,6 @@ bool VFS::FileExists(const std::string& path) const
     
 void VFS::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
-    Log::Info() << "FileRead";
-    Log::Info() << "This: " << this;
-    Log::Info() << "Impl: " << m_pImpl;
     m_pImpl->FileRead(path, onFileReadCompleted);
 }
 

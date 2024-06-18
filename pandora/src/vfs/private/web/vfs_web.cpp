@@ -3,6 +3,7 @@
 #include "vfs/private/web/vfs_web.hpp"
 
 #include <cassert>
+#include <sstream>
 #include <vector>
 
 #include <emscripten/fetch.h>
@@ -22,7 +23,7 @@ void downloadSucceeded(emscripten_fetch_t *fetch)
 
 void downloadFailed(emscripten_fetch_t *fetch) 
 {
-    Log::Info() << fetch->url << "Downloading %s failed, HTTP failure status code: " << fetch->status;
+    Log::Info() << fetch->url << "Downloading " << fetch->url << " failed, HTTP failure status code: " << fetch->status;
     emscripten_fetch_close(fetch); // Also free data on failure.
 }
 
@@ -43,14 +44,16 @@ bool VFSWeb::FileExists(const std::string& path) const
     
 void VFSWeb::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
-    Log::Info() << "This: " << this;
-    // emscripten_fetch_attr_t attr;
-    // emscripten_fetch_attr_init(&attr);
-    // strcpy(attr.requestMethod, "GET");
-    // attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-    // attr.onsuccess = downloadSucceeded;
-    // attr.onerror = downloadFailed;
-    // emscripten_fetch(&attr, "https://solace-10.dev/thebrighteststar/manifest.json");
+    std::stringstream url;
+    url << VFS_WEB_HOST << "/" << path;
+
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "GET");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    attr.onsuccess = downloadSucceeded;
+    attr.onerror = downloadFailed;
+    emscripten_fetch(&attr, url.str().c_str());
 }
 
 } // namespace WingsOfSteel::Pandora::Private
