@@ -7,14 +7,18 @@
 #include <filesystem>
 #include <vector>
 
+#include "core/log.hpp"
 #include "vfs/file.hpp"
+
+namespace fs = std::filesystem;
 
 namespace WingsOfSteel::Pandora::Private
 {
 
 VFSNative::VFSNative()
 {
-
+    BuildVFS();
+    Log::Info() << "Native VFS initialized.";
 }
 
 VFSNative::~VFSNative()
@@ -24,21 +28,22 @@ VFSNative::~VFSNative()
 
 bool VFSNative::FileExists(const std::string& path) const
 {
-    return std::filesystem::exists(path);
+    return m_VFS.find(path) != m_VFS.end();
 }
     
 void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
     assert(onFileReadCompleted);
 
-    if (!FileExists(path))
+    auto it = m_VFS.find(path);
+    if (it == m_VFS.end())
     {
         onFileReadCompleted(FileReadResult::ErrorFileNotFound, nullptr);
         return;
     }
 
     // std::ios::ate = immediately seek to the end of the stream.
-    std::ifstream ifs(path, std::ios::in | std::ios::binary | std::ios::ate );
+    std::ifstream ifs(it->second, std::ios::in | std::ios::binary | std::ios::ate );
 
     if (ifs.good())
     {
@@ -52,6 +57,24 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
     else
     {
         onFileReadCompleted(FileReadResult::ErrorGeneric, nullptr);
+    }
+}
+
+void VFSNative::BuildVFS()
+{
+    // TODO: This can be extended to support modding.
+    const std::string directory("data/core");
+    if (fs::exists(directory) && fs::is_directory(directory)) 
+    {
+        const size_t prefixLength = directory.length();
+        for (const auto& entry : fs::recursive_directory_iterator(directory)) 
+        {
+            if (entry.is_regular_file())
+            {
+                const std::string relativePath(entry.path().string().substr(prefixLength));
+                m_VFS[relativePath] = entry.path();
+            }
+        }
     }
 }
 

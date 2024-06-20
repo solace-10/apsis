@@ -38,7 +38,7 @@ void Start()
 
     // VFS test
     GetVFS()->FileRead(
-        "data/core/shaders/test.wgsl",
+        "/shaders/test.wgsl",
         [](FileReadResult result, File* pFile)
         {
             if (result == FileReadResult::Ok)

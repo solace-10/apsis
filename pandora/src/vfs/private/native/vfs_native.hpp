@@ -2,6 +2,10 @@
 
 #if defined(TARGET_PLATFORM_NATIVE)
 
+#include <filesystem>
+#include <string>
+#include <unordered_map>
+
 #include "vfs/private/vfs_impl.hpp"
 
 namespace WingsOfSteel::Pandora::Private
@@ -15,6 +19,11 @@ public:
 
     virtual bool FileExists(const std::string& path) const override;
     virtual void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+
+private:
+    void BuildVFS();
+
+    std::unordered_map<std::string, std::filesystem::path> m_VFS;
 };
 
 } // namespace WingsOfSteel::Pandora::Private

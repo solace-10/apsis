@@ -30,7 +30,6 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCallback)
 {
-    Log::Info() << "RSInit vfs " << GetVFS();
     g_OnRenderSystemInitializedCallback = onInitializedCallback;
 
     g_Instance = wgpu::CreateInstance();
