@@ -2,7 +2,7 @@
     "version": 8,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 23,
+        "minor": 22,
         "patch": 0
     },
     "configurePresets": [
@@ -24,6 +24,27 @@
             "generator": "Visual Studio 17 2022",
             "cacheVariables": {
                 "TARGET_PLATFORM_WINDOWS": "ON"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "inherits": [
+                "native"
+            ]
+        },
+        {
+            "name": "linux",
+            "hidden": true,
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "TARGET_PLATFORM_LINUX": "ON"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
             },
             "inherits": [
                 "native"
@@ -55,6 +76,15 @@
             ]
         },
         {
+            "name": "debug-linux",
+            "displayName": "Debug (Linux)",
+            "inherits": [
+                "core",
+                "debug",
+                "linux"
+            ]
+        },
+        {
             "name": "debug-web",
             "displayName": "Debug (Web)",
             "inherits": [
@@ -75,12 +105,32 @@
             ]
         },
         {
+            "name": "native",
+            "hidden": true,
+            "configurePreset": "native",
+            "inherits": [
+                "core"
+            ],
+            "targets": [
+                "manifest_generator"
+            ]
+        },
+        {
             "name": "debug-windows",
             "description": "Build The Brightest Star in Debug",
             "displayName": "Debug (Windows)",
             "configurePreset": "debug-windows",
-            "inherits":[
-              "core"
+            "inherits": [
+                "native"
+            ]
+        },
+        {
+            "name": "debug-linux",
+            "description": "Build The Brightest Star in Debug",
+            "displayName": "Debug (Linux)",
+            "configurePreset": "debug-linux",
+            "inherits": [
+                "native"
             ]
         },
         {
@@ -89,7 +139,7 @@
             "displayName": "Debug (Web)",
             "configurePreset": "debug-web",
             "inherits":[
-              "core"
+                "core"
             ]
         }
     ]

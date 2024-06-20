@@ -28,3 +28,22 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(magic_enum)
+
+FetchContent_Declare(
+    xxhash
+    GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
+    GIT_TAG bbb27a5efb85b92a0486cf361a8635715a53f6ba # v0.8.2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/xxhash
+    SOURCE_SUBDIR cmake_unofficial
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(xxhash)
+
+FetchContent_Declare(
+    nlohmann-json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG 9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03 # v3.11.3
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/nlohmann-json
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(nlohmann-json)
