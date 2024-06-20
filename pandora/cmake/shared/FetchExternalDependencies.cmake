@@ -18,6 +18,16 @@ if(TARGET_PLATFORM_NATIVE)
         EXCLUDE_FROM_ALL
     )
     FetchContent_MakeAvailable(dawn)
+
+    # clipp provides command line argument parsing functionality.
+    FetchContent_Declare(
+        clipp
+        GIT_REPOSITORY https://github.com/muellan/clipp.git
+        GIT_TAG 2c32b2f1f7cc530b1ec1f62c92f698643bb368db # Head as of 20/06/2024, adding cmake support.
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/clipp
+        EXCLUDE_FROM_ALL
+    )
+    FetchContent_MakeAvailable(clipp)
 endif()
 
 FetchContent_Declare(

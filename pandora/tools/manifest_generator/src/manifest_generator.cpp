@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <clipp.h>
 #include <nlohmann/json.hpp>
 #include <xxhash.h>
 
@@ -27,7 +28,7 @@ std::string GenerateHash(const fs::path& file)
     return std::string("");
 }
 
-void BuildManifest(const fs::path& directory)
+bool BuildManifest(const fs::path& directory)
 {
     using namespace nlohmann;
     json manifest = json::array();
@@ -56,29 +57,47 @@ void BuildManifest(const fs::path& directory)
                 fs << manifest.dump(4);
                 fs.close();
                 std::cout << "Wrote manifest to " << manifestFs << std::endl;
+                return true;
+            }
+            else
+            {
+                return false;
             }
         } 
         else 
         {
             std::cerr << "Directory does not exist or is not a directory." << std::endl;
-            exit(-1);
+            return false;
         }
     } 
     catch (const fs::filesystem_error& e) 
     {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
-        exit(-1);
+        return false;
     } 
     catch (const std::exception& e) 
     {
         std::cerr << "General exception: " << e.what() << std::endl;
-        exit(-1);
+        return false;
     }
 }
 
-int main(int argc, const char** argv)
-{   
-    BuildManifest("/home/solace10/dev/TheBrightestStar/game/bin/data/core");
+int main(int argc, char* argv[])
+{
+    std::string directory = "";
 
-    return 0;
+    clipp::group cli{
+        clipp::value("manifest directory", directory)
+    };
+
+    if (!clipp::parse(argc, argv, cli)) 
+    {
+        std::cout << clipp::make_man_page(cli, argv[0]);
+        return -1;
+    }
+    else
+    {
+        const bool success = BuildManifest(directory);
+        return success ? 0 : -1;
+    }
 }
