@@ -20,10 +20,12 @@ if(TARGET_PLATFORM_NATIVE)
     FetchContent_MakeAvailable(dawn)
 
     # clipp provides command line argument parsing functionality.
+    # We use a fork of the original project as it has several fixes, including 
+    # cmake and C++20 support.
     FetchContent_Declare(
         clipp
-        GIT_REPOSITORY https://github.com/muellan/clipp.git
-        GIT_TAG 2c32b2f1f7cc530b1ec1f62c92f698643bb368db # Head as of 20/06/2024, adding cmake support.
+        GIT_REPOSITORY https://github.com/GerHobbelt/clipp.git
+        GIT_TAG 02783b6782ebedbb2bebc2e6ceda738ee51c7df2 # v2023.10.12
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/clipp
         EXCLUDE_FROM_ALL
     )
