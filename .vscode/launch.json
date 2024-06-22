@@ -10,6 +10,14 @@
             "request":"launch",
             "program": "${workspaceRoot}/game/bin/game.exe",
             "cwd":"${workspaceRoot}/game/bin"
-        }
+        },
+        {
+            "name": "Launch Manifest Generator (Windows)",
+            "type":"cppvsdbg",
+            "request":"launch",
+            "program": "${workspaceRoot}/pandora/tools/manifest_generator/bin/manifest_generator.exe",
+            "cwd":"${workspaceRoot}/pandora/tools/manifest_generator/bin/",
+            "args": [ "${workspaceRoot}/game/bin" ]
+        },
     ]
 }

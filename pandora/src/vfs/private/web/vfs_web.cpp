@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <emscripten/fetch.h>
+#include <xxhash.h>
 
 #include "core/log.hpp"
 #include "vfs/private/web/manifest.hpp"
@@ -70,6 +71,10 @@ void VFSWeb::Update()
         attr.onsuccess = [](emscripten_fetch_t* pFetch)
         {
             VFSWeb* pVFS = reinterpret_cast<VFSWeb*>(pFetch->userData);
+            std::stringstream hash;
+            hash << XXH3_64bits(pFetch->data, pFetch->numBytes * sizeof(char));
+            Log::Info() << "Hash: " << hash.str() << "| size: " << pFetch->numBytes;
+
             assert(pVFS->m_InProgress.has_value());
 
             FileData fileData;

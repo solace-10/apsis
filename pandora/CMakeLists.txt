@@ -11,7 +11,11 @@ include("cmake/shared/TargetPlatforms.cmake")
 target_include_directories(pandora PUBLIC src/)
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
-target_link_libraries(pandora PUBLIC magic_enum::magic_enum nlohmann_json::nlohmann_json)
+target_link_libraries(pandora PUBLIC 
+    magic_enum::magic_enum 
+    nlohmann_json::nlohmann_json
+    xxHash::xxhash
+)
 
 if(TARGET_PLATFORM_WINDOWS)
     target_compile_definitions(pandora PUBLIC UNICODE _UNICODE _HASEXCEPTIONS=0 NOMINMAX)

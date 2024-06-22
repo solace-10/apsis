@@ -15,8 +15,9 @@ std::string GenerateHash(const fs::path& file)
     if (ifs.good())
     {
         std::ifstream::pos_type fileSize = ifs.tellg();
+        ifs.seekg(0, std::ios::beg);
         std::vector<char> bytes;
-        bytes.reserve(static_cast<size_t>(fileSize));
+        bytes.resize(static_cast<size_t>(fileSize));
         ifs.read(bytes.data(), fileSize);
         ifs.close();
 
