@@ -15,5 +15,5 @@ target_link_libraries(manifest_generator PRIVATE
 )
 
 add_custom_command(TARGET manifest_generator POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:manifest_generator> ${CMAKE_CURRENT_LIST_DIR}/bin/manifest_generator
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:manifest_generator> ${CMAKE_CURRENT_LIST_DIR}/bin/$<TARGET_FILE_NAME:manifest_generator>
 )

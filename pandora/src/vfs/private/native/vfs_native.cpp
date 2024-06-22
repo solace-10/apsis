@@ -26,6 +26,16 @@ VFSNative::~VFSNative()
 
 }
 
+void VFSNative::Initialize()
+{
+    
+}
+
+void VFSNative::Update()
+{
+
+}
+
 bool VFSNative::FileExists(const std::string& path) const
 {
     return m_VFS.find(path) != m_VFS.end();
@@ -52,7 +62,7 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
         bytes.reserve(static_cast<size_t>(fileSize));
         ifs.read(bytes.data(), fileSize);
         ifs.close();
-        onFileReadCompleted(FileReadResult::Ok, new File(bytes));
+        onFileReadCompleted(FileReadResult::Ok, std::make_shared<File>(std::move(bytes)));
     }
     else
     {

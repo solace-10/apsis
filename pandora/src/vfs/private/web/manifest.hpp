@@ -23,10 +23,10 @@ public:
     bool IsValid() const;
     ManifestEntry* GetEntry(const std::string& path) const;
 
+private:
     void OnDownloadSucceeded(const std::string& url, const char* pData, size_t dataSize);
     void OnDownloadFailed(const std::string& url, int statusCode);
 
-private:
     bool m_IsValid;
     using ManifestEntryUniquePtr = std::unique_ptr<ManifestEntry>;
     using ManifestData = std::unordered_map<std::string, ManifestEntryUniquePtr>;

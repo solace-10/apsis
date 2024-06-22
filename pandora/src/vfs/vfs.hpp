@@ -22,7 +22,7 @@ enum class FileReadResult
     ErrorGeneric
 };
 
-using FileReadCallback = std::function<void(FileReadResult, File*)>;
+using FileReadCallback = std::function<void(FileReadResult, FileSharedPtr)>;
 
 // The VFS provides a layer of abstraction over the underlying file system, as well as
 // providing the foundation for mod support.
@@ -41,6 +41,8 @@ public:
     VFS();
     ~VFS();
 
+    void Initialize();
+    void Update();
     bool FileExists(const std::string& path) const;
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
 

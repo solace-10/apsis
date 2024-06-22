@@ -112,6 +112,7 @@
                 "core"
             ],
             "targets": [
+                "game",
                 "manifest_generator"
             ]
         },

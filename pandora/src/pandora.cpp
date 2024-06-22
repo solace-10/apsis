@@ -39,7 +39,7 @@ void Start()
     // VFS test
     GetVFS()->FileRead(
         "/shaders/test.wgsl",
-        [](FileReadResult result, File* pFile)
+        [](FileReadResult result, FileSharedPtr pFile)
         {
             if (result == FileReadResult::Ok)
             {
@@ -73,6 +73,8 @@ void Initialize()
     InitializeLogging();
 
     g_pVFS = std::make_unique<VFS>();
+    g_pVFS->Initialize();
+
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
         []() -> void {
@@ -83,6 +85,7 @@ void Initialize()
 
 void Update()
 {
+    GetVFS()->Update();
     GetRenderSystem()->Update();
 }
 
