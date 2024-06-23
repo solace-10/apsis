@@ -12,6 +12,7 @@ namespace WingsOfSteel::Pandora::Private
 {
 
 class Manifest;
+class ManifestEntry;
 
 class VFSWeb : public VFSImpl
 {
@@ -25,13 +26,12 @@ public:
     virtual void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
 
 private:
-    void PumpQueue();
-
     std::unique_ptr<Manifest> m_pManifest;
 
     struct QueuedFile
     {
         std::string path;
+        ManifestEntry* pManifestEntry;
         FileReadCallback onFileReadCompleted;
     };
     std::list<QueuedFile> m_Queue;
