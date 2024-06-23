@@ -11,6 +11,10 @@
 
 #include <memory>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_wgpu.h"
+
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
@@ -25,47 +29,7 @@ std::unique_ptr<RenderSystem> g_pRenderSystem;
 std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
 
-void Start() 
-{
-    if (!glfwInit()) 
-    {
-        Log::Error() << "Failed to initialize GLFW.";
-        exit(-1);
-        return;
-    }
-
-    g_pWindow = std::make_unique<Window>();
-
-    // VFS test
-    GetVFS()->FileRead(
-        "/shaders/test.wgsl",
-        [](FileReadResult result, FileSharedPtr pFile)
-        {
-            if (result == FileReadResult::Ok)
-            {
-                Log::Info() << "File read OK.";
-            }
-            else
-            {
-                Log::Error() << "Failed to read file.";
-            }
-        }
-    );
-
-#if defined(TARGET_PLATFORM_NATIVE)
-    while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
-    {
-        glfwPollEvents();
-        Pandora::Update();
-        GetWindow()->GetSurface().Present();
-        GetRenderSystem()->GetInstance().ProcessEvents();
-    }
-    Shutdown();
-#elif defined(TARGET_PLATFORM_WEB)
-    emscripten_set_main_loop(Pandora::Update, 0, false);
-#endif
-}
-
+void InitializeImGui();
 void InitializeLogging();
 
 void Initialize()
@@ -77,8 +41,31 @@ void Initialize()
 
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
-        []() -> void {
-            Start();
+        []() -> void 
+        {
+            if (!glfwInit()) 
+            {
+                Log::Error() << "Failed to initialize GLFW.";
+                exit(-1);
+                return;
+            }
+
+            g_pWindow = std::make_unique<Window>();
+
+            InitializeImGui();
+
+#if defined(TARGET_PLATFORM_NATIVE)
+            while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
+            {
+                glfwPollEvents();
+                Pandora::Update();
+                GetWindow()->GetSurface().Present();
+                GetRenderSystem()->GetInstance().ProcessEvents();
+            }
+            Shutdown();
+#elif defined(TARGET_PLATFORM_WEB)
+            emscripten_set_main_loop(Pandora::Update, 0, true);
+#endif
         }
     );
 }
@@ -86,6 +73,13 @@ void Initialize()
 void Update()
 {
     GetVFS()->Update();
+
+    ImGui_ImplWGPU_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();
+    ImGui::Render();
+
     GetRenderSystem()->Update();
 }
 
@@ -96,6 +90,8 @@ void Shutdown()
     g_pWindow.reset();
     g_pRenderSystem.reset();
     g_pVFS.reset();
+
+    glfwTerminate();
 }
 
 RenderSystem* GetRenderSystem()
@@ -111,6 +107,28 @@ VFS* GetVFS()
 Window* GetWindow()
 {
     return g_pWindow.get();
+}
+
+void InitializeImGui()
+{
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOther(GetWindow()->GetRawWindow(), true);
+#if defined(TARGET_PLATFORM_WEB)
+    ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+    ImGui::GetIO().IniFilename = nullptr; // Disable ini files when targetting web, as we don't support writing temporary files.
+#endif
+    ImGui_ImplWGPU_InitInfo init_info;
+    init_info.Device = GetRenderSystem()->GetDevice().Get();
+    init_info.NumFramesInFlight = 3;
+    init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(GetWindow()->GetTextureFormat());
+    init_info.DepthStencilFormat = WGPUTextureFormat_Undefined;
+    ImGui_ImplWGPU_Init(&init_info);
 }
 
 void InitializeLogging()

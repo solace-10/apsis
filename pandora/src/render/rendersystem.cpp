@@ -2,7 +2,9 @@
 
 #include <cassert>
 #include <magic_enum.hpp>
+
 #include "core/log.hpp"
+#include "imgui_impl_wgpu.h"
 #include "render/window.hpp"
 #include "pandora.hpp"
 
@@ -164,6 +166,11 @@ void RenderSystem::CreateDefaultPipeline()
 
 void RenderSystem::RenderDefaultPipeline()
 {
+#if defined(TARGET_PLATFORM_NATIVE)
+    // Tick needs to be called in Dawn to display validation errors
+    GetDevice().Tick();
+#endif
+
     if (!m_DefaultPipeline)
     {
         CreateDefaultPipeline();
@@ -175,18 +182,31 @@ void RenderSystem::RenderDefaultPipeline()
     wgpu::RenderPassColorAttachment attachment{
         .view = surfaceTexture.texture.CreateView(),
         .loadOp = wgpu::LoadOp::Clear,
-        .storeOp = wgpu::StoreOp::Store};
+        .storeOp = wgpu::StoreOp::Store,
+        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
+    };
 
     wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
                                         .colorAttachments = &attachment};
 
-    wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder();
+    wgpu::CommandEncoderDescriptor commandEncoderDescriptor{
+        .label = "Pandora default command encoder"
+    };
+
+    wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
     wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
 
     pass.SetPipeline(m_DefaultPipeline);
     pass.Draw(3);
+
+    ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass.Get());
+
     pass.End();
-    wgpu::CommandBuffer commands = encoder.Finish();
+
+    wgpu::CommandBufferDescriptor commandBufferDescriptor{
+        .label = "Pandora default command buffer"
+    };
+    wgpu::CommandBuffer commands = encoder.Finish(&commandBufferDescriptor);
     GetDevice().GetQueue().Submit(1, &commands);
 }
 

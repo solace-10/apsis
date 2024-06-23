@@ -3,5 +3,6 @@ build/
 pandora/ext/
 game/bin/data/core/manifest.json
 game/bin/game*
+game/bin/imgui.ini
 game/bin/log.txt
 pandora/tools/manifest_generator/bin/

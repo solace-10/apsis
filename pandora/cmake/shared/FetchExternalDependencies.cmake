@@ -30,7 +30,31 @@ if(TARGET_PLATFORM_NATIVE)
         EXCLUDE_FROM_ALL
     )
     FetchContent_MakeAvailable(clipp)
+
+    option(DAWN_BUILD_SAMPLES "Enables building Dawn's samples" OFF)
+    option(TINT_BUILD_CMD_TOOLS "Build the Tint command line tools" OFF)
+    option(TINT_BUILD_DOCS "Build documentation" OFF)
+    option(TINT_BUILD_TESTS "Build tests" OFF)
+
+    if(TARGET_PLATFORM_WINDOWS)
+        option(TINT_BUILD_MSL_WRITER "Build the MSL output writer" OFF)
+        option(TINT_BUILD_SPV_READER "Build the SPIR-V input reader" OFF)
+        option(TINT_BUILD_WGSL_READER "Build the WGSL input reader" ON)
+        option(TINT_BUILD_GLSL_WRITER "Build the GLSL output writer" OFF)
+        option(TINT_BUILD_GLSL_VALIDATOR "Build the GLSL output validator" OFF)
+        option(TINT_BUILD_SPV_WRITER "Build the SPIR-V output writer" OFF)
+        option(TINT_BUILD_WGSL_WRITER "Build the WGSL output writer" ON)
+    endif()
 endif()
+
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG 6f7b5d0ee2fe9948ab871a530888a6dc5c960700 # v1.90.8
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/imgui
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(imgui)
 
 FetchContent_Declare(
     magic_enum

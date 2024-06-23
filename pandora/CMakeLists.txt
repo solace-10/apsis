@@ -6,9 +6,26 @@ include("cmake/shared/FetchExternalDependencies.cmake")
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR}/src FILES ${SOURCE_FILES})
 
-add_library(pandora STATIC ${SOURCE_FILES})
+set(IMGUI_SOURCE_DIR ext/imgui)
+set(SOURCE_FILES_IMGUI
+    ${IMGUI_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+    ${IMGUI_SOURCE_DIR}/imgui.cpp
+    ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
+    ${IMGUI_SOURCE_DIR}/imgui_draw.cpp
+    ${IMGUI_SOURCE_DIR}/imgui_tables.cpp
+    ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
+)
+
+add_library(pandora STATIC ${SOURCE_FILES} ${SOURCE_FILES_IMGUI})
 include("cmake/shared/TargetPlatforms.cmake")
-target_include_directories(pandora PUBLIC src/)
+
+target_include_directories(pandora PUBLIC 
+    src/
+    ${IMGUI_SOURCE_DIR}
+    ${IMGUI_SOURCE_DIR}/backends/
+)
+
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
 target_link_libraries(pandora PUBLIC 

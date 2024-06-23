@@ -20,7 +20,7 @@ private:
     void ConfigureSurface();
 
     GLFWwindow* m_pWindow;
-    wgpu::Surface m_pSurface;
+    wgpu::Surface m_Surface;
     wgpu::TextureFormat m_Format;
     uint32_t m_Width;
     uint32_t m_Height;

@@ -15,8 +15,8 @@ namespace WingsOfSteel::Pandora
 Window::Window()
 : m_pWindow(nullptr)
 {
-    m_Width = 512;
-    m_Height = 512;
+    m_Width = 1024;
+    m_Height = 768;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     m_pWindow = glfwCreateWindow(m_Width, m_Height, "The Brightest Star", nullptr, nullptr);
@@ -25,12 +25,13 @@ Window::Window()
 
 Window::~Window()
 {
-
+    glfwDestroyWindow(m_pWindow);
+    m_pWindow = nullptr;
 }
 
 wgpu::Surface Window::GetSurface() const
 {
-    return m_pSurface;
+    return m_Surface;
 }
 
 wgpu::TextureFormat Window::GetTextureFormat() const
@@ -46,27 +47,27 @@ GLFWwindow* Window::GetRawWindow() const
 void Window::ConfigureSurface()
 {
 #if defined(TARGET_PLATFORM_NATIVE)
-    m_pSurface = wgpu::glfw::CreateSurfaceForWindow(GetRenderSystem()->GetInstance(), m_pWindow);
+    m_Surface = wgpu::glfw::CreateSurfaceForWindow(GetRenderSystem()->GetInstance(), m_pWindow);
 #elif defined(TARGET_PLATFORM_WEB)
     wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
     canvasDesc.selector = "#canvas";
 
     wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
 
-    m_pSurface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
+    m_Surface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
 #endif
 
     wgpu::SurfaceCapabilities capabilities;
-    m_pSurface.GetCapabilities(GetRenderSystem()->GetAdapter(), &capabilities);
+    m_Surface.GetCapabilities(GetRenderSystem()->GetAdapter(), &capabilities);
     m_Format = capabilities.formats[0];
 
     wgpu::SurfaceConfiguration config{
         .device = GetRenderSystem()->GetDevice(),
         .format = m_Format,
         .width = m_Width,
-        .height = m_Height
+        .height = m_Height,
     };
-    m_pSurface.Configure(&config);
+    m_Surface.Configure(&config);
 }
 
 } // namespace WingsOfSteel::Pandora
