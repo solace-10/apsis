@@ -35,11 +35,6 @@ void VFSNative::Update()
 {
 
 }
-
-bool VFSNative::FileExists(const std::string& path) const
-{
-    return m_VFS.find(path) != m_VFS.end();
-}
     
 void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {

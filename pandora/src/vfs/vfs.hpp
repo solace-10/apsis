@@ -43,7 +43,6 @@ public:
 
     void Initialize();
     void Update();
-    bool FileExists(const std::string& path) const;
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
 
 private:

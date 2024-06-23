@@ -114,11 +114,6 @@ void VFSWeb::Update()
         }
     }
 }
-
-bool VFSWeb::FileExists(const std::string& path) const
-{
-    return false;
-}
     
 void VFSWeb::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {

@@ -32,11 +32,6 @@ void VFS::Update()
 {
     m_pImpl->Update();
 }
-
-bool VFS::FileExists(const std::string& path) const
-{
-    return m_pImpl->FileExists(path);
-}
     
 void VFS::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
