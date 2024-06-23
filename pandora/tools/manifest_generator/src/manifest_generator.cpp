@@ -43,7 +43,8 @@ bool BuildManifest(const fs::path& directory)
                 if (fs::is_regular_file(entry.path()) && entry.path().filename() != "manifest.json")
                 {
                     json manifestEntry;
-                    const std::string relativePath(entry.path().string().substr(prefixLength));
+                    std::string relativePath(entry.path().string().substr(prefixLength));
+                    std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
                     manifestEntry["path"] = relativePath;
                     manifestEntry["size"] = fs::file_size(entry.path());
                     manifestEntry["hash"] = GenerateHash(entry.path());
