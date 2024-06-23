@@ -77,7 +77,8 @@ void VFSNative::BuildVFS()
         {
             if (entry.is_regular_file())
             {
-                const std::string relativePath(entry.path().string().substr(prefixLength));
+                std::string relativePath(entry.path().string().substr(prefixLength));
+                std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
                 m_VFS[relativePath] = entry.path();
             }
         }
