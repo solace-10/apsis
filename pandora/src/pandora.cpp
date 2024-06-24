@@ -11,11 +11,8 @@
 
 #include <memory>
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_wgpu.h"
-
 #include "core/log.hpp"
+#include "imgui/imguisystem.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "vfs/vfs.hpp"
@@ -25,11 +22,11 @@
 namespace WingsOfSteel::Pandora
 {
 
+std::unique_ptr<ImGuiSystem> g_pImGuiSystem;
 std::unique_ptr<RenderSystem> g_pRenderSystem;
 std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
 
-void InitializeImGui();
 void InitializeLogging();
 
 void Initialize()
@@ -51,8 +48,7 @@ void Initialize()
             }
 
             g_pWindow = std::make_unique<Window>();
-
-            InitializeImGui();
+            g_pImGuiSystem = std::make_unique<ImGuiSystem>();
 
 #if defined(TARGET_PLATFORM_NATIVE)
             while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
@@ -72,13 +68,12 @@ void Initialize()
 
 void Update()
 {
+    GetImGuiSystem()->OnFrameStart();
+    
     GetVFS()->Update();
-
-    ImGui_ImplWGPU_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
-    ImGui::Render();
+    GetImGuiSystem()->Update();
+    
+    // Scene management goes here
 
     GetRenderSystem()->Update();
 }
@@ -89,9 +84,15 @@ void Shutdown()
     // this ensures they are shut down in a deterministic order.
     g_pWindow.reset();
     g_pRenderSystem.reset();
+    g_pImGuiSystem.reset();
     g_pVFS.reset();
 
     glfwTerminate();
+}
+
+ImGuiSystem* GetImGuiSystem()
+{
+    return g_pImGuiSystem.get();
 }
 
 RenderSystem* GetRenderSystem()
@@ -107,28 +108,6 @@ VFS* GetVFS()
 Window* GetWindow()
 {
     return g_pWindow.get();
-}
-
-void InitializeImGui()
-{
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    ImGui::StyleColorsDark();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOther(GetWindow()->GetRawWindow(), true);
-#if defined(TARGET_PLATFORM_WEB)
-    ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
-    ImGui::GetIO().IniFilename = nullptr; // Disable ini files when targetting web, as we don't support writing temporary files.
-#endif
-    ImGui_ImplWGPU_InitInfo init_info;
-    init_info.Device = GetRenderSystem()->GetDevice().Get();
-    init_info.NumFramesInFlight = 3;
-    init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(GetWindow()->GetTextureFormat());
-    init_info.DepthStencilFormat = WGPUTextureFormat_Undefined;
-    ImGui_ImplWGPU_Init(&init_info);
 }
 
 void InitializeLogging()

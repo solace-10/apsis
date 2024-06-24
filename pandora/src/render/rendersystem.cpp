@@ -4,7 +4,7 @@
 #include <magic_enum.hpp>
 
 #include "core/log.hpp"
-#include "imgui_impl_wgpu.h"
+#include "imgui/imguisystem.hpp"
 #include "render/window.hpp"
 #include "pandora.hpp"
 
@@ -199,7 +199,7 @@ void RenderSystem::RenderDefaultPipeline()
     pass.SetPipeline(m_DefaultPipeline);
     pass.Draw(3);
 
-    ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass.Get());
+    GetImGuiSystem()->Render(pass);
 
     pass.End();
 
