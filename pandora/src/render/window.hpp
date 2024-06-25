@@ -15,6 +15,7 @@ public:
     wgpu::Surface GetSurface() const;
     wgpu::TextureFormat GetTextureFormat() const;
     GLFWwindow* GetRawWindow() const;
+    void OnWindowResized(uint32_t width, uint32_t height);
 
 private:
     void ConfigureSurface();
