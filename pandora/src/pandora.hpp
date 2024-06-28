@@ -5,6 +5,7 @@ namespace WingsOfSteel::Pandora
 
 class ImGuiSystem;
 class RenderSystem;
+class ResourceSystem;
 class VFS;
 class Window;
 
@@ -14,6 +15,7 @@ void Shutdown();
 
 ImGuiSystem* GetImGuiSystem();
 RenderSystem* GetRenderSystem();
+ResourceSystem* GetResourceSystem();
 VFS* GetVFS();
 Window* GetWindow();
 

@@ -15,6 +15,7 @@
 #include "imgui/imguisystem.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
+#include "resources/resource_system.hpp"
 #include "vfs/vfs.hpp"
 #include "vfs/file.hpp"
 #include "pandora.hpp"
@@ -24,6 +25,7 @@ namespace WingsOfSteel::Pandora
 
 std::unique_ptr<ImGuiSystem> g_pImGuiSystem;
 std::unique_ptr<RenderSystem> g_pRenderSystem;
+std::unique_ptr<ResourceSystem> g_pResourceSystem;
 std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
 
@@ -40,15 +42,11 @@ void Initialize()
     g_pRenderSystem->Initialize(
         []() -> void 
         {
-            if (!glfwInit()) 
-            {
-                Log::Error() << "Failed to initialize GLFW.";
-                exit(-1);
-                return;
-            }
-
+            g_pResourceSystem = std::make_unique<ResourceSystem>();
             g_pWindow = std::make_unique<Window>();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();
+
+            g_pResourceSystem->RequestResource("/test/rgb_colors.jpg", [](ResourceSharedPtr pResource) {});
 
 #if defined(TARGET_PLATFORM_NATIVE)
             while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
@@ -71,6 +69,7 @@ void Update()
     GetImGuiSystem()->OnFrameStart();
     
     GetVFS()->Update();
+    GetResourceSystem()->Update();
     GetImGuiSystem()->Update();
     
     // Scene management goes here
@@ -82,12 +81,11 @@ void Shutdown()
 {
     // Although all the systems are unique pointers and will be cleaned up,
     // this ensures they are shut down in a deterministic order.
+    g_pResourceSystem.reset();
     g_pWindow.reset();
     g_pRenderSystem.reset();
     g_pImGuiSystem.reset();
     g_pVFS.reset();
-
-    glfwTerminate();
 }
 
 ImGuiSystem* GetImGuiSystem()
@@ -98,6 +96,11 @@ ImGuiSystem* GetImGuiSystem()
 RenderSystem* GetRenderSystem()
 {
     return g_pRenderSystem.get();
+}
+
+ResourceSystem* GetResourceSystem()
+{
+    return g_pResourceSystem.get();
 }
 
 VFS* GetVFS()

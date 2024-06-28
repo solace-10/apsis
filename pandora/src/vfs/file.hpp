@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace WingsOfSteel::Pandora
@@ -14,12 +15,14 @@ using FileData = std::vector<char>;
 class File
 {
 public:
-    File(const FileData& data);
+    File(const std::string& path, const FileData& data);
     ~File();
 
+    const std::string& GetPath() const;
     const FileData& GetData() const;
 
 private:
+    std::string m_Path;
     FileData m_Data;
 };
 

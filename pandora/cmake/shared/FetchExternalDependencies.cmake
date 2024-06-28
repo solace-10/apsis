@@ -83,3 +83,12 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(nlohmann-json)
+
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG 013ac3beddff3dbffafd5177e7972067cd2b5083 # Head as of 27/06/2024
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/stb
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(stb)

@@ -26,6 +26,10 @@ target_include_directories(pandora PUBLIC
     ${IMGUI_SOURCE_DIR}/backends/
 )
 
+target_include_directories(pandora PRIVATE
+    ext/stb/
+)
+
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
 target_link_libraries(pandora PUBLIC 
@@ -50,6 +54,7 @@ elseif(TARGET_PLATFORM_WEB)
         "VFS_WEB_HOST=\"http://127.0.0.1:8000\""
     )
     target_link_options(pandora PUBLIC 
+        "-sDEFAULT_TO_CXX"
         "-sUSE_WEBGPU=1" 
         "-sUSE_GLFW=3" 
         "-sFETCH" 

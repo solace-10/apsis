@@ -84,18 +84,19 @@ void VFSWeb::Update()
                 downloadHash << XXH3_64bits(pFetch->data, pFetch->numBytes * sizeof(char));
                 const std::string& manifestHash = pVFS->m_InProgress->pManifestEntry->GetHash();
 
+                const std::string& path = pVFS->m_InProgress->path;
                 if (manifestHash == downloadHash.str())
                 {
                     FileData fileData;
                     fileData.reserve(pFetch->numBytes);
                     std::memcpy(fileData.data(), pFetch->data, pFetch->numBytes * sizeof(char));
 
-                    Log::Info() << "Downloaded '" << pVFS->m_InProgress->path << "'.";
-                    pVFS->m_InProgress->onFileReadCompleted(FileReadResult::Ok, std::make_shared<File>(std::move(fileData)));
+                    Log::Info() << "Downloaded '" << path << "'.";
+                    pVFS->m_InProgress->onFileReadCompleted(FileReadResult::Ok, std::make_shared<File>(path, std::move(fileData)));
                 }
                 else
                 {
-                    Log::Error() << "Download '" << pVFS->m_InProgress->path << "' failed due to mismatched hashes. Expected " << manifestHash << ", expected " << downloadHash.str() << ".";
+                    Log::Error() << "Download '" << path << "' failed due to mismatched hashes. Expected " << manifestHash << ", expected " << downloadHash.str() << ".";
                     pVFS->m_InProgress->onFileReadCompleted(FileReadResult::ErrorHashMismatch, nullptr);
                 }
 

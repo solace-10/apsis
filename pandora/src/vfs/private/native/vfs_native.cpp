@@ -58,7 +58,7 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
         bytes.resize(static_cast<size_t>(fileSize));
         ifs.read(bytes.data(), fileSize);
         ifs.close();
-        onFileReadCompleted(FileReadResult::Ok, std::make_shared<File>(std::move(bytes)));
+        onFileReadCompleted(FileReadResult::Ok, std::make_shared<File>(path, std::move(bytes)));
     }
     else
     {

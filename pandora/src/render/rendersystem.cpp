@@ -27,7 +27,7 @@ RenderSystem::RenderSystem()
 
 RenderSystem::~RenderSystem()
 {
-
+    glfwTerminate();
 }
 
 void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCallback)
@@ -48,6 +48,14 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
     AcquireDevice([](wgpu::Device device) {
         g_Device = device;
         Log::Info() << "WebGPU device acquired.";
+
+        if (!glfwInit()) 
+        {
+            Log::Error() << "Failed to initialize GLFW.";
+            exit(-1);
+            return;
+        }
+
         OnRenderSystemInitializedWrapper();
     });
     // Code here will never be reached until shutdown has started.
