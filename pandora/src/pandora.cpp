@@ -46,8 +46,6 @@ void Initialize()
             g_pWindow = std::make_unique<Window>();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();
 
-            g_pResourceSystem->RequestResource("/test/rgb_colors.jpg", [](ResourceSharedPtr pResource) {});
-
 #if defined(TARGET_PLATFORM_NATIVE)
             while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
             {

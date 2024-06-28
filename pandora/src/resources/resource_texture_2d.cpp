@@ -54,6 +54,11 @@ ResourceType ResourceTexture2D::GetResourceType() const
     return ResourceType::Texture2D;
 }
 
+wgpu::TextureView ResourceTexture2D::GetTextureView() const
+{
+    return m_TextureView;
+}
+
 void ResourceTexture2D::LoadInternal(FileReadResult result, FileSharedPtr pFile)
 {
     if (result == FileReadResult::Ok)
@@ -77,7 +82,7 @@ void ResourceTexture2D::LoadInternal(FileReadResult result, FileSharedPtr pFile)
                 .usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst,
                 .dimension = wgpu::TextureDimension::e2D,
                 .size = { static_cast<uint32_t>(m_Width), static_cast<uint32_t>(m_Height), 1 },
-                .format = wgpu::TextureFormat::RGBA8Uint,
+                .format = wgpu::TextureFormat::RGBA8Unorm,
                 .mipLevelCount = 1,
                 .sampleCount = 1
             };
@@ -98,6 +103,16 @@ void ResourceTexture2D::LoadInternal(FileReadResult result, FileSharedPtr pFile)
             GetRenderSystem()->GetDevice().GetQueue().WriteTexture(&destination, pTextureData, textureDataSize, &sourceLayout, &textureDescriptor.size );
 
             stbi_image_free(pTextureData);
+
+            wgpu::TextureViewDescriptor textureViewDescriptor{
+                .label = pFile->GetPath().c_str(),
+                .format = textureDescriptor.format,
+                .dimension = wgpu::TextureViewDimension::e2D,
+                .mipLevelCount = textureDescriptor.mipLevelCount,
+                .arrayLayerCount = 1
+            };
+            m_TextureView = m_Texture.CreateView(&textureViewDescriptor);
+
             SetState(ResourceState::Loaded);
         }
         else

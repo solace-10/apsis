@@ -125,7 +125,8 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
                     wgpu::Device device = wgpu::Device::Acquire(cDevice);
                     device.SetUncapturedErrorCallback(
                             [](WGPUErrorType type, const char* message, void* userdata) {
-                                Log::Warning() << "Uncaptured device error: " << type << " - message: " << message;
+                                Log::Error() << "Uncaptured device error: " << type << " - message: " << message;
+                                exit(-1);
                             },
                             nullptr
                     );

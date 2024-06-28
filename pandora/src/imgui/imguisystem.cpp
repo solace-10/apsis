@@ -8,8 +8,14 @@
 #include "render/window.hpp"
 #include "pandora.hpp"
 
+// Experimental, to remove
+#include "resources/resource_texture_2d.hpp"
+#include "resources/resource_system.hpp"
+
 namespace WingsOfSteel::Pandora
 {
+
+ResourceSharedPtr g_pTestTexture;
 
 ImGuiSystem::ImGuiSystem()
 {
@@ -31,6 +37,10 @@ ImGuiSystem::ImGuiSystem()
     init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(GetWindow()->GetTextureFormat());
     init_info.DepthStencilFormat = WGPUTextureFormat_Undefined;
     ImGui_ImplWGPU_Init(&init_info);
+
+    GetResourceSystem()->RequestResource("/test/rgb_colors.jpg", [](ResourceSharedPtr pResource) {
+        g_pTestTexture = pResource;
+    });
 }
 
 ImGuiSystem::~ImGuiSystem()
@@ -50,6 +60,20 @@ void ImGuiSystem::OnFrameStart()
 void ImGuiSystem::Update()
 {
     ImGui::ShowDemoWindow();
+
+    ImGui::SetNextWindowSize(ImVec2(800, 600));
+    ImGui::Begin("Test texture");
+    
+    if (g_pTestTexture)
+    {
+        ResourceTexture2D* pTexture = reinterpret_cast<ResourceTexture2D*>(g_pTestTexture.get());
+        ImGui::Image(
+            (void*)pTexture->GetTextureView().Get(),
+            ImVec2(800, 600)
+        );
+    }
+
+    ImGui::End();
 }
     
 void ImGuiSystem::Render(wgpu::RenderPassEncoder& pass)
