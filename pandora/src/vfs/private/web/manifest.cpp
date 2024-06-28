@@ -33,7 +33,7 @@ void Manifest::Initialize()
 
     emscripten_fetch_attr_init(&attr);
     strcpy(attr.requestMethod, "GET");
-    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_REPLACE;
     attr.userData = this;
     attr.onsuccess = [](emscripten_fetch_t* pFetch)
     {

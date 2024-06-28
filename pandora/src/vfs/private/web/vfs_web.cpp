@@ -88,7 +88,7 @@ void VFSWeb::Update()
                 if (manifestHash == downloadHash.str())
                 {
                     FileData fileData;
-                    fileData.reserve(pFetch->numBytes);
+                    fileData.resize(pFetch->numBytes);
                     std::memcpy(fileData.data(), pFetch->data, pFetch->numBytes * sizeof(char));
 
                     Log::Info() << "Downloaded '" << path << "'.";

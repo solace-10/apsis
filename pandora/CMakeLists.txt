@@ -62,6 +62,7 @@ elseif(TARGET_PLATFORM_WEB)
         "-sALLOW_MEMORY_GROWTH" 
         "-sASSERTIONS=2" 
         "-sSTACK_SIZE=5MB"
+        "-sDISABLE_EXCEPTION_CATCHING"
         #"-fsanitize=address"
     )
 endif()
