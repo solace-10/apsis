@@ -29,6 +29,7 @@ using OnResourceAvailableCallback = std::function<void(ResourceSharedPtr)>;
 enum class ResourceType
 {
     Invalid = 0,
+    Shader,
     Texture2D
 };
 

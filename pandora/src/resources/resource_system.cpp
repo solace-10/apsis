@@ -2,6 +2,7 @@
 
 #include "core/log.hpp"
 #include "resources/resource.hpp"
+#include "resources/resource_shader.hpp"
 #include "resources/resource_texture_2d.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -9,6 +10,7 @@ namespace WingsOfSteel::Pandora
 
 ResourceSystem::ResourceSystem()
 {
+    RegisterResource<ResourceShader>("wgsl");
     RegisterResource<ResourceTexture2D>("jpg");
     RegisterResource<ResourceTexture2D>("png");
 }

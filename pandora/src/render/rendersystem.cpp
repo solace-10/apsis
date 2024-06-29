@@ -6,6 +6,7 @@
 #include "core/log.hpp"
 #include "imgui/imguisystem.hpp"
 #include "render/window.hpp"
+#include "scene/scene.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -56,6 +57,7 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
             return;
         }
 
+        GetRenderSystem()->CreateGlobalUniforms();
         OnRenderSystemInitializedWrapper();
     });
     // Code here will never be reached until shutdown has started.
@@ -185,6 +187,8 @@ void RenderSystem::RenderDefaultPipeline()
         CreateDefaultPipeline();
     }
 
+    UpdateGlobalUniforms();
+
     wgpu::SurfaceTexture surfaceTexture;
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
 
@@ -205,8 +209,14 @@ void RenderSystem::RenderDefaultPipeline()
     wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
     wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
 
-    pass.SetPipeline(m_DefaultPipeline);
-    pass.Draw(3);
+    // pass.SetPipeline(m_DefaultPipeline);
+    // pass.Draw(3);
+
+    Scene* pActiveScene = GetActiveScene();
+    if (pActiveScene)
+    {
+        pActiveScene->Render();
+    }
 
     GetImGuiSystem()->Render(pass);
 
@@ -217,6 +227,33 @@ void RenderSystem::RenderDefaultPipeline()
     };
     wgpu::CommandBuffer commands = encoder.Finish(&commandBufferDescriptor);
     GetDevice().GetQueue().Submit(1, &commands);
+}
+
+void RenderSystem::CreateGlobalUniforms()
+{
+    memset(&m_GlobalUniforms, 0, sizeof(GlobalUniforms));
+    m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.time = 0.0f;
+
+    wgpu::BufferDescriptor bufferDescriptor{
+        .label = "Global uniforms buffer",
+        .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
+        .size = sizeof(GlobalUniforms)
+    };
+
+    m_GlobalUniformsBuffer = GetDevice().CreateBuffer(&bufferDescriptor);
+}
+
+void RenderSystem::UpdateGlobalUniforms()
+{
+    m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.time = static_cast<float>(glfwGetTime());
+
+    GetDevice().GetQueue().WriteBuffer(m_GlobalUniformsBuffer, 0, &m_GlobalUniforms, sizeof(GlobalUniforms));
 }
 
 } // namespace WingsOfSteel::Pandora

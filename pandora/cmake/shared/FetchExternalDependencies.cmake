@@ -48,6 +48,15 @@ if(TARGET_PLATFORM_NATIVE)
 endif()
 
 FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e # v1.0.1
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/glm
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(glm)
+
+FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG 6f7b5d0ee2fe9948ab871a530888a6dc5c960700 # v1.90.8

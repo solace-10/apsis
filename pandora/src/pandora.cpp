@@ -16,6 +16,7 @@
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
+#include "scene/scene.hpp"
 #include "vfs/vfs.hpp"
 #include "vfs/file.hpp"
 #include "pandora.hpp"
@@ -26,6 +27,7 @@ namespace WingsOfSteel::Pandora
 std::unique_ptr<ImGuiSystem> g_pImGuiSystem;
 std::unique_ptr<RenderSystem> g_pRenderSystem;
 std::unique_ptr<ResourceSystem> g_pResourceSystem;
+std::shared_ptr<Scene> g_pActiveScene;
 std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
 
@@ -69,8 +71,12 @@ void Update()
     GetVFS()->Update();
     GetResourceSystem()->Update();
     GetImGuiSystem()->Update();
-    
-    // Scene management goes here
+
+    Scene* pActiveScene = GetActiveScene();
+    if (pActiveScene)
+    {
+        pActiveScene->Update(0.0f);
+    }
 
     GetRenderSystem()->Update();
 }
@@ -82,6 +88,7 @@ void Shutdown()
     g_pResourceSystem.reset();
     g_pWindow.reset();
     g_pRenderSystem.reset();
+    g_pActiveScene.reset();
     g_pImGuiSystem.reset();
     g_pVFS.reset();
 }
@@ -99,6 +106,16 @@ RenderSystem* GetRenderSystem()
 ResourceSystem* GetResourceSystem()
 {
     return g_pResourceSystem.get();
+}
+
+Scene* GetActiveScene()
+{
+    return g_pActiveScene.get();
+}
+
+void SetActiveScene(SceneSharedPtr pScene)
+{
+    g_pActiveScene = pScene;
 }
 
 VFS* GetVFS()

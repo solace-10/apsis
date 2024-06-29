@@ -32,7 +32,13 @@ target_include_directories(pandora PRIVATE
 
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
+target_compile_definitions(pandora PUBLIC
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+    GLM_FORCE_LEFT_HANDED
+)
+
 target_link_libraries(pandora PUBLIC 
+    glm::glm
     magic_enum::magic_enum 
     nlohmann_json::nlohmann_json
     xxHash::xxhash
