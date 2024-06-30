@@ -1,7 +1,6 @@
-@vertex fn vertexMain(@builtin(vertex_index) i : u32) -> @builtin(position) vec4f 
+@vertex fn vertexMain(@location(0) in_vertex_position: vec3f) -> @builtin(position) vec4f 
 {
-    const pos = array(vec2f(0, 1), vec2f(-1, -1), vec2f(1, -1));
-    return vec4f(pos[i], 0, 1);
+    return vec4f(in_vertex_position, 1);
 }
 
 @fragment fn fragmentMain() -> @location(0) vec4f 

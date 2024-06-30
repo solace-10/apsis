@@ -20,16 +20,27 @@ Game::~Game()
 
 }
 
-void Game::EntryPoint()
+void Game::Initialize()
 {
-    Pandora::Initialize();
-
     m_pCamera = std::make_shared<Pandora::Camera>();
 
-    Pandora::SceneSharedPtr pScene = std::make_shared<Pandora::Scene>();
-    pScene->AddEntity(m_pCamera);
-    pScene->SetCamera(m_pCamera);
-    Pandora::SetActiveScene(pScene);
+    m_pScene = std::make_shared<Pandora::Scene>();
+    m_pScene->AddEntity(m_pCamera);
+    m_pScene->SetCamera(m_pCamera);
+    Pandora::SetActiveScene(m_pScene);
+
+    m_pTestEntity = std::make_shared<TestEntity>();
+    m_pScene->AddEntity(m_pTestEntity);
+}
+
+void Game::Update(float delta)
+{
+
+}
+
+void Game::Shutdown()
+{
+
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

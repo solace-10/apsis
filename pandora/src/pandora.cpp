@@ -31,10 +31,20 @@ std::shared_ptr<Scene> g_pActiveScene;
 std::unique_ptr<VFS> g_pVFS;
 std::unique_ptr<Window> g_pWindow;
 
+GameInitializeCallback g_GameInitializeCallback;
+GameUpdateCallback g_GameUpdateCallback;
+GameShutdownCallback g_GameShutdownCallback;
+
+float g_PreviousFrameStart = 0.0f;
+
 void InitializeLogging();
 
-void Initialize()
+void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback)
 {
+    g_GameInitializeCallback = gameInitializeCallback;
+    g_GameUpdateCallback = gameUpdateCallback;
+    g_GameShutdownCallback = gameShutdownCallback;
+
     InitializeLogging();
 
     g_pVFS = std::make_unique<VFS>();
@@ -47,6 +57,8 @@ void Initialize()
             g_pResourceSystem = std::make_unique<ResourceSystem>();
             g_pWindow = std::make_unique<Window>();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();
+            g_GameInitializeCallback();
+            g_PreviousFrameStart = static_cast<float>(glfwGetTime());
 
 #if defined(TARGET_PLATFORM_NATIVE)
             while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
@@ -66,16 +78,22 @@ void Initialize()
 
 void Update()
 {
+    const float now = static_cast<float>(glfwGetTime());
+    const float delta = now - g_PreviousFrameStart;
+    g_PreviousFrameStart = now;
+
     GetImGuiSystem()->OnFrameStart();
     
     GetVFS()->Update();
     GetResourceSystem()->Update();
     GetImGuiSystem()->Update();
 
+    g_GameUpdateCallback(delta);
+
     Scene* pActiveScene = GetActiveScene();
     if (pActiveScene)
     {
-        pActiveScene->Update(0.0f);
+        pActiveScene->Update(delta);
     }
 
     GetRenderSystem()->Update();
@@ -83,6 +101,8 @@ void Update()
 
 void Shutdown()
 {
+    g_GameShutdownCallback();
+
     // Although all the systems are unique pointers and will be cleaned up,
     // this ensures they are shut down in a deterministic order.
     g_pResourceSystem.reset();

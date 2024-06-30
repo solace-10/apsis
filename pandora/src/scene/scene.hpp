@@ -30,7 +30,6 @@ private:
 
     std::vector<EntitySharedPtr> m_Entities;
     std::vector<EntitySharedPtr> m_EntitiesPendingAdd;
-    std::vector<EntitySharedPtr> m_EntitiesPendingRemove;
     CameraSharedPtr m_pCamera;
 };
 

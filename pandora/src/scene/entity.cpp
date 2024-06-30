@@ -1,10 +1,14 @@
+#include <cassert>
+
 #include "scene/entity.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 Entity::Entity()
-: m_Transform(1.0f)
+: m_pScene(nullptr)
+, m_Transform(1.0f)
+, m_MarkedForRemoval(false)
 {
 
 }
@@ -14,9 +18,16 @@ Entity::~Entity()
 
 }
 
-void Entity::Initialize()
+void Entity::OnAddedToScene(Scene* pScene)
 {
+    assert(!m_pScene);
+    m_pScene = pScene;
+}
 
+void Entity::OnRemovedFromScene()
+{
+    assert(m_pScene);
+    m_pScene = nullptr;
 }
 
 void Entity::Update(float delta)

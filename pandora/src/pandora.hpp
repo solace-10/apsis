@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "core/smart_ptr.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -12,7 +14,11 @@ DECLARE_SMART_PTR(Scene);
 DECLARE_SMART_PTR(VFS);
 DECLARE_SMART_PTR(Window);
 
-void Initialize();
+using GameInitializeCallback = std::function<void()>;
+using GameUpdateCallback = std::function<void(float)>;
+using GameShutdownCallback = std::function<void()>;
+
+void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback);
 void Update();
 void Shutdown();
 
