@@ -70,8 +70,6 @@ void RenderSystem::Update()
     GetDevice().Tick();
 #endif
 
-    UpdateGlobalUniforms();
-
     wgpu::SurfaceTexture surfaceTexture;
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
 
@@ -91,7 +89,8 @@ void RenderSystem::Update()
 
     wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
     wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
-
+    UpdateGlobalUniforms(renderPass);
+    
     Scene* pActiveScene = GetActiveScene();
     if (pActiveScene)
     {
@@ -183,22 +182,56 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
 
 void RenderSystem::CreateGlobalUniforms()
 {
+    static_assert(sizeof(GlobalUniforms) % 16 == 0);
+
+    using namespace wgpu;
+
     memset(&m_GlobalUniforms, 0, sizeof(GlobalUniforms));
     m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.time = 0.0f;
 
-    wgpu::BufferDescriptor bufferDescriptor{
+    BufferDescriptor bufferDescriptor{
         .label = "Global uniforms buffer",
-        .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
+        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
         .size = sizeof(GlobalUniforms)
     };
 
     m_GlobalUniformsBuffer = GetDevice().CreateBuffer(&bufferDescriptor);
+
+    BindGroupLayoutEntry bindGroupLayoutEntry{
+        .binding = 0,
+        .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
+        .buffer {
+            .type = wgpu::BufferBindingType::Uniform,
+            .minBindingSize = sizeof(GlobalUniforms)
+        }
+    };
+
+    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+        .entryCount = 1,
+        .entries = &bindGroupLayoutEntry
+    };
+    m_GlobalUniformsBindGroupLayout = GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+
+    BindGroupEntry bindGroupEntry{
+        .binding = 0,
+        .buffer = m_GlobalUniformsBuffer,
+        .offset = 0,
+        .size = sizeof(GlobalUniforms)
+    };
+
+    BindGroupDescriptor bindGroupDescriptor{
+        .layout = m_GlobalUniformsBindGroupLayout,
+        .entryCount = bindGroupLayoutDescriptor.entryCount,
+        .entries = &bindGroupEntry
+    };
+
+    m_GlobalUniformsBindGroup = GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
-void RenderSystem::UpdateGlobalUniforms()
+void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 {
     m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
@@ -206,6 +239,12 @@ void RenderSystem::UpdateGlobalUniforms()
     m_GlobalUniforms.time = static_cast<float>(glfwGetTime());
 
     GetDevice().GetQueue().WriteBuffer(m_GlobalUniformsBuffer, 0, &m_GlobalUniforms, sizeof(GlobalUniforms));
+    renderPass.SetBindGroup(0, m_GlobalUniformsBindGroup);
+}
+
+wgpu::BindGroupLayout& RenderSystem::GetGlobalUniformsLayout()
+{
+    return m_GlobalUniformsBindGroupLayout;
 }
 
 } // namespace WingsOfSteel::Pandora

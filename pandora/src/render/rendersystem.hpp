@@ -23,11 +23,13 @@ public:
     wgpu::Adapter GetAdapter() const;
     wgpu::Device GetDevice() const;
 
+    wgpu::BindGroupLayout& GetGlobalUniformsLayout(); 
+
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
 
     void CreateGlobalUniforms();
-    void UpdateGlobalUniforms();
+    void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass);
 
     struct GlobalUniforms
     {
@@ -40,6 +42,8 @@ private:
     GlobalUniforms m_GlobalUniforms;
 
     wgpu::Buffer m_GlobalUniformsBuffer;
+    wgpu::BindGroup m_GlobalUniformsBindGroup;
+    wgpu::BindGroupLayout m_GlobalUniformsBindGroupLayout;
 };
 
 } // namespace WingsOfSteel::Pandora

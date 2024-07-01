@@ -89,13 +89,21 @@ void TestEntity::CreateRenderPipeline()
         .attributes = &posititionAttribute
     };
 
+    wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
+        .bindGroupLayoutCount = 1,
+        .bindGroupLayouts = &Pandora::GetRenderSystem()->GetGlobalUniformsLayout()
+    };
+    wgpu::PipelineLayout pipelineLayout = Pandora::GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
+
     wgpu::RenderPipelineDescriptor descriptor{
+        .layout = pipelineLayout,
         .vertex = {
             .module = m_pShader->GetShaderModule(),
             .bufferCount = 1,
             .buffers = &vertexBufferLayout
         },
-        .fragment = &fragmentState};
+        .fragment = &fragmentState
+    };
     m_RenderPipeline = Pandora::GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
