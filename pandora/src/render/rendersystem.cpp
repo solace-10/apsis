@@ -65,7 +65,48 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
 
 void RenderSystem::Update()
 {
-    RenderDefaultPipeline();
+#if defined(TARGET_PLATFORM_NATIVE)
+    // Tick needs to be called in Dawn to display validation errors
+    GetDevice().Tick();
+#endif
+
+    UpdateGlobalUniforms();
+
+    wgpu::SurfaceTexture surfaceTexture;
+    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
+
+    wgpu::RenderPassColorAttachment attachment{
+        .view = surfaceTexture.texture.CreateView(),
+        .loadOp = wgpu::LoadOp::Clear,
+        .storeOp = wgpu::StoreOp::Store,
+        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
+    };
+
+    wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
+                                        .colorAttachments = &attachment};
+
+    wgpu::CommandEncoderDescriptor commandEncoderDescriptor{
+        .label = "Pandora default command encoder"
+    };
+
+    wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
+    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
+
+    Scene* pActiveScene = GetActiveScene();
+    if (pActiveScene)
+    {
+        pActiveScene->Render(renderPass);
+    }
+
+    GetImGuiSystem()->Render(renderPass);
+
+    renderPass.End();
+
+    wgpu::CommandBufferDescriptor commandBufferDescriptor{
+        .label = "Pandora default command buffer"
+    };
+    wgpu::CommandBuffer commands = encoder.Finish(&commandBufferDescriptor);
+    GetDevice().GetQueue().Submit(1, &commands);
 }
 
 wgpu::Instance RenderSystem::GetInstance() const
@@ -138,95 +179,6 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
             );
         },
         reinterpret_cast<void*>(callback));
-}
-
-void RenderSystem::CreateDefaultPipeline()
-{
-    static const char shaderCode[] = R"(
-        @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
-        @builtin(position) vec4f {
-            const pos = array(vec2f(0, 1), vec2f(-1, -1), vec2f(1, -1));
-            return vec4f(pos[i], 0, 1);
-        }
-        @fragment fn fragmentMain() -> @location(0) vec4f {
-            return vec4f(1, 0, 0, 1);
-        }
-    )";
-
-    wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-    wgslDesc.code = shaderCode;
-
-    wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
-        .nextInChain = &wgslDesc
-    };
-    wgpu::ShaderModule shaderModule = GetDevice().CreateShaderModule(&shaderModuleDescriptor);
-
-    wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
-    };
-
-    wgpu::FragmentState fragmentState{.module = shaderModule,
-                                    .targetCount = 1,
-                                    .targets = &colorTargetState};
-
-    wgpu::RenderPipelineDescriptor descriptor{
-        .vertex = {.module = shaderModule},
-        .fragment = &fragmentState};
-    m_DefaultPipeline = GetDevice().CreateRenderPipeline(&descriptor);
-}
-
-void RenderSystem::RenderDefaultPipeline()
-{
-#if defined(TARGET_PLATFORM_NATIVE)
-    // Tick needs to be called in Dawn to display validation errors
-    GetDevice().Tick();
-#endif
-
-    if (!m_DefaultPipeline)
-    {
-        CreateDefaultPipeline();
-    }
-
-    UpdateGlobalUniforms();
-
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
-    wgpu::RenderPassColorAttachment attachment{
-        .view = surfaceTexture.texture.CreateView(),
-        .loadOp = wgpu::LoadOp::Clear,
-        .storeOp = wgpu::StoreOp::Store,
-        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
-    };
-
-    wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
-                                        .colorAttachments = &attachment};
-
-    wgpu::CommandEncoderDescriptor commandEncoderDescriptor{
-        .label = "Pandora default command encoder"
-    };
-
-    wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
-    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderpass);
-
-    // pass.SetPipeline(m_DefaultPipeline);
-    // pass.Draw(3);
-
-    Scene* pActiveScene = GetActiveScene();
-    if (pActiveScene)
-    {
-        pActiveScene->Render();
-    }
-
-    GetImGuiSystem()->Render(pass);
-
-    pass.End();
-
-    wgpu::CommandBufferDescriptor commandBufferDescriptor{
-        .label = "Pandora default command buffer"
-    };
-    wgpu::CommandBuffer commands = encoder.Finish(&commandBufferDescriptor);
-    GetDevice().GetQueue().Submit(1, &commands);
 }
 
 void RenderSystem::CreateGlobalUniforms()

@@ -35,7 +35,7 @@ void Entity::Update(float delta)
 
 }
 
-void Entity::Render()
+void Entity::Render(wgpu::RenderPassEncoder renderPass)
 {
 
 }

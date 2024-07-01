@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <webgpu/webgpu_cpp.h>
+
 #include "core/smart_ptr.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -18,7 +20,7 @@ public:
     ~Scene();
 
     void Update(float delta);
-    void Render();
+    void Render(wgpu::RenderPassEncoder renderPass);
 
     void AddEntity(EntitySharedPtr pEntity);
     void RemoveEntity(EntitySharedPtr pEntity);

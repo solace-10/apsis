@@ -28,11 +28,11 @@ void Scene::Update(float delta)
     ProcessEntitiesToRemove();
 }
 
-void Scene::Render()
+void Scene::Render(wgpu::RenderPassEncoder renderPass)
 {
     for (auto& pEntity : m_Entities)
     {
-        pEntity->Render();
+        pEntity->Render(renderPass);
     }
 }
 

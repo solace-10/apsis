@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/mat4x4.hpp>
+#include <webgpu/webgpu_cpp.h>
 
 #include "core/smart_ptr.hpp"
 
@@ -19,7 +20,7 @@ public:
     virtual void OnAddedToScene(Scene* pScene);
     virtual void OnRemovedFromScene();
     virtual void Update(float delta);
-    virtual void Render();
+    virtual void Render(wgpu::RenderPassEncoder renderPass);
 
     void SetTransform(const glm::mat4x4& transform);
     const glm::mat4x4& GetTransform() const;

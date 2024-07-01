@@ -60,20 +60,6 @@ void ImGuiSystem::OnFrameStart()
 void ImGuiSystem::Update()
 {
     ImGui::ShowDemoWindow();
-
-    ImGui::SetNextWindowSize(ImVec2(800, 600));
-    ImGui::Begin("Test texture");
-    
-    if (g_pTestTexture)
-    {
-        ResourceTexture2D* pTexture = reinterpret_cast<ResourceTexture2D*>(g_pTestTexture.get());
-        ImGui::Image(
-            (void*)pTexture->GetTextureView().Get(),
-            ImVec2(800, 600)
-        );
-    }
-
-    ImGui::End();
 }
     
 void ImGuiSystem::Render(wgpu::RenderPassEncoder& pass)

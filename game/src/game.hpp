@@ -5,7 +5,7 @@
 #include "scene/entity.hpp"
 #include "scene/scene.hpp"
 
-#include "testentity.hpp"
+#include "test_entity.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {

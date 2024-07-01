@@ -25,8 +25,6 @@ public:
 
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
-    void CreateDefaultPipeline();
-    void RenderDefaultPipeline();
 
     void CreateGlobalUniforms();
     void UpdateGlobalUniforms();
@@ -41,7 +39,6 @@ private:
     };
     GlobalUniforms m_GlobalUniforms;
 
-    wgpu::RenderPipeline m_DefaultPipeline;
     wgpu::Buffer m_GlobalUniformsBuffer;
 };
 
