@@ -1,3 +1,13 @@
+struct VertexInput
+{
+    @location(0) position: vec3f
+};
+
+struct VertexOutput 
+{
+    @builtin(position) position: vec4f
+};
+
 struct GlobalUniforms
 {
     projectionMatrix : mat4x4<f32>,
@@ -8,9 +18,11 @@ struct GlobalUniforms
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 
-@vertex fn vertexMain(@location(0) in_vertex_position: vec3f) -> @builtin(position) vec4f 
+@vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
-    return vec4f(in_vertex_position, 1);
+    var out: VertexOutput;
+    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * uGlobalUniforms.modelMatrix * vec4f(in.position, 1.0);
+    return out;
 }
 
 @fragment fn fragmentMain() -> @location(0) vec4f 

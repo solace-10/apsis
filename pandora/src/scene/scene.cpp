@@ -51,6 +51,11 @@ void Scene::SetCamera(CameraSharedPtr pCamera)
     m_pCamera = pCamera;
 }
 
+Camera* Scene::GetCamera() const
+{
+    return m_pCamera.get();
+}
+
 void Scene::ProcessEntitiesToAdd()
 {
     for (auto& pEntity : m_EntitiesPendingAdd)

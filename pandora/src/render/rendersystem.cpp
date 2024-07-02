@@ -2,10 +2,12 @@
 
 #include <cassert>
 #include <magic_enum.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "core/log.hpp"
 #include "imgui/imguisystem.hpp"
 #include "render/window.hpp"
+#include "scene/camera.hpp"
 #include "scene/scene.hpp"
 #include "pandora.hpp"
 
@@ -233,9 +235,23 @@ void RenderSystem::CreateGlobalUniforms()
 
 void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 {
+    const float fov = glm::radians(45.0f);
+    const float aspectRatio = static_cast<float>(GetWindow()->GetWidth()) / static_cast<float>(GetWindow()->GetHeight());
+    const float nearPlane = 1.0f;
+    const float farPlane = 200.0f;
+    m_GlobalUniforms.projectionMatrix = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+
     m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
-    m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
-    m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+
+    if (GetActiveScene() && GetActiveScene()->GetCamera())
+    {
+        m_GlobalUniforms.viewMatrix = GetActiveScene()->GetCamera()->GetTransform();
+    }
+    else
+    {
+        m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+    }
+
     m_GlobalUniforms.time = static_cast<float>(glfwGetTime());
 
     GetDevice().GetQueue().WriteBuffer(m_GlobalUniformsBuffer, 0, &m_GlobalUniforms, sizeof(GlobalUniforms));

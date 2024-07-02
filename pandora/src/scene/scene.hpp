@@ -25,6 +25,7 @@ public:
     void AddEntity(EntitySharedPtr pEntity);
     void RemoveEntity(EntitySharedPtr pEntity);
     void SetCamera(CameraSharedPtr pCamera);
+    Camera* GetCamera() const;
 
 private:
     void ProcessEntitiesToAdd();

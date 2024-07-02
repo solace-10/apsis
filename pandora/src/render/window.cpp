@@ -98,4 +98,14 @@ void Window::ConfigureSurface()
     m_Surface.Configure(&config);
 }
 
+uint32_t Window::GetWidth() const
+{
+    return m_Width;
+}
+
+uint32_t Window::GetHeight() const
+{
+    return m_Height;
+}
+
 } // namespace WingsOfSteel::Pandora
