@@ -8,6 +8,7 @@ namespace WingsOfSteel::Pandora
 {
 
 DECLARE_SMART_PTR(ImGuiSystem);
+DECLARE_SMART_PTR(InputSystem);
 DECLARE_SMART_PTR(RenderSystem);
 DECLARE_SMART_PTR(ResourceSystem);
 DECLARE_SMART_PTR(Scene);
@@ -23,6 +24,7 @@ void Update();
 void Shutdown();
 
 ImGuiSystem* GetImGuiSystem();
+InputSystem* GetInputSystem();
 RenderSystem* GetRenderSystem();
 ResourceSystem* GetResourceSystem();
 Scene* GetActiveScene();

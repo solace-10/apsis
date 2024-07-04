@@ -13,6 +13,7 @@
 
 #include "core/log.hpp"
 #include "imgui/imguisystem.hpp"
+#include "input/input_system.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
@@ -25,6 +26,7 @@ namespace WingsOfSteel::Pandora
 {
 
 std::unique_ptr<ImGuiSystem> g_pImGuiSystem;
+std::unique_ptr<InputSystem> g_pInputSystem;
 std::unique_ptr<RenderSystem> g_pRenderSystem;
 std::unique_ptr<ResourceSystem> g_pResourceSystem;
 std::shared_ptr<Scene> g_pActiveScene;
@@ -56,6 +58,8 @@ void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallbac
         {
             g_pResourceSystem = std::make_unique<ResourceSystem>();
             g_pWindow = std::make_unique<Window>();
+            g_pInputSystem = std::make_unique<InputSystem>();
+            g_pInputSystem->Initialize();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();
             g_GameInitializeCallback();
             g_PreviousFrameStart = static_cast<float>(glfwGetTime());
@@ -106,9 +110,10 @@ void Shutdown()
     // Although all the systems are unique pointers and will be cleaned up,
     // this ensures they are shut down in a deterministic order.
     g_pResourceSystem.reset();
+    g_pInputSystem.reset();
     g_pWindow.reset();
-    g_pRenderSystem.reset();
     g_pActiveScene.reset();
+    g_pRenderSystem.reset();
     g_pImGuiSystem.reset();
     g_pVFS.reset();
 }
@@ -116,6 +121,11 @@ void Shutdown()
 ImGuiSystem* GetImGuiSystem()
 {
     return g_pImGuiSystem.get();
+}
+
+InputSystem* GetInputSystem()
+{
+    return g_pInputSystem.get();
 }
 
 RenderSystem* GetRenderSystem()
