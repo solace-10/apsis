@@ -2,6 +2,7 @@
 
 #include <array>
 #include <functional>
+#include <optional>
 
 #include <glm/vec2.hpp>
 
@@ -27,10 +28,11 @@ enum class MouseAction
     Released
 };
 
-typedef unsigned int InputCallbackToken;
-typedef std::function<void()> InputCallbackKeyboardFn;
-typedef std::function<void()> InputCallbackMouseButtonFn;
-typedef std::function<void(float x, float y)> InputCallbackMouseWheelFn;
+using InputCallbackToken = unsigned int;
+using InputCallbackKeyboardFn = std::function<void()>;
+using InputCallbackMouseButtonFn = std::function<void()>;
+using InputCallbackMouseWheelFn = std::function<void(const glm::vec2&)>;
+using InputCallbackMousePositionFn = std::function<void(const glm::vec2&, const glm::vec2&)>;
 
 class InputSystem
 {
@@ -39,15 +41,15 @@ public:
     ~InputSystem();
     void Initialize();
 
-    const glm::vec2& GetMousePosition() const;
-
     InputCallbackToken AddKeyboardCallback(InputCallbackKeyboardFn callback, int key, KeyAction action);
     InputCallbackToken AddMouseButtonCallback(InputCallbackMouseButtonFn callback, MouseButton button, MouseAction action);
     InputCallbackToken AddMouseWheelCallback(InputCallbackMouseWheelFn callback);
+    InputCallbackToken AddMousePositionCallback(InputCallbackMousePositionFn callback);
 
     void RemoveKeyboardCallback(InputCallbackToken token);
     void RemoveMouseButtonCallback(InputCallbackToken token);
     void RemoveMouseWheelCallback(InputCallbackToken token);
+    void RemoveMousePositionCallback(InputCallbackToken token);
 
     static InputCallbackToken sInvalidInputCallbackToken;
 
@@ -74,22 +76,33 @@ private:
         InputCallbackMouseWheelFn callback;
     };
 
-    typedef std::list<InputCallbackKeyboardInfo> CallbackKeyboardList;
-    typedef std::list<InputCallbackMouseInfo> CallbackMouseList;
-    typedef std::list<InputCallbackMouseWheelInfo> CallbackMouseWheelList;
+    struct InputCallbackMousePositionInfo
+    {
+        InputCallbackToken token;
+        InputCallbackMousePositionFn callback;
+    };
+
+    using CallbackKeyboardList = std::list<InputCallbackKeyboardInfo>;
+    using CallbackMouseList = std::list<InputCallbackMouseInfo>;
+    using CallbackMouseWheelList = std::list<InputCallbackMouseWheelInfo>;
+    using CallbackMousePositionList = std::list<InputCallbackMousePositionInfo>;
 
     InputCallbackToken GenerateToken();
 
     void HandleKeyboardEvent(int key, int scancode, int action, int mods);
-    void HandleMouseButtonEvent(int button, int scancode, int action, int mods);
+    void HandleMouseButtonEvent(int button, int action, int mods);
+    void HandleMousePositionEvent(double xPos, double yPos);
     void HandleMouseWheelEvent(double xOffset, double yOffset);
+    void HandleCursorEnterEvent(bool entered);
 
     CallbackKeyboardList m_KeyboardCallbacks;
     CallbackMouseList m_MouseCallbacks;
     CallbackMouseWheelList m_MouseWheelCallbacks;
+    CallbackMousePositionList m_MousePositionCallbacks;
 
-    glm::vec2 m_MousePosition;
     static InputCallbackToken m_sToken;
+
+    std::optional<glm::vec2> m_PreviousMousePosition;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -99,11 +112,6 @@ private:
 inline InputCallbackToken InputSystem::GenerateToken()
 {
     return m_sToken++;
-}
-
-inline const glm::vec2& InputSystem::GetMousePosition() const
-{
-    return m_MousePosition;
 }
 
 } // namespace WingsOfSteel::Pandora

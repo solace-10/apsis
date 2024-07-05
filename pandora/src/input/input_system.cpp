@@ -1,5 +1,7 @@
 #include <GLFW/glfw3.h>
+#include <imgui.h>
 
+#include "core/log.hpp"
 #include "input/input_system.hpp"
 #include "render/window.hpp"
 #include "pandora.hpp"
@@ -18,8 +20,10 @@ InputSystem::~InputSystem()
 {
     GLFWwindow* pWindow = GetWindow()->GetRawWindow();
     glfwSetKeyCallback(pWindow, nullptr);
+    glfwSetMouseButtonCallback(pWindow, nullptr);
     glfwSetCursorPosCallback(pWindow, nullptr);
     glfwSetScrollCallback(pWindow, nullptr);
+    glfwSetCursorEnterCallback(pWindow, nullptr);
 }
 
 void InputSystem::Initialize()
@@ -30,28 +34,45 @@ void InputSystem::Initialize()
         GetInputSystem()->HandleKeyboardEvent(key, scancode, action, mods);
     });
 
+    glfwSetMouseButtonCallback(pWindow, [](GLFWwindow* pWindow, int button, int action, int mods){
+        GetInputSystem()->HandleMouseButtonEvent(button, action, mods);
+    });
+
     glfwSetCursorPosCallback(pWindow, [](GLFWwindow* pWindow, double xPos, double yPos){
-        GetInputSystem()->m_MousePosition = glm::vec2(
-            static_cast<float>(xPos),
-            static_cast<float>(yPos)
-        );
+        GetInputSystem()->HandleMousePositionEvent(xPos, yPos);
     });
 
     glfwSetScrollCallback(pWindow, [](GLFWwindow* pWindow, double xOffset, double yOffset){
         GetInputSystem()->HandleMouseWheelEvent(xOffset, yOffset);
     });
+
+    glfwSetCursorEnterCallback(pWindow, [](GLFWwindow* pWindow, int entered){
+        GetInputSystem()->HandleCursorEnterEvent(entered == GLFW_TRUE);
+    });
 }
+
 
 void InputSystem::HandleMouseWheelEvent(double xOffset, double yOffset)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+    {
+        return;
+    }
+
+    const glm::vec2 offset(static_cast<float>(xOffset), static_cast<float>(yOffset));
     for ( auto& callbackInfo : m_MouseWheelCallbacks )
     {
-        callbackInfo.callback(static_cast<float>(xOffset), static_cast<float>(yOffset));
+        callbackInfo.callback(offset);
     }
 }
 
 void InputSystem::HandleKeyboardEvent(int key, int scancode, int action, int mods)
 {
+    if (ImGui::GetIO().WantCaptureKeyboard)
+    {
+        return;
+    }
+
     for (auto& callbackInfo : m_KeyboardCallbacks)
     {
         if (callbackInfo.key == key)
@@ -66,8 +87,13 @@ void InputSystem::HandleKeyboardEvent(int key, int scancode, int action, int mod
     }
 }
 
-void InputSystem::HandleMouseButtonEvent(int button, int scancode, int action, int mods)
+void InputSystem::HandleMouseButtonEvent(int button, int action, int mods)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+    {
+        return;
+    }
+
     for (auto& callbackInfo : m_MouseCallbacks)
     {
         if (static_cast<int>(callbackInfo.button) == button)
@@ -78,6 +104,30 @@ void InputSystem::HandleMouseButtonEvent(int button, int scancode, int action, i
                 callbackInfo.callback();
             }
         }
+    }
+}
+
+void InputSystem::HandleMousePositionEvent(double xPos, double yPos)
+{
+    const glm::vec2 mousePosition(static_cast<float>(xPos), static_cast<float>(yPos));
+    glm::vec2 mouseDelta(0.0f);
+    if (m_PreviousMousePosition)
+    {
+        mouseDelta = mousePosition - m_PreviousMousePosition.value();
+    }
+    m_PreviousMousePosition = mousePosition;
+
+    for (auto& callbackInfo : m_MousePositionCallbacks)
+    {
+        callbackInfo.callback(mousePosition, mouseDelta);
+    }
+}
+
+void InputSystem::HandleCursorEnterEvent(bool entered)
+{
+    if (entered)
+    {
+        m_PreviousMousePosition.reset();
     }
 }
 
@@ -112,6 +162,15 @@ InputCallbackToken InputSystem::AddMouseWheelCallback(InputCallbackMouseWheelFn 
     return info.token;
 }
 
+InputCallbackToken InputSystem::AddMousePositionCallback(InputCallbackMousePositionFn callback)
+{
+    InputCallbackMousePositionInfo info;
+    info.callback = callback;
+    info.token = GenerateToken();
+    m_MousePositionCallbacks.push_back(info);
+    return info.token;
+}
+
 void InputSystem::RemoveKeyboardCallback( InputCallbackToken token )
 {
     m_KeyboardCallbacks.remove_if( [ token ]( const InputCallbackKeyboardInfo& callbackInfo ) { return token == callbackInfo.token; } );
@@ -125,6 +184,11 @@ void InputSystem::RemoveMouseButtonCallback( InputCallbackToken token )
 void InputSystem::RemoveMouseWheelCallback( InputCallbackToken token )
 {
     m_MouseWheelCallbacks.remove_if( [ token ]( const InputCallbackMouseWheelInfo& callbackInfo ) { return token == callbackInfo.token; } );
+}
+
+void InputSystem::RemoveMousePositionCallback( InputCallbackToken token )
+{
+    m_MousePositionCallbacks.remove_if( [ token ]( const InputCallbackMousePositionInfo& callbackInfo ) { return token == callbackInfo.token; } );
 }
 
 } // namespace WingsOfSteel::Pandora

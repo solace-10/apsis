@@ -22,7 +22,7 @@ Game::~Game()
 
 void Game::Initialize()
 {
-    m_pCamera = std::make_shared<Pandora::Camera>();
+    m_pCamera = std::make_shared<OrbitCamera>();
     m_pCamera->LookAt(
         glm::vec3(0.0f, 0.0f, 10.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -40,14 +40,7 @@ void Game::Initialize()
 
 void Game::Update(float delta)
 {
-    static float accum = 0.0f;
-    accum += delta;
 
-    m_pCamera->LookAt(
-        glm::vec3(cosf(accum) * 10.0f, 0.0f, 10.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
 }
 
 void Game::Shutdown()

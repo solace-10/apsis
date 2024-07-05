@@ -1,10 +1,10 @@
 #pragma once
 
 #include "core/smart_ptr.hpp"
-#include "scene/camera.hpp"
 #include "scene/entity.hpp"
 #include "scene/scene.hpp"
 
+#include "orbit_camera.hpp"
 #include "test_entity.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -21,7 +21,7 @@ public:
     void Shutdown();
 
 private:
-    Pandora::CameraSharedPtr m_pCamera;
+    OrbitCameraSharedPtr m_pCamera;
     Pandora::SceneSharedPtr m_pScene;
 
     TestEntitySharedPtr m_pTestEntity;
