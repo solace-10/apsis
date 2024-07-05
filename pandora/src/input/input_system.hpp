@@ -2,6 +2,7 @@
 
 #include <array>
 #include <functional>
+#include <list>
 #include <optional>
 
 #include <glm/vec2.hpp>
