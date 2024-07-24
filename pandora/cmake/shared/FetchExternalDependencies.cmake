@@ -101,3 +101,12 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(stb)
+
+FetchContent_Declare(
+    tinygltf
+    URL https://raw.githubusercontent.com/syoyo/tinygltf/release/tiny_gltf.h
+    DOWNLOAD_NO_EXTRACT true
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/tinygltf
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(tinygltf)

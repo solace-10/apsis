@@ -2,6 +2,7 @@
 
 #include <render/rendersystem.hpp>
 #include <render/window.hpp>
+#include <resources/resource_model.hpp>
 #include <resources/resource_shader.hpp>
 #include <resources/resource_system.hpp>
 #include <pandora.hpp>
@@ -45,6 +46,26 @@ void TestEntity::OnAddedToScene(Pandora::Scene* pScene)
         this->m_pShader = std::dynamic_pointer_cast<Pandora::ResourceShader>(pResource);
         this->CreateRenderPipeline();
     });
+
+    // Pandora::GetResourceSystem()->RequestResource("/test/box/Box.glb", [this](Pandora::ResourceSharedPtr pResource) {
+    //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    // });
+
+    // Pandora::GetResourceSystem()->RequestResource("/test/triangle_without_indices/TriangleWithoutIndices.gltf", [this](Pandora::ResourceSharedPtr pResource) {
+    //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    // });
+
+    // Pandora::GetResourceSystem()->RequestResource("/test/triangle/Triangle.gltf", [this](Pandora::ResourceSharedPtr pResource) {
+    //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    // });
+
+    Pandora::GetResourceSystem()->RequestResource("/test/cube/cube.glb", [this](Pandora::ResourceSharedPtr pResource) {
+        this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    });
+
+    // Pandora::GetResourceSystem()->RequestResource("/test/plane/plane_normals.glb", [this](Pandora::ResourceSharedPtr pResource) {
+    //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    // });
 }
 
 void TestEntity::Update(float delta) 
@@ -56,11 +77,16 @@ void TestEntity::Render(wgpu::RenderPassEncoder renderPass)
 {
     Pandora::Entity::Render(renderPass);
 
-    if (m_RenderPipeline)
+    // if (m_RenderPipeline)
+    // {
+    //     renderPass.SetPipeline(m_RenderPipeline);
+    //     renderPass.SetVertexBuffer(0, m_VertexBuffer, 0, m_VertexBuffer.GetSize());
+    //     renderPass.Draw(3);
+    // }
+
+    if (m_pModel)
     {
-        renderPass.SetPipeline(m_RenderPipeline);
-        renderPass.SetVertexBuffer(0, m_VertexBuffer, 0, m_VertexBuffer.GetSize());
-        renderPass.Draw(3);
+        m_pModel->Render(renderPass);
     }
 }
 

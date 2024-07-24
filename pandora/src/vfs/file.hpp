@@ -18,10 +18,12 @@ public:
     File(const std::string& path, const FileData& data);
     ~File();
 
-    const std::string& GetPath() const;
     const FileData& GetData() const;
+    const std::string& GetExtension() const;
+    const std::string& GetPath() const;
 
 private:
+    std::string m_Extension;
     std::string m_Path;
     FileData m_Data;
 };

@@ -22,6 +22,8 @@ public:
 private:
     void CreateRenderPipeline();
 
+    Pandora::ResourceModelSharedPtr m_pModel;
+
     wgpu::Buffer m_VertexBuffer;
     wgpu::RenderPipeline m_RenderPipeline;
     Pandora::ResourceShaderSharedPtr m_pShader;

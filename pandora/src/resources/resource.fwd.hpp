@@ -12,6 +12,7 @@ namespace WingsOfSteel::Pandora
     using x ## WeakPtr = std::weak_ptr<x>
 
 DECLARE_RESOURCE_TYPE(Resource);
+DECLARE_RESOURCE_TYPE(ResourceModel);
 DECLARE_RESOURCE_TYPE(ResourceShader);
 DECLARE_RESOURCE_TYPE(ResourceTexture2D);
 
@@ -31,7 +32,8 @@ enum class ResourceType
 {
     Invalid = 0,
     Shader,
-    Texture2D
+    Texture2D,
+    Model
 };
 
 } // namespace WingsOfSteel::Pandora
