@@ -15,18 +15,21 @@ namespace WingsOfSteel::Pandora::Private
 
 DebugRenderImpl::DebugRenderImpl()
 {
+
 }
     
 DebugRenderImpl::~DebugRenderImpl()
 {
-
+    dd::shutdown();
 }
 
 void DebugRenderImpl::Initialize()
 {
+    dd::initialize(this);
+
     Pandora::GetResourceSystem()->RequestResource("/shaders/debug_render_untextured.wgsl", [this](Pandora::ResourceSharedPtr pResource) {
         m_pUntexturedShader = std::dynamic_pointer_cast<Pandora::ResourceShader>(pResource);
-        CreateUntexturedRenderPipeline();
+        CreateLineRenderPipeline();
     });
 
     wgpu::BufferDescriptor bufferDescriptor{
@@ -41,22 +44,20 @@ void DebugRenderImpl::Initialize()
 
 void DebugRenderImpl::Render(wgpu::RenderPassEncoder& renderPass)
 {
+    m_LineData.clear();
+
+    // flush() will populate the vertex data.
     dd::flush();
 
-    if (!m_UntexturedRenderPipeline)
+    if (m_LineRenderPipeline && !m_LineData.empty())
     {
-        return;
-    }
-
-    if (!m_LineData.empty())
-    {
-        renderPass.SetPipeline(m_UntexturedRenderPipeline);
+        renderPass.SetPipeline(m_LineRenderPipeline);
         renderPass.SetVertexBuffer(0, m_LineVertexBuffer);
         renderPass.Draw(m_LineData.size());
     }
 }
 
-void DebugRenderImpl::CreateUntexturedRenderPipeline()
+void DebugRenderImpl::CreateLineRenderPipeline()
 {
     wgpu::ColorTargetState colorTargetState{
         .format = GetWindow()->GetTextureFormat()
@@ -107,16 +108,8 @@ void DebugRenderImpl::CreateUntexturedRenderPipeline()
         },
         .fragment = &fragmentState
     };
-    m_UntexturedRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
+    m_LineRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
-
-// void DebugRenderImpl::beginDraw()
-// {
-// }
-    
-// void DebugRenderImpl::endDraw()
-// {
-// }
 
 // dd::GlyphTextureHandle DebugRenderImpl::createGlyphTexture(int width, int height, const void * pixels)
 // {

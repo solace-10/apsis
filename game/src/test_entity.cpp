@@ -89,11 +89,6 @@ void TestEntity::Render(wgpu::RenderPassEncoder renderPass)
     {
         m_pModel->Render(renderPass);
     }
-
-    auto pDebugRender = Pandora::GetRenderSystem()->GetDebugRender();
-    pDebugRender->Line(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    pDebugRender->Line(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    pDebugRender->Line(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void TestEntity::CreateRenderPipeline()

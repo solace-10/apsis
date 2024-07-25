@@ -4,20 +4,18 @@
 
 #include "imgui/imguisystem.hpp"
 
+#include "render/debug_render.hpp"
+#include "render/debug_render_demo.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "pandora.hpp"
 
-// Experimental, to remove
-#include "resources/resource_texture_2d.hpp"
-#include "resources/resource_system.hpp"
-
 namespace WingsOfSteel::Pandora
 {
 
-ResourceSharedPtr g_pTestTexture;
-
 ImGuiSystem::ImGuiSystem()
+: m_ShowDemoWindow(false)
+, m_DebugDrawDemo(false)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -37,10 +35,6 @@ ImGuiSystem::ImGuiSystem()
     init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(GetWindow()->GetTextureFormat());
     init_info.DepthStencilFormat = WGPUTextureFormat_Undefined;
     ImGui_ImplWGPU_Init(&init_info);
-
-    GetResourceSystem()->RequestResource("/test/rgb_colors.jpg", [](ResourceSharedPtr pResource) {
-        g_pTestTexture = pResource;
-    });
 }
 
 ImGuiSystem::~ImGuiSystem()
@@ -59,7 +53,31 @@ void ImGuiSystem::OnFrameStart()
 
 void ImGuiSystem::Update()
 {
-    ImGui::ShowDemoWindow();
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("Engine"))
+        {
+            if (ImGui::BeginMenu("Demos"))
+            {
+                ImGui::MenuItem("ImGui demo window", nullptr, &m_ShowDemoWindow);
+
+                if (ImGui::MenuItem("Debug draw demo", nullptr, &m_DebugDrawDemo))
+                {
+                    GetDebugRender()->GetDemo()->Show(m_DebugDrawDemo);
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    if (m_ShowDemoWindow)
+    {
+        ImGui::ShowDemoWindow(&m_ShowDemoWindow);
+    }
 }
     
 void ImGuiSystem::Render(wgpu::RenderPassEncoder& pass)

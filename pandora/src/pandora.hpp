@@ -7,6 +7,7 @@
 namespace WingsOfSteel::Pandora
 {
 
+DECLARE_SMART_PTR(DebugRender);
 DECLARE_SMART_PTR(ImGuiSystem);
 DECLARE_SMART_PTR(InputSystem);
 DECLARE_SMART_PTR(RenderSystem);
@@ -23,6 +24,7 @@ void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallbac
 void Update();
 void Shutdown();
 
+DebugRender* GetDebugRender();
 ImGuiSystem* GetImGuiSystem();
 InputSystem* GetInputSystem();
 RenderSystem* GetRenderSystem();

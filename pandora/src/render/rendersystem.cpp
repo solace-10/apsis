@@ -73,11 +73,6 @@ void RenderSystem::Update()
     GetDevice().Tick();
 #endif
 
-    if (!m_pDebugRender)
-    {
-        CreateDebugRender();
-    }
-
     wgpu::SurfaceTexture surfaceTexture;
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
 
@@ -131,11 +126,6 @@ wgpu::Adapter RenderSystem::GetAdapter() const
 wgpu::Device RenderSystem::GetDevice() const
 {
     return g_Device;
-}
-
-DebugRender* RenderSystem::GetDebugRender() const
-{
-    return m_pDebugRender.get();
 }
 
 void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
@@ -274,11 +264,6 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 wgpu::BindGroupLayout& RenderSystem::GetGlobalUniformsLayout()
 {
     return m_GlobalUniformsBindGroupLayout;
-}
-
-void RenderSystem::CreateDebugRender()
-{
-    m_pDebugRender = std::make_unique<DebugRender>();
 }
 
 } // namespace WingsOfSteel::Pandora

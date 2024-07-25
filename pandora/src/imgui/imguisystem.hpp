@@ -19,6 +19,8 @@ public:
     void Render(wgpu::RenderPassEncoder& pass);
 
 private:
+    bool m_ShowDemoWindow;
+    bool m_DebugDrawDemo;
 };
 
 } // namespace WingsOfSteel::Pandora

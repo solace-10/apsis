@@ -10,7 +10,7 @@ namespace WingsOfSteel::TheBrightestStar
 
 OrbitCamera::OrbitCamera()
 : m_Distance(10.0f)
-, m_OrbitAngle(glm::radians(90.0f))
+, m_OrbitAngle(glm::radians(-90.0f))
 , m_Pitch(0.0f)
 , m_MinimumPitch(glm::radians(0.0f))
 , m_MaximumPitch(glm::radians(80.0f))
@@ -37,7 +37,7 @@ void OrbitCamera::OnAddedToScene(Pandora::Scene* pScene)
         if (m_Orbiting)
         {
             const float sensitivity = 0.15f;
-            m_OrbitAngle += glm::radians(mouseDelta.x * sensitivity);
+            m_OrbitAngle -= glm::radians(mouseDelta.x * sensitivity);
             m_Pitch += glm::radians(mouseDelta.y * sensitivity);
 
             if (m_Pitch < m_MinimumPitch)
@@ -63,11 +63,7 @@ void OrbitCamera::OnRemovedFromScene()
 void OrbitCamera::Update(float delta) 
 {
     Pandora::Camera::Update(delta); 
-
-    if (m_Orbiting)
-    {
-        CalculateCameraTransform();
-    }
+    CalculateCameraTransform();
 }
 
 void OrbitCamera::CalculateCameraTransform()
@@ -78,7 +74,7 @@ void OrbitCamera::CalculateCameraTransform()
         glm::sin(m_OrbitAngle) * glm::cos(m_Pitch)
     );
 
-    //Pandora::Log::Info() << position.x << "," << position.y << "," << position.z << ", pitch " << glm::degrees(m_Pitch);
+    // Pandora::Log::Info() << position.x << "," << position.y << "," << position.z << ", pitch " << glm::degrees(m_Pitch);
 
     LookAt(position * m_Distance, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));  
 }

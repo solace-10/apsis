@@ -24,21 +24,18 @@ public:
     void Initialize();
     void Render(wgpu::RenderPassEncoder& renderPass);
 
-    // virtual void beginDraw() override;
-    // virtual void endDraw() override;
-
     // virtual dd::GlyphTextureHandle createGlyphTexture(int width, int height, const void * pixels) override;
     // virtual void destroyGlyphTexture(dd::GlyphTextureHandle glyphTex) override;
 
-    virtual void drawPointList(const dd::DrawVertex* points, int count, bool depthEnabled) override;
-    virtual void drawLineList(const dd::DrawVertex* lines, int count, bool depthEnabled) override;
+    void drawPointList(const dd::DrawVertex* points, int count, bool depthEnabled) override;
+    void drawLineList(const dd::DrawVertex* lines, int count, bool depthEnabled) override;
     // virtual void drawGlyphList(const dd::DrawVertex* glyphs, int count, dd::GlyphTextureHandle glyphTex) override;
 
 private:
-    void CreateUntexturedRenderPipeline();
+    void CreateLineRenderPipeline();
 
     wgpu::Buffer m_LineVertexBuffer;
-    wgpu::RenderPipeline m_UntexturedRenderPipeline;
+    wgpu::RenderPipeline m_LineRenderPipeline;
     ResourceShaderSharedPtr m_pUntexturedShader;
 
     struct LineData

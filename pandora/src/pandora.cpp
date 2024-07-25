@@ -14,6 +14,7 @@
 #include "core/log.hpp"
 #include "imgui/imguisystem.hpp"
 #include "input/input_system.hpp"
+#include "render/debug_render.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
@@ -25,6 +26,7 @@
 namespace WingsOfSteel::Pandora
 {
 
+std::unique_ptr<DebugRender> g_pDebugRender;
 std::unique_ptr<ImGuiSystem> g_pImGuiSystem;
 std::unique_ptr<InputSystem> g_pInputSystem;
 std::unique_ptr<RenderSystem> g_pRenderSystem;
@@ -61,6 +63,7 @@ void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallbac
             g_pInputSystem = std::make_unique<InputSystem>();
             g_pInputSystem->Initialize();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();
+            g_pDebugRender = std::make_unique<DebugRender>();
             g_GameInitializeCallback();
             g_PreviousFrameStart = static_cast<float>(glfwGetTime());
 
@@ -90,6 +93,7 @@ void Update()
     
     GetVFS()->Update();
     GetResourceSystem()->Update();
+    GetDebugRender()->Update(delta);
     GetImGuiSystem()->Update();
 
     g_GameUpdateCallback(delta);
@@ -116,6 +120,11 @@ void Shutdown()
     g_pRenderSystem.reset();
     g_pImGuiSystem.reset();
     g_pVFS.reset();
+}
+
+DebugRender* GetDebugRender()
+{
+    return g_pDebugRender.get();
 }
 
 ImGuiSystem* GetImGuiSystem()
