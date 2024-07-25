@@ -5,8 +5,12 @@
 #include <glm/mat4x4.hpp>
 #include <webgpu/webgpu_cpp.h>
 
+#include "core/smart_ptr.hpp"
+
 namespace WingsOfSteel::Pandora
 {
+
+DECLARE_SMART_PTR(DebugRender);
 
 using OnRenderSystemInitializedCallback = std::function<void()>;
 
@@ -22,6 +26,7 @@ public:
     wgpu::Instance GetInstance() const;
     wgpu::Adapter GetAdapter() const;
     wgpu::Device GetDevice() const;
+    DebugRender* GetDebugRender() const;
 
     wgpu::BindGroupLayout& GetGlobalUniformsLayout(); 
 
@@ -30,6 +35,7 @@ private:
 
     void CreateGlobalUniforms();
     void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass);
+    void CreateDebugRender();
 
     struct GlobalUniforms
     {
@@ -44,6 +50,8 @@ private:
     wgpu::Buffer m_GlobalUniformsBuffer;
     wgpu::BindGroup m_GlobalUniformsBindGroup;
     wgpu::BindGroupLayout m_GlobalUniformsBindGroupLayout;
+
+    DebugRenderUniquePtr m_pDebugRender;
 };
 
 } // namespace WingsOfSteel::Pandora

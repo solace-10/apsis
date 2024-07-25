@@ -27,6 +27,7 @@ target_include_directories(pandora PUBLIC
 )
 
 target_include_directories(pandora PRIVATE
+    ext/debug-draw/
     ext/stb/
     ext/tinygltf/
 )
@@ -34,6 +35,8 @@ target_include_directories(pandora PRIVATE
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)
 
 target_compile_definitions(pandora PUBLIC
+    DEBUG_DRAW_CXX11_SUPPORTED
+    DEBUG_DRAW_VEC3_TYPE_DEFINED
     GLM_FORCE_DEPTH_ZERO_TO_ONE
     GLM_FORCE_LEFT_HANDED
 )

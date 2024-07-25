@@ -48,6 +48,15 @@ if(TARGET_PLATFORM_NATIVE)
 endif()
 
 FetchContent_Declare(
+    debug-draw
+    GIT_REPOSITORY https://github.com/glampert/debug-draw.git
+    GIT_TAG dd78c2230adce80ab2e1e257e2e257cb25ea1312 # Head as of 24/07/2024
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/debug-draw
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(debug-draw)
+
+FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e # v1.0.1
