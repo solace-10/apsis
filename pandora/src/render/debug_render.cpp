@@ -1,3 +1,5 @@
+#include <glm/gtc/type_ptr.hpp>
+
 #include "render/private/debug_render_impl.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
@@ -35,12 +37,27 @@ void DebugRender::Render(wgpu::RenderPassEncoder& renderPass)
 
 void DebugRender::Point(const glm::vec3& pos, const Color& color, const float size, const int durationMillis)
 {
-    dd::point(pos, color.AsVec3(), size, durationMillis, false);
+    dd::point(pos, color.AsVec3(), size, durationMillis);
 }
 
 void DebugRender::Line(const glm::vec3& from, const glm::vec3& to, const Color& color, const int durationMillis)
 {
-    dd::line(from, to, color.AsVec3(), durationMillis, false);
+    dd::line(from, to, color.AsVec3(), durationMillis);
+}
+
+void DebugRender::ScreenText(const std::string& str, const glm::vec3& pos, const Color& color, float scaling, int durationMillis)
+{
+    dd::screenText(str.c_str(), pos, color.AsVec3(), scaling, durationMillis);
+}
+
+void DebugRender::ProjectedText(const std::string& str, const glm::vec3& pos, const Color& color, const glm::mat4x4& vpMatrix, int sx, int sy, int sw, int sh, float scaling, int durationMillis)
+{
+    dd::projectedText(str.c_str(), pos, color.AsVec3(), glm::value_ptr(vpMatrix), sx, sy, sw, sh, scaling, durationMillis);
+}
+
+void DebugRender::AxisTriad(const glm::mat4x4& transform, float size, float length, int durationMillis)
+{
+    dd::axisTriad(glm::value_ptr(transform), size, length, durationMillis);
 }
 
 void DebugRender::Arrow(const glm::vec3& from, const glm::vec3& to, const Color& color, float size, int durationMillis)
@@ -86,6 +103,11 @@ void DebugRender::Box(const glm::vec3& center, const Color& color, float width, 
 void DebugRender::Aabb(const glm::vec3& mins, const glm::vec3& maxs, const Color& color, int durationMillis)
 {
     dd::aabb(mins, maxs, color.AsVec3(), durationMillis);
+}
+
+void DebugRender::Frustum(const glm::mat4x4& invClipMatrix, const Color& color, int durationMillis)
+{
+    dd::frustum(glm::value_ptr(invClipMatrix), color.AsVec3(), durationMillis);
 }
 
 void DebugRender::VertexNormal(const glm::vec3& origin, const glm::vec3& normal, float length, int durationMillis)

@@ -238,20 +238,18 @@ void RenderSystem::CreateGlobalUniforms()
 
 void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 {
-    const float fov = glm::radians(45.0f);
-    const float aspectRatio = static_cast<float>(GetWindow()->GetWidth()) / static_cast<float>(GetWindow()->GetHeight());
-    const float nearPlane = 1.0f;
-    const float farPlane = 200.0f;
-    m_GlobalUniforms.projectionMatrix = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
-
+    // TODO: model matrix needs to be in a different set of uniforms, as it is entity specific.
     m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
 
-    if (GetActiveScene() && GetActiveScene()->GetCamera())
+    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    if (pCamera)
     {
-        m_GlobalUniforms.viewMatrix = GetActiveScene()->GetCamera()->GetTransform();
+        m_GlobalUniforms.projectionMatrix = pCamera->GetProjectionMatrix();
+        m_GlobalUniforms.viewMatrix = pCamera->GetViewMatrix();
     }
     else
     {
+        m_GlobalUniforms.projectionMatrix = glm::ortho(0.0f, static_cast<float>(GetWindow()->GetWidth()), 0.0f, static_cast<float>(GetWindow()->GetHeight()));
         m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
     }
 

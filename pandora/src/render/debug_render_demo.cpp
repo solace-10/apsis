@@ -1,6 +1,11 @@
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "core/color.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
+#include "render/window.hpp"
+#include "scene/camera.hpp"
+#include "scene/scene.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -24,15 +29,13 @@ void DebugRenderDemo::Show(bool state)
 
 void DebugRenderDemo::Update(float delta)
 {
-    if (!m_Show)
+    if (m_Show)
     {
-        return;
+        DrawGrid();
+        DrawMiscObjects();
+        DrawFrustum();
+        DrawText();
     }
-
-    DrawGrid();
-    DrawMiscObjects();
-    DrawFrustum();
-    DrawText();
 }
 
 void DebugRenderDemo::DrawGrid()
@@ -43,9 +46,13 @@ void DebugRenderDemo::DrawGrid()
 
 void DebugRenderDemo::DrawLabel(const glm::vec3& pos, const std::string& name)
 {
-    // const ddVec3 textColor = { 0.8f, 0.8f, 1.0f };
-    // dd::projectedText(ctx, name, pos, textColor, toFloatPtr(camera.vpMatrix),
-    //                     0, 0, WindowWidth, WindowHeight, 0.5f);
+    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    if (pCamera)
+    {
+        const Color textColor(0.8f, 0.8f, 1.0f);
+        const glm::mat4 viewProjection = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
+        GetDebugRender()->ProjectedText(name, pos, textColor, viewProjection, 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 0.5f);
+    }
 }
 
 void DebugRenderDemo::DrawMiscObjects()
@@ -136,33 +143,28 @@ void DebugRenderDemo::DrawMiscObjects()
 
 void DebugRenderDemo::DrawFrustum()
 {
-    // const ddVec3 color  = {  0.8f, 0.3f, 1.0f  };
-    // const ddVec3 origin = { -8.0f, 0.5f, 14.0f };
-    // drawLabel(ctx, origin, "frustum + axes");
+    const glm::vec3 origin(-8.0f, 0.5f, 14.0f);
+    DrawLabel(origin, "frustum + axes");
 
-    // // The frustum will depict a fake camera:
-    // const Matrix4 proj = Matrix4::perspective(degToRad(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
-    // const Matrix4 view = Matrix4::lookAt(Point3(-8.0f, 0.5f, 14.0f), Point3(-8.0f, 0.5f, -14.0f), Vector3::yAxis());
-    // const Matrix4 clip = inverse(proj * view);
-    // dd::frustum(ctx, toFloatPtr(clip), color);
+    // The frustum will depict a fake camera:
+    const glm::mat4x4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
+    const glm::mat4x4 view = glm::lookAt(glm::vec3(-8.0f, 0.5f, 14.0f), glm::vec3(-8.0f, 0.5f, -14.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4x4 clip = glm::inverse(proj * view);
+    GetDebugRender()->Frustum(clip, Color::LimeGreen);
 
-    // // A white dot at the eye position:
-    // dd::point(ctx, origin, dd::colors::White, 15.0f);
+    // A white dot at the eye position:
+    GetDebugRender()->Point(origin, Color::White, 15.0f);
 
-    // // A set of arrows at the camera's origin/eye:
-    // const Matrix4 transform = Matrix4::translation(Vector3(-8.0f, 0.5f, 14.0f)) * Matrix4::rotationZ(degToRad(60.0f));
-    // dd::axisTriad(ctx, toFloatPtr(transform), 0.3f, 2.0f);
+    // A set of arrows at the camera's origin/eye:
+    const glm::mat4x4 transform = glm::translate(glm::mat4x4(1.0f), glm::vec3(-8.0f, 0.5f, 14.0f)) * glm::rotate(glm::mat4x4(1.0f), glm::radians(60.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    GetDebugRender()->AxisTriad(transform, 0.3f, 2.0f);
 }
 
 void DebugRenderDemo::DrawText()
 {
     // HUD text:
-    // const ddVec3 textColor = { 1.0f,  1.0f,  1.0f };
-    // const ddVec3 textPos2D = { 10.0f, 15.0f, 0.0f };
-    // dd::screenText(ctx, "Welcome to the D3D11 Debug Draw demo.\n\n"
-    //                     "[SPACE]  to toggle labels on/off\n"
-    //                     "[RETURN] to toggle grid on/off",
-    //                     textPos2D, textColor, 0.55f);
+    const glm::vec3 textPos2D(10.0f, 15.0f, 0.0f);
+    GetDebugRender()->ScreenText("Welcome to the Debug Draw demo.\n\n", textPos2D, Color::White, 0.55f);
 }
 
 } // namespace WingsOfSteel::Pandora

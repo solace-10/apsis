@@ -1,15 +1,30 @@
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "render/window.hpp"
 #include "scene/camera.hpp"
+#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 Camera::Camera()
+: m_Fov(70.0f)
+, m_ProjectionMatrix(1.0f)
+, m_NearPlane(1.0f)
+, m_FarPlane(200.0f)
 {
-
+    CalculateProjectionMatrix();
 }
-    
+
+Camera::Camera(float fov, float nearPlane, float farPlane)
+: m_Fov(fov)
+, m_ProjectionMatrix(1.0f)
+, m_NearPlane(nearPlane)
+, m_FarPlane(farPlane)
+{
+    CalculateProjectionMatrix();
+}
+
 Camera::~Camera()
 {
 
@@ -18,6 +33,55 @@ Camera::~Camera()
 void Camera::LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up)
 {
     SetTransform(glm::lookAt(cameraPosition, targetPosition, up));
+}
+
+void Camera::SetNearPlane(float distance)
+{
+    m_NearPlane = distance;
+    CalculateProjectionMatrix();
+}
+
+float Camera::GetNearPlane() const
+{
+    return m_NearPlane;
+}
+
+void Camera::SetFarPlane(float distance)
+{
+    m_FarPlane = distance;
+    CalculateProjectionMatrix();
+}
+
+float Camera::GetFarPlane() const
+{
+    return m_FarPlane;
+}
+
+void Camera::SetFieldOfView(float degrees)
+{
+    m_Fov = glm::radians(degrees);
+    CalculateProjectionMatrix();
+}
+
+float Camera::GetFieldOfView() const
+{
+    return m_Fov;
+}
+    
+const glm::mat4& Camera::GetViewMatrix() const
+{
+    return GetTransform();
+}
+
+const glm::mat4& Camera::GetProjectionMatrix() const
+{
+    return m_ProjectionMatrix;
+}
+
+void Camera::CalculateProjectionMatrix()
+{
+    const float aspectRatio = static_cast<float>(GetWindow()->GetWidth()) / static_cast<float>(GetWindow()->GetHeight());
+    m_ProjectionMatrix = glm::perspective(m_Fov, aspectRatio, m_NearPlane, m_FarPlane);
 }
 
 } // namespace WingsOfSteel::Pandora

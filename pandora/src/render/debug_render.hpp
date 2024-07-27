@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
+#include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <webgpu/webgpu_cpp.h>
 
@@ -29,39 +31,26 @@ public:
     void Update(float delta);
     void Render(wgpu::RenderPassEncoder& renderPass);
 
+    // Add a point in 3D space. Point is expressed in world-space coordinates.
     void Point(const glm::vec3& pos, const Color& color, const float size, const int durationMillis = 0);
 
+    // Add a 3D line. Note that lines are expressed in world coordinates, and so are all wireframe primitives which are built from lines.
     void Line(const glm::vec3& from, const glm::vec3& to, const Color& color, const int durationMillis = 0);
 
-// void screenText(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx,)
-//                 const char * str,
-//                 const glm::vec3& pos,
-//                 const glm::vec3& color,
-//                 float scaling = 1.0f,
-//                 int durationMillis = 0);
+    // Add a 2D text string as an overlay to the current view, using a built-in font.
+    // Position is in screen-space pixels, origin at the top-left corner of the screen.
+    // The third element (Z) of the position vector is ignored.
+    // Note: Newlines and tabs are handled (1 tab = 4 spaces).
+    void ScreenText(const std::string& str, const glm::vec3& pos, const Color& color, float scaling = 1.0f, int durationMillis = 0);
 
-// Add a 3D text label centered at the given world position that
-// gets projected to screen-space. The label always faces the viewer.
-// sx/sy, sw/sh are the viewport coordinates/size, in pixels.
-// 'vpMatrix' is the view * projection transform to map the text from 3D to 2D.
-// void projectedText(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx,)
-//                    const char * str,
-//                    const glm::vec3& pos,
-//                    const glm::vec3& color,
-//                    ddMat4x4_In vpMatrix,
-//                    int sx, int sy,
-//                    int sw, int sh,
-//                    float scaling = 1.0f,
-//                    int durationMillis = 0);
+    // Add a 3D text label centered at the given world position that gets projected to screen-space. The label always faces the viewer.
+    // sx/sy, sw/sh are the viewport coordinates/size, in pixels.
+    // 'vpMatrix' is the view * projection transform to map the text from 3D to 2D.
+    void ProjectedText(const std::string& str, const glm::vec3& pos, const Color& color, const glm::mat4x4& vpMatrix, int sx, int sy, int sw, int sh, float scaling = 1.0f, int durationMillis = 0);
 
-// Add a set of three coordinate axis depicting the position and orientation of the given transform.
-// 'size' defines the size of the arrow heads. 'length' defines the length of the arrow's base line.
-// void axisTriad(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx,)
-//                ddMat4x4_In transform,
-//                float size,
-//                float length,
-//                int durationMillis = 0,
-//                bool depthEnabled = true);
+    // Add a set of three coordinate axis depicting the position and orientation of the given transform.
+    // 'size' defines the size of the arrow heads. 'length' defines the length of the arrow's base line.
+    void AxisTriad(const glm::mat4x4& transform, float size, float length, int durationMillis = 0);
 
     // Add a 3D line with an arrow-like end.
     // 'size' defines the arrow head size.
@@ -97,15 +86,11 @@ public:
     // Add a wireframe Axis Aligned Bounding Box (AABB).
     void Aabb(const glm::vec3& mins, const glm::vec3& maxs, const Color& color, int durationMillis = 0);
 
-// // Add a wireframe frustum pyramid.
-// // 'invClipMatrix' is the inverse of the matrix defining the frustum
-// // (AKA clip) volume, which normally consists of the projection * view matrix.
-// // E.g.: inverse(projMatrix * viewMatrix)
-// void frustum(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx,)
-//              ddMat4x4_In invClipMatrix,
-//              const glm::vec3& color,
-//              int durationMillis = 0,
-//              bool depthEnabled = true);
+    // Add a wireframe frustum pyramid.
+    // 'invClipMatrix' is the inverse of the matrix defining the frustum
+    // (AKA clip) volume, which normally consists of the projection * view matrix.
+    // E.g.: inverse(projMatrix * viewMatrix)
+    void Frustum(const glm::mat4x4& invClipMatrix, const Color& color, int durationMillis = 0);
 
     // Add a vertex normal for debug visualization.
     // The normal vector 'normal' is assumed to be already normalized.
