@@ -51,7 +51,7 @@ void DebugRenderDemo::DrawLabel(const glm::vec3& pos, const std::string& name)
     {
         const Color textColor(0.8f, 0.8f, 1.0f);
         const glm::mat4 viewProjection = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
-        GetDebugRender()->ProjectedText(name, pos, textColor, viewProjection, 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 0.5f);
+        GetDebugRender()->ProjectedText(name, pos, textColor, viewProjection, 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight());
     }
 }
 
@@ -163,8 +163,8 @@ void DebugRenderDemo::DrawFrustum()
 void DebugRenderDemo::DrawText()
 {
     // HUD text:
-    const glm::vec3 textPos2D(10.0f, 15.0f, 0.0f);
-    GetDebugRender()->ScreenText("Welcome to the Debug Draw demo.\n\n", textPos2D, Color::White, 0.55f);
+    const glm::vec3 textPos2D(10.0f, 30.0f, 0.0f);
+    GetDebugRender()->ScreenText("Welcome to the Debug Draw demo.\n\n", textPos2D, Color::White);
 }
 
 } // namespace WingsOfSteel::Pandora
