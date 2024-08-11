@@ -1,0 +1,17 @@
+[
+    {
+        "name": "nexalite",
+        "display_name": "Nexalite ore",
+        "type": "ore"
+    },
+    {
+        "name": "zerite",
+        "display_name": "Zerite ore",
+        "type": "ore"
+    },
+    {
+        "name": "neutronium",
+        "display_name": "Neutronium ore",
+        "type": "ore"
+    }
+]

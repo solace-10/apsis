@@ -12,12 +12,12 @@ class Sector
 {
 public:
     Sector(SectorInfoSharedPtr& pSectorInfo);
-    ~SectorInfo();
+    ~Sector();
 
     void Update(float delta);
 
 private:
-    SectorSharedPtr m_pSectorInfo;
+    SectorInfoSharedPtr m_pSectorInfo;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

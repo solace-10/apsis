@@ -10,6 +10,9 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Sector);
+DECLARE_SMART_PTR(SectorGenerator);
+
 class Game
 {
 public:
@@ -24,7 +27,9 @@ private:
     OrbitCameraSharedPtr m_pCamera;
     Pandora::SceneSharedPtr m_pScene;
 
-    TestEntitySharedPtr m_pTestEntity;
+    //TestEntitySharedPtr m_pTestEntity;
+    SectorUniquePtr m_pSector;
+    SectorGeneratorUniquePtr m_pSectorGenerator;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

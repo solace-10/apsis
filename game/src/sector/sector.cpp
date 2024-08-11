@@ -1,3 +1,4 @@
+#include "sector/sector_info.hpp"
 #include "sector/sector.hpp"
 
 namespace WingsOfSteel::TheBrightestStar

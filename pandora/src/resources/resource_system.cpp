@@ -2,6 +2,7 @@
 
 #include "core/log.hpp"
 #include "resources/resource.hpp"
+#include "resources/resource_data_store.hpp"
 #include "resources/resource_model.hpp"
 #include "resources/resource_shader.hpp"
 #include "resources/resource_texture_2d.hpp"
@@ -11,6 +12,7 @@ namespace WingsOfSteel::Pandora
 
 ResourceSystem::ResourceSystem()
 {
+    RegisterResource<ResourceDataStore>("json");
     RegisterResource<ResourceModel>("glb");
     RegisterResource<ResourceModel>("gltf");
     RegisterResource<ResourceShader>("wgsl");

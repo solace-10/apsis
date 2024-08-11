@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "core/log.hpp"
+#include "core/random.hpp"
 #include "imgui/imguisystem.hpp"
 #include "input/input_system.hpp"
 #include "render/debug_render.hpp"
@@ -50,6 +51,8 @@ void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallbac
     g_GameShutdownCallback = gameShutdownCallback;
 
     InitializeLogging();
+
+    Random::Initialize();
 
     g_pVFS = std::make_unique<VFS>();
     g_pVFS->Initialize();

@@ -14,6 +14,7 @@ public:
     virtual void Initialize() = 0;
     virtual void Update() = 0;
     virtual void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) = 0;
+    virtual bool Exists(const std::string& path) const = 0;
 };
 
 } // namespace WingsOfSteel::Pandora::Private

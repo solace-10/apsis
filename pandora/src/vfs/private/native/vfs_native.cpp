@@ -66,6 +66,11 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
     }
 }
 
+bool VFSNative::Exists(const std::string& path) const
+{
+    return m_VFS.find(path) != m_VFS.end();
+}
+
 void VFSNative::BuildVFS()
 {
     // TODO: This can be extended to support modding.

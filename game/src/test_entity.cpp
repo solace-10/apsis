@@ -3,6 +3,7 @@
 #include <render/debug_render.hpp>
 #include <render/rendersystem.hpp>
 #include <render/window.hpp>
+#include <resources/resource_data_store.hpp>
 #include <resources/resource_model.hpp>
 #include <resources/resource_shader.hpp>
 #include <resources/resource_system.hpp>
@@ -66,6 +67,11 @@ void TestEntity::OnAddedToScene(Pandora::Scene* pScene)
 
     // Pandora::GetResourceSystem()->RequestResource("/test/plane/plane_normals.glb", [this](Pandora::ResourceSharedPtr pResource) {
     //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
+    // });
+
+    // Pandora::GetResourceSystem()->RequestResource("/items/ores.json", [this](Pandora::ResourceSharedPtr pResource) {
+    //     Pandora::ResourceJsonSharedPtr pJsonResource = std::dynamic_pointer_cast<Pandora::ResourceDataStore>(pResource);
+    //     int a = 0;
     // });
 }
 

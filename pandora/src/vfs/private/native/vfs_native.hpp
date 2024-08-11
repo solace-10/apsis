@@ -17,9 +17,10 @@ public:
     VFSNative();
     ~VFSNative();
 
-    virtual void Initialize() override;
-    virtual void Update() override;
-    virtual void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+    void Initialize() override;
+    void Update() override;
+    void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+    bool Exists(const std::string& path) const override;
 
 private:
     void BuildVFS();

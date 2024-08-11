@@ -44,6 +44,7 @@ public:
     void Initialize();
     void Update();
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
+    bool Exists(const std::string& path) const;
 
 private:
     std::unique_ptr<Private::VFSImpl> m_pImpl;

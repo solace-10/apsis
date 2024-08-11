@@ -1,0 +1,46 @@
+{
+    "asteroid_field": [
+        {
+            "signal_difficulty": 0.0,
+            "spawn_chance": 0.9,
+            "contents": [
+                {
+                    "item": "nexalite",
+                    "spawn_chance": 0.9
+                },
+                {
+                    "item": "zerite",
+                    "spawn_chance": 0.1
+                }
+            ]
+        },
+        {
+            "signal_difficulty": 0.0,
+            "spawn_chance": 0.1,
+            "contents": [
+                {
+                    "item": "nexalite",
+                    "spawn_chance": 0.8
+                },
+                {
+                    "item": "zerite",
+                    "spawn_chance": 0.15
+                },
+                {
+                    "item": "neutronium",
+                    "spawn_chance": 0.05
+                }
+            ]
+        }
+    ],
+    "signals": {
+        "minimum": 3,
+        "maximum": 8,
+        "spawn_chance": [
+            {
+                "signal": "asteroid_field",
+                "chance": 1.0
+            }
+        ]
+    }
+}

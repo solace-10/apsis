@@ -38,4 +38,9 @@ void VFS::FileRead(const std::string& path, FileReadCallback onFileReadCompleted
     m_pImpl->FileRead(path, onFileReadCompleted);
 }
 
+bool VFS::Exists(const std::string& path) const
+{
+    return m_pImpl->Exists(path);
+}
+
 } // namespace WingsOfSteel::Pandora
