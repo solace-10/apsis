@@ -1,11 +1,14 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <core/smart_ptr.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
 {
+
+DECLARE_SMART_PTR(Signal);
 
 // clang-format off
 enum class SectorCivilizationLevel
@@ -22,13 +25,14 @@ DECLARE_SMART_PTR(SectorInfo);
 class SectorInfo
 {
 public:
-    SectorInfo(int level);
+    SectorInfo(int level, const std::vector<SignalSharedPtr>& signals);
     ~SectorInfo();
 
-    uint32_t GetSeed() const;
+    const std::vector<SignalSharedPtr>& GetSignals() const;
 
 private:
-    uint32_t m_Seed;
+    int m_Level;
+    std::vector<SignalSharedPtr> m_Signals;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

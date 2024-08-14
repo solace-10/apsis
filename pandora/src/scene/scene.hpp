@@ -19,8 +19,9 @@ public:
     Scene();
     ~Scene();
 
-    void Update(float delta);
-    void Render(wgpu::RenderPassEncoder renderPass);
+    virtual void Initialize();
+    virtual void Update(float delta);
+    virtual void Render(wgpu::RenderPassEncoder renderPass);
 
     void AddEntity(EntitySharedPtr pEntity);
     void RemoveEntity(EntitySharedPtr pEntity);

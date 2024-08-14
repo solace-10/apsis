@@ -25,10 +25,10 @@ public:
 
 private:
     OrbitCameraSharedPtr m_pCamera;
-    Pandora::SceneSharedPtr m_pScene;
+    Pandora::SceneSharedPtr m_pMenuScene;
 
     //TestEntitySharedPtr m_pTestEntity;
-    SectorUniquePtr m_pSector;
+    SectorSharedPtr m_pSector;
     SectorGeneratorUniquePtr m_pSectorGenerator;
 };
 

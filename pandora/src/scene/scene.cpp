@@ -16,6 +16,11 @@ Scene::~Scene()
 
 }
 
+void Scene::Initialize()
+{
+    
+}
+
 void Scene::Update(float delta)
 {
     ProcessEntitiesToAdd();

@@ -10,6 +10,7 @@
 
 #include "sector/signal/asteroid_field_signal.hpp"
 #include "sector/sector_generator.hpp"
+#include "sector/sector_info.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -30,7 +31,9 @@ SectorInfoSharedPtr SectorGenerator::Create(uint32_t level)
 
     std::vector<SignalSharedPtr> signals = GenerateSignals(generationParameters);
 
-    return nullptr;
+    SectorInfoSharedPtr pSectorInfo = std::make_shared<SectorInfo>(level, signals);
+
+    return pSectorInfo;
 }
 
 bool SectorGenerator::CanCreate(uint32_t level) const
@@ -111,9 +114,7 @@ SignalSharedPtr SectorGenerator::GenerateAsteroidFieldSignal(const nlohmann::jso
         accum += generationParameters[i]["spawn_chance"].get<float>();
         if (roll <= accum)
         {
-            AsteroidFieldSignalSharedPtr pAsteroidFieldSignal = std::make_shared<AsteroidFieldSignal>(GenerateSignalPosition(), generationParameters[i]);
-            pAsteroidFieldSignal->AddContent("todo", 0.0f);
-            return pAsteroidFieldSignal;
+            return std::make_shared<AsteroidFieldSignal>(GenerateSignalPosition(), generationParameters[i]);;
         }
     }
 

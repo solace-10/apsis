@@ -19,7 +19,9 @@ public:
     float GetSignalDifficulty() const;
 
 protected:
-    Signal(const glm::vec3& position, const nlohmann::json& signalParameters);
+    Signal(const glm::vec3& position);
+
+    void SetSignalDifficulty(float difficulty);
 
 private:
     glm::vec3 m_Position;
