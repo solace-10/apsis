@@ -19,9 +19,14 @@ public:
     void Initialize() override;
     void Update(float delta) override;
 
+    void ShowSignalsDebugUI(bool state);
+
 private:
+    void DrawSignalsDebugUI();
+
     SectorInfoSharedPtr m_pSectorInfo;
     SectorCameraSharedPtr m_pCamera;
+    bool m_ShowSignalsDebugUI;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

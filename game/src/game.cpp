@@ -1,3 +1,4 @@
+#include <imgui/imgui_system.hpp>
 #include <pandora.hpp>
 #include <scene/camera.hpp>
 #include <scene/entity.hpp>
@@ -23,6 +24,8 @@ Game::~Game()
 
 void Game::Initialize()
 {
+    Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar();});
+
     m_pSectorGenerator = std::make_unique<SectorGenerator>();
 
     m_pCamera = std::make_shared<OrbitCamera>();
@@ -55,6 +58,21 @@ void Game::Update(float delta)
 void Game::Shutdown()
 {
 
+}
+
+// Called from ImGuiSystem::Update() to draw any menus in the menu bar.
+void Game::DrawImGuiMenuBar()
+{
+    if (m_pSector && ImGui::BeginMenu("Sector"))
+    {
+        static bool sShowSignalsWindow = false;
+        if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
+        {
+            m_pSector->ShowSignalsDebugUI(sShowSignalsWindow);
+        }
+
+        ImGui::EndMenu();
+    }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

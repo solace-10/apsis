@@ -3,15 +3,21 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-Signal::Signal(const glm::vec3& position)
+Signal::Signal(const glm::vec3& position, const nlohmann::json& signalParameters)
 : m_Position(position)
-, m_Difficulty(0.0f)
 {
+    m_Name = signalParameters["name"].get<std::string>();
+    m_Difficulty = signalParameters["signal_difficulty"].get<float>();
 }
 
 Signal::~Signal()
 {
 
+}
+
+const std::string& Signal::GetName() const
+{
+    return m_Name;
 }
 
 const glm::vec3& Signal::GetPosition() const
@@ -22,11 +28,6 @@ const glm::vec3& Signal::GetPosition() const
 float Signal::GetSignalDifficulty() const
 {
     return m_Difficulty;
-}
-
-void Signal::SetSignalDifficulty(float difficulty)
-{
-    m_Difficulty = difficulty;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

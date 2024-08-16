@@ -2,7 +2,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_wgpu.h"
 
-#include "imgui/imguisystem.hpp"
+#include "imgui/imgui_system.hpp"
 
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
@@ -71,6 +71,12 @@ void ImGuiSystem::Update()
 
             ImGui::EndMenu();
         }
+
+        if (m_GameMenuBarCallback)
+        {
+            m_GameMenuBarCallback();
+        }
+
         ImGui::EndMainMenuBar();
     }
 
@@ -84,6 +90,11 @@ void ImGuiSystem::Render(wgpu::RenderPassEncoder& pass)
 {
     ImGui::Render();
     ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass.Get());
+}
+
+void ImGuiSystem::SetGameMenuBarCallback(ImGuiGameMenuBarCallback callback)
+{
+    m_GameMenuBarCallback = callback;
 }
 
 } // namespace WingsOfSteel::Pandora

@@ -1,6 +1,7 @@
 {
     "asteroid_field": [
         {
+            "name": "Asteroid field",
             "signal_difficulty": 0.0,
             "spawn_chance": 0.9,
             "contents": [
@@ -15,6 +16,7 @@
             ]
         },
         {
+            "name": "Rich asteroid field",
             "signal_difficulty": 0.0,
             "spawn_chance": 0.1,
             "contents": [

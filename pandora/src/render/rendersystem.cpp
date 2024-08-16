@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "core/log.hpp"
-#include "imgui/imguisystem.hpp"
+#include "imgui/imgui_system.hpp"
 #include "render/debug_render.hpp"
 #include "render/window.hpp"
 #include "scene/camera.hpp"

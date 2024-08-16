@@ -24,6 +24,8 @@ public:
     void Shutdown();
 
 private:
+    void DrawImGuiMenuBar();
+
     OrbitCameraSharedPtr m_pCamera;
     Pandora::SceneSharedPtr m_pMenuScene;
 

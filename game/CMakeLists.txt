@@ -9,7 +9,12 @@ source_group(TREE ${CMAKE_CURRENT_LIST_DIR}/src FILES ${SOURCE_FILES})
 find_package(pandora REQUIRED)
 add_executable(game ${SOURCE_FILES})
 
-target_include_directories(game PRIVATE ${PANDORA_INCLUDE_DIRS})
+target_include_directories(
+    game PRIVATE 
+    src/
+    ${PANDORA_INCLUDE_DIRS}
+)
+
 target_link_directories(game PRIVATE ${PANDORA_LIBRARY_DIRS})
 target_link_libraries(game PRIVATE pandora)
 

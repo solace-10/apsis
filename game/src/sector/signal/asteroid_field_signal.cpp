@@ -1,15 +1,14 @@
 #include <core/random.hpp>
 
+#include "sector/phenomena/asteroid_field.hpp"
 #include "sector/signal/asteroid_field_signal.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
 AsteroidFieldSignal::AsteroidFieldSignal(const glm::vec3& position, const nlohmann::json& signalParameters)
-: Signal(position)
+: Signal(position, signalParameters)
 {
-    SetSignalDifficulty(signalParameters["signal_difficulty"].get<float>());
-
     const nlohmann::json& contents = signalParameters["contents"];
     for (int i = 0; i < contents.size(); i++)
     {
@@ -20,6 +19,11 @@ AsteroidFieldSignal::AsteroidFieldSignal(const glm::vec3& position, const nlohma
 AsteroidFieldSignal::~AsteroidFieldSignal()
 {
 
+}
+
+Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn() const
+{
+    return std::make_shared<AsteroidField>(this);
 }
 
 const AsteroidFieldSignalContents AsteroidFieldSignal::GetContents() const
