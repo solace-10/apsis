@@ -46,13 +46,8 @@ void DebugRenderDemo::DrawGrid()
 
 void DebugRenderDemo::DrawLabel(const glm::vec3& pos, const std::string& name)
 {
-    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
-    if (pCamera)
-    {
-        const Color textColor(0.8f, 0.8f, 1.0f);
-        const glm::mat4 viewProjection = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
-        GetDebugRender()->ProjectedText(name, pos, textColor, viewProjection, 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight());
-    }
+    const Color textColor(0.8f, 0.8f, 1.0f);
+    GetDebugRender()->Label(name, pos, textColor);
 }
 
 void DebugRenderDemo::DrawMiscObjects()

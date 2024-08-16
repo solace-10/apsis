@@ -44,9 +44,7 @@ public:
     void ScreenText(const std::string& str, const glm::vec3& pos, const Color& color, float scaling = 1.0f, int durationMillis = 0);
 
     // Add a 3D text label centered at the given world position that gets projected to screen-space. The label always faces the viewer.
-    // sx/sy, sw/sh are the viewport coordinates/size, in pixels.
-    // 'vpMatrix' is the view * projection transform to map the text from 3D to 2D.
-    void ProjectedText(const std::string& str, const glm::vec3& pos, const Color& color, const glm::mat4x4& vpMatrix, int sx, int sy, int sw, int sh, float scaling = 1.0f, int durationMillis = 0);
+    void Label(const std::string& str, const glm::vec3& pos, const Color& color, float scaling = 1.0f, int durationMillis = 0);
 
     // Add a set of three coordinate axis depicting the position and orientation of the given transform.
     // 'size' defines the size of the arrow heads. 'length' defines the length of the arrow's base line.

@@ -3,6 +3,10 @@
 #include "render/private/debug_render_impl.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
+#include "render/window.hpp"
+#include "scene/camera.hpp"
+#include "scene/scene.hpp"
+#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -50,9 +54,14 @@ void DebugRender::ScreenText(const std::string& str, const glm::vec3& pos, const
     dd::screenText(str.c_str(), pos, color.AsVec3(), scaling, durationMillis);
 }
 
-void DebugRender::ProjectedText(const std::string& str, const glm::vec3& pos, const Color& color, const glm::mat4x4& vpMatrix, int sx, int sy, int sw, int sh, float scaling, int durationMillis)
+void DebugRender::Label(const std::string& str, const glm::vec3& pos, const Color& color, float scaling, int durationMillis)
 {
-    dd::projectedText(str.c_str(), pos, color.AsVec3(), glm::value_ptr(vpMatrix), sx, sy, sw, sh, scaling, durationMillis);
+    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    if (pCamera)
+    {
+        const glm::mat4 viewProjection = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
+        dd::projectedText(str.c_str(), pos, color.AsVec3(), glm::value_ptr(viewProjection), 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight(), scaling, durationMillis);
+    }
 }
 
 void DebugRender::AxisTriad(const glm::mat4x4& transform, float size, float length, int durationMillis)
