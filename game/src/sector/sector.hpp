@@ -22,6 +22,7 @@ public:
 
 private:
     void DrawSignalsDebugUI();
+    void SpawnPlayerShip();
 
     SectorInfoSharedPtr m_pSectorInfo;
     Pandora::EntitySharedPtr m_pCamera;

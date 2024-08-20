@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <core/smart_ptr.hpp>
 #include <scene/entity.hpp>
+#include <scene/scene.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -18,7 +19,7 @@ class Signal
 public:
     virtual ~Signal();
 
-    virtual Pandora::EntitySharedPtr Spawn() const = 0;
+    virtual Pandora::EntitySharedPtr Spawn(Pandora::Scene* pScene) const = 0;
 
     const std::string& GetName() const;
     const glm::vec3& GetPosition() const;

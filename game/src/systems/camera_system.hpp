@@ -22,7 +22,7 @@ private:
     Pandora::InputCallbackToken m_RightMouseButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_MousePositionToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     bool m_IsDragging = false;
-    bool m_InputPending = false;
+    bool m_InputPending = true;
     glm::vec2 m_MouseDelta{ 0.0f, 0.0f };
 };
 

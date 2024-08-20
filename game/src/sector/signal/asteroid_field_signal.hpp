@@ -16,7 +16,7 @@ public:
     AsteroidFieldSignal(const glm::vec3& position, const nlohmann::json& signalParameters);
     ~AsteroidFieldSignal() override;
 
-    Pandora::EntitySharedPtr Spawn() const override;
+    Pandora::EntitySharedPtr Spawn(Pandora::Scene* pScene) const override;
 
     const AsteroidFieldSignalContents GetContents() const;
 

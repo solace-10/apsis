@@ -112,4 +112,9 @@ void Scene::ProcessEntitiesToRemove()
     std::erase_if(m_Entities, [](EntitySharedPtr pEntity) { return pEntity->m_MarkedForRemoval; });
 }
 
+entt::registry& Scene::GetRegistry()
+{
+    return m_Registry;
+}
+
 } // namespace WingsOfSteel::Pandoraaa

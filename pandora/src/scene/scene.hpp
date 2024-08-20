@@ -34,6 +34,9 @@ public:
 
     friend Entity;
 
+    // Temp
+    entt::registry& GetRegistry();
+
 private:
     void ProcessEntitiesToAdd();
     void ProcessEntitiesToRemove();

@@ -1,5 +1,7 @@
 #include <core/random.hpp>
 #include <pandora.hpp>
+#include <scene/components/debug_render_component.hpp>
+#include <scene/components/transform_component.hpp>
 
 #include "sector/phenomena/asteroid_field.hpp"
 #include "sector/signal/asteroid_field_signal.hpp"
@@ -22,9 +24,20 @@ AsteroidFieldSignal::~AsteroidFieldSignal()
 
 }
 
-Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn() const
+Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn(Pandora::Scene* pScene) const
 {
-    return Pandora::GetActiveScene()->CreateEntity();
+    using namespace Pandora;
+    EntitySharedPtr pAsteroidField = pScene->CreateEntity();
+
+    DebugRenderComponent& debugRenderComponent = pAsteroidField->AddComponent<DebugRenderComponent>();
+    debugRenderComponent.color = Color::SandyBrown;
+    debugRenderComponent.shape = DebugRenderShape::Circle;
+    debugRenderComponent.radius = 10.0f;
+
+    TransformComponent& transformComponent = pAsteroidField->AddComponent<TransformComponent>();
+    transformComponent.transform = glm::translate(glm::mat4(1.0f), GetPosition());
+
+    return pAsteroidField;
 }
 
 const AsteroidFieldSignalContents AsteroidFieldSignal::GetContents() const
