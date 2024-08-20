@@ -1,9 +1,13 @@
 #include <imgui.h>
 
-#include "sector/sector_camera.hpp"
+#include <scene/components/camera_component.hpp>
+#include <scene/components/orbit_camera_component.hpp>
+#include <scene/components/transform_component.hpp>
+
 #include "sector/sector_info.hpp"
 #include "sector/sector.hpp"
 #include "sector/signal/signal.hpp"
+#include "systems/camera_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -22,23 +26,43 @@ Sector::~Sector()
 
 void Sector::Initialize()
 {
-    Pandora::Scene::Initialize();
+    using namespace Pandora;
 
-    m_pCamera = std::make_shared<SectorCamera>();
-    m_pCamera->LookAt(
+    Scene::Initialize();
+
+    // m_pCamera = std::make_shared<SectorCamera>();
+    // m_pCamera->LookAt(
+    //     glm::vec3(0.0f, 0.0f, 10.0f),
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, 1.0f, 0.0f)
+    // );
+
+    // AddEntity(m_pCamera);
+    // SetCamera(m_pCamera);
+
+    // for (auto& pSignal : m_pSectorInfo->GetSignals())
+    // {
+    //     Pandora::EntitySharedPtr pEntity = pSignal->Spawn();
+    //     AddEntity(pEntity);
+    // }
+
+    m_pCamera = CreateEntity();
+    m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 200.0f);
+    TransformComponent& transformComponent = m_pCamera->AddComponent<TransformComponent>();
+    transformComponent.transform = glm::lookAt(
         glm::vec3(0.0f, 0.0f, 10.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
+    OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
+    orbitCameraComponent.distance = 10.0f;
+    orbitCameraComponent.orbitAngle = glm::radians(-90.0f);
+    orbitCameraComponent.pitch = 0.0f;
+    orbitCameraComponent.minimumPitch = glm::radians(0.0f);
+    orbitCameraComponent.maximumPitch = glm::radians(80.0f);
+    SetCamera(m_pCamera); 
 
-    AddEntity(m_pCamera);
-    SetCamera(m_pCamera);
-
-    for (auto& pSignal : m_pSectorInfo->GetSignals())
-    {
-        Pandora::EntitySharedPtr pEntity = pSignal->Spawn();
-        AddEntity(pEntity);
-    }
+    AddSystem(std::make_unique<CameraSystem>());
 
     DrawSignalsDebugUI();
 }

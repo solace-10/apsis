@@ -4,7 +4,8 @@
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
 #include "render/window.hpp"
-#include "scene/camera.hpp"
+#include "scene/components/camera_component.hpp"
+#include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 #include "pandora.hpp"
 
@@ -56,10 +57,12 @@ void DebugRender::ScreenText(const std::string& str, const glm::vec3& pos, const
 
 void DebugRender::Label(const std::string& str, const glm::vec3& pos, const Color& color, float scaling, int durationMillis)
 {
-    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera)
     {
-        const glm::mat4 viewProjection = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
+        const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+        const TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
+        const glm::mat4 viewProjection = cameraComponent.camera.GetProjectionMatrix() * transformComponent.transform;
         dd::projectedText(str.c_str(), pos, color.AsVec3(), glm::value_ptr(viewProjection), 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight(), scaling, durationMillis);
     }
 }

@@ -24,6 +24,7 @@ target_include_directories(pandora PUBLIC
     src/
     ${IMGUI_SOURCE_DIR}
     ${IMGUI_SOURCE_DIR}/backends/
+    ext/entt/single_include/
 )
 
 target_include_directories(pandora PRIVATE

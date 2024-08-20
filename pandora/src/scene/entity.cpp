@@ -5,8 +5,8 @@
 namespace WingsOfSteel::Pandora
 {
 
-Entity::Entity()
-: m_pScene(nullptr)
+Entity::Entity(Scene* pScene)
+: m_pScene(pScene)
 , m_Transform(1.0f)
 , m_MarkedForRemoval(false)
 {
@@ -18,21 +18,14 @@ Entity::~Entity()
 
 }
 
-void Entity::OnAddedToScene(Scene* pScene)
+void Entity::OnAddedToScene()
 {
-    assert(!m_pScene);
-    m_pScene = pScene;
 }
 
 void Entity::OnRemovedFromScene()
 {
     assert(m_pScene);
     m_pScene = nullptr;
-}
-
-void Entity::Update(float delta)
-{
-
 }
 
 void Entity::Render(wgpu::RenderPassEncoder renderPass)

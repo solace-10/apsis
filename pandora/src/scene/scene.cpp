@@ -1,7 +1,10 @@
 #include "scene/scene.hpp"
 
-#include "scene/camera.hpp"
+#include "core/log.hpp"
+#include "scene/components/camera_component.hpp"
+#include "scene/components/transform_component.hpp"
 #include "scene/entity.hpp"
+#include "scene/system.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -25,9 +28,9 @@ void Scene::Update(float delta)
 {
     ProcessEntitiesToAdd();
 
-    for (auto& pEntity : m_Entities)
+    for (auto& pSystem : m_Systems)
     {
-        pEntity->Update(delta);   
+        pSystem->Update(delta);
     }
 
     ProcessEntitiesToRemove();
@@ -41,24 +44,49 @@ void Scene::Render(wgpu::RenderPassEncoder renderPass)
     }
 }
 
-void Scene::AddEntity(EntitySharedPtr pEntity)
+EntitySharedPtr Scene::CreateEntity()
 {
+    EntitySharedPtr pEntity = std::make_shared<Entity>(this);
     m_EntitiesPendingAdd.push_back(pEntity);
+
+    pEntity->m_EntityHandle = m_Registry.create();
+
+    return pEntity;
 }
-    
+
+
 void Scene::RemoveEntity(EntitySharedPtr pEntity)
 {
     pEntity->m_MarkedForRemoval = true;
 }
 
-void Scene::SetCamera(CameraSharedPtr pCamera)
+void Scene::AddSystem(SystemUniquePtr pSystem)
 {
-    m_pCamera = pCamera;
+    pSystem->Initialize();
+    m_Systems.push_back(std::move(pSystem));
 }
 
-Camera* Scene::GetCamera() const
+void Scene::SetCamera(EntitySharedPtr pCamera)
 {
-    return m_pCamera.get();
+    if (!pCamera->HasComponent<CameraComponent>())
+    {
+        Log::Error() << "Trying to add a camera without a CameraComponent.";
+        m_pCamera.reset();
+    }
+    else if (!pCamera->HasComponent<TransformComponent>())
+    {
+        Log::Error() << "Trying to add a camera without a TransformComponent.";
+        m_pCamera.reset();
+    }
+    else
+    {
+        m_pCamera = pCamera;
+    }
+}
+
+EntitySharedPtr Scene::GetCamera() const
+{
+    return m_pCamera.lock();
 }
 
 void Scene::ProcessEntitiesToAdd()
@@ -66,7 +94,7 @@ void Scene::ProcessEntitiesToAdd()
     for (auto& pEntity : m_EntitiesPendingAdd)
     {
         m_Entities.push_back(pEntity);
-        pEntity->OnAddedToScene(this);
+        pEntity->OnAddedToScene();
     }
     m_EntitiesPendingAdd.clear();
 }

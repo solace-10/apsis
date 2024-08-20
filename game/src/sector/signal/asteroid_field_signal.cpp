@@ -1,4 +1,5 @@
 #include <core/random.hpp>
+#include <pandora.hpp>
 
 #include "sector/phenomena/asteroid_field.hpp"
 #include "sector/signal/asteroid_field_signal.hpp"
@@ -23,7 +24,7 @@ AsteroidFieldSignal::~AsteroidFieldSignal()
 
 Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn() const
 {
-    return std::make_shared<AsteroidField>(this);
+    return Pandora::GetActiveScene()->CreateEntity();
 }
 
 const AsteroidFieldSignalContents AsteroidFieldSignal::GetContents() const

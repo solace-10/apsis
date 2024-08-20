@@ -8,6 +8,8 @@
 #include "imgui/imgui_system.hpp"
 #include "render/debug_render.hpp"
 #include "render/window.hpp"
+#include "scene/components/camera_component.hpp"
+#include "scene/components/transform_component.hpp"
 #include "scene/camera.hpp"
 #include "scene/scene.hpp"
 #include "pandora.hpp"
@@ -241,11 +243,13 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
     // TODO: model matrix needs to be in a different set of uniforms, as it is entity specific.
     m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
 
-    Camera* pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera)
     {
-        m_GlobalUniforms.projectionMatrix = pCamera->GetProjectionMatrix();
-        m_GlobalUniforms.viewMatrix = pCamera->GetViewMatrix();
+        const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+        const TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
+        m_GlobalUniforms.projectionMatrix = cameraComponent.camera.GetProjectionMatrix();
+        m_GlobalUniforms.viewMatrix = transformComponent.transform;
     }
     else
     {

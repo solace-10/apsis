@@ -7,10 +7,9 @@
 namespace WingsOfSteel::Pandora
 {
 
-class Camera : public Entity
+class Camera
 {
 public:
-    Camera();
     Camera(float fov, float nearPlane, float farPlane);
     ~Camera();
 
@@ -23,16 +22,17 @@ public:
     void SetFieldOfView(float degrees);
     float GetFieldOfView() const;
     
-    const glm::mat4& GetViewMatrix() const; // Same as GetTransform(), exists just for ergonomics.
+    const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix() const;
 
 private:
     void CalculateProjectionMatrix();
 
-    float m_Fov;
-    float m_NearPlane;
-    float m_FarPlane;
-    glm::mat4 m_ProjectionMatrix;
+    float m_Fov = 45.0f;
+    float m_NearPlane = 0.01f;
+    float m_FarPlane = 100.0f;
+    glm::mat4 m_ViewMatrix { 1.0f };
+    glm::mat4 m_ProjectionMatrix { 1.0f };
 };
 
 } // namespace WingsOfSteel::Pandora

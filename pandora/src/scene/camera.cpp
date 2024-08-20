@@ -7,18 +7,8 @@
 namespace WingsOfSteel::Pandora
 {
 
-Camera::Camera()
-: m_Fov(70.0f)
-, m_ProjectionMatrix(1.0f)
-, m_NearPlane(1.0f)
-, m_FarPlane(200.0f)
-{
-    CalculateProjectionMatrix();
-}
-
 Camera::Camera(float fov, float nearPlane, float farPlane)
 : m_Fov(fov)
-, m_ProjectionMatrix(1.0f)
 , m_NearPlane(nearPlane)
 , m_FarPlane(farPlane)
 {
@@ -32,7 +22,7 @@ Camera::~Camera()
 
 void Camera::LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up)
 {
-    SetTransform(glm::lookAt(cameraPosition, targetPosition, up));
+    m_ViewMatrix = glm::lookAt(cameraPosition, targetPosition, up);
 }
 
 void Camera::SetNearPlane(float distance)
@@ -66,11 +56,6 @@ void Camera::SetFieldOfView(float degrees)
 float Camera::GetFieldOfView() const
 {
     return m_Fov;
-}
-    
-const glm::mat4& Camera::GetViewMatrix() const
-{
-    return GetTransform();
 }
 
 const glm::mat4& Camera::GetProjectionMatrix() const

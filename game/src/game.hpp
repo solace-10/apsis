@@ -4,9 +4,6 @@
 #include "scene/entity.hpp"
 #include "scene/scene.hpp"
 
-#include "orbit_camera.hpp"
-#include "test_entity.hpp"
-
 namespace WingsOfSteel::TheBrightestStar
 {
 
@@ -26,10 +23,8 @@ public:
 private:
     void DrawImGuiMenuBar();
 
-    OrbitCameraSharedPtr m_pCamera;
     Pandora::SceneSharedPtr m_pMenuScene;
 
-    //TestEntitySharedPtr m_pTestEntity;
     SectorSharedPtr m_pSector;
     SectorGeneratorUniquePtr m_pSectorGenerator;
 };

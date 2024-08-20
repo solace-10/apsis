@@ -57,6 +57,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(debug-draw)
 
 FetchContent_Declare(
+    entt
+    GIT_REPOSITORY https://github.com/skypjack/entt.git
+    GIT_TAG 78213075654a688e9da6bc49f7f873d25c26d12c # v3.13.2
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/entt
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(entt)
+
+FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e # v1.0.1

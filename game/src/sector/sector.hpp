@@ -6,7 +6,6 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(SectorCamera);
 DECLARE_SMART_PTR(SectorInfo);
 
 DECLARE_SMART_PTR(Sector);
@@ -25,7 +24,7 @@ private:
     void DrawSignalsDebugUI();
 
     SectorInfoSharedPtr m_pSectorInfo;
-    SectorCameraSharedPtr m_pCamera;
+    Pandora::EntitySharedPtr m_pCamera;
     bool m_ShowSignalsDebugUI;
 };
 

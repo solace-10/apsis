@@ -12,11 +12,10 @@ DECLARE_SMART_PTR(TestEntity);
 class TestEntity : public Pandora::Entity
 {
 public:
-    TestEntity();
+    TestEntity(Pandora::Scene* pScene);
     ~TestEntity();
 
-    void OnAddedToScene(Pandora::Scene* pScene) override;
-    void Update(float delta) override;
+    void OnAddedToScene();
     void Render(wgpu::RenderPassEncoder renderPass) override;
 
 private:

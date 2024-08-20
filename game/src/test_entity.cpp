@@ -14,7 +14,8 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-TestEntity::TestEntity()
+TestEntity::TestEntity(Pandora::Scene* pScene)
+: Pandora::Entity(pScene)
 {
 
 }
@@ -24,10 +25,8 @@ TestEntity::~TestEntity()
 
 }
 
-void TestEntity::OnAddedToScene(Pandora::Scene* pScene)
+void TestEntity::OnAddedToScene()
 {
-    Pandora::Entity::OnAddedToScene(pScene);
-
     static std::vector<float> sVertexData =
     {
         -0.5, -0.5, 0.0,
@@ -73,11 +72,6 @@ void TestEntity::OnAddedToScene(Pandora::Scene* pScene)
     //     Pandora::ResourceJsonSharedPtr pJsonResource = std::dynamic_pointer_cast<Pandora::ResourceDataStore>(pResource);
     //     int a = 0;
     // });
-}
-
-void TestEntity::Update(float delta) 
-{
-    Pandora::Entity::Update(delta);
 }
 
 void TestEntity::Render(wgpu::RenderPassEncoder renderPass)
