@@ -3,7 +3,6 @@
 #include <scene/components/debug_render_component.hpp>
 #include <scene/components/transform_component.hpp>
 
-#include "sector/phenomena/asteroid_field.hpp"
 #include "sector/signal/asteroid_field_signal.hpp"
 
 namespace WingsOfSteel::TheBrightestStar

@@ -24,8 +24,8 @@ void OnWindowResizedCallback(GLFWwindow* pWindow, int width, int height)
 Window::Window()
 : m_pWindow(nullptr)
 {
-    m_Width = 1024;
-    m_Height = 768;
+    m_Width = 1440;
+    m_Height = 900;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     m_pWindow = glfwCreateWindow(m_Width, m_Height, "The Brightest Star", nullptr, nullptr);

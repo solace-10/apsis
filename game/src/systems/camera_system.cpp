@@ -17,9 +17,12 @@ CameraSystem::CameraSystem()
 CameraSystem::~CameraSystem()
 {
     Pandora::InputSystem* pInputSystem = Pandora::GetInputSystem();
-    pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
-    pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonReleasedToken);
-    pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
+    if (pInputSystem)
+    {
+        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonReleasedToken);
+        pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
+    }
 }
 
 void CameraSystem::Initialize()

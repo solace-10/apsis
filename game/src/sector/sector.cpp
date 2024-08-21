@@ -5,11 +5,15 @@
 #include <scene/components/orbit_camera_component.hpp>
 #include <scene/components/transform_component.hpp>
 
+#include "components/player_controller_component.hpp"
+#include "components/ship_navigation_component.hpp"
 #include "sector/sector_info.hpp"
 #include "sector/sector.hpp"
 #include "sector/signal/signal.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/player_controller_system.hpp"
+#include "systems/ship_navigation_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -34,6 +38,8 @@ void Sector::Initialize()
 
     AddSystem(std::make_unique<CameraSystem>());
     AddSystem(std::make_unique<DebugRenderSystem>());
+    AddSystem(std::make_unique<PlayerControllerSystem>());
+    AddSystem(std::make_unique<ShipNavigationSystem>());
 
     m_pCamera = CreateEntity();
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
@@ -120,6 +126,9 @@ void Sector::SpawnPlayerShip()
 
     TransformComponent& transformComponent = pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+    pPlayerShip->AddComponent<ShipNavigationComponent>();
+    pPlayerShip->AddComponent<PlayerControllerComponent>();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
