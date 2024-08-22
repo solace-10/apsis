@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <glm/vec2.hpp>
+
 #include <core/smart_ptr.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
@@ -21,17 +23,24 @@ enum class SectorCivilizationLevel
 };
 // clang-format on
 
+DECLARE_SMART_PTR(SubSectorInfo);
+
 DECLARE_SMART_PTR(SectorInfo);
-class SectorInfo
+class SectorInfo : public std::enable_shared_from_this<SectorInfo>
 {
 public:
-    SectorInfo(int level, const std::vector<SignalSharedPtr>& signals);
-    ~SectorInfo();
+    SectorInfo(int level, const glm::vec2& size, const std::vector<SignalSharedPtr>& signals);
+    ~SectorInfo() {}
 
     const std::vector<SignalSharedPtr>& GetSignals() const;
 
+    // This should receive the coordinates the player is jumping to, but for prototyping reasons
+    // we make sure we always return a sector with an asteroid field in it.
+    SubSectorInfoSharedPtr CreateSubSectorInfo();
+
 private:
-    int m_Level;
+    int m_Level{ 0 };
+    glm::vec2 m_Size{ 1.0f };
     std::vector<SignalSharedPtr> m_Signals;
 };
 

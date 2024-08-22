@@ -7,8 +7,9 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(Sector);
 DECLARE_SMART_PTR(SectorGenerator);
+DECLARE_SMART_PTR(SectorInfo);
+DECLARE_SMART_PTR(SubSector);
 
 class Game
 {
@@ -25,7 +26,8 @@ private:
 
     Pandora::SceneSharedPtr m_pMenuScene;
 
-    SectorSharedPtr m_pSector;
+    SectorInfoSharedPtr m_pSectorInfo;
+    SubSectorSharedPtr m_pSubSector;
     SectorGeneratorUniquePtr m_pSectorGenerator;
 };
 

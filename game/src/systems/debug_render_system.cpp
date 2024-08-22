@@ -1,5 +1,6 @@
 #include <render/debug_render.hpp>
 #include <scene/components/debug_render_component.hpp>
+#include <scene/components/tag_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 #include <pandora.hpp>
@@ -15,7 +16,7 @@ void DebugRenderSystem::Update(float delta)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const DebugRenderComponent, const TransformComponent>();
 
-    view.each([](const auto entity, const DebugRenderComponent& debugRenderComponent, const TransformComponent& transformComponent)
+    view.each([&registry](const auto entity, const DebugRenderComponent& debugRenderComponent, const TransformComponent& transformComponent)
     {
         if (debugRenderComponent.shape == DebugRenderShape::Circle)
         {
@@ -54,11 +55,15 @@ void DebugRenderSystem::Update(float delta)
                 buildPoint(transformComponent.transform, -halfLength, -halfHeight, -halfWidth),
                 buildPoint(transformComponent.transform, -halfLength, -halfHeight,  halfWidth)
             };
-
             GetDebugRender()->Box(points, debugRenderComponent.color);
         }
 
-        //GetDebugRender()->Label(m_pSignal->GetName(), m_pSignal->GetPosition(), Color::White);
+        TagComponent* pTagComponent = registry.try_get<TagComponent>(entity);
+        if (pTagComponent)
+        {
+            const glm::vec3 position(transformComponent.transform[3]);
+            GetDebugRender()->Label(pTagComponent->Value(), position, Color::White);
+        }
     });
 }
 

@@ -31,7 +31,7 @@ SectorInfoSharedPtr SectorGenerator::Create(uint32_t level)
 
     std::vector<SignalSharedPtr> signals = GenerateSignals(generationParameters);
 
-    SectorInfoSharedPtr pSectorInfo = std::make_shared<SectorInfo>(level, signals);
+    SectorInfoSharedPtr pSectorInfo = std::make_shared<SectorInfo>(level, m_SectorSize, signals);
 
     return pSectorInfo;
 }
@@ -124,9 +124,10 @@ SignalSharedPtr SectorGenerator::GenerateAsteroidFieldSignal(const nlohmann::jso
 
 glm::vec3 SectorGenerator::GenerateSignalPosition() const
 {
-    float m = 100.0f;
-    float x = Pandora::Random::Get(-m, m);
-    float z = Pandora::Random::Get(-m, m);
+    const float halfWidth = m_SectorSize.x / 2.0f;
+    const float halfHeight = m_SectorSize.y / 2.0f;
+    const float x = Pandora::Random::Get(-halfWidth, halfWidth);
+    const float z = Pandora::Random::Get(-halfHeight, halfHeight);
     return glm::vec3(x, 0.0f, z);
 }
 

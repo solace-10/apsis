@@ -8,7 +8,8 @@
 #include "components/player_controller_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "sector/sector_info.hpp"
-#include "sector/sector.hpp"
+#include "sector/sub_sector.hpp"
+#include "sector/sub_sector_info.hpp"
 #include "sector/signal/signal.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
@@ -18,19 +19,19 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-Sector::Sector(SectorInfoSharedPtr& pSectorInfo)
-: m_pSectorInfo(pSectorInfo)
+SubSector::SubSector(SubSectorInfoSharedPtr& pSubSectorInfo)
+: m_pSubSectorInfo(pSubSectorInfo)
 , m_ShowSignalsDebugUI(false)
 {
 
 }
 
-Sector::~Sector()
+SubSector::~SubSector()
 {
 
 }
 
-void Sector::Initialize()
+void SubSector::Initialize()
 {
     using namespace Pandora;
 
@@ -57,7 +58,7 @@ void Sector::Initialize()
     orbitCameraComponent.maximumPitch = glm::radians(80.0f);
     SetCamera(m_pCamera); 
 
-    for (auto& pSignal : m_pSectorInfo->GetSignals())
+    for (auto& pSignal : m_pSubSectorInfo->GetSignals())
     {
         pSignal->Spawn(this);
     }
@@ -67,19 +68,19 @@ void Sector::Initialize()
     DrawSignalsDebugUI();
 }
 
-void Sector::Update(float delta)
+void SubSector::Update(float delta)
 {
     Pandora::Scene::Update(delta);
 
     DrawSignalsDebugUI();
 }
 
-void Sector::ShowSignalsDebugUI(bool state)
+void SubSector::ShowSignalsDebugUI(bool state)
 {
     m_ShowSignalsDebugUI = state;
 }
 
-void Sector::DrawSignalsDebugUI()
+void SubSector::DrawSignalsDebugUI()
 {
     if (!m_ShowSignalsDebugUI)
     {
@@ -97,21 +98,25 @@ void Sector::DrawSignalsDebugUI()
         ImGui::TableSetupColumn("Z");
         ImGui::TableHeadersRow();
 
-        for (auto& pSignal : m_pSectorInfo->GetSignals())
+        SectorInfoSharedPtr pSectorInfo = m_pSubSectorInfo->GetSectorInfo().lock();
+        if (pSectorInfo)
         {
-            ImGui::TableNextRow();
-            const glm::vec3& pos = pSignal->GetPosition();
-            ImGui::TableNextColumn(); ImGui::Text("%s", pSignal->GetName().c_str());
-            ImGui::TableNextColumn(); ImGui::Text("%.2f", pSignal->GetSignalDifficulty());
-            ImGui::TableNextColumn(); ImGui::Text("%d", static_cast<int>(pos.x));
-            ImGui::TableNextColumn(); ImGui::Text("%d", static_cast<int>(pos.z));
+            for (auto& pSignal : pSectorInfo->GetSignals())
+            {
+                ImGui::TableNextRow();
+                const glm::vec3& pos = pSignal->GetPosition();
+                ImGui::TableNextColumn(); ImGui::Text("%s", pSignal->GetName().c_str());
+                ImGui::TableNextColumn(); ImGui::Text("%.2f", pSignal->GetSignalDifficulty());
+                ImGui::TableNextColumn(); ImGui::Text("%d", static_cast<int>(pos.x));
+                ImGui::TableNextColumn(); ImGui::Text("%d", static_cast<int>(pos.z));
+            }
         }
         ImGui::EndTable();
     }
     ImGui::End();
 }
 
-void Sector::SpawnPlayerShip()
+void SubSector::SpawnPlayerShip()
 {
     using namespace Pandora;
 

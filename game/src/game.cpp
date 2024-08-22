@@ -4,9 +4,10 @@
 #include <scene/entity.hpp>
 #include <scene/scene.hpp>
 
-#include "sector/sector.hpp"
 #include "sector/sector_generator.hpp"
 #include "sector/sector_info.hpp"
+#include "sector/sub_sector.hpp"
+#include "sector/sub_sector_info.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -46,12 +47,13 @@ void Game::Initialize()
 
 void Game::Update(float delta)
 {
-    if (m_pSector == nullptr && m_pSectorGenerator->CanCreate(0))
+    if (m_pSubSector == nullptr && m_pSectorGenerator->CanCreate(0))
     {
-        SectorInfoSharedPtr pSectorInfo = m_pSectorGenerator->Create(0);
-        m_pSector = std::make_shared<Sector>(pSectorInfo);
-        m_pSector->Initialize();
-        Pandora::SetActiveScene(m_pSector);
+        m_pSectorInfo = m_pSectorGenerator->Create(0);
+        SubSectorInfoSharedPtr pSubSectorInfo = m_pSectorInfo->CreateSubSectorInfo();
+        m_pSubSector = std::make_shared<SubSector>(pSubSectorInfo);
+        m_pSubSector->Initialize();
+        Pandora::SetActiveScene(m_pSubSector);
     }
 }
 
@@ -63,15 +65,17 @@ void Game::Shutdown()
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.
 void Game::DrawImGuiMenuBar()
 {
-    if (m_pSector && ImGui::BeginMenu("Sector"))
+    if (m_pSubSector)
     {
-        static bool sShowSignalsWindow = false;
-        if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
+        if (ImGui::BeginMenu("Sector"))
         {
-            m_pSector->ShowSignalsDebugUI(sShowSignalsWindow);
+            static bool sShowSignalsWindow = false;
+            if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
+            {
+                m_pSubSector->ShowSignalsDebugUI(sShowSignalsWindow);
+            }
+            ImGui::EndMenu();
         }
-
-        ImGui::EndMenu();
     }
 }
 

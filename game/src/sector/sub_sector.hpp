@@ -6,14 +6,14 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(SectorInfo);
+DECLARE_SMART_PTR(SubSectorInfo);
 
-DECLARE_SMART_PTR(Sector);
-class Sector : public Pandora::Scene
+DECLARE_SMART_PTR(SubSector);
+class SubSector : public Pandora::Scene
 {
 public:
-    Sector(SectorInfoSharedPtr& pSectorInfo);
-    ~Sector();
+    SubSector(SubSectorInfoSharedPtr& pSubSectorInfo);
+    ~SubSector();
 
     void Initialize() override;
     void Update(float delta) override;
@@ -24,7 +24,7 @@ private:
     void DrawSignalsDebugUI();
     void SpawnPlayerShip();
 
-    SectorInfoSharedPtr m_pSectorInfo;
+    SubSectorInfoSharedPtr m_pSubSectorInfo;
     Pandora::EntitySharedPtr m_pCamera;
     bool m_ShowSignalsDebugUI;
 };

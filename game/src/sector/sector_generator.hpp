@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <nlohmann/json.hpp>
 
@@ -37,6 +38,7 @@ private:
     SectorCivilizationLevel GenerateCivilizationLevel() const;
 
     std::unordered_map<std::string, Pandora::ResourceDataStoreSharedPtr> m_GenerationParameters;
+    glm::vec2 m_SectorSize{ 10.0f, 10.0f };
 };
 
 } // namespace WingsOfSteel::TheBrightestStar
