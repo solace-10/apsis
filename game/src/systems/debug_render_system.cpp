@@ -25,7 +25,15 @@ void DebugRenderSystem::Update(float delta)
                 glm::vec3(0.0f, 1.0f, 0.0f),
                 debugRenderComponent.color,
                 debugRenderComponent.radius.value_or(1.0f),
-                20.0f
+                12.0f
+            );
+        }
+        if (debugRenderComponent.shape == DebugRenderShape::Sphere)
+        {
+            GetDebugRender()->Sphere(
+                glm::vec3(transformComponent.transform[3]),
+                debugRenderComponent.color,
+                debugRenderComponent.radius.value_or(1.0f)
             );
         }
         else if (debugRenderComponent.shape == DebugRenderShape::Cone)

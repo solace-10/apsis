@@ -1,3 +1,4 @@
+#include <core/log.hpp>
 #include <core/random.hpp>
 #include <pandora.hpp>
 #include <scene/components/debug_render_component.hpp>
@@ -29,7 +30,7 @@ Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn(Pandora::Scene* pScene) cons
     using namespace Pandora;
     EntitySharedPtr pAsteroidField = pScene->CreateEntity();
 
-    const float asteroidFieldRadius = Pandora::Random::Get(1000.0f, 1001.0f);
+    const float asteroidFieldRadius = Pandora::Random::Get(1000.0f, 1500.0f);
     const glm::vec3 asteroidFieldCenter = GetPosition();
 
     DebugRenderComponent& debugRenderComponent = pAsteroidField->AddComponent<DebugRenderComponent>();
@@ -42,7 +43,7 @@ Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn(Pandora::Scene* pScene) cons
 
     pAsteroidField->AddComponent<TagComponent>(GetName());
 
-    int numAsteroids = 100;
+    int numAsteroids = static_cast<int>(asteroidFieldRadius / 10.0f);
     struct AsteroidCollisionData
     {
         glm::vec3 position;
@@ -51,16 +52,34 @@ Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn(Pandora::Scene* pScene) cons
     std::vector<AsteroidCollisionData> data;
     data.reserve(numAsteroids);
 
+    auto checkOverlap = [&data](const AsteroidCollisionData& toTest) -> bool
+    {
+        for (auto& asteroid : data)
+        {
+            const float x1 = toTest.position.x;
+            const float x2 = asteroid.position.x;
+            const float z1 = toTest.position.z;
+            const float z2 = asteroid.position.z;
+            const float distanceSquared = (x2 - x1) * (x2 - x1) + (z2 - z1) * (z2 - z1);
+            const float radiusSum = toTest.radius + asteroid.radius;
+            const float radiusSumSquared = radiusSum * radiusSum;
+            if (distanceSquared <= radiusSumSquared)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
     for (int i = 0; i < numAsteroids; i++)
     {
-
         for (int retries = 0; retries < 3; retries++)
         {
             AsteroidCollisionData asteroidCollisionData;
             asteroidCollisionData.position = asteroidFieldCenter + glm::vec3(Random::Get(-asteroidFieldRadius, asteroidFieldRadius), Random::Get(-100.0f, 100.0f), Random::Get(-asteroidFieldRadius, asteroidFieldRadius));
             asteroidCollisionData.radius = Random::Get(10.0f, 50.0f);
 
-            if (glm::distance(asteroidFieldCenter, asteroidCollisionData.position) > asteroidFieldRadius)
+            if (glm::distance(asteroidFieldCenter, asteroidCollisionData.position) > asteroidFieldRadius || checkOverlap(asteroidCollisionData))
             {
                 continue;
             }
@@ -72,11 +91,12 @@ Pandora::EntitySharedPtr AsteroidFieldSignal::Spawn(Pandora::Scene* pScene) cons
             debugRenderComponent.radius = asteroidCollisionData.radius;
             TransformComponent& transformComponent = pAsteroid->AddComponent<TransformComponent>();
             transformComponent.transform = glm::translate(glm::mat4(1.0f), asteroidCollisionData.position);
+            data.push_back(asteroidCollisionData);
             break;
         }
-
     }
 
+    Pandora::Log::Info() << "Generated asteroid field with " << data.size() << " asteroids.";
     return pAsteroidField;
 }
 

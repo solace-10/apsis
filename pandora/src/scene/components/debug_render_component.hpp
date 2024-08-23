@@ -11,7 +11,8 @@ enum class DebugRenderShape
 {
     Circle,
     Cone,
-    Box
+    Box,
+    Sphere
 };
 
 class DebugRenderComponent
