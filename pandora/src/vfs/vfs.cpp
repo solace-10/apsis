@@ -43,4 +43,9 @@ bool VFS::Exists(const std::string& path) const
     return m_pImpl->Exists(path);
 }
 
+const std::vector<std::string> VFS::List(const std::string& path) const
+{
+    return m_pImpl->List(path);
+}
+
 } // namespace WingsOfSteel::Pandora

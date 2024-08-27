@@ -4,6 +4,8 @@
 #include <scene/entity.hpp>
 #include <scene/scene.hpp>
 
+#include "items/item_info.hpp"
+#include "items/item_manager.hpp"
 #include "sector/sector_generator.hpp"
 #include "sector/sector_info.hpp"
 #include "sector/sub_sector.hpp"
@@ -27,6 +29,7 @@ void Game::Initialize()
 {
     Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar();});
 
+    m_pItemManager = std::make_unique<ItemManager>();
     m_pSectorGenerator = std::make_unique<SectorGenerator>();
 
     // m_pCamera = std::make_shared<OrbitCamera>();

@@ -21,6 +21,7 @@ public:
     void Update() override;
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
     bool Exists(const std::string& path) const override;
+    const std::vector<std::string> List(const std::string& path) const override;
 
 private:
     void BuildVFS();

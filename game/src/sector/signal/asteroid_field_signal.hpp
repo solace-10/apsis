@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <vector>
 
 #include "sector/signal/signal.hpp"
@@ -22,6 +23,7 @@ public:
 
 private:
     void AddContent(const std::string& itemName, float chance);
+    std::string_view GenerateAsteroidContents() const;
 
     AsteroidFieldSignalContents m_Contents;
 };

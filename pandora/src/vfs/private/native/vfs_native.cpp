@@ -94,6 +94,19 @@ void VFSNative::BuildVFS()
     }
 }
 
+const std::vector<std::string> VFSNative::List(const std::string& path) const
+{
+    std::vector<std::string> files;
+    for (auto& file : m_VFS)
+    {
+        if (file.first.starts_with(path))
+        {
+            files.push_back(file.first);
+        }
+    }
+    return files;
+}
+
 } // namespace WingsOfSteel::Pandora::Private
 
 #endif // TARGET_PLATFORM_NATIVE

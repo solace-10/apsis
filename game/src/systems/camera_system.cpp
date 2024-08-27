@@ -63,16 +63,25 @@ void CameraSystem::Update(float delta)
             {
                 orbitCameraComponent.pitch = orbitCameraComponent.maximumPitch;
             }
-
-            glm::vec3 position(
-                glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
-                glm::sin(orbitCameraComponent.pitch),
-                glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch)
-            );
-
-            TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
-            transformComponent.transform = glm::lookAt(position * orbitCameraComponent.distance, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            m_InputPending = false;
         }
+
+        glm::vec3 position(
+            glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
+            glm::sin(orbitCameraComponent.pitch),
+            glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch)
+        );
+
+        EntitySharedPtr pAnchorEntity = orbitCameraComponent.anchorEntity.lock();
+        glm::vec3 anchorPosition(0.0f);
+        if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
+        {
+            const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
+            anchorPosition = glm::vec3(anchorTransform[3]);
+        }
+
+        TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
+        transformComponent.transform = glm::lookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 }
 

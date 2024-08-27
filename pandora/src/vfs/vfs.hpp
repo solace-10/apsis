@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "vfs/file.hpp"
 
@@ -45,6 +46,7 @@ public:
     void Update();
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
     bool Exists(const std::string& path) const;
+    const std::vector<std::string> List(const std::string& path = "/") const;
 
 private:
     std::unique_ptr<Private::VFSImpl> m_pImpl;

@@ -64,6 +64,7 @@ void SubSector::Initialize()
     }
 
     SpawnPlayerShip();
+    orbitCameraComponent.anchorEntity = m_pPlayerShip;
 
     DrawSignalsDebugUI();
 }
@@ -120,20 +121,20 @@ void SubSector::SpawnPlayerShip()
 {
     using namespace Pandora;
 
-    EntitySharedPtr pPlayerShip = CreateEntity();
+    m_pPlayerShip = CreateEntity();
 
-    DebugRenderComponent& debugRenderComponent = pPlayerShip->AddComponent<DebugRenderComponent>();
+    DebugRenderComponent& debugRenderComponent = m_pPlayerShip->AddComponent<DebugRenderComponent>();
     debugRenderComponent.color = Color::Cyan;
     debugRenderComponent.shape = DebugRenderShape::Box;
     debugRenderComponent.length = 50.0f;
     debugRenderComponent.width = 25.0f;
     debugRenderComponent.height = 10.0f;
 
-    TransformComponent& transformComponent = pPlayerShip->AddComponent<TransformComponent>();
+    TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-    pPlayerShip->AddComponent<ShipNavigationComponent>();
-    pPlayerShip->AddComponent<PlayerControllerComponent>();
+    m_pPlayerShip->AddComponent<ShipNavigationComponent>();
+    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

@@ -67,11 +67,6 @@ void TestEntity::OnAddedToScene()
     // Pandora::GetResourceSystem()->RequestResource("/test/plane/plane_normals.glb", [this](Pandora::ResourceSharedPtr pResource) {
     //     this->m_pModel = std::dynamic_pointer_cast<Pandora::ResourceModel>(pResource);
     // });
-
-    // Pandora::GetResourceSystem()->RequestResource("/items/ores.json", [this](Pandora::ResourceSharedPtr pResource) {
-    //     Pandora::ResourceJsonSharedPtr pJsonResource = std::dynamic_pointer_cast<Pandora::ResourceDataStore>(pResource);
-    //     int a = 0;
-    // });
 }
 
 void TestEntity::Render(wgpu::RenderPassEncoder renderPass)

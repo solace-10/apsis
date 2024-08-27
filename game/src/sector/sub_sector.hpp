@@ -26,6 +26,7 @@ private:
 
     SubSectorInfoSharedPtr m_pSubSectorInfo;
     Pandora::EntitySharedPtr m_pCamera;
+    Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowSignalsDebugUI;
 };
 

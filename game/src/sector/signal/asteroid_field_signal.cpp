@@ -110,4 +110,20 @@ void AsteroidFieldSignal::AddContent(const std::string& itemName, float chance)
     m_Contents.push_back({itemName, chance});
 }
 
+std::string_view AsteroidFieldSignal::GenerateAsteroidContents() const
+{
+    const float roll = Pandora::Random::Get(1.0f);
+    float accum = 0.0f;
+    for (auto& pair : m_Contents)
+    {
+        accum += pair.second;
+        if (roll <= accum)
+        {
+            return std::string_view{pair.first};
+        }
+    }
+    
+    return std::string_view();
+}
+
 } // namespace WingsOfSteel::TheBrightestStar
