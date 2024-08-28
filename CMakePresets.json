@@ -113,6 +113,7 @@
             ],
             "targets": [
                 "game",
+                "forge",
                 "manifest_generator"
             ]
         },

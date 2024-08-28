@@ -5,4 +5,5 @@ set(CMAKE_CXX_STANDARD 20)           # Enable C++20 standardq
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pandora/cmake/shared)
 
 add_subdirectory("pandora")
+add_subdirectory("forge")
 add_subdirectory("game")
