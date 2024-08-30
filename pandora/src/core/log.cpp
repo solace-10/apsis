@@ -21,6 +21,7 @@
 #include "windows.h"
 #endif
 
+#include "core/debug_trap.hpp"
 #include "core/log.hpp"
 
 //#include <SDL.h>
@@ -70,6 +71,19 @@ void Log::LogInternal( const std::string& text, Log::Level level )
     {
         pTarget->Log( text, level );
     }
+
+    AbortOnError(level);
+}
+
+void Log::AbortOnError(Log::Level level)
+{
+    if (level != Log::Level::Error)
+    {
+        return;
+    }
+
+    psnip_trap();
+    exit(1);
 }
 
 //////////////////////////////////////////////////////////////////////////

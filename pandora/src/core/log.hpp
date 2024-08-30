@@ -84,6 +84,7 @@ private:
     using LogTargetList = std::list<LogTargetSharedPtr>;
 
     static void LogInternal( const std::string& text, Log::Level level );
+    static void AbortOnError(Log::Level level);
 
     static std::mutex m_Mutex;
     static LogTargetList m_Targets;

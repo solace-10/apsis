@@ -2,6 +2,7 @@
 
 #include <magic_enum.hpp>
 
+#include <core/log.hpp>
 #include <imgui/imgui_system.hpp>
 #include <pandora.hpp>
 
@@ -23,6 +24,7 @@ Forge::~Forge()
 
 void Forge::Initialize()
 {
+    Pandora::Log::Info() << "Initializing Forge...";
     Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar(); });
     m_pManifest = std::make_unique<Manifest>();
 }

@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include <xxhash.h>
 
+#include <core/log.hpp>
+
 #include "manifest.hpp"
 
 namespace WingsOfSteel::Forge
@@ -60,19 +62,20 @@ void Manifest::Save()
         {
             fs << manifest.dump(4);
             fs.close();
+            Pandora::Log::Info() << "Manifest file written out.";
         }
         else
         {
-            //return false;
+            Pandora::Log::Error() << "Failed to write out manifest file.";
         }
     } 
     catch (const fs::filesystem_error& e) 
     {
-        //std::cerr << "Filesystem error: " << e.what() << std::endl;
+        Pandora::Log::Error() << "Filesystem error: " << e.what();
     } 
     catch (const std::exception& e) 
     {
-        //std::cerr << "General exception: " << e.what() << std::endl;
+        Pandora::Log::Error() << "General exception: " << e.what();
     }
 }
 
@@ -101,31 +104,19 @@ void Manifest::BuildFromFilesystem()
                     m_Entries[relativePath] = std::move(pManifestEntry);
                 }
             }
-
-            // fs::path manifestFs(directory / "manifest.json");
-            // std::ofstream fs(manifestFs, std::ios::out);
-            // if (fs.good())
-            // {
-            //     fs << manifest.dump(4);
-            //     fs.close();
-            //     //std::cout << "Wrote manifest to " << manifestFs << std::endl;
-            // }
         } 
         else 
         {
-            //std::cerr << "Directory does not exist or is not a directory." << std::endl;
-            //return false;
+            Pandora::Log::Error() << "Directory does not exist or is not a directory.";
         }
     } 
     catch (const fs::filesystem_error& e) 
     {
-        //std::cerr << "Filesystem error: " << e.what() << std::endl;
-        //return false;
+        Pandora::Log::Error() << "Filesystem error: " << e.what();
     } 
     catch (const std::exception& e) 
     {
-        //std::cerr << "General exception: " << e.what() << std::endl;
-        //return false;
+        Pandora::Log::Error() << "General exception: " << e.what();
     }
 }
     
@@ -136,6 +127,7 @@ void Manifest::OverrideFromPreviousManifest()
     std::ifstream manifestFile("../../game/bin/data/core/manifest.json");
     if (!manifestFile)
     {
+        Pandora::Log::Info() << "No previously existing manifest file to override from.";
         return;
     }
 
