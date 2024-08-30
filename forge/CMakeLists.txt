@@ -1,6 +1,8 @@
 project(forge)
 set(CMAKE_CXX_STANDARD 20)
 
+if(TARGET_PLATFORM_NATIVE)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
@@ -16,10 +18,11 @@ target_include_directories(
 )
 
 target_link_directories(forge PRIVATE ${PANDORA_LIBRARY_DIRS})
+
 target_link_libraries(forge PRIVATE pandora)
 
-if(TARGET_PLATFORM_NATIVE)
-    add_custom_command(TARGET forge POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:forge> ${CMAKE_CURRENT_LIST_DIR}/bin
-    )
-endif()
+add_custom_command(TARGET forge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:forge> ${CMAKE_CURRENT_LIST_DIR}/bin
+)
+
+endif() # TARGET_PLATFORM_NATIVE

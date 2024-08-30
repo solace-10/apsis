@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/smart_ptr.hpp"
-#include "scene/entity.hpp"
-#include "scene/scene.hpp"
 
 namespace WingsOfSteel::Forge
 {
+
+DECLARE_SMART_PTR(Manifest);
 
 class Forge
 {
@@ -19,6 +19,9 @@ public:
 
 private:
     void DrawImGuiMenuBar();
+    void DrawManifestTab();
+
+    ManifestUniquePtr m_pManifest;
 };
 
 } // namespace WingsOfSteel::Forge

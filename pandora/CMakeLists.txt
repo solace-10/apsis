@@ -77,7 +77,3 @@ elseif(TARGET_PLATFORM_WEB)
         #"-fsanitize=address"
     )
 endif()
-
-if(TARGET_PLATFORM_NATIVE)
-    add_subdirectory("tools/manifest_generator")
-endif()

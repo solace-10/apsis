@@ -35,7 +35,7 @@ using FileReadCallback = std::function<void(FileReadResult, FileSharedPtr)>;
 // Access to the overriden file is not possible.
 // Note that with the current system, only native would support mods, with web relying on
 // the predetermined manifest file in `data/core/manifest.json`, which is created by
-// the `manifest_generator` tool.
+// the `Forge` tool.
 class VFS
 {
 public:

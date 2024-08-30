@@ -12,12 +12,11 @@
             "cwd":"${workspaceRoot}/game/bin"
         },
         {
-            "name": "Launch Manifest Generator (Windows)",
+            "name": "Launch Forge (Windows)",
             "type":"cppvsdbg",
             "request":"launch",
-            "program": "${workspaceRoot}/pandora/tools/manifest_generator/bin/manifest_generator.exe",
-            "cwd":"${workspaceRoot}/pandora/tools/manifest_generator/bin/",
-            "args": [ "${workspaceRoot}/game/bin" ]
+            "program": "${workspaceRoot}/forge/bin/forge.exe",
+            "cwd":"${workspaceRoot}/forge/bin"
         },
     ]
 }
