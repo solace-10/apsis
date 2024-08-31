@@ -132,8 +132,14 @@ wgpu::Device RenderSystem::GetDevice() const
 
 void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
 {
+    // Request the high performance device if possible, so we don't accidentally select an integrated GPU when
+    // a dedicated GPU is available.
+    wgpu::RequestAdapterOptions adapterOptions{
+        .powerPreference = wgpu::PowerPreference::HighPerformance
+    };
+
     g_Instance.RequestAdapter(
-        nullptr,
+        &adapterOptions,
         // TODO(https://bugs.chromium.org/p/dawn/issues/detail?id=1892): Use
         // wgpu::RequestAdapterStatus, wgpu::Adapter, and wgpu::Device.
         [](WGPURequestAdapterStatus status, WGPUAdapter adapter, const char* message, void* userdata) {
