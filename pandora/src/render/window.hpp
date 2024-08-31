@@ -3,13 +3,15 @@
 #include <GLFW/glfw3.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include "render/window_settings.hpp"
+
 namespace WingsOfSteel::Pandora
 {
 
 class Window
 {
 public:
-    Window();
+    Window(const WindowSettings& windowSettings);
     ~Window();
 
     wgpu::Surface GetSurface() const;

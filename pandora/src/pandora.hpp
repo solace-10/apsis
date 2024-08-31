@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "core/smart_ptr.hpp"
+#include "render/window_settings.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -20,7 +21,7 @@ using GameInitializeCallback = std::function<void()>;
 using GameUpdateCallback = std::function<void(float)>;
 using GameShutdownCallback = std::function<void()>;
 
-void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback);
+void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback);
 void Update();
 void Shutdown();
 

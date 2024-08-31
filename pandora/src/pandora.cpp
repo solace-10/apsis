@@ -44,7 +44,7 @@ float g_PreviousFrameStart = 0.0f;
 
 void InitializeLogging();
 
-void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback)
+void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gameInitializeCallback, GameUpdateCallback gameUpdateCallback, GameShutdownCallback gameShutdownCallback)
 {
     g_GameInitializeCallback = gameInitializeCallback;
     g_GameUpdateCallback = gameUpdateCallback;
@@ -59,10 +59,10 @@ void Initialize(GameInitializeCallback gameInitializeCallback, GameUpdateCallbac
 
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
-        []() -> void 
+        [windowSettings]() -> void 
         {
             g_pResourceSystem = std::make_unique<ResourceSystem>();
-            g_pWindow = std::make_unique<Window>();
+            g_pWindow = std::make_unique<Window>(windowSettings);
             g_pInputSystem = std::make_unique<InputSystem>();
             g_pInputSystem->Initialize();
             g_pImGuiSystem = std::make_unique<ImGuiSystem>();

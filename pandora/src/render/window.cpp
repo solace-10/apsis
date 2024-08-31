@@ -21,14 +21,14 @@ void OnWindowResizedCallback(GLFWwindow* pWindow, int width, int height)
     GetWindow()->OnWindowResized(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 }
 
-Window::Window()
+Window::Window(const WindowSettings& windowSettings)
 : m_pWindow(nullptr)
 {
-    m_Width = 1024;
-    m_Height = 768;
+    assert(windowSettings.GetMode() != WindowMode::Fullscreen); // Not implemented yet.
+    windowSettings.GetSize(m_Width, m_Height);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    m_pWindow = glfwCreateWindow(m_Width, m_Height, "The Brightest Star", nullptr, nullptr);
+    m_pWindow = glfwCreateWindow(m_Width, m_Height, windowSettings.GetTitle().c_str(), nullptr, nullptr);
     glfwSetWindowSizeCallback(m_pWindow, &OnWindowResizedCallback);
     ConfigureSurface();
 }
