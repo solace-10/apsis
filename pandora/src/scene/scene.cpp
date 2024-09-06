@@ -4,7 +4,7 @@
 #include "scene/components/camera_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/entity.hpp"
-#include "scene/system.hpp"
+#include "scene/systems/system.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -34,14 +34,6 @@ void Scene::Update(float delta)
     }
 
     ProcessEntitiesToRemove();
-}
-
-void Scene::Render(wgpu::RenderPassEncoder renderPass)
-{
-    for (auto& pEntity : m_Entities)
-    {
-        pEntity->Render(renderPass);
-    }
 }
 
 EntitySharedPtr Scene::CreateEntity()

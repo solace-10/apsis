@@ -104,12 +104,6 @@ void RenderSystem::Update()
     wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
     UpdateGlobalUniforms(renderPass);
     
-    Scene* pActiveScene = GetActiveScene();
-    if (pActiveScene)
-    {
-        pActiveScene->Render(renderPass);
-    }
-
     m_pModelRenderSystem->Render(renderPass);
 
     GetDebugRender()->Render(renderPass);

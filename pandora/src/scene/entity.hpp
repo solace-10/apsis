@@ -1,8 +1,6 @@
 #pragma once
 
 #include <entt/entt.hpp>
-#include <glm/mat4x4.hpp>
-#include <webgpu/webgpu_cpp.h>
 
 #include "core/smart_ptr.hpp"
 #include "scene/scene.hpp"
@@ -39,18 +37,12 @@ public:
 
     virtual void OnAddedToScene();
     virtual void OnRemovedFromScene();
-    virtual void Render(wgpu::RenderPassEncoder renderPass);
-
-    void SetTransform(const glm::mat4x4& transform);
-    const glm::mat4x4& GetTransform() const;
 
     friend Scene;
 
 private:
     Scene* m_pScene = nullptr;
     entt::entity m_EntityHandle = entt::null;
-
-    glm::mat4x4 m_Transform;
     bool m_MarkedForRemoval;
 };
 

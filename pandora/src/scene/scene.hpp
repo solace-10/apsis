@@ -22,7 +22,6 @@ public:
 
     virtual void Initialize();
     virtual void Update(float delta);
-    virtual void Render(wgpu::RenderPassEncoder renderPass);
 
     EntitySharedPtr CreateEntity();
     void RemoveEntity(EntitySharedPtr pEntity);

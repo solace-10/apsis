@@ -1,3 +1,5 @@
+#include <glm/glm.hpp>
+
 #include "sector/signal/signal.hpp"
 #include "sector/sector_info.hpp"
 #include "sector/sub_sector_info.hpp"
