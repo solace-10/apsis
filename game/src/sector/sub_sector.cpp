@@ -2,6 +2,7 @@
 
 #include <scene/components/camera_component.hpp>
 #include <scene/components/debug_render_component.hpp>
+#include <scene/components/model_component.hpp>
 #include <scene/components/orbit_camera_component.hpp>
 #include <scene/components/transform_component.hpp>
 
@@ -51,7 +52,7 @@ void SubSector::Initialize()
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
     OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
-    orbitCameraComponent.distance = 1000.0f;
+    orbitCameraComponent.distance = 100.0f;
     orbitCameraComponent.orbitAngle = glm::radians(-90.0f);
     orbitCameraComponent.pitch = 0.0f;
     orbitCameraComponent.minimumPitch = glm::radians(0.0f);
@@ -133,6 +134,7 @@ void SubSector::SpawnPlayerShip()
     TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
+    m_pPlayerShip->AddComponent<ModelComponent>("/test/cube/cube.glb");
     m_pPlayerShip->AddComponent<ShipNavigationComponent>();
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
 }

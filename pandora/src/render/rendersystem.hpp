@@ -11,6 +11,7 @@ namespace WingsOfSteel::Pandora
 {
 
 DECLARE_SMART_PTR(DebugRender);
+DECLARE_SMART_PTR(ModelRenderSystem);
 
 using OnRenderSystemInitializedCallback = std::function<void()>;
 
@@ -31,6 +32,7 @@ public:
 
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
+    void InitializeInternal();
 
     void CreateGlobalUniforms();
     void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass);
@@ -48,6 +50,7 @@ private:
     wgpu::Buffer m_GlobalUniformsBuffer;
     wgpu::BindGroup m_GlobalUniformsBindGroup;
     wgpu::BindGroupLayout m_GlobalUniformsBindGroupLayout;
+    ModelRenderSystemUniquePtr m_pModelRenderSystem;
 };
 
 } // namespace WingsOfSteel::Pandora

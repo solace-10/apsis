@@ -1,7 +1,7 @@
 #pragma once
 
 #include <input/input_system.hpp>
-#include <scene/system.hpp>
+#include <scene/systems/system.hpp>
 
 #include "components/ship_navigation_component.hpp"
 

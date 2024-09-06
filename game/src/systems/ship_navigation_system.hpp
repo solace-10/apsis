@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scene/system.hpp>
+#include <scene/systems/system.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
 {

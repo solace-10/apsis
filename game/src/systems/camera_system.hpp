@@ -3,7 +3,7 @@
 #include <glm/vec2.hpp>
 
 #include <input/input_system.hpp>
-#include <scene/system.hpp>
+#include <scene/systems/system.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
 {

@@ -1,6 +1,7 @@
 .vscode/settings.json
 build/
 pandora/ext/
+game/assets/
 game/bin/data/core/manifest.json
 game/bin/game*
 game/bin/imgui.ini

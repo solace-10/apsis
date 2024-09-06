@@ -59,7 +59,7 @@ ResourceType ResourceModel::GetResourceType() const
     return ResourceType::Model;
 }
 
-void ResourceModel::Render(wgpu::RenderPassEncoder renderPass)
+void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass)
 {
     for (auto& primitiveRenderData : m_PrimitiveRenderData)
     {

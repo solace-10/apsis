@@ -9,7 +9,9 @@
 #include "render/debug_render.hpp"
 #include "render/window.hpp"
 #include "scene/components/camera_component.hpp"
+#include "scene/components/model_component.hpp"
 #include "scene/components/transform_component.hpp"
+#include "scene/systems/model_render_system.hpp"
 #include "scene/camera.hpp"
 #include "scene/scene.hpp"
 #include "pandora.hpp"
@@ -62,10 +64,16 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
             return;
         }
 
-        GetRenderSystem()->CreateGlobalUniforms();
+        GetRenderSystem()->InitializeInternal();
         OnRenderSystemInitializedWrapper();
     });
     // Code here will never be reached until shutdown has started.
+}
+
+void RenderSystem::InitializeInternal()
+{
+    CreateGlobalUniforms();
+    m_pModelRenderSystem = std::make_unique<ModelRenderSystem>();
 }
 
 void RenderSystem::Update()
@@ -101,6 +109,8 @@ void RenderSystem::Update()
     {
         pActiveScene->Render(renderPass);
     }
+
+    m_pModelRenderSystem->Render(renderPass);
 
     GetDebugRender()->Render(renderPass);
 

@@ -31,7 +31,7 @@ public:
     void Load(const std::string& path) override;
     ResourceType GetResourceType() const override;
 
-    void Render(wgpu::RenderPassEncoder renderPass);
+    void Render(wgpu::RenderPassEncoder& renderPass);
 
 private:
     void InitializeShaderLocationsMap();
