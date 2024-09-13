@@ -61,8 +61,7 @@ void DebugRender::Label(const std::string& str, const glm::vec3& pos, const Colo
     if (pCamera)
     {
         const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-        const TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
-        const glm::mat4 viewProjection = cameraComponent.camera.GetProjectionMatrix() * transformComponent.transform;
+        const glm::mat4 viewProjection = cameraComponent.camera.GetProjectionMatrix() * cameraComponent.camera.GetViewMatrix();
         dd::projectedText(str.c_str(), pos, color.AsVec3(), glm::value_ptr(viewProjection), 0, 0, GetWindow()->GetWidth(), GetWindow()->GetHeight(), scaling, durationMillis);
     }
 }

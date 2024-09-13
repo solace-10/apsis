@@ -62,12 +62,7 @@ void DebugRenderImpl::Render(wgpu::RenderPassEncoder& renderPass)
     m_GlyphData.clear();
 
     // flush() will populate the vertex data.
-
-    bool pendingDraws = dd::hasPendingDraws();
-
     dd::flush();
-
-    bool pendingDraws2 = dd::hasPendingDraws();
 
     if (m_LineRenderPipeline && !m_LineData.empty())
     {

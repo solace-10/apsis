@@ -204,7 +204,6 @@ void RenderSystem::CreateGlobalUniforms()
     using namespace wgpu;
 
     memset(&m_GlobalUniforms, 0, sizeof(GlobalUniforms));
-    m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.time = 0.0f;
@@ -250,16 +249,12 @@ void RenderSystem::CreateGlobalUniforms()
 
 void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 {
-    // TODO: model matrix needs to be in a different set of uniforms, as it is entity specific.
-    m_GlobalUniforms.modelMatrix = glm::mat4x4(1.0f);
-
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera)
     {
         const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-        const TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
         m_GlobalUniforms.projectionMatrix = cameraComponent.camera.GetProjectionMatrix();
-        m_GlobalUniforms.viewMatrix = transformComponent.transform;
+        m_GlobalUniforms.viewMatrix = cameraComponent.camera.GetViewMatrix();
     }
     else
     {

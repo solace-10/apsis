@@ -16,7 +16,6 @@ struct GlobalUniforms
 {
     projectionMatrix : mat4x4<f32>,
     viewMatrix : mat4x4<f32>,
-    modelMatrix : mat4x4<f32>,
     time : f32
 };
 

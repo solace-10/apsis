@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <glm/mat4x4.hpp>
 #include <webgpu/webgpu_cpp.h>
 
 #include "resources/resource_shader.hpp"
@@ -31,7 +32,7 @@ public:
     void Load(const std::string& path) override;
     ResourceType GetResourceType() const override;
 
-    void Render(wgpu::RenderPassEncoder& renderPass);
+    void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
 private:
     void InitializeShaderLocationsMap();
@@ -45,6 +46,7 @@ private:
     wgpu::PrimitiveTopology GetPrimitiveTopology(const tinygltf::Primitive* pPrimitive) const;
     int GetNumberOfComponentsForType(int type) const;
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
+    void CreateLocalUniforms();
 
     std::unique_ptr<tinygltf::Model> m_pModel;
     std::vector<wgpu::Buffer> m_Buffers;
@@ -79,6 +81,16 @@ private:
     std::vector<PrimitiveRenderData> m_PrimitiveRenderData;
 
     bool m_IsIndexed;
+
+    struct LocalUniforms
+    {
+        glm::mat4x4 modelMatrix;
+    };
+    LocalUniforms m_LocalUniforms;
+
+    wgpu::Buffer m_LocalUniformsBuffer;
+    wgpu::BindGroup m_LocalUniformsBindGroup;
+    wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
 };
 
 } // namespace WingsOfSteel::Pandora

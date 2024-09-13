@@ -59,10 +59,14 @@ ResourceType ResourceModel::GetResourceType() const
     return ResourceType::Model;
 }
 
-void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass)
+void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform)
 {
     for (auto& primitiveRenderData : m_PrimitiveRenderData)
     {
+        m_LocalUniforms.modelMatrix = transform;
+        GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LocalUniformsBuffer, 0, &m_LocalUniforms, sizeof(LocalUniforms));
+        renderPass.SetBindGroup(1, m_LocalUniformsBindGroup);
+
         renderPass.SetPipeline(primitiveRenderData.pipeline);
         for (const auto& vertexData : primitiveRenderData.vertexData)
         {
@@ -118,6 +122,7 @@ void ResourceModel::LoadInternal(FileReadResult result, FileSharedPtr pFile)
 
         if (loadResult)
         {
+            CreateLocalUniforms();
             LoadDependentResources();
         }
         else
@@ -295,9 +300,15 @@ void ResourceModel::SetupPrimitive(tinygltf::Primitive* pPrimitive)
         .targets = &colorTargetState
     };
 
+    wgpu::BindGroupLayout bindGroupLayouts[] = 
+    {
+        GetRenderSystem()->GetGlobalUniformsLayout(),
+        m_LocalUniformsBindGroupLayout
+    };
+
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
-        .bindGroupLayoutCount = 1,
-        .bindGroupLayouts = &GetRenderSystem()->GetGlobalUniformsLayout()
+        .bindGroupLayoutCount = 2,
+        .bindGroupLayouts = bindGroupLayouts
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
@@ -402,6 +413,54 @@ ResourceShader* ResourceModel::GetShaderForPrimitive(tinygltf::Primitive* pPrimi
     path << "/shaders/" << material.name << ".wgsl";
     auto it = m_Shaders.find(path.str());
     return (it == m_Shaders.end()) ? nullptr : it->second.get();
+}
+
+void ResourceModel::CreateLocalUniforms()
+{
+    static_assert(sizeof(LocalUniforms) % 16 == 0);
+
+    using namespace wgpu;
+
+    memset(&m_LocalUniforms, 0, sizeof(LocalUniforms));
+    m_LocalUniforms.modelMatrix = glm::mat4x4(1.0f);
+
+    BufferDescriptor bufferDescriptor{
+        .label = "Local uniforms buffer",
+        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
+        .size = sizeof(LocalUniforms)
+    };
+
+    m_LocalUniformsBuffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
+
+    BindGroupLayoutEntry bindGroupLayoutEntry{
+        .binding = 0,
+        .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
+        .buffer {
+            .type = wgpu::BufferBindingType::Uniform,
+            .minBindingSize = sizeof(LocalUniforms)
+        }
+    };
+
+    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+        .entryCount = 1,
+        .entries = &bindGroupLayoutEntry
+    };
+    m_LocalUniformsBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+
+    BindGroupEntry bindGroupEntry{
+        .binding = 0,
+        .buffer = m_LocalUniformsBuffer,
+        .offset = 0,
+        .size = sizeof(LocalUniforms)
+    };
+
+    BindGroupDescriptor bindGroupDescriptor{
+        .layout = m_LocalUniformsBindGroupLayout,
+        .entryCount = bindGroupLayoutDescriptor.entryCount,
+        .entries = &bindGroupEntry
+    };
+
+    m_LocalUniformsBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
 } // namespace WingsOfSteel::Pandora

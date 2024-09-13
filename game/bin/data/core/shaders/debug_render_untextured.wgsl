@@ -14,7 +14,6 @@ struct GlobalUniforms
 {
     projectionMatrix : mat4x4<f32>,
     viewMatrix : mat4x4<f32>,
-    modelMatrix : mat4x4<f32>,
     time : f32
 };
 
@@ -23,7 +22,7 @@ struct GlobalUniforms
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
-    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * uGlobalUniforms.modelMatrix * vec4f(in.position, 1.0);
+    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * vec4f(in.position, 1.0);
     out.color = vec4f(in.color, 1.0);
     return out;
 }

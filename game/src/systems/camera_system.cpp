@@ -46,7 +46,7 @@ void CameraSystem::Update(float delta)
         return;
     }
 
-    if (pCamera->HasComponent<OrbitCameraComponent>())
+    if (pCamera->HasComponent<OrbitCameraComponent>() && pCamera->HasComponent<CameraComponent>())
     {
         OrbitCameraComponent& orbitCameraComponent = pCamera->GetComponent<OrbitCameraComponent>();
         if (m_IsDragging && m_InputPending)
@@ -80,8 +80,8 @@ void CameraSystem::Update(float delta)
             anchorPosition = glm::vec3(anchorTransform[3]);
         }
 
-        TransformComponent& transformComponent = pCamera->GetComponent<TransformComponent>();
-        transformComponent.transform = glm::lookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+        CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+        cameraComponent.camera.LookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 }
 

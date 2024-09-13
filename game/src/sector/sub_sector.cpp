@@ -38,19 +38,17 @@ void SubSector::Initialize()
 
     Scene::Initialize();
 
-    AddSystem(std::make_unique<CameraSystem>());
-    AddSystem(std::make_unique<DebugRenderSystem>());
     AddSystem(std::make_unique<PlayerControllerSystem>());
     AddSystem(std::make_unique<ShipNavigationSystem>());
 
+    // Make sure these systems are added after everything else that might modify transforms,
+    // otherwise the camera and debug rendering will be offset by a frame.
+    AddSystem(std::make_unique<CameraSystem>());
+    AddSystem(std::make_unique<DebugRenderSystem>());
+
     m_pCamera = CreateEntity();
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
-    TransformComponent& transformComponent = m_pCamera->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 10.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
+
     OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
     orbitCameraComponent.distance = 100.0f;
     orbitCameraComponent.orbitAngle = glm::radians(-90.0f);

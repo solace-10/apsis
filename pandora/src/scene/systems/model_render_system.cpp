@@ -1,3 +1,4 @@
+#include "core/log.hpp"
 #include "scene/systems/model_render_system.hpp"
 #include "scene/components/model_component.hpp"
 #include "scene/components/transform_component.hpp"
@@ -27,7 +28,7 @@ void ModelRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         ResourceModel* pResourceModel = modelComponent.GetModel();
         if (pResourceModel)
         {
-            pResourceModel->Render(renderPass);
+            pResourceModel->Render(renderPass, transformComponent.transform);
         }
     });
 }

@@ -23,6 +23,7 @@ public:
     void SetFieldOfView(float degrees);
     float GetFieldOfView() const;
     
+    const glm::vec3& GetTarget() const;
     const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix() const;
 
@@ -34,6 +35,7 @@ private:
     float m_FarPlane = 100.0f;
     glm::mat4 m_ViewMatrix { 1.0f };
     glm::mat4 m_ProjectionMatrix { 1.0f };
+    glm::vec3 m_CameraTarget { 0.0f };
 };
 
 } // namespace WingsOfSteel::Pandora

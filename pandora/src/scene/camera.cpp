@@ -23,6 +23,7 @@ Camera::~Camera()
 void Camera::LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up)
 {
     m_ViewMatrix = glm::lookAt(cameraPosition, targetPosition, up);
+    m_CameraTarget = targetPosition;
 }
 
 void Camera::SetNearPlane(float distance)
@@ -56,6 +57,16 @@ void Camera::SetFieldOfView(float degrees)
 float Camera::GetFieldOfView() const
 {
     return m_Fov;
+}
+
+const glm::vec3& Camera::GetTarget() const
+{
+    return m_CameraTarget;
+}
+
+const glm::mat4& Camera::GetViewMatrix() const
+{
+    return m_ViewMatrix;
 }
 
 const glm::mat4& Camera::GetProjectionMatrix() const

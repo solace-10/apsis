@@ -65,11 +65,6 @@ void Scene::SetCamera(EntitySharedPtr pCamera)
         Log::Error() << "Trying to add a camera without a CameraComponent.";
         m_pCamera.reset();
     }
-    else if (!pCamera->HasComponent<TransformComponent>())
-    {
-        Log::Error() << "Trying to add a camera without a TransformComponent.";
-        m_pCamera.reset();
-    }
     else
     {
         m_pCamera = pCamera;

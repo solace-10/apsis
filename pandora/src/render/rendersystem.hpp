@@ -41,7 +41,6 @@ private:
     {
         glm::mat4x4 projectionMatrix;
         glm::mat4x4 viewMatrix;
-        glm::mat4x4 modelMatrix;
         float time;
         float _unused[3];
     };
