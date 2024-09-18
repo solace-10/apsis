@@ -7,6 +7,7 @@
 #include "core/log.hpp"
 #include "imgui/imgui_system.hpp"
 #include "render/debug_render.hpp"
+#include "render/shader_editor.hpp"
 #include "render/window.hpp"
 #include "scene/components/camera_component.hpp"
 #include "scene/components/model_component.hpp"
@@ -74,6 +75,7 @@ void RenderSystem::InitializeInternal()
 {
     CreateGlobalUniforms();
     m_pModelRenderSystem = std::make_unique<ModelRenderSystem>();
+    m_pShaderEditor = std::make_unique<ShaderEditor>();
 }
 
 void RenderSystem::Update()
@@ -82,6 +84,8 @@ void RenderSystem::Update()
     // Tick needs to be called in Dawn to display validation errors
     GetDevice().Tick();
 #endif
+
+    GetShaderEditor()->Update();
 
     wgpu::SurfaceTexture surfaceTexture;
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
@@ -271,6 +275,11 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 wgpu::BindGroupLayout& RenderSystem::GetGlobalUniformsLayout()
 {
     return m_GlobalUniformsBindGroupLayout;
+}
+
+ShaderEditor* RenderSystem::GetShaderEditor() const
+{
+    return m_pShaderEditor.get();
 }
 
 } // namespace WingsOfSteel::Pandora

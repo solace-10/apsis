@@ -12,6 +12,7 @@ namespace WingsOfSteel::Pandora
 
 DECLARE_SMART_PTR(DebugRender);
 DECLARE_SMART_PTR(ModelRenderSystem);
+DECLARE_SMART_PTR(ShaderEditor);
 
 using OnRenderSystemInitializedCallback = std::function<void()>;
 
@@ -28,7 +29,9 @@ public:
     wgpu::Adapter GetAdapter() const;
     wgpu::Device GetDevice() const;
 
-    wgpu::BindGroupLayout& GetGlobalUniformsLayout(); 
+    wgpu::BindGroupLayout& GetGlobalUniformsLayout();
+
+    ShaderEditor* GetShaderEditor() const;
 
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
@@ -50,6 +53,8 @@ private:
     wgpu::BindGroup m_GlobalUniformsBindGroup;
     wgpu::BindGroupLayout m_GlobalUniformsBindGroupLayout;
     ModelRenderSystemUniquePtr m_pModelRenderSystem;
+
+    ShaderEditorUniquePtr m_pShaderEditor;
 };
 
 } // namespace WingsOfSteel::Pandora

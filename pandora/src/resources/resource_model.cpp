@@ -4,7 +4,6 @@
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
-#include "vfs/vfs.hpp"
 #include "pandora.hpp"
 
 // clang-format off
@@ -91,6 +90,7 @@ void ResourceModel::InitializeShaderLocationsMap()
     {
         sShaderLocationsMap["POSITION"] = 0;
         sShaderLocationsMap["NORMAL"] = 1;
+        sShaderLocationsMap["TEXCOORD_0"] = 2;
         sShaderLocationsMapInitialized = true;
     }
 }

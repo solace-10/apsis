@@ -2,7 +2,6 @@
 
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
-#include "vfs/vfs.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -38,14 +37,25 @@ wgpu::ShaderModule ResourceShader::GetShaderModule() const
     return m_ShaderModule;
 }
 
+const std::string& ResourceShader::GetShaderCode() const
+{
+    return m_ShaderCode;
+}
+
+bool ResourceShader::SetShaderCode(const std::string& code)
+{
+    // Not implemented.
+    return false;
+}
+
 void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
 {
     if (result == FileReadResult::Ok)
     {
-        const std::string shaderCode(pFile->GetData().data(), pFile->GetData().size());
+        m_ShaderCode = std::string(pFile->GetData().data(), pFile->GetData().size());
 
         wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-        wgslDesc.code = shaderCode.c_str();
+        wgslDesc.code = m_ShaderCode.c_str();
 
         wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
             .nextInChain = &wgslDesc

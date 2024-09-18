@@ -2,7 +2,6 @@
 
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
-#include "vfs/vfs.hpp"
 #include "pandora.hpp"
 
 // clang-format off

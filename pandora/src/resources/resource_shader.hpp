@@ -4,8 +4,6 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-#include "vfs/vfs.hpp"
-
 namespace WingsOfSteel::Pandora
 {
 
@@ -20,10 +18,15 @@ public:
 
     wgpu::ShaderModule GetShaderModule() const;
 
+    const std::string& GetShaderCode() const;
+    bool SetShaderCode(const std::string& code);
+
 private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
 
     wgpu::ShaderModule m_ShaderModule;
+
+    std::string m_ShaderCode;
 };
 
 } // namespace WingsOfSteel::Pandora

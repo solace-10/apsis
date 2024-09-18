@@ -66,6 +66,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(entt)
 
 FetchContent_Declare(
+    freetype
+    GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG 42608f77f20749dd6ddc9e0536788eaad70ea4b5 # VER-2-13-3
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/freetype
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(freetype)
+
+FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e # v1.0.1

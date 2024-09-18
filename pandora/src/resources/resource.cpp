@@ -16,8 +16,14 @@ Resource::~Resource()
 
 void Resource::Load(const std::string& path)
 {
+    m_Name = path.substr(path.find_last_of('/') + 1);
     m_Path = path;
     SetState(ResourceState::Loading);
+}
+
+const std::string& Resource::GetName() const
+{
+    return m_Name;
 }
 
 const std::string& Resource::GetPath() const

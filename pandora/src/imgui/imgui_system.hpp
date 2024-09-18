@@ -27,9 +27,13 @@ public:
     void SetGameMenuBarCallback(ImGuiGameMenuBarCallback callback);
 
 private:
-    bool m_ShowDemoWindow;
-    bool m_DebugDrawDemo;
+    void AddDefaultFont();
+
+    bool m_ShowDemoWindow{ false };
+    bool m_DebugDrawDemo{ false };
+    bool m_ShowShaderEditor{ false };
     ImGuiGameMenuBarCallback m_GameMenuBarCallback;
+    ImFont* m_pDefaultFont{ nullptr };
 };
 
 } // namespace WingsOfSteel::Pandora

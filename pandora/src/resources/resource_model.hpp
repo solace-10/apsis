@@ -11,7 +11,6 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include "resources/resource_shader.hpp"
-#include "vfs/vfs.hpp"
 
 namespace tinygltf
 {

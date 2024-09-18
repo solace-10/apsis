@@ -13,6 +13,7 @@ namespace WingsOfSteel::Pandora
 
 DECLARE_RESOURCE_TYPE(Resource);
 DECLARE_RESOURCE_TYPE(ResourceDataStore);
+DECLARE_RESOURCE_TYPE(ResourceFont);
 DECLARE_RESOURCE_TYPE(ResourceModel);
 DECLARE_RESOURCE_TYPE(ResourceShader);
 DECLARE_RESOURCE_TYPE(ResourceTexture2D);
@@ -35,7 +36,8 @@ enum class ResourceType
     Shader,
     Texture2D,
     Model,
-    DataStore
+    DataStore,
+    Font
 };
 
 } // namespace WingsOfSteel::Pandora

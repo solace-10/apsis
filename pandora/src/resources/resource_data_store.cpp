@@ -1,7 +1,6 @@
 #include "resources/resource_data_store.hpp"
 
 #include "core/log.hpp"
-#include "vfs/vfs.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora

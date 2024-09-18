@@ -4,8 +4,6 @@
 
 #include "resources/resource.hpp"
 
-#include "vfs/vfs.hpp"
-
 namespace WingsOfSteel::Pandora
 {
 

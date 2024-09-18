@@ -10,7 +10,10 @@ set(IMGUI_SOURCE_DIR ext/imgui)
 set(SOURCE_FILES_IMGUI
     ${IMGUI_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+    ${IMGUI_SOURCE_DIR}/misc/freetype/imgui_freetype.cpp
+    ${IMGUI_SOURCE_DIR}/misc/freetype/imgui_freetype.h
     ${IMGUI_SOURCE_DIR}/imgui.cpp
+    ${IMGUI_SOURCE_DIR}/imgui.h
     ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
     ${IMGUI_SOURCE_DIR}/imgui_draw.cpp
     ${IMGUI_SOURCE_DIR}/imgui_tables.cpp
@@ -29,6 +32,7 @@ target_include_directories(pandora PUBLIC
 
 target_include_directories(pandora PRIVATE
     ext/debug-draw/
+    ext/freetype/include/
     ext/stb/
     ext/tinygltf/
 )
@@ -40,9 +44,11 @@ target_compile_definitions(pandora PUBLIC
     DEBUG_DRAW_VEC3_TYPE_DEFINED
     GLM_FORCE_DEPTH_ZERO_TO_ONE
     GLM_FORCE_LEFT_HANDED
+    IMGUI_ENABLE_FREETYPE
 )
 
 target_link_libraries(pandora PUBLIC 
+    freetype
     glm::glm
     magic_enum::magic_enum 
     nlohmann_json::nlohmann_json

@@ -132,7 +132,7 @@ void SubSector::SpawnPlayerShip()
     TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-    m_pPlayerShip->AddComponent<ModelComponent>("/test/cube/cube.glb");
+    m_pPlayerShip->AddComponent<ModelComponent>("/models/flagship/light_carrier/light_carrier.glb");
     m_pPlayerShip->AddComponent<ShipNavigationComponent>();
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
 }
