@@ -1,7 +1,11 @@
+#include <sstream>
+
 #include "resources/resource_shader.hpp"
 
 #include "core/log.hpp"
 #include "render/rendersystem.hpp"
+#include "render/shader_compilation_result.hpp"
+#include "render/shader_compiler.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -42,9 +46,9 @@ const std::string& ResourceShader::GetShaderCode() const
     return m_ShaderCode;
 }
 
+// Rename to Inject() ?
 bool ResourceShader::SetShaderCode(const std::string& code)
 {
-    // Not implemented.
     return false;
 }
 
@@ -54,16 +58,26 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     {
         m_ShaderCode = std::string(pFile->GetData().data(), pFile->GetData().size());
 
-        wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-        wgslDesc.code = m_ShaderCode.c_str();
-
-        wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
-            .nextInChain = &wgslDesc
-        };
-        m_ShaderModule = GetRenderSystem()->GetDevice().CreateShaderModule(&shaderModuleDescriptor);
-        //m_ShaderModule.GetCompilationInfo()
-
-        SetState(ResourceState::Loaded);
+        GetRenderSystem()->GetShaderCompiler()->Compile(m_ShaderCode, [this, pFile](ShaderCompilationResult* pCompilationResult)
+        {
+            if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
+            {
+                m_ShaderModule = pCompilationResult->GetShaderModule();
+                SetState(ResourceState::Loaded);
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "Failed to compile shader '" << pFile->GetPath() << "':";
+                for (const ShaderCompilationError& error : pCompilationResult->GetErrors())
+                {
+                    uint32_t lineNumebr = error.GetLineNumber();
+                    ss << std::endl << "Error on line " << (error.GetLineNumber()) << ", char " << error.GetLinePosition() << ": " << error.GetMessage();
+                }
+                Log::Error() << ss.str();
+                SetState(ResourceState::Error);
+            }
+        });
     }
     else
     {

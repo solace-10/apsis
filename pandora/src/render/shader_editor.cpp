@@ -52,7 +52,9 @@ void ShaderEditor::Initialize()
 {
     m_Initialized = true;
 
-    for (auto& shaderFile : GetVFS()->List("/shaders"))
+    auto shadersList = GetVFS()->List("/shaders");
+    m_ShadersToLoad = shadersList.size();
+    for (auto& shaderFile : shadersList)
     {
         GetResourceSystem()->RequestResource(shaderFile, [this](ResourceSharedPtr pResource) {
             ResourceShaderSharedPtr pResourceShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
@@ -63,12 +65,19 @@ void ShaderEditor::Initialize()
             };
 
             m_Shaders[pResourceShader->GetName()] = std::move(data);
+            m_ShadersToLoad--;
         });
     }
 }
 
 void ShaderEditor::DrawShaderList()
 {
+    // Open the first shader once all the shaders have been loaded.
+    if (m_Selected.empty() && !m_Shaders.empty() && m_ShadersToLoad == 0)
+    {
+        OpenShader(m_Shaders.begin()->first);
+    }
+
     const int shaderListWidth = 250;
     const int compileButtonHeight = 32;
     ImGui::BeginGroup();
@@ -80,14 +89,35 @@ void ShaderEditor::DrawShaderList()
         std::string label = ICON_FA_FILE_CODE " " + entry.first;
         if (ImGui::Selectable(label.c_str(), &selected))
         {
-            m_Selected = entry.first;
-            m_TextEditor.SetText(entry.second.code);
+            if (m_Selected != entry.first)
+            {
+                OpenShader(entry.first);
+            }
         }
     }
     ImGui::EndChild();
 
-    ImGui::Button(ICON_FA_CIRCLE_PLAY " Compile", ImVec2(shaderListWidth, compileButtonHeight));
+    if (ImGui::Button(ICON_FA_CIRCLE_PLAY " Compile", ImVec2(shaderListWidth, compileButtonHeight)))
+    {
+        CompileSelectedShader();
+    }
+
     ImGui::EndGroup();
+}
+
+void ShaderEditor::OpenShader(const std::string& shader)
+{
+    m_Selected = shader;
+    m_TextEditor.SetText(m_Shaders[shader].code);
+    m_TextEditor.SetCursorPosition(TextEditor::Coordinates(0, 0));
+}
+
+void ShaderEditor::CompileSelectedShader()
+{
+    if (m_Selected.empty())
+    {
+        return;
+    }
 }
 
 } // namespace WingsOfSteel::Pandora

@@ -24,6 +24,8 @@ public:
 private:
     void Initialize();
     void DrawShaderList();
+    void OpenShader(const std::string& shader);
+    void CompileSelectedShader();
 
     TextEditor m_TextEditor;
 
@@ -45,6 +47,7 @@ private:
     bool m_Initialized{ false };
     bool m_Show{ false };
     std::string m_Selected;
+    int m_ShadersToLoad{ 0 };
 };
 
 } // namespace WingsOfSteel::Pandora

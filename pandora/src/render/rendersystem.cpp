@@ -7,6 +7,7 @@
 #include "core/log.hpp"
 #include "imgui/imgui_system.hpp"
 #include "render/debug_render.hpp"
+#include "render/shader_compiler.hpp"
 #include "render/shader_editor.hpp"
 #include "render/window.hpp"
 #include "scene/components/camera_component.hpp"
@@ -75,6 +76,7 @@ void RenderSystem::InitializeInternal()
 {
     CreateGlobalUniforms();
     m_pModelRenderSystem = std::make_unique<ModelRenderSystem>();
+    m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderEditor = std::make_unique<ShaderEditor>();
 }
 
@@ -275,6 +277,11 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 wgpu::BindGroupLayout& RenderSystem::GetGlobalUniformsLayout()
 {
     return m_GlobalUniformsBindGroupLayout;
+}
+
+ShaderCompiler* RenderSystem::GetShaderCompiler() const
+{
+    return m_pShaderCompiler.get();
 }
 
 ShaderEditor* RenderSystem::GetShaderEditor() const
