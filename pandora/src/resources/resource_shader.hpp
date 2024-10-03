@@ -1,5 +1,8 @@
 #pragma once
 
+#include <functional>
+
+#include "render/shader_compilation_result.hpp"
 #include "resources/resource.hpp"
 
 #include <webgpu/webgpu_cpp.h>
@@ -19,7 +22,7 @@ public:
     wgpu::ShaderModule GetShaderModule() const;
 
     const std::string& GetShaderCode() const;
-    bool SetShaderCode(const std::string& code);
+    void Inject(const std::string& code, OnShaderCompiledCallback callback);
 
 private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);

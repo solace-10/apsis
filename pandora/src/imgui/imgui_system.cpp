@@ -41,6 +41,7 @@ ImGuiSystem::ImGuiSystem()
     ImGui_ImplWGPU_Init(&init_info);
 
     AddDefaultFont();
+    ApplyStyle();
 }
 
 ImGuiSystem::~ImGuiSystem()
@@ -125,6 +126,67 @@ void ImGuiSystem::AddDefaultFont()
     pFontAtlas->AddFontFromMemoryCompressedTTF(sFontAwesomeCompressedData, sFontAwesomeCompressedSize, defaultIconsFontSize, &iconsConfig, iconsRanges);
 
     pFontAtlas->Build();
+}
+
+void ImGuiSystem::ApplyStyle()
+{
+    ImGuiStyle* pStyle = &ImGui::GetStyle();
+
+    pStyle->WindowPadding            = ImVec2(15, 15);
+    pStyle->WindowRounding           = 5.0f;
+    pStyle->FramePadding             = ImVec2(5, 5);
+    pStyle->FrameRounding            = 4.0f;
+    pStyle->ItemSpacing              = ImVec2(12, 8);
+    pStyle->ItemInnerSpacing         = ImVec2(8, 6);
+    pStyle->IndentSpacing            = 25.0f;
+    pStyle->ScrollbarSize            = 15.0f;
+    pStyle->ScrollbarRounding        = 9.0f;
+    pStyle->GrabMinSize              = 5.0f;
+    pStyle->GrabRounding             = 3.0f;
+
+    pStyle->Colors[ImGuiCol_Text]                  = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
+    pStyle->Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
+    pStyle->Colors[ImGuiCol_WindowBg]              = ImVec4(0.92f, 0.91f, 0.88f, 0.90f);
+    //pStyle->Colors[ImGuiCol_ChildWindowBg]         = ImVec4(1.00f, 0.98f, 0.95f, 0.58f);
+    pStyle->Colors[ImGuiCol_PopupBg]               = ImVec4(0.92f, 0.91f, 0.88f, 0.92f);
+    pStyle->Colors[ImGuiCol_Border]                = ImVec4(0.84f, 0.83f, 0.80f, 0.65f);
+    pStyle->Colors[ImGuiCol_BorderShadow]          = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
+    pStyle->Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
+    pStyle->Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.99f, 1.00f, 0.40f, 0.78f);
+    pStyle->Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 1.00f, 0.00f, 1.00f);
+    pStyle->Colors[ImGuiCol_TitleBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
+    pStyle->Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 0.98f, 0.95f, 0.50f);
+    pStyle->Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_MenuBarBg]             = ImVec4(1.00f, 0.98f, 0.95f, 0.47f);
+    pStyle->Colors[ImGuiCol_ScrollbarBg]           = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
+    pStyle->Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.00f, 0.00f, 0.00f, 0.21f);
+    pStyle->Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.90f, 0.91f, 0.00f, 0.78f);
+    pStyle->Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    //pStyle->Colors[ImGuiCol_ComboBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
+    pStyle->Colors[ImGuiCol_CheckMark]             = ImVec4(0.02f, 0.98f, 0.75f, 0.80f);
+    pStyle->Colors[ImGuiCol_SliderGrab]            = ImVec4(0.00f, 0.00f, 0.00f, 0.14f);
+    pStyle->Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_Button]                = ImVec4(0.02f, 0.98f, 0.75f, 0.75f);
+    pStyle->Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_ButtonActive]          = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_Header]                = ImVec4(0.02f, 0.98f, 0.75f, 0.76f);
+    pStyle->Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.02f, 0.98f, 0.75f, 0.86f);
+    pStyle->Colors[ImGuiCol_HeaderActive]          = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    //pStyle->Colors[ImGuiCol_Column]                = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);
+    //pStyle->Colors[ImGuiCol_ColumnHovered]         = ImVec4(0.02f, 0.98f, 0.75f, 0.78f);
+    //pStyle->Colors[ImGuiCol_ColumnActive]          = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
+    pStyle->Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.02f, 0.98f, 0.75f, 0.78f);
+    pStyle->Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    //pStyle->Colors[ImGuiCol_CloseButton]           = ImVec4(0.40f, 0.39f, 0.38f, 0.16f);
+    //pStyle->Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.40f, 0.39f, 0.38f, 0.39f);
+    //pStyle->Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
+    pStyle->Colors[ImGuiCol_PlotLines]             = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+    pStyle->Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+    pStyle->Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.02f, 0.98f, 0.75f, 0.43f);
+    //pStyle->Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
 }
 
 } // namespace WingsOfSteel::Pandora

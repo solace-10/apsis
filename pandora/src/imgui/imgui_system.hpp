@@ -28,6 +28,7 @@ public:
 
 private:
     void AddDefaultFont();
+    void ApplyStyle();
 
     bool m_ShowDemoWindow{ false };
     bool m_DebugDrawDemo{ false };

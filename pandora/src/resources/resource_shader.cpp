@@ -46,10 +46,18 @@ const std::string& ResourceShader::GetShaderCode() const
     return m_ShaderCode;
 }
 
-// Rename to Inject() ?
-bool ResourceShader::SetShaderCode(const std::string& code)
+void ResourceShader::Inject(const std::string& code, OnShaderCompiledCallback callback)
 {
-    return false;
+    GetRenderSystem()->GetShaderCompiler()->Compile(code, [this, code, callback](ShaderCompilationResult* pCompilationResult)
+    {
+        if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
+        {
+            m_ShaderModule = pCompilationResult->GetShaderModule();
+            m_ShaderCode = code;
+        }
+
+        callback(pCompilationResult);
+    });
 }
 
 void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)

@@ -27,8 +27,6 @@ private:
     void OpenShader(const std::string& shader);
     void CompileSelectedShader();
 
-    TextEditor m_TextEditor;
-
     enum class ShaderState
     {
         Compiled,
@@ -40,7 +38,10 @@ private:
     {
         ResourceShaderSharedPtr pResource;
         std::string code;
+        std::string originalCode;
         ShaderState state;
+        TextEditor editor;
+        bool previouslyOpened;
     };
 
     std::map<std::string, ShaderEditorData> m_Shaders;
