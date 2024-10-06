@@ -90,13 +90,13 @@ void ShaderEditor::Initialize()
             ResourceShaderSharedPtr pResourceShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
             ShaderEditorData data{
                 .pResource = pResourceShader,
-                .code = pResourceShader->GetShaderCode(),
-                .originalCode = pResourceShader->GetShaderCode(),
                 .state = ShaderState::Compiled,
                 .previouslyOpened = false
             };
 
             data.editor.SetPalette(palette);
+            data.editor.SetText(pResourceShader->GetShaderCode());
+            data.code = data.editor.GetText();
 
             m_Shaders[pResourceShader->GetName()] = std::move(data);
             m_ShadersToLoad--;
@@ -119,14 +119,33 @@ void ShaderEditor::DrawShaderList()
 
     for (auto& entry : m_Shaders)
     {
+        const std::string& editorText = entry.second.editor.GetText();
+        const std::string& lastSavedText = entry.second.code;
+        const bool modified = (editorText != lastSavedText);
+
+        std::string label;
+        if (modified)
+        {
+            label = ICON_FA_FLOPPY_DISK " " + entry.first;
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 0.5, 0.0f, 1.0f));
+        }
+        else
+        {
+            label = ICON_FA_FILE_CODE " " + entry.first;
+        }
+
         bool selected = (entry.first == m_Selected);
-        std::string label = ICON_FA_FILE_CODE " " + entry.first;
         if (ImGui::Selectable(label.c_str(), &selected))
         {
             if (m_Selected != entry.first)
             {
                 OpenShader(entry.first);
             }
+        }
+
+        if (modified)
+        {
+            ImGui::PopStyleColor();
         }
     }
     ImGui::EndChild();
@@ -161,9 +180,6 @@ void ShaderEditor::CompileSelectedShader()
 
     ShaderEditorData& data = m_Shaders[m_Selected];
     data.code = data.editor.GetText();
-
-    // TODO: Inject and send to compiler.
-    // TODO: Add a callback for error handling
 
     data.pResource->Inject(data.code, [this, &data](ShaderCompilationResult* pResult){
         int a = 0;

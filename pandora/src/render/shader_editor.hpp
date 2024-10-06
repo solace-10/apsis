@@ -38,7 +38,6 @@ private:
     {
         ResourceShaderSharedPtr pResource;
         std::string code;
-        std::string originalCode;
         ShaderState state;
         TextEditor editor;
         bool previouslyOpened;
