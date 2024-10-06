@@ -6,6 +6,7 @@
 #include "render/rendersystem.hpp"
 #include "render/shader_compilation_result.hpp"
 #include "render/shader_compiler.hpp"
+#include "resources/resource_system.hpp"
 #include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -54,6 +55,8 @@ void ResourceShader::Inject(const std::string& code, OnShaderCompiledCallback ca
         {
             m_ShaderModule = pCompilationResult->GetShaderModule();
             m_ShaderCode = code;
+
+            GetResourceSystem()->GetShaderInjectedSignal().Emit(this);
         }
 
         callback(pCompilationResult);

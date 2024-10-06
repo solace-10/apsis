@@ -10,6 +10,7 @@
 #include <glm/mat4x4.hpp>
 #include <webgpu/webgpu_cpp.h>
 
+#include "core/signal.hpp"
 #include "resources/resource_shader.hpp"
 
 namespace tinygltf
@@ -46,6 +47,7 @@ private:
     int GetNumberOfComponentsForType(int type) const;
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
     void CreateLocalUniforms();
+    void HandleShaderInjection();
 
     std::unique_ptr<tinygltf::Model> m_pModel;
     std::vector<wgpu::Buffer> m_Buffers;
@@ -90,6 +92,8 @@ private:
     wgpu::Buffer m_LocalUniformsBuffer;
     wgpu::BindGroup m_LocalUniformsBindGroup;
     wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
+
+    std::optional<SignalId> m_ShaderInjectionSignalId;
 };
 
 } // namespace WingsOfSteel::Pandora

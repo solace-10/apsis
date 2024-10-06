@@ -6,10 +6,13 @@
 #include <string>
 #include <unordered_map>
 
+#include "core/signal.hpp"
 #include "resources/resource.fwd.hpp"
 
 namespace WingsOfSteel::Pandora
 {
+
+using ShaderInjectedSignal = Signal<ResourceShader*>;
 
 class ResourceSystem
 {
@@ -19,6 +22,8 @@ public:
     void Update();
 
     void RequestResource(const std::string& path, OnResourceAvailableCallback onResourceLoaded);
+
+    ShaderInjectedSignal& GetShaderInjectedSignal();
 
 private:
     template<typename T> void RegisterResource(const std::string& extension)
@@ -42,6 +47,8 @@ private:
         OnResourceAvailableCallback onResourceAvailable;
     };
     std::list<PendingResource> m_PendingResources;
+
+    ShaderInjectedSignal m_ShaderInjectedSignal;
 };
 
 } // namespace WingsOfSteel::Pandora

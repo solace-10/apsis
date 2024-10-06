@@ -31,12 +31,14 @@ ResourceModel::ResourceModel()
 , m_DependentResourcesLoaded(0)
 , m_IsIndexed(false)
 {
-
 }
 
 ResourceModel::~ResourceModel()
 {
-
+    if (GetResourceSystem() && m_ShaderInjectionSignalId.has_value())
+    {
+        GetResourceSystem()->GetShaderInjectedSignal().Disconnect(m_ShaderInjectionSignalId.value());
+    }
 }
 
 void ResourceModel::Load(const std::string& path)
@@ -212,7 +214,9 @@ void ResourceModel::OnDependentResourcesLoaded()
         }
     }
 
-    SetState(ResourceState::Loaded); 
+    SetState(ResourceState::Loaded);
+
+    HandleShaderInjection();
 }
 
 void ResourceModel::SetupPrimitive(tinygltf::Primitive* pPrimitive)
@@ -461,6 +465,39 @@ void ResourceModel::CreateLocalUniforms()
     };
 
     m_LocalUniformsBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
+}
+
+void ResourceModel::HandleShaderInjection()
+{
+    if (!m_ShaderInjectionSignalId.has_value())
+    {
+        m_ShaderInjectionSignalId = GetResourceSystem()->GetShaderInjectedSignal().Connect(
+            [this](ResourceShader* pResourceShader)
+            {
+                bool rebuildPrimitives = false;
+                for (auto& shader : m_Shaders)
+                {
+                    if (shader.second.get() == pResourceShader)
+                    {
+                        rebuildPrimitives = true;
+                        break;
+                    }
+                }
+
+                if (rebuildPrimitives)
+                {
+                    m_PrimitiveRenderData.clear();
+                    for (auto& mesh : m_pModel->meshes)
+                    {
+                        for (auto& primitive : mesh.primitives)
+                        {
+                            SetupPrimitive(&primitive);
+                        }
+                    }
+                }
+            }
+        );
+    }
 }
 
 } // namespace WingsOfSteel::Pandora

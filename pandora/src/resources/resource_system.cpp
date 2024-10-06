@@ -85,6 +85,11 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     );
 }
 
+ShaderInjectedSignal& ResourceSystem::GetShaderInjectedSignal()
+{
+    return m_ShaderInjectedSignal;
+}
+
 std::optional<std::string> ResourceSystem::GetExtension(const std::string& path) const
 {
     size_t separator = path.find_last_of('.');
