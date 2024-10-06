@@ -71,7 +71,7 @@ void ShaderEditor::Initialize()
 			0xffc040a0, // Preproc identifier
 			0xff205020, // Comment (single line)
 			0xff405020, // Comment (multi line)
-			0x20ffffff, // Background
+			IM_COL32(255, 250, 242, 148), // Background
 			0xff000000, // Cursor
 			0x80600000, // Selection
 			0xa00010ff, // ErrorMarker
