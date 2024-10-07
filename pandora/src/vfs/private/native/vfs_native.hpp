@@ -20,6 +20,7 @@ public:
     void Initialize() override;
     void Update() override;
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+    bool FileWrite(const std::string& path, const std::vector<uint8_t>& bytes) override;
     bool Exists(const std::string& path) const override;
     const std::vector<std::string> List(const std::string& path) const override;
 

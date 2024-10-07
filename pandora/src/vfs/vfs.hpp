@@ -45,6 +45,7 @@ public:
     void Initialize();
     void Update();
     void FileRead(const std::string& path, FileReadCallback onFileReadCompleted);
+    bool FileWrite(const std::string& path, const std::vector<uint8_t>& bytes);
     bool Exists(const std::string& path) const;
     const std::vector<std::string> List(const std::string& path = "/") const;
 

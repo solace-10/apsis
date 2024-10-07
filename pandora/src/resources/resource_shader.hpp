@@ -26,6 +26,7 @@ public:
 
 private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
+    void Save();
 
     wgpu::ShaderModule m_ShaderModule;
 

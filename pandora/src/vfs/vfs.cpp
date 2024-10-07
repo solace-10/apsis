@@ -38,6 +38,11 @@ void VFS::FileRead(const std::string& path, FileReadCallback onFileReadCompleted
     m_pImpl->FileRead(path, onFileReadCompleted);
 }
 
+bool VFS::FileWrite(const std::string& path, const std::vector<uint8_t>& bytes)
+{
+    return m_pImpl->FileWrite(path, bytes);
+}
+
 bool VFS::Exists(const std::string& path) const
 {
     return m_pImpl->Exists(path);

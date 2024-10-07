@@ -125,6 +125,12 @@ void VFSWeb::FileRead(const std::string& path, FileReadCallback onFileReadComple
     m_Queue.push_back(queuedFile);
 }
 
+bool VFSWeb::FileWrite(const std::string& path, const std::vector<uint8_t>& bytes) override
+{
+    Log::Error() << "VFSWeb::FileWrite: Unsupported operation.";
+    return false;
+}
+
 } // namespace WingsOfSteel::Pandora::Private
 
 #endif // TARGET_PLATFORM_WEB

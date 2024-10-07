@@ -1,4 +1,5 @@
 #include <sstream>
+#include <vector>
 
 #include "resources/resource_shader.hpp"
 
@@ -57,6 +58,7 @@ void ResourceShader::Inject(const std::string& code, OnShaderCompiledCallback ca
             m_ShaderCode = code;
 
             GetResourceSystem()->GetShaderInjectedSignal().Emit(this);
+            Save();
         }
 
         callback(pCompilationResult);
@@ -93,6 +95,19 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     else
     {
         SetState(ResourceState::Error);   
+    }
+}
+
+void ResourceShader::Save()
+{
+    std::vector<uint8_t> data(m_ShaderCode.begin(), m_ShaderCode.end());
+    if (GetVFS()->FileWrite(GetPath(), data))
+    {
+        Log::Info() << "Saved shader '" << GetPath() << "'.";
+    }
+    else
+    {
+        Log::Warning() << "Failed to save shader '" << GetPath() << "'.";
     }
 }
 

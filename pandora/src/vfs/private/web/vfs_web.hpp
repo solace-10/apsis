@@ -20,9 +20,10 @@ public:
     VFSWeb();
     ~VFSWeb();
 
-    virtual void Initialize() override;
-    virtual void Update() override;
-    virtual void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+    void Initialize() override;
+    void Update() override;
+    void FileRead(const std::string& path, FileReadCallback onFileReadCompleted) override;
+    bool FileWrite(const std::string& path, const std::vector<uint8_t>& bytes) override;
 
 private:
     std::unique_ptr<Manifest> m_pManifest;
