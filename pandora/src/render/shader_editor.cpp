@@ -72,7 +72,7 @@ void ShaderEditor::Initialize()
 			0xff205020, // Comment (single line)
 			0xff405020, // Comment (multi line)
 			IM_COL32(255, 250, 242, 148), // Background
-			0xff000000, // Cursor
+            IM_COL32(  0,   0,   0, 255), // Cursor
 			0x80600000, // Selection
 			0xa00010ff, // ErrorMarker
 			0x80f08000, // Breakpoint
@@ -122,9 +122,15 @@ void ShaderEditor::DrawShaderList()
         const std::string& editorText = entry.second.editor.GetText();
         const std::string& lastSavedText = entry.second.code;
         const bool modified = (editorText != lastSavedText);
+        const bool error = (entry.second.state == ShaderEditor::ShaderState::Error);
 
         std::string label;
-        if (modified)
+        if (error)
+        {
+            label = ICON_FA_TRIANGLE_EXCLAMATION " " + entry.first;
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 0.0, 0.0f, 1.0f));
+        }
+        else if (modified)
         {
             label = ICON_FA_FLOPPY_DISK " " + entry.first;
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 0.5, 0.0f, 1.0f));
@@ -143,7 +149,7 @@ void ShaderEditor::DrawShaderList()
             }
         }
 
-        if (modified)
+        if (error || modified)
         {
             ImGui::PopStyleColor();
         }
@@ -179,10 +185,24 @@ void ShaderEditor::CompileSelectedShader()
     }
 
     ShaderEditorData& data = m_Shaders[m_Selected];
-    data.code = data.editor.GetText();
 
-    data.pResource->Inject(data.code, [this, &data](ShaderCompilationResult* pResult){
-        int a = 0;
+    const std::string& codeToCompile = data.editor.GetText();
+    data.pResource->Inject(codeToCompile, [this, &data, codeToCompile](ShaderCompilationResult* pResult){
+        TextEditor::ErrorMarkers errorMarkers;
+        if (pResult->GetState() == ShaderCompilationResult::State::Error)
+        {
+            data.state = ShaderState::Error;
+            for (auto& error : pResult->GetErrors())
+            {
+                errorMarkers[static_cast<int>(error.GetLineNumber())] = error.GetMessage();
+            }
+        }
+        else
+        {
+            data.code = codeToCompile;
+            data.state = ShaderState::Compiled;
+        }
+        data.editor.SetErrorMarkers(errorMarkers);
     });
 }
 
