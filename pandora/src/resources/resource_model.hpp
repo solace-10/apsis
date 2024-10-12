@@ -34,12 +34,42 @@ public:
 
     void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
+    using NodeIndices = std::vector<uint32_t>;
+    class Node
+    {
+    public:
+        Node(const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, std::optional<uint32_t> meshId)
+        : m_Transform(transform)
+        , m_Name(name)
+        , m_Children(children)
+        , m_IsRoot(isRoot)
+        , m_MeshId(meshId)
+        {}
+
+        ~Node() {}
+
+        inline const glm::mat4 GetTransform() const { return m_Transform; }
+        inline const std::string& GetName() const { return m_Name; }
+        inline const NodeIndices& GetChildren() const { return m_Children; }
+        inline bool IsRoot() const { return m_IsRoot; }
+        inline std::optional<uint32_t> GetMeshId() const { return m_MeshId; }
+
+    private:
+        glm::mat4 m_Transform;
+        std::string m_Name;
+        NodeIndices m_Children;
+        bool m_IsRoot;
+        std::optional<uint32_t> m_MeshId;
+    };
+
 private:
     void InitializeShaderLocationsMap();
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
     void LoadDependentResources();
     void OnDependentResourcesLoaded();
-    void SetupPrimitive(tinygltf::Primitive* pPrimitive);
+    void SetupNodes();
+    void SetupMeshes();
+    void SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive);
     std::optional<int> GetShaderLocation(const std::string& attributeName) const;
     wgpu::IndexFormat GetIndexFormat(const tinygltf::Accessor* pAccessor) const;
     wgpu::VertexFormat GetVertexFormat(const tinygltf::Accessor* pAccessor) const;
@@ -48,9 +78,11 @@ private:
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
     void CreateLocalUniforms();
     void HandleShaderInjection();
+    void RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform);
 
     std::unique_ptr<tinygltf::Model> m_pModel;
     std::vector<wgpu::Buffer> m_Buffers;
+    std::vector<Node> m_Nodes;
 
     std::unordered_map<std::string, ResourceShaderSharedPtr> m_Shaders;
     int m_DependentResourcesToLoad;
@@ -79,7 +111,9 @@ private:
 
         wgpu::RenderPipeline pipeline;
     };
-    std::vector<PrimitiveRenderData> m_PrimitiveRenderData;
+
+    using MeshRenderData = std::vector<PrimitiveRenderData>;
+    std::vector<MeshRenderData> m_RenderData;
 
     bool m_IsIndexed;
 

@@ -17,6 +17,12 @@
 #include "tiny_gltf.h"
 // clang-format on
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+#include <array>
+#include <bitset>
 #include <sstream>
 #include <unordered_map>
 
@@ -62,7 +68,27 @@ ResourceType ResourceModel::GetResourceType() const
 
 void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform)
 {
-    for (auto& primitiveRenderData : m_PrimitiveRenderData)
+    for (auto& node : m_Nodes)
+    {
+        if (node.IsRoot())
+        {
+            RenderNode(renderPass, node, transform);
+        }
+    }
+
+}
+
+void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform)
+{
+    if (!node.GetMeshId().has_value())
+    {
+        return;
+    }
+
+    const uint32_t nodeId = node.GetMeshId().value();
+    const glm::mat4 transform = parentTransform * node.GetTransform();
+
+    for (auto& primitiveRenderData : m_RenderData[nodeId])
     {
         m_LocalUniforms.modelMatrix = transform;
         GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LocalUniformsBuffer, 0, &m_LocalUniforms, sizeof(LocalUniforms));
@@ -83,6 +109,12 @@ void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4&
         {
             renderPass.Draw(primitiveRenderData.vertexData[0].count);
         }
+    }
+
+    for (auto& childNodeId : node.GetChildren())
+    {
+        const Node& childNode = m_Nodes[childNodeId];
+        RenderNode(renderPass, childNode, transform);
     }
 }
 
@@ -205,21 +237,111 @@ void ResourceModel::OnDependentResourcesLoaded()
         m_Buffers[i] = buffer;
     }
 
-    for (auto& mesh : m_pModel->meshes)
-    {
-        Log::Info() << "Loading mesh " << mesh.name;
-        for (auto& primitive : mesh.primitives)
-        {
-            SetupPrimitive(&primitive);
-        }
-    }
+    SetupNodes();
+    SetupMeshes();
 
     SetState(ResourceState::Loaded);
 
     HandleShaderInjection();
 }
 
-void ResourceModel::SetupPrimitive(tinygltf::Primitive* pPrimitive)
+void ResourceModel::SetupNodes()
+{
+    // Figure out which nodes are root nodes. A root node is a node that has no parent.
+    // If a node is a child of another node, then it can't be a root node.
+    static const uint32_t sMaxNodes = 32;
+    std::bitset<sMaxNodes> rootNodeBitset;
+    rootNodeBitset.set(); // Set all bits to 1.
+    assert(m_pModel->nodes.size() <= sMaxNodes);
+    for (auto& node : m_pModel->nodes)
+    {
+        for (auto& childNodeId : node.children)
+        {
+            rootNodeBitset[childNodeId] = false;
+        }
+    }
+
+    // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#transformations
+    for (size_t i = 0; i < m_pModel->nodes.size(); i++)
+    {
+        const tinygltf::Node& node = m_pModel->nodes[i]; 
+        glm::mat4 nodeTransform(1.0f);
+
+        if (node.matrix.size() > 0)
+        {
+            assert(node.matrix.size() == 16);
+
+            // glTF has the values has doubles, but we need them as floats.
+            std::array<float, 16> values;
+            for (int i = 0; i < values.size(); i++)
+            {
+                values[i] = static_cast<float>(node.matrix[i]);
+            }
+
+            nodeTransform = glm::make_mat4(values.data());
+        }
+        else
+        {
+            if (node.translation.size() > 0)
+            {
+                assert(node.translation.size() == 3);
+                nodeTransform = glm::translate(nodeTransform, glm::vec3(node.translation[0], node.translation[1], node.translation[2]));
+            }
+
+            if (node.rotation.size() > 0)
+            {
+                assert(node.rotation.size() == 4); // Rotation is a quaternion.
+                // glTF node data has quaternions in XYZW format, but glm::quat expects them in WXYZ.
+                nodeTransform = glm::toMat4(glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]));
+            }
+
+            if (node.scale.size() > 0)
+            {
+                assert(node.scale.size() == 3);
+                nodeTransform = glm::scale(nodeTransform, glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
+            }
+        }
+
+        NodeIndices childNodes;
+        for (const int& childNodeId : node.children)
+        {
+            childNodes.push_back(static_cast<uint32_t>(childNodeId));
+        }
+
+        std::optional<uint32_t> meshId{};
+        if (node.mesh != -1)
+        {
+            meshId = static_cast<uint32_t>(node.mesh);
+        }
+
+        m_Nodes.emplace_back(
+            node.name,
+            nodeTransform,
+            childNodes,
+            rootNodeBitset[i],
+            meshId
+        );
+    }
+}
+
+// Note that this is called if a relevant shader is injected.
+void ResourceModel::SetupMeshes()
+{
+    size_t numMeshes = m_pModel->meshes.size();
+    m_RenderData.clear();
+    m_RenderData.resize(numMeshes);
+    
+    for (uint32_t meshId = 0; meshId < numMeshes; meshId++)
+    {
+        auto& mesh = m_pModel->meshes[meshId];
+        for (auto& primitive : mesh.primitives)
+        {
+            SetupPrimitive(meshId, &primitive);
+        }
+    }
+}
+
+void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive)
 {
     PrimitiveRenderData renderData;
 
@@ -336,7 +458,8 @@ void ResourceModel::SetupPrimitive(tinygltf::Primitive* pPrimitive)
     }
 
     renderData.pipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
-    m_PrimitiveRenderData.push_back(std::move(renderData));
+
+    m_RenderData[meshId].push_back(std::move(renderData));
 }
 
 std::optional<int> ResourceModel::GetShaderLocation(const std::string& attributeName) const
@@ -474,25 +597,12 @@ void ResourceModel::HandleShaderInjection()
         m_ShaderInjectionSignalId = GetResourceSystem()->GetShaderInjectedSignal().Connect(
             [this](ResourceShader* pResourceShader)
             {
-                bool rebuildPrimitives = false;
                 for (auto& shader : m_Shaders)
                 {
                     if (shader.second.get() == pResourceShader)
                     {
-                        rebuildPrimitives = true;
-                        break;
-                    }
-                }
-
-                if (rebuildPrimitives)
-                {
-                    m_PrimitiveRenderData.clear();
-                    for (auto& mesh : m_pModel->meshes)
-                    {
-                        for (auto& primitive : mesh.primitives)
-                        {
-                            SetupPrimitive(&primitive);
-                        }
+                        SetupMeshes();
+                        return;
                     }
                 }
             }
