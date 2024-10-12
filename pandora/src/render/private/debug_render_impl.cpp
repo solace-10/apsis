@@ -218,6 +218,7 @@ void DebugRenderImpl::CreateLineRenderPipeline()
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
     wgpu::RenderPipelineDescriptor descriptor{
+        .label = "Debug render lines",
         .layout = pipelineLayout,
         .vertex = {
             .module = m_pUntexturedShader->GetShaderModule(),
@@ -295,7 +296,7 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
     wgpu::RenderPipelineDescriptor descriptor{
-        .label = "Debug render glyph pipeline",
+        .label = "Debug render glyphs",
         .layout = pipelineLayout,
         .vertex = {
             .module = m_pGlyphShader->GetShaderModule(),

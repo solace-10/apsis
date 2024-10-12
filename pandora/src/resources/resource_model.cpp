@@ -420,10 +420,17 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     };
 
     wgpu::ShaderModule shaderModule = GetShaderForPrimitive(pPrimitive)->GetShaderModule();
+
     wgpu::FragmentState fragmentState{
         .module = shaderModule,
         .targetCount = 1,
         .targets = &colorTargetState
+    };
+
+    wgpu::DepthStencilState depthState{
+        .format = wgpu::TextureFormat::Depth32Float,
+        .depthWriteEnabled = true,
+        .depthCompare = wgpu::CompareFunction::Less
     };
 
     wgpu::BindGroupLayout bindGroupLayouts[] = 
@@ -439,6 +446,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
     wgpu::RenderPipelineDescriptor descriptor{
+        .label = "ResourceModel",
         .layout = pipelineLayout,
         .vertex = {
             .module = shaderModule,
@@ -449,6 +457,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
             .topology = GetPrimitiveTopology(pPrimitive),
             .cullMode = wgpu::CullMode::None
         },
+        .depthStencil = &depthState,
         .fragment = &fragmentState
     };
 

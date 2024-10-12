@@ -39,21 +39,6 @@ Window::~Window()
     m_pWindow = nullptr;
 }
 
-wgpu::Surface Window::GetSurface() const
-{
-    return m_Surface;
-}
-
-wgpu::TextureFormat Window::GetTextureFormat() const
-{
-    return m_Format;
-}
-
-GLFWwindow* Window::GetRawWindow() const
-{
-    return m_pWindow;
-}
-
 void Window::OnWindowResized(uint32_t width, uint32_t height)
 {
     Log::Info() << "Window resized to " << width << "x" << height;
@@ -96,16 +81,8 @@ void Window::ConfigureSurface()
         .height = m_Height,
     };
     m_Surface.Configure(&config);
-}
 
-uint32_t Window::GetWidth() const
-{
-    return m_Width;
-}
-
-uint32_t Window::GetHeight() const
-{
-    return m_Height;
+    m_DepthTexture = DepthTexture(GetRenderSystem()->GetDevice(), m_Width, m_Height, std::string("Window depth buffer"));
 }
 
 } // namespace WingsOfSteel::Pandora

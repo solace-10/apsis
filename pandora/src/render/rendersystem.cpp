@@ -89,34 +89,13 @@ void RenderSystem::Update()
 
     GetShaderEditor()->Update();
 
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
-    wgpu::RenderPassColorAttachment attachment{
-        .view = surfaceTexture.texture.CreateView(),
-        .loadOp = wgpu::LoadOp::Clear,
-        .storeOp = wgpu::StoreOp::Store,
-        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
-    };
-
-    wgpu::RenderPassDescriptor renderpass{.colorAttachmentCount = 1,
-                                        .colorAttachments = &attachment};
-
     wgpu::CommandEncoderDescriptor commandEncoderDescriptor{
         .label = "Pandora default command encoder"
     };
-
     wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
-    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
-    UpdateGlobalUniforms(renderPass);
-    
-    m_pModelRenderSystem->Render(renderPass);
 
-    GetDebugRender()->Render(renderPass);
-
-    GetImGuiSystem()->Render(renderPass);
-
-    renderPass.End();
+    RenderBasePass(encoder);
+    RenderUIPass(encoder);
 
     wgpu::CommandBufferDescriptor commandBufferDescriptor{
         .label = "Pandora default command buffer"
@@ -125,17 +104,75 @@ void RenderSystem::Update()
     GetDevice().GetQueue().Submit(1, &commands);
 }
 
-wgpu::Instance RenderSystem::GetInstance() const
+void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)
+{
+    wgpu::SurfaceTexture surfaceTexture;
+    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
+
+    wgpu::RenderPassColorAttachment colorAttachment{
+        .view = surfaceTexture.texture.CreateView(),
+        .loadOp = wgpu::LoadOp::Clear,
+        .storeOp = wgpu::StoreOp::Store,
+        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
+    };
+
+    wgpu::RenderPassDepthStencilAttachment depthAttachment{
+        .view = GetWindow()->GetDepthTexture().GetTextureView(),
+        .depthLoadOp = wgpu::LoadOp::Clear,
+        .depthStoreOp = wgpu::StoreOp::Store,
+        .depthClearValue = 1.0f
+    };
+
+    wgpu::RenderPassDescriptor renderpass{
+        .colorAttachmentCount = 1,
+        .colorAttachments = &colorAttachment,
+        .depthStencilAttachment = &depthAttachment
+    };
+
+    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
+    UpdateGlobalUniforms(renderPass);
+    
+    m_pModelRenderSystem->Render(renderPass);
+
+    renderPass.End();
+}
+
+void RenderSystem::RenderUIPass(wgpu::CommandEncoder& encoder)
+{
+    wgpu::SurfaceTexture surfaceTexture;
+    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
+
+    wgpu::RenderPassColorAttachment colorAttachment{
+        .view = surfaceTexture.texture.CreateView(),
+        .loadOp = wgpu::LoadOp::Load,
+        .storeOp = wgpu::StoreOp::Store
+    };
+
+    wgpu::RenderPassDescriptor renderpass{
+        .colorAttachmentCount = 1,
+        .colorAttachments = &colorAttachment
+    };
+
+    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
+    UpdateGlobalUniforms(renderPass);
+
+    GetDebugRender()->Render(renderPass);
+    GetImGuiSystem()->Render(renderPass);
+
+    renderPass.End();
+}
+
+wgpu::Instance& RenderSystem::GetInstance() const
 {
     return g_Instance;
 }
 
-wgpu::Adapter RenderSystem::GetAdapter() const
+wgpu::Adapter& RenderSystem::GetAdapter() const
 {
     return g_Adapter;
 }
 
-wgpu::Device RenderSystem::GetDevice() const
+wgpu::Device& RenderSystem::GetDevice() const
 {
     return g_Device;
 }

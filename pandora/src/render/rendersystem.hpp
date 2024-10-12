@@ -26,9 +26,9 @@ public:
     void Initialize(OnRenderSystemInitializedCallback onInitializedCallback);
     void Update();
 
-    wgpu::Instance GetInstance() const;
-    wgpu::Adapter GetAdapter() const;
-    wgpu::Device GetDevice() const;
+    wgpu::Instance& GetInstance() const;
+    wgpu::Adapter& GetAdapter() const;
+    wgpu::Device& GetDevice() const;
 
     wgpu::BindGroupLayout& GetGlobalUniformsLayout();
 
@@ -41,6 +41,9 @@ private:
 
     void CreateGlobalUniforms();
     void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass);
+
+    void RenderBasePass(wgpu::CommandEncoder& encoder);
+    void RenderUIPass(wgpu::CommandEncoder& encoder);
 
     struct GlobalUniforms
     {
