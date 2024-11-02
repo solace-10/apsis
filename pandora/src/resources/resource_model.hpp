@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resources/resource.hpp"
+#include "resources/resource.fwd.hpp"
 
 #include <atomic>
 #include <optional>
@@ -128,6 +129,7 @@ private:
     wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
 
     std::optional<SignalId> m_ShaderInjectionSignalId;
+    std::vector<ResourceTexture2DUniquePtr> m_Textures;
 };
 
 } // namespace WingsOfSteel::Pandora

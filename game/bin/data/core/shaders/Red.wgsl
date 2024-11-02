@@ -1,11 +1,13 @@
 struct VertexInput
 {
-    @location(0) position: vec3f
+    @location(0) position: vec3f,
+    @location(1) normal: vec3f
 };
 
 struct VertexOutput 
 {
-    @builtin(position) position: vec4f
+    @builtin(position) position: vec4f,
+    @location(0) normalVS: vec4f // vertex normal in view space
 };
 
 struct GlobalUniforms
@@ -27,6 +29,7 @@ struct LocalUniforms
 {
     var out: VertexOutput;
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * uLocalUniforms.modelMatrix * vec4f(in.position, 1.0);
+    out.normalVS = uGlobalUniforms.viewMatrix * uLocalUniforms.modelMatrix * vec4f(in.normal,1.0);
     return out;
 }
 

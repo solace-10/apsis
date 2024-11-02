@@ -4,6 +4,7 @@
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
+#include "resources/resource_texture_2d.hpp"
 #include "pandora.hpp"
 
 // clang-format off
@@ -179,6 +180,7 @@ void ResourceModel::LoadDependentResources()
         m_Shaders[path.str()] = nullptr;
     }
     m_DependentResourcesToLoad += m_pModel->materials.size();
+    m_DependentResourcesToLoad += m_pModel->images.size();
 
     if (m_DependentResourcesToLoad == 0)
     {
@@ -198,6 +200,37 @@ void ResourceModel::LoadDependentResources()
                     OnDependentResourcesLoaded();
                 }
             });
+        }
+
+        const size_t numImages = m_pModel->images.size();
+        m_Textures.resize(numImages);
+        for (size_t i = 0; i < numImages; i++)
+        {
+            auto& image = m_pModel->images[i];
+
+            // According to the spec (https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#reference-image), bufferView will be set if the texture is
+            // built into the GLTF rather than an external file.
+            if (image.bufferView >= 0)
+            {
+                auto& bufferView = m_pModel->bufferViews[image.bufferView];
+                auto& buffer = m_pModel->buffers[bufferView.buffer];
+                const std::string label = GetPath() + "[" + image.name + "]"; 
+                m_Textures[i] = std::make_unique<ResourceTexture2D>(label, &buffer.data[bufferView.byteOffset], bufferView.byteLength);
+                m_DependentResourcesLoaded++;
+            }
+            else if (!image.uri.empty()) // If we have a URI, then the texture is a local file. Path must be relative to the model file.
+            {
+                Log::Error() << "Loading textures from URIs is not implemented yet.";
+            }
+            else
+            {
+                Log::Error() << "Invalid GLTF file - image definition contains neither a buffer view or a URI.";
+            }
+        }
+
+        if (m_DependentResourcesToLoad == m_DependentResourcesLoaded)
+        {
+            OnDependentResourcesLoaded();
         }
     }
 }
