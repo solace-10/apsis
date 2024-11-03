@@ -12,6 +12,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include "core/signal.hpp"
+#include "render/material.hpp"
 #include "resources/resource_shader.hpp"
 
 namespace tinygltf
@@ -68,6 +69,7 @@ private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
     void LoadDependentResources();
     void OnDependentResourcesLoaded();
+    void SetupMaterials();
     void SetupNodes();
     void SetupMeshes();
     void SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive);
@@ -78,6 +80,7 @@ private:
     int GetNumberOfComponentsForType(int type) const;
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
     void CreateLocalUniforms();
+    void CreateTextureUniforms();
     void HandleShaderInjection();
     void RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform);
 
@@ -128,8 +131,12 @@ private:
     wgpu::BindGroup m_LocalUniformsBindGroup;
     wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
 
+    wgpu::BindGroup m_TextureUniformsBindGroup;
+    wgpu::BindGroupLayout m_TextureUniformsBindGroupLayout;
+
     std::optional<SignalId> m_ShaderInjectionSignalId;
     std::vector<ResourceTexture2DUniquePtr> m_Textures;
+    std::vector<Material> m_Materials;
 };
 
 } // namespace WingsOfSteel::Pandora

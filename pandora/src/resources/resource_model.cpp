@@ -20,7 +20,13 @@
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+// clang-format off
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-volatile"
 #include <glm/gtx/quaternion.hpp>
+#pragma clang diagnostic pop
+// clang-format on
 
 #include <array>
 #include <bitset>
@@ -270,12 +276,57 @@ void ResourceModel::OnDependentResourcesLoaded()
         m_Buffers[i] = buffer;
     }
 
+    SetupMaterials();
     SetupNodes();
     SetupMeshes();
 
     SetState(ResourceState::Loaded);
 
     HandleShaderInjection();
+}
+
+void ResourceModel::SetupMaterials()
+{
+    auto GetTexture = [this](int index) -> ResourceTexture2D*
+    {
+        if (index < 0 || index > static_cast<int>(m_Textures.size()))
+        {
+            return nullptr;   
+        }
+        else
+        {
+            return m_Textures[static_cast<size_t>(index)].get();
+        }
+    };
+
+    auto ToVec3 = [](const std::vector<double>& data)
+    {
+        assert(data.size() == 3);
+        return glm::vec3(data[0], data[1], data[2]);
+    };
+
+    auto ToVec4 = [](const std::vector<double>& data)
+    {
+        assert(data.size() == 4);
+        return glm::vec4(data[0], data[1], data[2], data[3]);
+    };
+
+    for (auto& material : m_pModel->materials)
+    {
+        MaterialSpec spec{
+            .baseColorFactor = ToVec4(material.pbrMetallicRoughness.baseColorFactor),
+            .metallicFactor = static_cast<float>(material.pbrMetallicRoughness.metallicFactor),
+            .roughnessFactor = static_cast<float>(material.pbrMetallicRoughness.roughnessFactor),
+            .emissiveFactor = ToVec3(material.emissiveFactor),
+            .pBaseColorTexture = GetTexture(material.pbrMetallicRoughness.baseColorTexture.index),
+            .pMetallicRoughnessTexture = GetTexture(material.pbrMetallicRoughness.metallicRoughnessTexture.index),
+            .pNormalTexture = GetTexture(material.normalTexture.index),
+            .pOcclusionTexture = GetTexture(material.occlusionTexture.index),
+            .pEmissiveTexture = GetTexture(material.emissiveTexture.index)
+        };
+
+        m_Materials.emplace_back(spec);
+    }
 }
 
 void ResourceModel::SetupNodes()
