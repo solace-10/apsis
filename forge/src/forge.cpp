@@ -98,7 +98,7 @@ void Forge::DrawManifestTab()
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn(); ImGui::Text("%s", pEntry->GetPath().data());
-                ImGui::TableNextColumn(); ImGui::Text("%u", pEntry->GetSize());
+                ImGui::TableNextColumn(); ImGui::Text("%lu", pEntry->GetSize());
                 ImGui::TableNextColumn();
 
                 int itemCurrentIdx = static_cast<int>(pEntry->GetMode());
