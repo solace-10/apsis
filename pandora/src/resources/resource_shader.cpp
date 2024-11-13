@@ -50,7 +50,8 @@ const std::string& ResourceShader::GetShaderCode() const
 
 void ResourceShader::Inject(const std::string& code, OnShaderCompiledCallback callback)
 {
-    GetRenderSystem()->GetShaderCompiler()->Compile(code, [this, code, callback](ShaderCompilationResult* pCompilationResult)
+    const std::string label(GetPath() + " (injected)");
+    GetRenderSystem()->GetShaderCompiler()->Compile(label, code, [this, code, callback](ShaderCompilationResult* pCompilationResult)
     {
         if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
         {
@@ -71,7 +72,8 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     {
         m_ShaderCode = std::string(pFile->GetData().data(), pFile->GetData().size());
 
-        GetRenderSystem()->GetShaderCompiler()->Compile(m_ShaderCode, [this, pFile](ShaderCompilationResult* pCompilationResult)
+        const std::string label(pFile->GetPath());
+        GetRenderSystem()->GetShaderCompiler()->Compile(label, m_ShaderCode, [this, pFile](ShaderCompilationResult* pCompilationResult)
         {
             if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
             {

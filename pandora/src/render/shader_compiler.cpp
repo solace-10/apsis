@@ -18,7 +18,7 @@ ShaderCompiler::~ShaderCompiler()
 
 }
 
-void ShaderCompiler::Compile(const std::string& code, OnShaderCompiledCallback callback)
+void ShaderCompiler::Compile(const std::string& label, const std::string& code, OnShaderCompiledCallback callback)
 {
     const uint32_t id = static_cast<uint32_t>(m_Results.size());
     m_Results.push_back(std::move(std::make_unique<ShaderCompilationResult>(id)));
@@ -29,7 +29,8 @@ void ShaderCompiler::Compile(const std::string& code, OnShaderCompiledCallback c
     wgslDesc.code = code.c_str();
 
     wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
-        .nextInChain = &wgslDesc
+        .nextInChain = &wgslDesc,
+        .label = label.data()
     };
 
     device.PushErrorScope(wgpu::ErrorFilter::Validation);

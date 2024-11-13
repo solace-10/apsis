@@ -21,7 +21,7 @@ public:
     ShaderCompiler();
     ~ShaderCompiler();
 
-    void Compile(const std::string& code, OnShaderCompiledCallback callback);
+    void Compile(const std::string& label, const std::string& code, OnShaderCompiledCallback callback);
     ShaderCompilationResult* GetShaderCompilationResult(uint32_t id) const;
 
 private:

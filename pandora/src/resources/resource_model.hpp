@@ -113,6 +113,7 @@ private:
         };
         std::optional<IndexData> indexData;
 
+        std::optional<Material> material;
         wgpu::RenderPipeline pipeline;
     };
 

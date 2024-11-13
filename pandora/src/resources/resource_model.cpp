@@ -22,16 +22,22 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // clang-format off
+#if __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-volatile"
 #include <glm/gtx/quaternion.hpp>
 #pragma clang diagnostic pop
+#else
+#include <glm/gtx/quaternion.hpp>
+#endif
 // clang-format on
 
 #include <array>
 #include <bitset>
+#include <optional>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 
 namespace WingsOfSteel::Pandora
 {
@@ -100,6 +106,11 @@ void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& 
         m_LocalUniforms.modelMatrix = transform;
         GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LocalUniformsBuffer, 0, &m_LocalUniforms, sizeof(LocalUniforms));
         renderPass.SetBindGroup(1, m_LocalUniformsBindGroup);
+
+        if (primitiveRenderData.material.has_value())
+        {
+            renderPass.SetBindGroup(2, primitiveRenderData.material.value().GetBindGroup());
+        }
 
         renderPass.SetPipeline(primitiveRenderData.pipeline);
         for (const auto& vertexData : primitiveRenderData.vertexData)
@@ -456,7 +467,19 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         uint64_t arrayStride = bufferView.byteStride;
         if (arrayStride == 0)
         {
-            arrayStride = 3 * sizeof(float);
+            if (accessor.type == TINYGLTF_TYPE_VEC2)
+            {
+                arrayStride = 2 * sizeof(float);
+            }
+            else if (accessor.type == TINYGLTF_TYPE_VEC3)
+            {
+                arrayStride = 3 * sizeof(float);
+            }
+            else
+            {
+                Log::Error() << "Unsupported accessor type: " << accessor.type;
+                continue;
+            }
         }
 
         wgpu::VertexBufferLayout bufferLayout{            
@@ -503,6 +526,12 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .format = Pandora::GetWindow()->GetTextureFormat()
     };
 
+    if (pPrimitive->material != -1)
+    {
+        renderData.material = m_Materials.at(pPrimitive->material);
+        colorTargetState.blend = &renderData.material.value().GetBlendState();
+    }
+
     wgpu::ShaderModule shaderModule = GetShaderForPrimitive(pPrimitive)->GetShaderModule();
 
     wgpu::FragmentState fragmentState{
@@ -517,15 +546,20 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .depthCompare = wgpu::CompareFunction::Less
     };
 
-    wgpu::BindGroupLayout bindGroupLayouts[] = 
+    std::vector<wgpu::BindGroupLayout> bindGroupLayouts = 
     {
         GetRenderSystem()->GetGlobalUniformsLayout(),
         m_LocalUniformsBindGroupLayout
     };
 
+    if (renderData.material.has_value())
+    {
+        bindGroupLayouts.push_back(renderData.material.value().GetBindGroupLayout());
+    }
+
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
-        .bindGroupLayoutCount = 2,
-        .bindGroupLayouts = bindGroupLayouts
+        .bindGroupLayoutCount = bindGroupLayouts.size(),
+        .bindGroupLayouts = bindGroupLayouts.data()
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 

@@ -27,8 +27,12 @@ struct LocalUniforms
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
-@group(2) @binding(0) var baseTexture: texture_2d<f32>;
-@group(2) @binding(1) var baseSampler: sampler;
+@group(2) @binding(0) var defaultSampler: sampler;
+@group(2) @binding(1) var baseTexture: texture_2d<f32>;
+//@group(2) @binding(2) var metallicRoughnessTexture: texture_2d<f32>;
+//@group(2) @binding(3) var normalTexture: texture_2d<f32>;
+//@group(2) @binding(4) var occlusionTexture: texture_2d<f32>;
+//@group(2) @binding(5) var emissiveTexture: texture_2d<f32>;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -45,8 +49,8 @@ struct LocalUniforms
 	let lightPosition = vec3f(100.0, 100.0, 100.0);
 	let lightDir = normalize(lightPosition - in.worldPosition);
 	let diffuseStrength = max(dot(in.worldNormal, lightDir), 0.0);
-	let ambientStrength = vec3f(0.2);
-	let objectColor = textureSample(baseTexture, baseSampler, in.uv).rgb;
+	let ambientStrength = vec3f(0.0);
+	let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
 	//return vec4f(in.worldNormal, 1.0);
     return vec4f(objectColor * ambientStrength + objectColor * diffuseStrength, 1);
 }

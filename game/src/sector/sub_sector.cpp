@@ -50,7 +50,7 @@ void SubSector::Initialize()
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
 
     OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
-    orbitCameraComponent.distance = 100.0f;
+    orbitCameraComponent.distance = 50.0f;
     orbitCameraComponent.orbitAngle = glm::radians(-90.0f);
     orbitCameraComponent.pitch = 0.0f;
     orbitCameraComponent.minimumPitch = glm::radians(0.0f);
