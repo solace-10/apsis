@@ -20,6 +20,11 @@ ModelRenderSystem::~ModelRenderSystem()
 
 void ModelRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
 {
+    if (GetActiveScene() == nullptr)
+    {
+        return;
+    }
+
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<ModelComponent, TransformComponent>();
 

@@ -1,4 +1,4 @@
-project(forge)
+project(dome)
 set(CMAKE_CXX_STANDARD 20)
 
 if(TARGET_PLATFORM_NATIVE)

@@ -113,6 +113,7 @@
             ],
             "targets": [
                 "game",
+                "dome",
                 "forge"
             ]
         },

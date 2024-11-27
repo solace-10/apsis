@@ -28,13 +28,13 @@ target_include_directories(pandora PUBLIC
     ${IMGUI_SOURCE_DIR}
     ${IMGUI_SOURCE_DIR}/backends/
     ext/entt/single_include/
+    ext/stb/
+    ext/tinygltf/
 )
 
 target_include_directories(pandora PRIVATE
     ext/debug-draw/
     ext/freetype/include/
-    ext/stb/
-    ext/tinygltf/
 )
 
 set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/pandora/lib)

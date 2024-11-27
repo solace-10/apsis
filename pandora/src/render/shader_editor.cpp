@@ -44,9 +44,8 @@ void ShaderEditor::Update()
                 data.editor.Render("Shader editor", ImVec2(), true);
             }
         }
-        
-        ImGui::End();
     }
+    ImGui::End();
 }
 
 void ShaderEditor::Show(bool state)

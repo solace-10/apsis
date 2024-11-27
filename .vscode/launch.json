@@ -36,6 +36,13 @@
             ]
         },
         {
+            "name": "Launch Dome (Windows)",
+            "type":"cppvsdbg",
+            "request":"launch",
+            "program": "${workspaceRoot}/dome/bin/dome.exe",
+            "cwd":"${workspaceRoot}/dome/bin"
+        },
+        {
             "name": "Launch Forge (Windows)",
             "type":"cppvsdbg",
             "request":"launch",

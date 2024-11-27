@@ -122,12 +122,12 @@ void SubSector::SpawnPlayerShip()
 
     m_pPlayerShip = CreateEntity();
 
-    DebugRenderComponent& debugRenderComponent = m_pPlayerShip->AddComponent<DebugRenderComponent>();
-    debugRenderComponent.color = Color::Cyan;
-    debugRenderComponent.shape = DebugRenderShape::Box;
-    debugRenderComponent.length = 50.0f;
-    debugRenderComponent.width = 25.0f;
-    debugRenderComponent.height = 10.0f;
+    // DebugRenderComponent& debugRenderComponent = m_pPlayerShip->AddComponent<DebugRenderComponent>();
+    // debugRenderComponent.color = Color::Cyan;
+    // debugRenderComponent.shape = DebugRenderShape::Box;
+    // debugRenderComponent.length = 50.0f;
+    // debugRenderComponent.width = 25.0f;
+    // debugRenderComponent.height = 10.0f;
 
     TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));

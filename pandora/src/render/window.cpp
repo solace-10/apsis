@@ -4,6 +4,8 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#include <GLFW/glfw3.h>
+
 #include <magic_enum.hpp>
 
 #include "render/window.hpp"

@@ -3,6 +3,7 @@
 #include <cassert>
 #include <magic_enum.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <GLFW/glfw3.h>
 
 #include "core/log.hpp"
 #include "imgui/imgui_system.hpp"

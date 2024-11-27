@@ -1,10 +1,11 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #include <webgpu/webgpu_cpp.h>
 
 #include "render/depth_texture.hpp"
 #include "render/window_settings.hpp"
+
+struct GLFWwindow;
 
 namespace WingsOfSteel::Pandora
 {
