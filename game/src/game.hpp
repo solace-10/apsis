@@ -7,9 +7,9 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Hyperscape);
 DECLARE_SMART_PTR(ItemManager);
-DECLARE_SMART_PTR(SectorGenerator);
-DECLARE_SMART_PTR(SectorInfo);
+DECLARE_SMART_PTR(Sector);
 DECLARE_SMART_PTR(SubSector);
 
 class Game
@@ -30,9 +30,9 @@ private:
     Pandora::SceneSharedPtr m_pMenuScene;
 
     ItemManagerUniquePtr m_pItemManager;
-    SectorInfoSharedPtr m_pSectorInfo;
+    HyperscapeUniquePtr m_pHyperscape;
+    SectorSharedPtr m_pSector;
     SubSectorSharedPtr m_pSubSector;
-    SectorGeneratorUniquePtr m_pSectorGenerator;
 };
 
 inline const ItemManager* Game::GetItemManager() const

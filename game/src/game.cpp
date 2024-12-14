@@ -4,13 +4,14 @@
 #include <scene/entity.hpp>
 #include <scene/scene.hpp>
 
+#include "hyperscape/hyperscape.hpp"
 #include "items/item_info.hpp"
 #include "items/item_manager.hpp"
-#include "sector/sector_generator.hpp"
-#include "sector/sector_info.hpp"
-#include "sector/sub_sector.hpp"
-#include "sector/sub_sector_info.hpp"
 #include "game.hpp"
+#include "sector/signal/sector_signal.hpp"
+#include "sector/sector.hpp"
+#include "sub_sector/signal/sub_sector_signal.hpp"
+#include "sub_sector/sub_sector.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -30,7 +31,23 @@ void Game::Initialize()
     Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar();});
 
     m_pItemManager = std::make_unique<ItemManager>();
-    m_pSectorGenerator = std::make_unique<SectorGenerator>();
+    //m_pSectorGenerator = std::make_unique<SectorGenerator>();
+
+    m_pHyperscape = std::make_unique<Hyperscape>();
+    m_pHyperscape->Initialize();
+
+    auto sectorSignals = m_pHyperscape->GetSignals();
+    assert(sectorSignals.size() == 1);
+    SectorSignal* pSectorSignal = sectorSignals.back();
+
+    m_pSector = pSectorSignal->Spawn();
+
+    auto subSectorSignals = m_pSector->GetSignals();
+    assert(subSectorSignals.size() == 1);
+    SubSectorSignal* pSubSectorSignal = subSectorSignals.back();
+
+    m_pSubSector = pSubSectorSignal->Spawn();
+    Pandora::SetActiveScene(m_pSubSector);
 
     // m_pCamera = std::make_shared<OrbitCamera>();
     // m_pCamera->LookAt(
@@ -39,25 +56,17 @@ void Game::Initialize()
     //     glm::vec3(0.0f, 1.0f, 0.0f)
     // );
 
-    m_pMenuScene = std::make_shared<Pandora::Scene>();
+    //m_pMenuScene = std::make_shared<Pandora::Scene>();
     // m_pMenuScene->AddEntity(m_pCamera);
     // m_pMenuScene->SetCamera(m_pCamera);
-    Pandora::SetActiveScene(m_pMenuScene);
+    //Pandora::SetActiveScene(m_pMenuScene);
 
-    //m_pTestEntity = std::make_shared<TestEntity>();
-    //m_pScene->AddEntity(m_pTestEntity);
+    
 }
 
 void Game::Update(float delta)
 {
-    if (m_pSubSector == nullptr && m_pSectorGenerator->CanCreate(0))
-    {
-        m_pSectorInfo = m_pSectorGenerator->Create(0);
-        SubSectorInfoSharedPtr pSubSectorInfo = m_pSectorInfo->CreateSubSectorInfo();
-        m_pSubSector = std::make_shared<SubSector>(pSubSectorInfo);
-        m_pSubSector->Initialize();
-        Pandora::SetActiveScene(m_pSubSector);
-    }
+
 }
 
 void Game::Shutdown()
@@ -68,18 +77,18 @@ void Game::Shutdown()
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.
 void Game::DrawImGuiMenuBar()
 {
-    if (m_pSubSector)
-    {
-        if (ImGui::BeginMenu("Sector"))
-        {
-            static bool sShowSignalsWindow = false;
-            if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
-            {
-                m_pSubSector->ShowSignalsDebugUI(sShowSignalsWindow);
-            }
-            ImGui::EndMenu();
-        }
-    }
+    // if (m_pSubSector)
+    // {
+    //     if (ImGui::BeginMenu("Sector"))
+    //     {
+    //         static bool sShowSignalsWindow = false;
+    //         if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
+    //         {
+    //             m_pSubSector->ShowSignalsDebugUI(sShowSignalsWindow);
+    //         }
+    //         ImGui::EndMenu();
+    //     }
+    // }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
