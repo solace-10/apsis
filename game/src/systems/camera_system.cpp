@@ -4,6 +4,7 @@
 #include <scene/entity.hpp>
 #include <pandora.hpp>
 
+#include "components/sub_sector_camera_component.hpp"
 #include "systems/camera_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -46,42 +47,61 @@ void CameraSystem::Update(float delta)
         return;
     }
 
-    if (pCamera->HasComponent<OrbitCameraComponent>() && pCamera->HasComponent<CameraComponent>())
+    if (pCamera->HasComponent<CameraComponent>())
     {
-        OrbitCameraComponent& orbitCameraComponent = pCamera->GetComponent<OrbitCameraComponent>();
-        if (m_IsDragging && m_InputPending)
+        if (pCamera->HasComponent<SubSectorCameraComponent>())
         {
-            const float sensitivity = 0.15f;
-            orbitCameraComponent.orbitAngle -= glm::radians(m_MouseDelta.x * sensitivity);
-            orbitCameraComponent.pitch += glm::radians(m_MouseDelta.y * sensitivity);
+            SubSectorCameraComponent& subSectorCameraComponent = pCamera->GetComponent<SubSectorCameraComponent>();
 
-            if (orbitCameraComponent.pitch < orbitCameraComponent.minimumPitch)
+            EntitySharedPtr pAnchorEntity = subSectorCameraComponent.GetAnchorEntity().lock();
+            glm::vec3 anchorPosition(0.0f);
+            if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
             {
-                orbitCameraComponent.pitch = orbitCameraComponent.minimumPitch;
+                const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
+                anchorPosition = glm::vec3(anchorTransform[3]);
             }
-            else if (orbitCameraComponent.pitch > orbitCameraComponent.maximumPitch)
-            {
-                orbitCameraComponent.pitch = orbitCameraComponent.maximumPitch;
-            }
-            m_InputPending = false;
+
+            glm::vec3 offset = subSectorCameraComponent.GetOffset();
+            CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+            cameraComponent.camera.LookAt(anchorPosition + offset, glm::vec3(0.0f, 0.0f, 1000.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
-
-        glm::vec3 position(
-            glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
-            glm::sin(orbitCameraComponent.pitch),
-            glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch)
-        );
-
-        EntitySharedPtr pAnchorEntity = orbitCameraComponent.anchorEntity.lock();
-        glm::vec3 anchorPosition(0.0f);
-        if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
+        else if (pCamera->HasComponent<OrbitCameraComponent>())
         {
-            const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
-            anchorPosition = glm::vec3(anchorTransform[3]);
-        }
+            OrbitCameraComponent& orbitCameraComponent = pCamera->GetComponent<OrbitCameraComponent>();
+            if (m_IsDragging && m_InputPending)
+            {
+                const float sensitivity = 0.15f;
+                orbitCameraComponent.orbitAngle -= glm::radians(m_MouseDelta.x * sensitivity);
+                orbitCameraComponent.pitch += glm::radians(m_MouseDelta.y * sensitivity);
 
-        CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-        cameraComponent.camera.LookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+                if (orbitCameraComponent.pitch < orbitCameraComponent.minimumPitch)
+                {
+                    orbitCameraComponent.pitch = orbitCameraComponent.minimumPitch;
+                }
+                else if (orbitCameraComponent.pitch > orbitCameraComponent.maximumPitch)
+                {
+                    orbitCameraComponent.pitch = orbitCameraComponent.maximumPitch;
+                }
+                m_InputPending = false;
+            }
+
+            glm::vec3 position(
+                glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
+                glm::sin(orbitCameraComponent.pitch),
+                glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch)
+            );
+
+            EntitySharedPtr pAnchorEntity = orbitCameraComponent.anchorEntity.lock();
+            glm::vec3 anchorPosition(0.0f);
+            if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
+            {
+                const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
+                anchorPosition = glm::vec3(anchorTransform[3]);
+            }
+
+            CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+            cameraComponent.camera.LookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+        }
     }
 }
 

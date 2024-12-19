@@ -133,7 +133,7 @@ void ImGuiSystem::ApplyStyle()
     ImGuiStyle* pStyle = &ImGui::GetStyle();
 
     pStyle->WindowPadding            = ImVec2(15, 15);
-    pStyle->WindowRounding           = 5.0f;
+    pStyle->WindowRounding           = 10.0f;
     pStyle->FramePadding             = ImVec2(5, 5);
     pStyle->FrameRounding            = 4.0f;
     pStyle->ItemSpacing              = ImVec2(12, 8);
@@ -144,24 +144,25 @@ void ImGuiSystem::ApplyStyle()
     pStyle->GrabMinSize              = 5.0f;
     pStyle->GrabRounding             = 3.0f;
 
-    pStyle->Colors[ImGuiCol_Text]                  = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
+
+    pStyle->Colors[ImGuiCol_Text]                  = ImColor(255, 255, 255, 255);
     pStyle->Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
-    pStyle->Colors[ImGuiCol_WindowBg]              = ImVec4(0.92f, 0.91f, 0.88f, 0.90f);
+    pStyle->Colors[ImGuiCol_WindowBg]              = ImColor(46, 46, 46, 240);
     pStyle->Colors[ImGuiCol_ChildBg]               = ImVec4(1.00f, 0.98f, 0.95f, 0.58f);
     pStyle->Colors[ImGuiCol_PopupBg]               = ImVec4(0.92f, 0.91f, 0.88f, 0.92f);
     pStyle->Colors[ImGuiCol_Border]                = ImVec4(0.84f, 0.83f, 0.80f, 0.65f);
     pStyle->Colors[ImGuiCol_BorderShadow]          = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
-    pStyle->Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
-    pStyle->Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.99f, 1.00f, 0.40f, 0.78f);
-    pStyle->Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 1.00f, 0.00f, 1.00f);
-    pStyle->Colors[ImGuiCol_TitleBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
-    pStyle->Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 0.98f, 0.95f, 0.50f);
-    pStyle->Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_FrameBg]               = ImColor(70, 70, 70, 255);
+    pStyle->Colors[ImGuiCol_FrameBgHovered]        = ImColor(80, 80, 80, 255);
+    pStyle->Colors[ImGuiCol_FrameBgActive]         = ImColor(90, 90, 90, 255);
+    pStyle->Colors[ImGuiCol_TitleBg]               = ImColor(70, 70, 70, 255);
+    pStyle->Colors[ImGuiCol_TitleBgCollapsed]      = ImColor(80, 80, 80, 255);
+    pStyle->Colors[ImGuiCol_TitleBgActive]         = ImColor(90, 90, 90, 255);
     pStyle->Colors[ImGuiCol_MenuBarBg]             = ImVec4(1.00f, 0.98f, 0.95f, 0.47f);
     pStyle->Colors[ImGuiCol_ScrollbarBg]           = ImVec4(1.00f, 0.98f, 0.95f, 0.00f);
-    pStyle->Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.00f, 0.00f, 0.00f, 0.21f);
-    pStyle->Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.90f, 0.91f, 0.00f, 0.78f);
-    pStyle->Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
+    pStyle->Colors[ImGuiCol_ScrollbarGrab]         = ImColor(70, 70, 70, 255);
+    pStyle->Colors[ImGuiCol_ScrollbarGrabHovered]  = ImColor(80, 80, 80, 255);
+    pStyle->Colors[ImGuiCol_ScrollbarGrabActive]   = ImColor(5, 250, 191, 200);
     //pStyle->Colors[ImGuiCol_ComboBg]               = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
     pStyle->Colors[ImGuiCol_CheckMark]             = ImVec4(0.02f, 0.98f, 0.75f, 0.80f);
     pStyle->Colors[ImGuiCol_SliderGrab]            = ImVec4(0.00f, 0.00f, 0.00f, 0.14f);
@@ -169,7 +170,7 @@ void ImGuiSystem::ApplyStyle()
     pStyle->Colors[ImGuiCol_Button]                = ImVec4(0.02f, 0.98f, 0.75f, 0.75f);
     pStyle->Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
     pStyle->Colors[ImGuiCol_ButtonActive]          = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
-    pStyle->Colors[ImGuiCol_Header]                = ImVec4(0.02f, 0.98f, 0.75f, 0.76f);
+    pStyle->Colors[ImGuiCol_Header]                = ImColor(70, 70, 70, 255);
     pStyle->Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.02f, 0.98f, 0.75f, 0.86f);
     pStyle->Colors[ImGuiCol_HeaderActive]          = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
     //pStyle->Colors[ImGuiCol_Column]                = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);

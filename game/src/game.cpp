@@ -77,18 +77,18 @@ void Game::Shutdown()
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.
 void Game::DrawImGuiMenuBar()
 {
-    // if (m_pSubSector)
-    // {
-    //     if (ImGui::BeginMenu("Sector"))
-    //     {
-    //         static bool sShowSignalsWindow = false;
-    //         if (ImGui::MenuItem("Signals", nullptr, &sShowSignalsWindow))
-    //         {
-    //             m_pSubSector->ShowSignalsDebugUI(sShowSignalsWindow);
-    //         }
-    //         ImGui::EndMenu();
-    //     }
-    // }
+    if (m_pSubSector)
+    {
+        if (ImGui::BeginMenu("Sub-sector"))
+        {
+            static bool sShowCameraWindow = false;
+            if (ImGui::MenuItem("Camera", nullptr, &sShowCameraWindow))
+            {
+                m_pSubSector->ShowCameraDebugUI(sShowCameraWindow);
+            }
+            ImGui::EndMenu();
+        }
+    }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
