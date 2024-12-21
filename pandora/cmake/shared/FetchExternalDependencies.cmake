@@ -8,6 +8,13 @@ if(TARGET_PLATFORM_NATIVE)
     # By default Dawn uses Chromium's build system and dependency management.
     # Setting DAWN_FETCH_DEPENDENCIES clones the dependencies repositories.
     set(DAWN_FETCH_DEPENDENCIES ON)
+    set(DAWN_BUILD_SAMPLES OFF)
+    set(TINT_BUILD_CMD_TOOLS OFF)
+    set(TINT_BUILD_DOCS OFF)
+    set(TINT_BUILD_TESTS OFF)
+    set(TINT_BUILD_MSL_WRITER OFF)
+    set(TINT_BUILD_SPV_READER OFF)
+    set(TINT_BUILD_GLSL_VALIDATOR OFF)
     FetchContent_Declare(
         dawn
         GIT_REPOSITORY https://github.com/google/dawn.git
@@ -30,21 +37,6 @@ if(TARGET_PLATFORM_NATIVE)
         EXCLUDE_FROM_ALL
     )
     FetchContent_MakeAvailable(clipp)
-
-    option(DAWN_BUILD_SAMPLES "Enables building Dawn's samples" OFF)
-    option(TINT_BUILD_CMD_TOOLS "Build the Tint command line tools" OFF)
-    option(TINT_BUILD_DOCS "Build documentation" OFF)
-    option(TINT_BUILD_TESTS "Build tests" OFF)
-
-    if(TARGET_PLATFORM_WINDOWS)
-        option(TINT_BUILD_MSL_WRITER "Build the MSL output writer" OFF)
-        option(TINT_BUILD_SPV_READER "Build the SPIR-V input reader" OFF)
-        option(TINT_BUILD_WGSL_READER "Build the WGSL input reader" ON)
-        option(TINT_BUILD_GLSL_WRITER "Build the GLSL output writer" OFF)
-        option(TINT_BUILD_GLSL_VALIDATOR "Build the GLSL output validator" OFF)
-        option(TINT_BUILD_SPV_WRITER "Build the SPIR-V output writer" OFF)
-        option(TINT_BUILD_WGSL_WRITER "Build the WGSL output writer" ON)
-    endif()
 endif()
 
 FetchContent_Declare(
