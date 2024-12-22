@@ -5,15 +5,13 @@
 #include <core/smart_ptr.hpp>
 #include <resources/resource.fwd.hpp>
 
+#include "point.hpp"
+
 namespace WingsOfSteel::Dome
 {
 
 DECLARE_SMART_PTR(BufferedTexture2D);
-
-struct Point {
-    int x;
-    int y;
-};
+DECLARE_SMART_PTR(TextureProcessor);
 
 class Dome
 {
@@ -28,9 +26,11 @@ public:
 private:
     void DrawImGuiMenuBar();
 
-    std::vector<Point> GetEdgePoints(int threshold) const;
-
+    TextureProcessorUniquePtr m_pTextureProcessor;
     BufferedTexture2DUniquePtr m_pSourceTexture;
+
+    BufferedTexture2DUniquePtr m_pGreyscaleTexture;
+
     int m_Threshold{220};
     std::vector<Point> m_EdgePoints;
 };
