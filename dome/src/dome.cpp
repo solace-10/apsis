@@ -40,7 +40,9 @@ void Dome::Initialize()
     else
     {
         m_pGreyscaleTexture = m_pTextureProcessor->GetGreyscale(m_pSourceTexture.get());
-        //m_EdgePoints = GetEdgePoints(m_Threshold);
+        m_pEdgeTexture = m_pTextureProcessor->GetEdges(m_pGreyscaleTexture.get());
+        CalculateEdgePoints();
+        CalculateEdgeVertices();
     }
 }
 
@@ -61,14 +63,12 @@ void Dome::Update(float delta)
     flags |= ImGuiWindowFlags_NoTitleBar;
     Begin("Dome", nullptr, flags);
 
-
-
     // Left
     static int selectedTextureIndex = 0; // Here we store our selection data as an index.
     {
         ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Border);
 
-        const char* items[] = { "Original", "Greyscale" };
+        const char* items[] = { "Original", "Greyscale", "Edges" };
 
         // Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
         const char* combo_preview_value = items[selectedTextureIndex];
@@ -92,6 +92,32 @@ void Dome::Update(float delta)
             ImGui::EndCombo();
         }
 
+        ImGui::Checkbox("Show edge points", &m_ShowEdgePoints);
+
+        bool recalculateGeometry = false;
+        if (ImGui::SliderInt("Edge point threshold", &m_EdgePointThreshold, 0, 255))
+        {
+            CalculateEdgePoints();
+            recalculateGeometry = true;
+        }
+
+        ImGui::Checkbox("Show edge vertices", &m_ShowEdgeVertices);
+
+        if (ImGui::SliderInt("Max vertex count", &m_MaxVertexCount, 100, 10000))
+        {
+            recalculateGeometry = true;
+        }
+
+        if (ImGui::SliderFloat("Edge vertex accuracy", &m_Accuracy, 0.0f, 1.0f))
+        {
+            recalculateGeometry = true;
+        }
+
+        if (recalculateGeometry)
+        {
+            CalculateEdgeVertices();
+        }
+
         ImGui::EndChild();
     }
     ImGui::SameLine();
@@ -105,6 +131,7 @@ void Dome::Update(float delta)
         {
             case 0: pSelectedTexture = m_pSourceTexture.get(); break;
             case 1: pSelectedTexture = m_pGreyscaleTexture.get(); break;
+            case 2: pSelectedTexture = m_pEdgeTexture.get(); break;
         };
 
         if (pSelectedTexture)
@@ -118,18 +145,35 @@ void Dome::Update(float delta)
             ImVec2 c = ImGui::GetCursorScreenPos();
             ImGui::Image(textureId, ImVec2(textureWidth, textureHeight), uvMin, uvMax);
 
-            // ImDrawList* pDrawList = ImGui::GetWindowDrawList();
-            // ImU32 pointColor = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
-            // int pointRadius = 1;
+            ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
-            // for (auto& point : m_EdgePoints)
-            // {
-            //     ImVec2 p1 = ImVec2(c.x + point.x - pointRadius, c.y + point.y - pointRadius);
-            //     ImVec2 p2 = ImVec2(c.x + point.x + pointRadius, c.y + point.y - pointRadius);
-            //     ImVec2 p3 = ImVec2(c.x + point.x + pointRadius, c.y + point.y + pointRadius);
-            //     ImVec2 p4 = ImVec2(c.x + point.x - pointRadius, c.y + point.y + pointRadius);
-            //     pDrawList->AddQuadFilled(p1, p2, p3, p4, pointColor);
-            // }
+            if (m_ShowEdgePoints)
+            {
+                ImU32 pointColor = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
+                int pointRadius = 1;
+                for (auto& point : m_EdgePoints)
+                {
+                    ImVec2 p1 = ImVec2(c.x + point.x - pointRadius, c.y + point.y - pointRadius);
+                    ImVec2 p2 = ImVec2(c.x + point.x + pointRadius, c.y + point.y - pointRadius);
+                    ImVec2 p3 = ImVec2(c.x + point.x + pointRadius, c.y + point.y + pointRadius);
+                    ImVec2 p4 = ImVec2(c.x + point.x - pointRadius, c.y + point.y + pointRadius);
+                    pDrawList->AddQuadFilled(p1, p2, p3, p4, pointColor);
+                }
+            }
+
+            if (m_ShowEdgeVertices)
+            {
+                ImU32 vertexColor = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
+                int vertexRadius = 1;
+                for (auto& vertex : m_EdgeVertices)
+                {
+                    ImVec2 p1 = ImVec2(c.x + vertex.x - vertexRadius, c.y + vertex.y - vertexRadius);
+                    ImVec2 p2 = ImVec2(c.x + vertex.x + vertexRadius, c.y + vertex.y - vertexRadius);
+                    ImVec2 p3 = ImVec2(c.x + vertex.x + vertexRadius, c.y + vertex.y + vertexRadius);
+                    ImVec2 p4 = ImVec2(c.x + vertex.x - vertexRadius, c.y + vertex.y + vertexRadius);
+                    pDrawList->AddQuadFilled(p1, p2, p3, p4, vertexColor);
+                }
+            }
         }
 
         ImGui::EndChild();
@@ -147,6 +191,16 @@ void Dome::Shutdown()
 void Dome::DrawImGuiMenuBar()
 {
 
+}
+
+void Dome::CalculateEdgePoints()
+{
+    m_EdgePoints = m_pTextureProcessor->GetEdgePoints(m_pGreyscaleTexture.get(), m_EdgePointThreshold);
+}
+
+void Dome::CalculateEdgeVertices()
+{
+    m_EdgeVertices = m_pTextureProcessor->GetVertexFromPoints(m_EdgePoints, m_MaxVertexCount, m_Accuracy, m_pSourceTexture->GetWidth(), m_pSourceTexture->GetHeight());
 }
 
 } // namespace WingsOfSteel::Dome

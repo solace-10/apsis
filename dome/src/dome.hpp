@@ -6,6 +6,7 @@
 #include <resources/resource.fwd.hpp>
 
 #include "point.hpp"
+#include "vertex.hpp"
 
 namespace WingsOfSteel::Dome
 {
@@ -25,14 +26,23 @@ public:
 
 private:
     void DrawImGuiMenuBar();
+    void CalculateEdgePoints();
+    void CalculateEdgeVertices();
 
     TextureProcessorUniquePtr m_pTextureProcessor;
     BufferedTexture2DUniquePtr m_pSourceTexture;
 
     BufferedTexture2DUniquePtr m_pGreyscaleTexture;
+    BufferedTexture2DUniquePtr m_pEdgeTexture;
 
-    int m_Threshold{220};
+    bool m_ShowEdgePoints{true};
+    int m_EdgePointThreshold{30};
     std::vector<Point> m_EdgePoints;
+
+    bool m_ShowEdgeVertices{true};
+    int m_MaxVertexCount{1000};
+    float m_Accuracy{1.0f};
+    std::vector<Vertex> m_EdgeVertices;
 };
 
 } // namespace WingsOfSteel::Dome

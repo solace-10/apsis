@@ -1,5 +1,8 @@
 #include "texture_processor.hpp"
 
+#include <unordered_map>
+#include <string>
+
 #include "buffered_texture_2d.hpp"
 #include <cassert>
 
@@ -73,6 +76,137 @@ BufferedTexture2DUniquePtr TextureProcessor::GetGreyscale(BufferedTexture2D* pSo
     }
     pGreyscaleTexture->Rebuild();
     return pGreyscaleTexture;
+}
+
+BufferedTexture2DUniquePtr TextureProcessor::GetEdges(BufferedTexture2D* pSourceTexture) const
+{
+    // Create the output texture
+    BufferedTexture2DUniquePtr pEdgeTexture = std::make_unique<BufferedTexture2D>("edges", pSourceTexture);
+
+    const size_t width = pEdgeTexture->GetWidth();
+    const size_t height = pEdgeTexture->GetHeight();
+    const size_t channels = pEdgeTexture->GetChannels();
+    assert(channels == 4);
+
+    const unsigned char* pSourceData = pSourceTexture->GetTextureData().data();
+    unsigned char* pEdgeData = pEdgeTexture->GetTextureData().data();
+
+    // Sobel kernels
+    const int sobelX[3][3] = {
+        {-1, 0, 1},
+        {-2, 0, 2},
+        {-1, 0, 1}
+    };
+
+    const int sobelY[3][3] = {
+        {-1, -2, -1},
+        { 0,  0,  0},
+        { 1,  2,  1}
+    };
+
+    auto getPixelIntensity = [&](int x, int y) -> unsigned char {
+        if (x < 0 || x >= static_cast<int>(width) || y < 0 || y >= static_cast<int>(height))
+        {
+            return 0;
+        }
+        const size_t index = (y * width + x) * channels;
+        return pSourceData[index];
+    };
+
+    for (size_t y = 0; y < height; ++y)
+    {
+        for (size_t x = 0; x < width; ++x)
+        {
+            int gx = 0, gy = 0;
+
+            // Apply Sobel kernels
+            for (int ky = -1; ky <= 1; ++ky)
+            {
+                for (int kx = -1; kx <= 1; ++kx)
+                {
+                    unsigned char intensity = getPixelIntensity(x + kx, y + ky);
+                    gx += sobelX[ky + 1][kx + 1] * intensity;
+                    gy += sobelY[ky + 1][kx + 1] * intensity;
+                }
+            }
+
+            // Compute gradient magnitude
+            const unsigned char edgeStrength = static_cast<unsigned char>(std::min(255, static_cast<int>(std::sqrt(gx * gx + gy * gy))));
+            const size_t index = (y * width + x) * channels;
+            pEdgeData[index] = pEdgeData[index + 1] = pEdgeData[index + 2] = edgeStrength;
+        }
+    }
+
+    pEdgeTexture->Rebuild();
+    return pEdgeTexture;
+}
+
+std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Point>& points, int maxPointCount, float accuracy, int width, int height) const
+{
+    auto addVertex = [](int x, int y, std::unordered_map<std::string, Vertex>& hash) {
+        std::ostringstream resultKeyStream;
+        resultKeyStream << x << "|" << y;
+        std::string resultKey = resultKeyStream.str();
+
+        if (hash.find(resultKey) == hash.end()) 
+        {
+            hash[resultKey] = {x, y};
+        }
+    };
+
+    std::unordered_map<std::string, Vertex> resultHash;
+
+    int gridPointCount = std::max(static_cast<int>(maxPointCount * (1.0f - accuracy)), 5);
+
+    int gridColumns = static_cast<int>(std::round(std::sqrt(gridPointCount)));
+    int gridRows = static_cast<int>(std::ceil(static_cast<double>(gridPointCount) / gridColumns));
+
+    int xIncrement = width / gridColumns;
+    int yIncrement = height / gridRows;
+
+    int rowIndex = 0;
+
+    for (int y = 0; y < height; y += yIncrement) 
+    {
+        ++rowIndex;
+        int startX = (rowIndex % 2 == 0) ? (xIncrement / 2) : 0;
+
+        for (int x = startX; x < width; x += xIncrement) {
+            if (x < width && y < height) {
+                addVertex(
+                    static_cast<int>(x + std::cos(y) * yIncrement),
+                    static_cast<int>(y + std::sin(x) * xIncrement),
+                    resultHash
+                );
+            }
+        }
+    }
+
+    addVertex(0, 0, resultHash);
+    addVertex(width - 1, 0, resultHash);
+    addVertex(width - 1, height - 1, resultHash);
+    addVertex(0, height - 1, resultHash);
+
+    int remainingPointCount = maxPointCount - static_cast<int>(resultHash.size());
+    int edgePointCount = static_cast<int>(points.size());
+    int increment = (remainingPointCount > 0) ? (edgePointCount / remainingPointCount) : 0;
+
+    if (maxPointCount > 0 && increment > 0) 
+    {
+        for (size_t i = 0; i < edgePointCount; i += increment) 
+        {
+            addVertex(points[i].x, points[i].y, resultHash);
+        }
+    }
+
+    std::vector<Vertex> result;
+    result.reserve(resultHash.size());
+    for (const auto& [key, vertex] : resultHash) 
+    {
+        result.push_back(vertex);
+    }
+
+    return result;
 }
 
 } // namespace WingsOfSteel::Dome
