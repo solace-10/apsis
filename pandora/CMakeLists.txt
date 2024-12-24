@@ -27,6 +27,7 @@ target_include_directories(pandora PUBLIC
     src/
     ${IMGUI_SOURCE_DIR}
     ${IMGUI_SOURCE_DIR}/backends/
+    ext/delaunator-cpp/
     ext/entt/single_include/
     ext/stb/
     ext/tinygltf/

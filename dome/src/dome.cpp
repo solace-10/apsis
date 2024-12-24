@@ -8,6 +8,7 @@
 
 #include "buffered_texture_2d.hpp"
 #include "dome.hpp"
+#include "geometry_processor.hpp"
 #include "texture_processor.hpp"
 
 namespace WingsOfSteel::Dome
@@ -31,6 +32,7 @@ void Dome::Initialize()
     GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar(); });
 
     m_pTextureProcessor = std::make_unique<TextureProcessor>();
+    m_pGeometryProcessor = std::make_unique<GeometryProcessor>();
 
     m_pSourceTexture = std::make_unique<BufferedTexture2D>("Dome source texture");
     if (!m_pSourceTexture->Load("data/core/source/nebula_1.png"))
@@ -42,7 +44,7 @@ void Dome::Initialize()
         m_pGreyscaleTexture = m_pTextureProcessor->GetGreyscale(m_pSourceTexture.get());
         m_pEdgeTexture = m_pTextureProcessor->GetEdges(m_pGreyscaleTexture.get());
         CalculateEdgePoints();
-        CalculateEdgeVertices();
+        BuildGeometry();
     }
 }
 
@@ -66,7 +68,7 @@ void Dome::Update(float delta)
     // Left
     static int selectedTextureIndex = 0; // Here we store our selection data as an index.
     {
-        ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Border);
+        ImGui::BeginChild("left pane", ImVec2(500, 0), ImGuiChildFlags_Border);
 
         const char* items[] = { "Original", "Greyscale", "Edges" };
 
@@ -94,28 +96,42 @@ void Dome::Update(float delta)
 
         ImGui::Checkbox("Show edge points", &m_ShowEdgePoints);
 
-        bool recalculateGeometry = false;
-        if (ImGui::SliderInt("Edge point threshold", &m_EdgePointThreshold, 0, 255))
+        bool rebuildGeometry = false;
+        if (ImGui::SliderInt("Edge threshold", &m_EdgePointThreshold, 10, 60))
         {
             CalculateEdgePoints();
-            recalculateGeometry = true;
+            rebuildGeometry = true;
         }
 
         ImGui::Checkbox("Show edge vertices", &m_ShowEdgeVertices);
 
-        if (ImGui::SliderInt("Max vertex count", &m_MaxVertexCount, 100, 10000))
+        if (ImGui::InputInt("Max vertex count", &m_MaxVertexCount, 100))
         {
-            recalculateGeometry = true;
+            rebuildGeometry = true;
         }
 
-        if (ImGui::SliderFloat("Edge vertex accuracy", &m_Accuracy, 0.0f, 1.0f))
+        if (ImGui::SliderFloat("Vertex accuracy", &m_Accuracy, 0.0f, 1.0f))
         {
-            recalculateGeometry = true;
+            rebuildGeometry = true;
         }
 
-        if (recalculateGeometry)
+        ImGui::Checkbox("Show wireframes", &m_ShowWireframes);
+
+        if (ImGui::Checkbox("Collapse vertices", &m_CollapseVertices))
         {
-            CalculateEdgeVertices();
+            rebuildGeometry = true;
+        }
+
+        if (ImGui::SliderFloat("Collapse threshold", &m_CollapseThreshold, 0.0f, 32.0f))
+        {
+            rebuildGeometry = true;
+        }
+
+        ImGui::Checkbox("Show mesh", &m_ShowMesh);
+
+        if (rebuildGeometry)
+        {
+            BuildGeometry();
         }
 
         ImGui::EndChild();
@@ -149,8 +165,8 @@ void Dome::Update(float delta)
 
             if (m_ShowEdgePoints)
             {
-                ImU32 pointColor = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
-                int pointRadius = 1;
+                const ImU32 pointColor = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
+                const int pointRadius = 1;
                 for (auto& point : m_EdgePoints)
                 {
                     ImVec2 p1 = ImVec2(c.x + point.x - pointRadius, c.y + point.y - pointRadius);
@@ -161,10 +177,45 @@ void Dome::Update(float delta)
                 }
             }
 
+            if (m_ShowMesh)
+            {
+                for (auto& triangle : m_IndexedTriangles)
+                {
+                    const Vertex& v0 = m_ColorizedVertices[triangle.v0];
+                    const Vertex& v1 = m_ColorizedVertices[triangle.v1];
+                    const Vertex& v2 = m_ColorizedVertices[triangle.v2];
+
+                    ImVec2 p1 = ImVec2(c.x + v0.x, c.y + v0.y);
+                    ImVec2 p2 = ImVec2(c.x + v1.x, c.y + v1.y);
+                    ImVec2 p3 = ImVec2(c.x + v2.x, c.y + v2.y);
+                    
+                    ImU32 c1 = ImGui::GetColorU32(ImVec4(v0.color.r, v0.color.g, v0.color.b, 1.0f));
+                    ImU32 c2 = ImGui::GetColorU32(ImVec4(v1.color.r, v1.color.g, v1.color.b, 1.0f));
+                    ImU32 c3 = ImGui::GetColorU32(ImVec4(v2.color.r, v2.color.g, v2.color.b, 1.0f));
+
+                    pDrawList->AddTriangleFilledMultiColor(
+                        p1, p2, p3,
+                        c1, c2, c3
+                    );
+                }
+            }
+
+            if (m_ShowWireframes)
+            {
+                const ImU32 triangleColor = ImGui::GetColorU32(IM_COL32(0, 0, 255, 255));
+                for (auto& triangle : m_IndexedTriangles)
+                {
+                    ImVec2 p1 = ImVec2(c.x + m_EdgeVertices[triangle.v0].x, c.y + m_EdgeVertices[triangle.v0].y);
+                    ImVec2 p2 = ImVec2(c.x + m_EdgeVertices[triangle.v1].x, c.y + m_EdgeVertices[triangle.v1].y);
+                    ImVec2 p3 = ImVec2(c.x + m_EdgeVertices[triangle.v2].x, c.y + m_EdgeVertices[triangle.v2].y);
+                    pDrawList->AddTriangle(p1, p2, p3, triangleColor);
+                }
+            }
+
             if (m_ShowEdgeVertices)
             {
-                ImU32 vertexColor = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
-                int vertexRadius = 1;
+                const ImU32 vertexColor = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
+                const int vertexRadius = 1;
                 for (auto& vertex : m_EdgeVertices)
                 {
                     ImVec2 p1 = ImVec2(c.x + vertex.x - vertexRadius, c.y + vertex.y - vertexRadius);
@@ -198,9 +249,18 @@ void Dome::CalculateEdgePoints()
     m_EdgePoints = m_pTextureProcessor->GetEdgePoints(m_pGreyscaleTexture.get(), m_EdgePointThreshold);
 }
 
-void Dome::CalculateEdgeVertices()
+void Dome::BuildGeometry()
 {
     m_EdgeVertices = m_pTextureProcessor->GetVertexFromPoints(m_EdgePoints, m_MaxVertexCount, m_Accuracy, m_pSourceTexture->GetWidth(), m_pSourceTexture->GetHeight());
+
+    if (m_CollapseVertices)
+    {
+        m_EdgeVertices = m_pGeometryProcessor->GetUniqueVertices(m_EdgeVertices, m_CollapseThreshold);
+    }
+
+    m_IndexedTriangles = m_pGeometryProcessor->GetTriangles(m_EdgeVertices);
+
+    m_ColorizedVertices = m_pTextureProcessor->GetColorizedVertices(m_EdgeVertices, m_pSourceTexture.get());
 }
 
 } // namespace WingsOfSteel::Dome

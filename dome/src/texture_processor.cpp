@@ -150,7 +150,11 @@ std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Poin
 
         if (hash.find(resultKey) == hash.end()) 
         {
-            hash[resultKey] = {x, y};
+            hash[resultKey] = {
+                .x = x, 
+                .y = y,
+                .color = {1.0f, 1.0f, 1.0f}
+            };
         }
     };
 
@@ -206,7 +210,47 @@ std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Poin
         result.push_back(vertex);
     }
 
+    // Ensure all vertices are within the texture bounds
+    for (auto& vertex : result)
+    {
+        if (vertex.x < 0) vertex.x = 0;
+        else if (vertex.x >= width) vertex.x = width - 1;
+        if (vertex.y < 0) vertex.y = 0;
+        else if (vertex.y >= height) vertex.y = height - 1;
+    }
+
     return result;
+}
+
+std::vector<Vertex> TextureProcessor::GetColorizedVertices(const std::vector<Vertex>& vertices, BufferedTexture2D* pSourceTexture) const
+{
+    std::vector<Vertex> colorizedVertices;
+
+    const size_t channels = pSourceTexture->GetChannels();
+    const unsigned char* pData = pSourceTexture->GetTextureData().data();
+
+    for (auto& vertex : vertices)
+    {
+        assert(vertex.x >= 0);
+        assert(vertex.x < pSourceTexture->GetWidth());
+        assert(vertex.y >= 0);
+        assert(vertex.y < pSourceTexture->GetHeight());
+
+        const size_t index = (vertex.y * pSourceTexture->GetWidth() + vertex.x) * channels;
+        assert(index < pSourceTexture->GetTextureData().size());
+
+        colorizedVertices.push_back({
+            .x = vertex.x,
+            .y = vertex.y,
+            .color = {
+                static_cast<float>(pData[index]) / 255.0f,
+                static_cast<float>(pData[index + 1]) / 255.0f,
+                static_cast<float>(pData[index + 2]) / 255.0f
+            }
+        });
+    }
+
+    return colorizedVertices;
 }
 
 } // namespace WingsOfSteel::Dome

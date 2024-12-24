@@ -58,6 +58,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(entt)
 
 FetchContent_Declare(
+    delaunator-cpp
+    URL https://raw.githubusercontent.com/delfrrr/delaunator-cpp/refs/heads/master/include/delaunator.hpp
+    DOWNLOAD_NO_EXTRACT true
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/delaunator-cpp
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(delaunator-cpp)
+
+FetchContent_Declare(
     freetype
     GIT_REPOSITORY https://github.com/freetype/freetype.git
     GIT_TAG 42608f77f20749dd6ddc9e0536788eaad70ea4b5 # VER-2-13-3
@@ -77,8 +86,8 @@ FetchContent_MakeAvailable(glm)
 
 FetchContent_Declare(
     imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG 6f7b5d0ee2fe9948ab871a530888a6dc5c960700 # v1.90.8
+    GIT_REPOSITORY https://github.com/solace-10/imgui.git # forked from https://github.com/ocornut/imgui.git, with changes to allow for multicolor polygons.
+    GIT_TAG aaa79039029ac238da63775b77fe924d1c4e273c # Head as of 23/12/2024
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/imgui
     EXCLUDE_FROM_ALL
 )
