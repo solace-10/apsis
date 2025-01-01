@@ -134,6 +134,11 @@ void Dome::Update(float delta)
             BuildGeometry();
         }
 
+        if (ImGui::Button("Export"))
+        {
+            m_pGeometryProcessor->Export(m_ColorizedVertices, m_IndexedTriangles);
+        }
+
         ImGui::EndChild();
     }
     ImGui::SameLine();
