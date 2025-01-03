@@ -151,8 +151,7 @@ std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Poin
         if (hash.find(resultKey) == hash.end()) 
         {
             hash[resultKey] = {
-                .x = x, 
-                .y = y,
+                .position = {static_cast<float>(x), static_cast<float>(y), 0.0f},
                 .color = {1.0f, 1.0f, 1.0f}
             };
         }
@@ -213,10 +212,10 @@ std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Poin
     // Ensure all vertices are within the texture bounds
     for (auto& vertex : result)
     {
-        if (vertex.x < 0) vertex.x = 0;
-        else if (vertex.x >= width) vertex.x = width - 1;
-        if (vertex.y < 0) vertex.y = 0;
-        else if (vertex.y >= height) vertex.y = height - 1;
+        if (vertex.position.x < 0.0f) vertex.position.x = 0.0f;
+        else if (vertex.position.x >= static_cast<float>(width)) vertex.position.x = static_cast<float>(width - 1);
+        if (vertex.position.y < 0.0f) vertex.position.y = 0.0f;
+        else if (vertex.position.y >= static_cast<float>(height)) vertex.position.y = static_cast<float>(height - 1);
     }
 
     return result;
@@ -231,17 +230,16 @@ std::vector<Vertex> TextureProcessor::GetColorizedVertices(const std::vector<Ver
 
     for (auto& vertex : vertices)
     {
-        assert(vertex.x >= 0);
-        assert(vertex.x < pSourceTexture->GetWidth());
-        assert(vertex.y >= 0);
-        assert(vertex.y < pSourceTexture->GetHeight());
+        assert(vertex.position.x >= 0.0f);
+        assert(vertex.position.x < static_cast<float>(pSourceTexture->GetWidth()));
+        assert(vertex.position.y >= 0.0f);
+        assert(vertex.position.y < static_cast<float>(pSourceTexture->GetHeight()));
 
-        const size_t index = (vertex.y * pSourceTexture->GetWidth() + vertex.x) * channels;
+        const size_t index = (vertex.position.y * pSourceTexture->GetWidth() + vertex.position.x) * channels;
         assert(index < pSourceTexture->GetTextureData().size());
 
         colorizedVertices.push_back({
-            .x = vertex.x,
-            .y = vertex.y,
+            .position = vertex.position,
             .color = {
                 static_cast<float>(pData[index]) / 255.0f,
                 static_cast<float>(pData[index + 1]) / 255.0f,

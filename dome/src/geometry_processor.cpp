@@ -1,6 +1,7 @@
 #include "geometry_processor.hpp"
 
 #include <delaunator.hpp>
+#include <glm/glm.hpp>
 #include <tiny_gltf.h>
 
 #include "geometry_types.hpp"
@@ -28,8 +29,8 @@ std::vector<Vertex> GeometryProcessor::GetUniqueVertices(const std::vector<Verte
         for (const Vertex& existing : uniqueVertices) 
         {
             // Calculate distance between points
-            float dx = candidate.x - existing.x;
-            float dy = candidate.y - existing.y;
+            float dx = candidate.position.x - existing.position.x;
+            float dy = candidate.position.y - existing.position.y;
             float distSquared = dx * dx + dy * dy;
 
             // If distance is less than threshold, this vertex is too close to an existing one
@@ -57,8 +58,8 @@ std::vector<IndexedTriangle> GeometryProcessor::GetTriangles(const std::vector<V
     std::vector<double> coords;
     for (const auto& vertex : vertices)
     {
-        coords.push_back(vertex.x);
-        coords.push_back(vertex.y);
+        coords.push_back(vertex.position.x);
+        coords.push_back(vertex.position.y);
     }
 
     delaunator::Delaunator delaunator(coords);
@@ -88,13 +89,12 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
 
     for (const auto& vertex : vertices)
     {
-        vertexPositionData.push_back(static_cast<float>(vertex.x) * scale);
-        vertexPositionData.push_back(static_cast<float>(vertex.y) * scale);
-        vertexPositionData.push_back(0.0f);
+        vertexPositionData.push_back(vertex.position.x * scale);
+        vertexPositionData.push_back(vertex.position.y * scale);
+        vertexPositionData.push_back(vertex.position.z * scale);
         vertexColorData.push_back(vertex.color.r);
         vertexColorData.push_back(vertex.color.g);
         vertexColorData.push_back(vertex.color.b);
-        vertexColorData.push_back(0.0f);
     }
 
     // Define your index data (triangle)
@@ -160,6 +160,9 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     model.accessors.push_back(indexAccessor);
 
     // Create an accessor for the vertex positions
+    glm::vec3 minCoords, maxCoords;
+    CalculatePositionBounds(vertices, minCoords, maxCoords);
+
     tinygltf::Accessor vertexPositionAccessor;
     vertexPositionAccessor.bufferView = 0; // Index of the vertex bufferView
     vertexPositionAccessor.byteOffset = 0;
@@ -167,16 +170,23 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     vertexPositionAccessor.count = static_cast<uint32_t>(vertexPositionData.size() / 3);
     vertexPositionAccessor.type = TINYGLTF_TYPE_VEC3;
     vertexPositionAccessor.normalized = false;
+    // vertexPositionAccessor.minValues = std::vector<double>{ minCoords.x, minCoords.y, minCoords.z };
+    // vertexPositionAccessor.maxValues = std::vector<double>{ maxCoords.x, maxCoords.y, maxCoords.z };
     model.accessors.push_back(vertexPositionAccessor);
 
     // Create an accessor for the vertex colors
+    glm::vec3 minColorBounds, maxColorBounds;
+    CalculateColorBounds(vertices, minColorBounds, maxColorBounds);
+
     tinygltf::Accessor vertexColorAccessor;
     vertexColorAccessor.bufferView = 1; // Index of the vertex color bufferView
     vertexColorAccessor.byteOffset = 0;
     vertexColorAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-    vertexColorAccessor.count = static_cast<uint32_t>(vertexColorData.size() / 4);
-    vertexColorAccessor.type = TINYGLTF_TYPE_VEC4;
+    vertexColorAccessor.count = static_cast<uint32_t>(vertexColorData.size() / 3);
+    vertexColorAccessor.type = TINYGLTF_TYPE_VEC3;
     vertexColorAccessor.normalized = false;
+    vertexColorAccessor.minValues = std::vector<double>{ minColorBounds.r, minColorBounds.g, minColorBounds.b };
+    vertexColorAccessor.maxValues = std::vector<double>{ maxColorBounds.r, maxColorBounds.g, maxColorBounds.b };
     model.accessors.push_back(vertexColorAccessor);
 
     // Create a primitive and mesh
@@ -215,6 +225,40 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     if (!gltf.WriteGltfSceneToFile(&model, outputFileName, false, true, true, false))
     {
         throw std::runtime_error("Failed to write GLTF: " + err);
+    }
+}
+
+void GeometryProcessor::CalculatePositionBounds(const std::vector<Vertex>& vertices, glm::vec3& minBounds, glm::vec3& maxBounds) const
+{
+    if (vertices.empty())
+    {
+        minBounds = maxBounds = glm::vec3(0.0f);
+    }
+    else
+    {
+        minBounds = maxBounds = vertices[0].position;
+        for (const auto& vertex : vertices)
+        {
+            minBounds = glm::min(minBounds, vertex.position);
+            maxBounds = glm::max(maxBounds, vertex.position);
+        }
+    }
+}
+
+void GeometryProcessor::CalculateColorBounds(const std::vector<Vertex>& vertices, glm::vec3& minBounds, glm::vec3& maxBounds) const
+{
+    if (vertices.empty())
+    {
+        minBounds = maxBounds = glm::vec3(0.0f);
+    }
+    else
+    {
+        minBounds = maxBounds = vertices[0].color;
+        for (const auto& vertex : vertices)
+        {
+            minBounds = glm::min(minBounds, vertex.color);
+            maxBounds = glm::max(maxBounds, vertex.color);
+        }
     }
 }
 

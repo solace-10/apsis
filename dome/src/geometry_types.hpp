@@ -1,14 +1,9 @@
 #pragma once
 
+#include <glm/vec3.hpp>
+
 namespace WingsOfSteel::Dome
 {
-
-struct Color
-{
-    float r;
-    float g;
-    float b;
-};
 
 struct Point {
     int x;
@@ -16,9 +11,8 @@ struct Point {
 };
 
 struct Vertex {
-    int x;
-    int y;
-    Color color;
+    glm::vec3 position;
+    glm::vec3 color;
 };
 
 struct IndexedTriangle

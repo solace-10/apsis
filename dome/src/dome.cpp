@@ -190,9 +190,9 @@ void Dome::Update(float delta)
                     const Vertex& v1 = m_ColorizedVertices[triangle.v1];
                     const Vertex& v2 = m_ColorizedVertices[triangle.v2];
 
-                    ImVec2 p1 = ImVec2(c.x + v0.x, c.y + v0.y);
-                    ImVec2 p2 = ImVec2(c.x + v1.x, c.y + v1.y);
-                    ImVec2 p3 = ImVec2(c.x + v2.x, c.y + v2.y);
+                    ImVec2 p1 = ImVec2(c.x + v0.position.x, c.y + v0.position.y);
+                    ImVec2 p2 = ImVec2(c.x + v1.position.x, c.y + v1.position.y);
+                    ImVec2 p3 = ImVec2(c.x + v2.position.x, c.y + v2.position.y);
                     
                     ImU32 c1 = ImGui::GetColorU32(ImVec4(v0.color.r, v0.color.g, v0.color.b, 1.0f));
                     ImU32 c2 = ImGui::GetColorU32(ImVec4(v1.color.r, v1.color.g, v1.color.b, 1.0f));
@@ -210,9 +210,9 @@ void Dome::Update(float delta)
                 const ImU32 triangleColor = ImGui::GetColorU32(IM_COL32(0, 0, 255, 255));
                 for (auto& triangle : m_IndexedTriangles)
                 {
-                    ImVec2 p1 = ImVec2(c.x + m_EdgeVertices[triangle.v0].x, c.y + m_EdgeVertices[triangle.v0].y);
-                    ImVec2 p2 = ImVec2(c.x + m_EdgeVertices[triangle.v1].x, c.y + m_EdgeVertices[triangle.v1].y);
-                    ImVec2 p3 = ImVec2(c.x + m_EdgeVertices[triangle.v2].x, c.y + m_EdgeVertices[triangle.v2].y);
+                    ImVec2 p1 = ImVec2(c.x + m_EdgeVertices[triangle.v0].position.x, c.y + m_EdgeVertices[triangle.v0].position.y);
+                    ImVec2 p2 = ImVec2(c.x + m_EdgeVertices[triangle.v1].position.x, c.y + m_EdgeVertices[triangle.v1].position.y);
+                    ImVec2 p3 = ImVec2(c.x + m_EdgeVertices[triangle.v2].position.x, c.y + m_EdgeVertices[triangle.v2].position.y);
                     pDrawList->AddTriangle(p1, p2, p3, triangleColor);
                 }
             }
@@ -223,10 +223,10 @@ void Dome::Update(float delta)
                 const int vertexRadius = 1;
                 for (auto& vertex : m_EdgeVertices)
                 {
-                    ImVec2 p1 = ImVec2(c.x + vertex.x - vertexRadius, c.y + vertex.y - vertexRadius);
-                    ImVec2 p2 = ImVec2(c.x + vertex.x + vertexRadius, c.y + vertex.y - vertexRadius);
-                    ImVec2 p3 = ImVec2(c.x + vertex.x + vertexRadius, c.y + vertex.y + vertexRadius);
-                    ImVec2 p4 = ImVec2(c.x + vertex.x - vertexRadius, c.y + vertex.y + vertexRadius);
+                    ImVec2 p1 = ImVec2(c.x + vertex.position.x - vertexRadius, c.y + vertex.position.y - vertexRadius);
+                    ImVec2 p2 = ImVec2(c.x + vertex.position.x + vertexRadius, c.y + vertex.position.y - vertexRadius);
+                    ImVec2 p3 = ImVec2(c.x + vertex.position.x + vertexRadius, c.y + vertex.position.y + vertexRadius);
+                    ImVec2 p4 = ImVec2(c.x + vertex.position.x - vertexRadius, c.y + vertex.position.y + vertexRadius);
                     pDrawList->AddQuadFilled(p1, p2, p3, p4, vertexColor);
                 }
             }
