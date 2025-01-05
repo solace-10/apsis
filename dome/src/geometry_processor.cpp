@@ -2,7 +2,15 @@
 
 #include <delaunator.hpp>
 #include <glm/glm.hpp>
+
+// clang-format off
+#define TINYGLTF_NOEXCEPTION
+#define TINYGLTF_USE_CPP14
+#define TINYGLTF_NO_INCLUDE_JSON
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#include <nlohmann/json.hpp>
 #include <tiny_gltf.h>
+// clang-format on
 
 #include "geometry_types.hpp"
 
