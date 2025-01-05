@@ -93,13 +93,12 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     std::vector<float> vertexPositionData;
     std::vector<float> vertexColorData;
 
-    const float scale = 1.0f / 1024.0f * 10.0f;
-
-    for (const auto& vertex : vertices)
+    std::vector<Vertex> transformedVertices = TransformVertices(vertices, 10.0f);
+    for (const auto& vertex : transformedVertices)
     {
-        vertexPositionData.push_back(vertex.position.x * scale);
-        vertexPositionData.push_back(vertex.position.y * scale);
-        vertexPositionData.push_back(vertex.position.z * scale);
+        vertexPositionData.push_back(vertex.position.x);
+        vertexPositionData.push_back(vertex.position.y);
+        vertexPositionData.push_back(vertex.position.z);
         vertexColorData.push_back(vertex.color.r);
         vertexColorData.push_back(vertex.color.g);
         vertexColorData.push_back(vertex.color.b);
@@ -169,7 +168,7 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
 
     // Create an accessor for the vertex positions
     glm::vec3 minCoords, maxCoords;
-    CalculatePositionBounds(vertices, minCoords, maxCoords);
+    CalculatePositionBounds(transformedVertices, minCoords, maxCoords);
 
     tinygltf::Accessor vertexPositionAccessor;
     vertexPositionAccessor.bufferView = 0; // Index of the vertex bufferView
@@ -178,13 +177,13 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     vertexPositionAccessor.count = static_cast<uint32_t>(vertexPositionData.size() / 3);
     vertexPositionAccessor.type = TINYGLTF_TYPE_VEC3;
     vertexPositionAccessor.normalized = false;
-    // vertexPositionAccessor.minValues = std::vector<double>{ minCoords.x, minCoords.y, minCoords.z };
-    // vertexPositionAccessor.maxValues = std::vector<double>{ maxCoords.x, maxCoords.y, maxCoords.z };
+    vertexPositionAccessor.minValues = std::vector<double>{ minCoords.x, minCoords.y, minCoords.z };
+    vertexPositionAccessor.maxValues = std::vector<double>{ maxCoords.x, maxCoords.y, maxCoords.z };
     model.accessors.push_back(vertexPositionAccessor);
 
     // Create an accessor for the vertex colors
     glm::vec3 minColorBounds, maxColorBounds;
-    CalculateColorBounds(vertices, minColorBounds, maxColorBounds);
+    CalculateColorBounds(transformedVertices, minColorBounds, maxColorBounds);
 
     tinygltf::Accessor vertexColorAccessor;
     vertexColorAccessor.bufferView = 1; // Index of the vertex color bufferView
@@ -268,6 +267,24 @@ void GeometryProcessor::CalculateColorBounds(const std::vector<Vertex>& vertices
             maxBounds = glm::max(maxBounds, vertex.color);
         }
     }
+}
+
+std::vector<Vertex> GeometryProcessor::TransformVertices(const std::vector<Vertex>& vertices, float scale) const
+{
+    float textureSize = 1024.0f;
+
+    std::vector<Vertex> transformedVertices;
+    for (const auto& vertex : vertices)
+    {
+        Vertex transformedVertex;
+        transformedVertex.color = vertex.color;
+        transformedVertex.position = vertex.position / textureSize - glm::vec3(0.5f, 0.5f, 0.0f); // Normalize the position from the texture size and center it.
+        transformedVertex.position.y = -transformedVertex.position.y; // Flip Y axis as 0 is at the top in the texture.
+        transformedVertex.position *= scale;
+
+        transformedVertices.push_back(transformedVertex);
+    }
+    return transformedVertices;
 }
 
 } // namespace WingsOfSteel::Dome

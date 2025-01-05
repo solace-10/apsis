@@ -39,6 +39,10 @@ void Dome::Initialize()
     {
         Log::Error() << "Failed to load texture.";
     }
+    else if (m_pSourceTexture->GetWidth() != m_pSourceTexture->GetHeight())
+    {
+        Log::Error() << "Source texture must be square.";
+    }
     else
     {
         m_pGreyscaleTexture = m_pTextureProcessor->GetGreyscale(m_pSourceTexture.get());
@@ -145,7 +149,8 @@ void Dome::Update(float delta)
 
     // Right
     {
-        ImGui::BeginChild("item view", ImVec2(1024, 1024), 0, ImGuiWindowFlags_NoScrollbar); // Leave room for 1 line below us
+        const ImVec2 textureSize = ImVec2(1024, 1024);
+        ImGui::BeginChild("item view", textureSize, 0, ImGuiWindowFlags_NoScrollbar); // Leave room for 1 line below us
 
         BufferedTexture2D* pSelectedTexture = nullptr;
         switch (selectedTextureIndex)
@@ -158,13 +163,11 @@ void Dome::Update(float delta)
         if (pSelectedTexture)
         {
             ImTextureID textureId = pSelectedTexture->GetTextureView().Get();
-            const float textureWidth = 1024.0f;
-            const float textureHeight = 1024.0f;
             ImVec2 pos = ImGui::GetCursorScreenPos();
             ImVec2 uvMin = ImVec2(0.0f, 0.0f);
             ImVec2 uvMax = ImVec2(1.0f, 1.0f);
             ImVec2 c = ImGui::GetCursorScreenPos();
-            ImGui::Image(textureId, ImVec2(textureWidth, textureHeight), uvMin, uvMax);
+            ImGui::Image(textureId, textureSize, uvMin, uvMax);
 
             ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
@@ -256,11 +259,12 @@ void Dome::CalculateEdgePoints()
 
 void Dome::BuildGeometry()
 {
-    m_EdgeVertices = m_pTextureProcessor->GetVertexFromPoints(m_EdgePoints, m_MaxVertexCount, m_Accuracy, m_pSourceTexture->GetWidth(), m_pSourceTexture->GetHeight());
+    m_EdgeVertices = m_pTextureProcessor->GetVerticesFromPoints(m_EdgePoints, m_MaxVertexCount, m_Accuracy, m_pSourceTexture->GetWidth(), m_pSourceTexture->GetHeight());
 
     if (m_CollapseVertices)
     {
-        m_EdgeVertices = m_pGeometryProcessor->GetUniqueVertices(m_EdgeVertices, m_CollapseThreshold);
+        const float collapseThreshold = m_CollapseThreshold / static_cast<float>(m_pSourceTexture->GetWidth());
+        m_EdgeVertices = m_pGeometryProcessor->GetUniqueVertices(m_EdgeVertices, collapseThreshold);
     }
 
     m_IndexedTriangles = m_pGeometryProcessor->GetTriangles(m_EdgeVertices);

@@ -141,7 +141,7 @@ BufferedTexture2DUniquePtr TextureProcessor::GetEdges(BufferedTexture2D* pSource
     return pEdgeTexture;
 }
 
-std::vector<Vertex> TextureProcessor::GetVertexFromPoints(const std::vector<Point>& points, int maxPointCount, float accuracy, int width, int height) const
+std::vector<Vertex> TextureProcessor::GetVerticesFromPoints(const std::vector<Point>& points, int maxPointCount, float accuracy, int width, int height) const
 {
     auto addVertex = [](int x, int y, std::unordered_map<std::string, Vertex>& hash) {
         std::ostringstream resultKeyStream;

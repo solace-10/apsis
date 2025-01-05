@@ -25,6 +25,7 @@ public:
 private:
     void CalculatePositionBounds(const std::vector<Vertex>& vertices, glm::vec3& minBound, glm::vec3& maxBound) const;
     void CalculateColorBounds(const std::vector<Vertex>& vertices, glm::vec3& minBound, glm::vec3& maxBound) const;
+    std::vector<Vertex> TransformVertices(const std::vector<Vertex>& vertices, float scale) const;
 };
 
 } // namespace WingsOfSteel::Dome
