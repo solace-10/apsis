@@ -12,6 +12,9 @@
 #include <tiny_gltf.h>
 // clang-format on
 
+#include <core/log.hpp>
+#include <pandora.hpp>
+
 #include "geometry_types.hpp"
 
 namespace WingsOfSteel::Dome
@@ -219,19 +222,23 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     model.defaultScene = 0; // Default scene index
 
     tinygltf::Material material;
-    material.name = "Dome_Mat";
+    material.name = "dome"; // The name of the material must match the name of the shader which will be imported by Pandora.
     material.doubleSided = true;
     material.pbrMetallicRoughness.metallicFactor = 0.0f;
-    material.pbrMetallicRoughness.roughnessFactor = 0.9f;
+    material.pbrMetallicRoughness.roughnessFactor = 1.0f;
     model.materials.push_back(material);
 
     // Save the model
     tinygltf::TinyGLTF gltf;
     std::string err, warn;
-    std::string outputFileName = "dome.gltf";
-    if (!gltf.WriteGltfSceneToFile(&model, outputFileName, false, true, true, false))
+    std::string outputFileName = "dome.glb";
+    if (gltf.WriteGltfSceneToFile(&model, outputFileName, false, true, true, true))
     {
-        throw std::runtime_error("Failed to write GLTF: " + err);
+        Pandora::Log::Info() << "Export successful: " << outputFileName;
+    }
+    else
+    {
+        Pandora::Log::Error() << "Failed to write GLTF: " << err;
     }
 }
 
@@ -271,6 +278,19 @@ void GeometryProcessor::CalculateColorBounds(const std::vector<Vertex>& vertices
 
 std::vector<Vertex> GeometryProcessor::TransformVertices(const std::vector<Vertex>& vertices, float scale) const
 {
+    auto domeProjection = [](const glm::vec3& pos) {
+        const float modifier = 4.0f;
+        glm::vec3 position = pos;
+        position.x *= modifier;
+        position.y *= modifier;
+        position.z = 1.0f;
+
+        const glm::vec3 direction = glm::normalize(position);
+
+
+        return direction;
+    };
+
     float textureSize = 1024.0f;
 
     std::vector<Vertex> transformedVertices;
@@ -280,6 +300,7 @@ std::vector<Vertex> GeometryProcessor::TransformVertices(const std::vector<Verte
         transformedVertex.color = vertex.color;
         transformedVertex.position = vertex.position / textureSize - glm::vec3(0.5f, 0.5f, 0.0f); // Normalize the position from the texture size and center it.
         transformedVertex.position.y = -transformedVertex.position.y; // Flip Y axis as 0 is at the top in the texture.
+        transformedVertex.position = domeProjection(transformedVertex.position);
         transformedVertex.position *= scale;
 
         transformedVertices.push_back(transformedVertex);
