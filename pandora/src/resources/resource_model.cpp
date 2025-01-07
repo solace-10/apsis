@@ -143,6 +143,7 @@ void ResourceModel::InitializeShaderLocationsMap()
         sShaderLocationsMap["POSITION"] = 0;
         sShaderLocationsMap["NORMAL"] = 1;
         sShaderLocationsMap["TEXCOORD_0"] = 2;
+        sShaderLocationsMap["COLOR_0"] = 3;
         sShaderLocationsMapInitialized = true;
     }
 }
@@ -277,7 +278,7 @@ void ResourceModel::OnDependentResourcesLoaded()
 
         wgpu::BufferDescriptor bufferDescriptor{
             .usage = bufferUsage,
-            .size = static_cast<size_t>(glm::ceil(m_pModel->buffers[i].data.size() / 4)) * 4, // Must be rounded up to nearest multiple of 4
+            .size = static_cast<size_t>(glm::ceil(static_cast<float>(m_pModel->buffers[i].data.size()) / 4.0f)) * 4, // Must be rounded up to nearest multiple of 4
             .mappedAtCreation = true
         };
 
