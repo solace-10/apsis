@@ -69,14 +69,21 @@ const glm::mat4& Camera::GetViewMatrix() const
     return m_ViewMatrix;
 }
 
-const glm::mat4& Camera::GetProjectionMatrix() const
+const glm::mat4& Camera::GetProjectionMatrix()
 {
+    if (m_WindowWidth != GetWindow()->GetWidth() || m_WindowHeight != GetWindow()->GetHeight())
+    {
+        CalculateProjectionMatrix();
+    }
+
     return m_ProjectionMatrix;
 }
 
 void Camera::CalculateProjectionMatrix()
 {
-    const float aspectRatio = static_cast<float>(GetWindow()->GetWidth()) / static_cast<float>(GetWindow()->GetHeight());
+    m_WindowWidth = GetWindow()->GetWidth();
+    m_WindowHeight = GetWindow()->GetHeight();
+    const float aspectRatio = static_cast<float>(m_WindowWidth) / static_cast<float>(m_WindowHeight);
     m_ProjectionMatrix = glm::perspective(m_Fov, aspectRatio, m_NearPlane, m_FarPlane);
 }
 

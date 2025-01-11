@@ -25,7 +25,7 @@ public:
     
     const glm::vec3& GetTarget() const;
     const glm::mat4& GetViewMatrix() const;
-    const glm::mat4& GetProjectionMatrix() const;
+    const glm::mat4& GetProjectionMatrix(); // Not constant as it can recalculate the projection matrix if the window size has changed.
 
 private:
     void CalculateProjectionMatrix();
@@ -33,9 +33,11 @@ private:
     float m_Fov = 45.0f;
     float m_NearPlane = 0.01f;
     float m_FarPlane = 100.0f;
-    glm::mat4 m_ViewMatrix { 1.0f };
-    glm::mat4 m_ProjectionMatrix { 1.0f };
-    glm::vec3 m_CameraTarget { 0.0f };
+    glm::mat4 m_ViewMatrix{ 1.0f };
+    glm::mat4 m_ProjectionMatrix{ 1.0f };
+    glm::vec3 m_CameraTarget{ 0.0f };
+    uint32_t m_WindowWidth{ 0 };
+    uint32_t m_WindowHeight{ 0 };
 };
 
 } // namespace WingsOfSteel::Pandora

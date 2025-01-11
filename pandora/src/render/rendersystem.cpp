@@ -296,7 +296,7 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera)
     {
-        const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+        CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
         m_GlobalUniforms.projectionMatrix = cameraComponent.camera.GetProjectionMatrix();
         m_GlobalUniforms.viewMatrix = cameraComponent.camera.GetViewMatrix();
     }
