@@ -61,7 +61,15 @@ void CameraSystem::Update(float delta)
                 anchorPosition = glm::vec3(anchorTransform[3]);
             }
 
-            glm::vec3 offset = subSectorCameraComponent.GetOffset();
+            const float driftTimer = subSectorCameraComponent.GetDriftTimer() + delta;
+            subSectorCameraComponent.SetDriftTimer(driftTimer);
+
+            glm::vec3 maximumDrift = subSectorCameraComponent.GetMaximumDrift();
+            glm::vec3 drift(0.0f);
+            drift.x = glm::cos(driftTimer) * maximumDrift.x;
+            drift.y = glm::sin(driftTimer) * maximumDrift.y;
+
+            glm::vec3 offset = subSectorCameraComponent.GetOffset() + glm::vec3(drift.x, drift.y, 0.0f);
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
             cameraComponent.camera.LookAt(anchorPosition + offset, glm::vec3(0.0f, 0.0f, 1000.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         }

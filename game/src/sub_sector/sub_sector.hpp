@@ -22,10 +22,12 @@ public:
 private:
     void DrawCameraDebugUI();
     //void DrawSignalsDebugUI();
+    void SpawnDome();
     void SpawnPlayerShip();
 
     //Sector* m_pSector;
     //SectorSignal* m_pSectorSignal;
+    Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
     Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowCameraDebugUI = false;

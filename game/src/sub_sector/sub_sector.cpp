@@ -50,13 +50,10 @@ void SubSector::Initialize()
     SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->AddComponent<SubSectorCameraComponent>();
     subSectorCameraComponent.SetOffset(12.0f, 9.0f, -55.0f);
     subSectorCameraComponent.SetTarget(0.0f, 0.0f, 1000.0f);
-    // orbitCameraComponent.distance = 50.0f;
-    // orbitCameraComponent.orbitAngle = glm::radians(-90.0f);
-    // orbitCameraComponent.pitch = 0.0f;
-    // orbitCameraComponent.minimumPitch = glm::radians(0.0f);
-    // orbitCameraComponent.maximumPitch = glm::radians(80.0f);
+    subSectorCameraComponent.SetMaximumDrift(0.25f, 0.15f, 0.0f);
     SetCamera(m_pCamera); 
 
+    SpawnDome();
     SpawnPlayerShip();
     subSectorCameraComponent.SetAnchorEntity(m_pPlayerShip);
 }
@@ -111,6 +108,20 @@ void SubSector::DrawCameraDebugUI()
     }
 
     ImGui::End();
+}
+
+void SubSector::SpawnDome()
+{
+    using namespace Pandora;
+
+    m_pDome = CreateEntity();
+
+    SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->GetComponent<SubSectorCameraComponent>();
+
+    TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
+    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), subSectorCameraComponent.GetOffset() + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+
+    m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
 }
 
 void SubSector::SpawnPlayerShip()
