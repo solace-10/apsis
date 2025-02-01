@@ -48,14 +48,14 @@ void SubSector::Initialize()
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
 
     SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->AddComponent<SubSectorCameraComponent>();
-    subSectorCameraComponent.SetOffset(12.0f, 9.0f, -55.0f);
-    subSectorCameraComponent.SetTarget(0.0f, 0.0f, 1000.0f);
-    subSectorCameraComponent.SetMaximumDrift(0.25f, 0.15f, 0.0f);
+    subSectorCameraComponent.position = glm::vec3(0.0f, 200.0f, -75.0f);
+    subSectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
+    subSectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
     SetCamera(m_pCamera); 
 
     SpawnDome();
     SpawnPlayerShip();
-    subSectorCameraComponent.SetAnchorEntity(m_pPlayerShip);
+    subSectorCameraComponent.anchorEntity = m_pPlayerShip;
 }
 
 void SubSector::Update(float delta)
@@ -73,6 +73,8 @@ void SubSector::Update(float delta)
         glm::vec3(0.0f, 1000.0f, 0.0f),
         Pandora::Color::Red
     );
+
+    Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
 
     DrawCameraDebugUI();
 }
@@ -93,18 +95,20 @@ void SubSector::DrawCameraDebugUI()
 
     SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->GetComponent<SubSectorCameraComponent>();
 
-    const glm::vec3& offset = subSectorCameraComponent.GetOffset();
-    float foffset[3] = { offset.x, offset.y, offset.z };
-    if (ImGui::InputFloat3("Offset", foffset))
+    ImGui::Checkbox("Debug Draw", &subSectorCameraComponent.debugDraw);
+
+    const glm::vec3& position = subSectorCameraComponent.position;
+    float fposition[3] = { position.x, position.y, position.z };
+    if (ImGui::InputFloat3("Eye", fposition))
     {
-        subSectorCameraComponent.SetOffset(foffset[0], foffset[1], foffset[2]);
+        subSectorCameraComponent.position = glm::vec3(fposition[0], fposition[1], fposition[2]);
     }
 
-    const glm::vec3& drift = subSectorCameraComponent.GetMaximumDrift();
+    const glm::vec3& drift = subSectorCameraComponent.maximumDrift;
     float fdrift[3] = { drift.x, drift.y, drift.z };
     if (ImGui::InputFloat3("Drift", fdrift))
     {
-        subSectorCameraComponent.SetMaximumDrift(fdrift[0], fdrift[1], fdrift[2]);
+        subSectorCameraComponent.maximumDrift = glm::vec3(fdrift[0], fdrift[1], fdrift[2]);
     }
 
     ImGui::End();
@@ -119,7 +123,7 @@ void SubSector::SpawnDome()
     SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->GetComponent<SubSectorCameraComponent>();
 
     TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), subSectorCameraComponent.GetOffset() + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), subSectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
 
     m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
 }

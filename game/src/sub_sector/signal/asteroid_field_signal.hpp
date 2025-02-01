@@ -13,6 +13,9 @@ public:
     ~AsteroidFieldSignal() override;
 
     SubSectorSharedPtr Spawn() const override;
+
+private:
+    void CreateAsteroidField(SubSector* pSubSector) const;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

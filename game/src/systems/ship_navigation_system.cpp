@@ -20,7 +20,7 @@ void ShipNavigationSystem::Update(float delta)
         if (shipNavigationComponent.GetThrust() > 0.0f)
         {
             const float shipMaximumSpeed = 20.0f * shipNavigationComponent.GetThrust() * delta;
-            transformComponent.transform = glm::translate(transformComponent.transform, glm::vec3(shipMaximumSpeed, 0.0f, 0.0f));
+            transformComponent.transform = glm::translate(transformComponent.transform, glm::vec3(0.0f, 0.0f, shipMaximumSpeed));
         }
 
         if (shipNavigationComponent.GetSteerCommand() != ShipSteerCommand::None)
