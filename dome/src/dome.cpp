@@ -67,6 +67,7 @@ void Dome::Update(float delta)
     flags |= ImGuiWindowFlags_NoMove;
     flags |= ImGuiWindowFlags_NoCollapse;
     flags |= ImGuiWindowFlags_NoTitleBar;
+    flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
     Begin("Dome", nullptr, flags);
 
     // Left
