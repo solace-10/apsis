@@ -11,6 +11,7 @@
 #include "components/ship_navigation_component.hpp"
 #include "components/sub_sector_camera_component.hpp"
 #include "sector/sector_info.hpp"
+#include "sub_sector/encounters/encounter_window.hpp"
 #include "sub_sector/sub_sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
@@ -56,6 +57,10 @@ void SubSector::Initialize()
     SpawnDome();
     SpawnPlayerShip();
     subSectorCameraComponent.anchorEntity = m_pPlayerShip;
+
+    m_pEncounterWindow = std::make_unique<EncounterWindow>();
+    m_pEncounterWindow->Initialize();
+    m_pEncounterWindow->LoadPrefab("/ui/prefabs/encounter.json");
 }
 
 void SubSector::Update(float delta)
@@ -75,6 +80,11 @@ void SubSector::Update(float delta)
     );
 
     Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
+
+    if (m_pEncounterWindow)
+    {
+        m_pEncounterWindow->Render();
+    }
 
     DrawCameraDebugUI();
 }

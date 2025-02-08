@@ -46,6 +46,8 @@ target_compile_definitions(pandora PUBLIC
     GLM_FORCE_DEPTH_ZERO_TO_ONE
     GLM_FORCE_LEFT_HANDED
     IMGUI_ENABLE_FREETYPE
+    IMGUI_USER_CONFIG="imgui/imgui_config.hpp"
+    IMGUI_DEFINE_MATH_OPERATORS
 )
 
 target_link_libraries(pandora PUBLIC 

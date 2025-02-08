@@ -6,6 +6,8 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(EncounterWindow);
+
 DECLARE_SMART_PTR(SubSector);
 class SubSector : public Pandora::Scene
 {
@@ -32,6 +34,7 @@ private:
     Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowCameraDebugUI = false;
     //bool m_ShowSignalsDebugUI;
+    EncounterWindowUniquePtr m_pEncounterWindow;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar
