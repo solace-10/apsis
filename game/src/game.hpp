@@ -7,10 +7,16 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(PrefabEditor);
 DECLARE_SMART_PTR(Hyperscape);
 DECLARE_SMART_PTR(ItemManager);
 DECLARE_SMART_PTR(Sector);
 DECLARE_SMART_PTR(SubSector);
+
+namespace UI
+{
+    DECLARE_SMART_PTR(PrefabEditor);
+}
 
 class Game
 {
@@ -23,6 +29,9 @@ public:
     void Shutdown();
 
     const ItemManager* GetItemManager() const;
+    UI::PrefabEditor* GetPrefabEditor();
+
+    static Game* Get();
 
 private:
     void DrawImGuiMenuBar();
@@ -33,11 +42,18 @@ private:
     HyperscapeUniquePtr m_pHyperscape;
     SectorSharedPtr m_pSector;
     SubSectorSharedPtr m_pSubSector;
+
+    UI::PrefabEditorUniquePtr m_pPrefabEditor;
 };
 
 inline const ItemManager* Game::GetItemManager() const
 {
     return m_pItemManager.get();
+}
+
+inline UI::PrefabEditor* Game::GetPrefabEditor()
+{
+    return m_pPrefabEditor.get();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

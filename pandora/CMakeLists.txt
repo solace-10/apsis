@@ -10,6 +10,8 @@ set(IMGUI_SOURCE_DIR ext/imgui)
 set(SOURCE_FILES_IMGUI
     ${IMGUI_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+    ${IMGUI_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
+    ${IMGUI_SOURCE_DIR}/misc/cpp/imgui_stdlib.h
     ${IMGUI_SOURCE_DIR}/misc/freetype/imgui_freetype.cpp
     ${IMGUI_SOURCE_DIR}/misc/freetype/imgui_freetype.h
     ${IMGUI_SOURCE_DIR}/imgui.cpp

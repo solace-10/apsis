@@ -27,7 +27,7 @@ void Window::Initialize()
 
 void Window::LoadPrefab(const std::string& prefabPath)
 {
-    m_PrefabData = PrefabData(prefabPath, [this, prefabPath](const std::string& key, const PrefabDataValue& value) {
+    m_pPrefabData = std::make_shared<PrefabData>(prefabPath, [this, prefabPath](const std::string& key, const PrefabDataValue& value) {
         auto it = m_Bindings.find(key);
         if (it != m_Bindings.end())
         {
@@ -38,12 +38,12 @@ void Window::LoadPrefab(const std::string& prefabPath)
             Pandora::Log::Warning() << "Window::Initialize() - " << prefabPath << ": No binding found for key: " << key;
         }
     });
-    m_PrefabData.Initialize();
+    m_pPrefabData->Initialize();
 }
 
 void Window::Render()
 {
-    if (!m_PrefabData.IsLoaded())
+    if (!m_pPrefabData->IsLoaded())
     {
         return;
     }

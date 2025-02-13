@@ -4,6 +4,8 @@
 #include <pandora.hpp>
 
 #include "ui/prefab_data.hpp"
+#include "ui/prefab_editor.hpp"
+#include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
 {
@@ -48,6 +50,7 @@ void PrefabData::Initialize()
             }
         }
         m_IsLoaded = true;
+        Game::Get()->GetPrefabEditor()->AddPrefabData(shared_from_this());
     });
 }
 

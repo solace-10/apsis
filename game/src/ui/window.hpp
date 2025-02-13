@@ -35,7 +35,7 @@ public:
 private:
     void RenderBackground();
 
-    PrefabData m_PrefabData;
+    PrefabDataSharedPtr m_pPrefabData;
     std::unordered_map<std::string, std::function<void(const PrefabDataValue&)>> m_Bindings;
 
     std::string m_Title{"Window"};

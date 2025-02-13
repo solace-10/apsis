@@ -12,9 +12,12 @@
 #include "sector/sector.hpp"
 #include "sub_sector/signal/sub_sector_signal.hpp"
 #include "sub_sector/sub_sector.hpp"
+#include "ui/prefab_editor.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
+
+Game* g_pGame = nullptr;
 
 Game::Game()
 {
@@ -26,9 +29,19 @@ Game::~Game()
 
 }
 
+Game* Game::Get()
+{
+    return g_pGame;
+}
+
 void Game::Initialize()
 {
+    g_pGame = this;
+
     Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar();});
+
+    m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
+    m_pPrefabEditor->Initialize();
 
     m_pItemManager = std::make_unique<ItemManager>();
     //m_pSectorGenerator = std::make_unique<SectorGenerator>();
@@ -60,13 +73,11 @@ void Game::Initialize()
     // m_pMenuScene->AddEntity(m_pCamera);
     // m_pMenuScene->SetCamera(m_pCamera);
     //Pandora::SetActiveScene(m_pMenuScene);
-
-    
 }
 
 void Game::Update(float delta)
 {
-
+    m_pPrefabEditor->DrawPrefabEditor();
 }
 
 void Game::Shutdown()
@@ -88,6 +99,16 @@ void Game::DrawImGuiMenuBar()
             }
             ImGui::EndMenu();
         }
+    }
+
+    if (ImGui::BeginMenu("UI"))
+    {
+        static bool sShowPrefabEditor = false;
+        if (ImGui::MenuItem("Prefab Editor", nullptr, &sShowPrefabEditor))
+        {
+            m_pPrefabEditor->ShowPrefabEditor(sShowPrefabEditor);
+        }
+        ImGui::EndMenu();
     }
 }
 
