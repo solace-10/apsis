@@ -7,6 +7,8 @@
 
 #include <core/smart_ptr.hpp>
 #include <core/log.hpp>
+#include <resources/resource.fwd.hpp>
+#include <resources/resource_data_store.hpp>
 #include <pandora.hpp>
 
 namespace WingsOfSteel::TheBrightestStar::UI
@@ -27,9 +29,14 @@ public:
 
     void Initialize();
 
+    void Save();
+    void Revert();
+    bool WasModified() const;
+
     inline void Set(const std::string& key, const PrefabDataValue& value)
     {
         m_Data[key] = value;
+        m_CurrentHash = GetHash(ToJson());
         m_OnValueSetCallback(key, value);
     }
 
@@ -53,10 +60,23 @@ public:
     inline bool IsLoaded() const { return m_IsLoaded; }
 
 private:
+    inline void SetInternal(const std::string& key, const PrefabDataValue& value)
+    {
+        m_Data[key] = value;
+        m_OnValueSetCallback(key, value);
+    }
+
+    void BuildFromDataStore();
+    const nlohmann::json ToJson() const;
+    std::string GetHash(const nlohmann::json& json) const;
+
     std::string m_Path;
     PrefabDataContainer m_Data;
     bool m_IsLoaded{false};
     OnValueSetCallbackFn m_OnValueSetCallback;
+    std::string m_OriginalHash;
+    std::string m_CurrentHash;
+    Pandora::ResourceDataStoreSharedPtr m_pDataStore;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

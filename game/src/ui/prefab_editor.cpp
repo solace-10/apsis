@@ -46,7 +46,8 @@ void PrefabEditor::DrawPrefabEditor()
         PrefabDataSharedPtr pPrefabData = pPrefabDataWeakPtr.lock();
         if (pPrefabData)
         {
-            if (ImGui::Selectable(pPrefabData->GetPath().c_str(), m_pSelectedPrefabData == pPrefabData))
+            const std::string label = ICON_FA_FILE_CODE " " + pPrefabData->GetPath();
+            if (ImGui::Selectable(label.c_str(), m_pSelectedPrefabData == pPrefabData))
             {
                 m_pSelectedPrefabData = pPrefabData;
             }
@@ -59,9 +60,17 @@ void PrefabEditor::DrawPrefabEditor()
     ImGui::BeginChild("PrefabData", ImVec2(0, 0), ImGuiChildFlags_Border);
     if (m_pSelectedPrefabData)
     {
-        ImGui::Button("Save");
+        const bool modified = m_pSelectedPrefabData->WasModified();
+
+        if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save", ImVec2(0, 0), modified))
+        {
+            m_pSelectedPrefabData->Save();
+        }
         ImGui::SameLine();
-        ImGui::Button("Revert");
+        if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert", ImVec2(0, 0), modified))
+        {
+            m_pSelectedPrefabData->Revert();
+        }
         ImGui::Separator();
         const PrefabDataContainer& data = m_pSelectedPrefabData->GetData();
         for (const auto& [key, value] : data)

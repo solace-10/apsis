@@ -52,4 +52,20 @@ void ResourceDataStore::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
 }
 
+void ResourceDataStore::Inject(const nlohmann::json& data)
+{
+    m_Data = data;
+    Save();
+}
+
+void ResourceDataStore::Save()
+{
+    const std::string dataDump = m_Data.dump();
+    std::vector<uint8_t> data(dataDump.begin(), dataDump.end());
+    if (GetVFS()->FileWrite(GetPath(), data))
+    {
+        Log::Info() << "Saved data store '" << GetPath() << "'.";
+    }
+}
+
 } // namespace WingsOfSteel::Pandora

@@ -18,8 +18,11 @@ public:
 
     const nlohmann::json& Data() const;
 
+    void Inject(const nlohmann::json& data);
+
 private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
+    void Save();
 
     nlohmann::json m_Data;
 };
