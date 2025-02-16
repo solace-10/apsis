@@ -60,17 +60,18 @@ void PrefabEditor::DrawPrefabEditor()
     ImGui::BeginChild("PrefabData", ImVec2(0, 0), ImGuiChildFlags_Border);
     if (m_pSelectedPrefabData)
     {
-        const bool modified = m_pSelectedPrefabData->WasModified();
-
-        if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save", ImVec2(0, 0), modified))
+        const bool isDisabled = !m_pSelectedPrefabData->WasModified();
+        ImGui::BeginDisabled(isDisabled);
+        if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
         {
             m_pSelectedPrefabData->Save();
         }
         ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert", ImVec2(0, 0), modified))
+        if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
         {
             m_pSelectedPrefabData->Revert();
         }
+        ImGui::EndDisabled();
         ImGui::Separator();
         const PrefabDataContainer& data = m_pSelectedPrefabData->GetData();
         for (const auto& [key, value] : data)
