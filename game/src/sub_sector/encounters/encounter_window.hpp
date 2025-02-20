@@ -3,6 +3,7 @@
 #include <core/smart_ptr.hpp>
 
 #include "ui/image.hpp"
+#include "ui/text.hpp"
 #include "ui/window.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -15,11 +16,11 @@ public:
     EncounterWindow() {}
     ~EncounterWindow() override {}
 
-    void Initialize() override;
-    void Render() override;
+    void Initialize(const std::string& prefabPath) override;
 
 private:
-    UI::ImageSharedPtr m_pEncounterImage;
+    //UI::ImageSharedPtr m_pEncounterImage;
+    //UI::TextSharedPtr m_pEncounterText;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

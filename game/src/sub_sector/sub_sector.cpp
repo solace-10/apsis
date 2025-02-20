@@ -58,9 +58,8 @@ void SubSector::Initialize()
     SpawnPlayerShip();
     subSectorCameraComponent.anchorEntity = m_pPlayerShip;
 
-    m_pEncounterWindow = std::make_unique<EncounterWindow>();
-    m_pEncounterWindow->Initialize();
-    m_pEncounterWindow->LoadPrefab("/ui/prefabs/encounter.json");
+    m_pEncounterWindow = std::make_shared<EncounterWindow>();
+    m_pEncounterWindow->Initialize("/ui/prefabs/encounter.json");
 }
 
 void SubSector::Update(float delta)

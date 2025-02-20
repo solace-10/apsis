@@ -34,7 +34,7 @@ private:
     Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowCameraDebugUI = false;
     //bool m_ShowSignalsDebugUI;
-    EncounterWindowUniquePtr m_pEncounterWindow;
+    EncounterWindowSharedPtr m_pEncounterWindow;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

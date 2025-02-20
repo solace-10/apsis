@@ -1,6 +1,10 @@
+#include <sstream>
+
 #include <imgui/imgui.hpp>
 
 #include "ui/prefab_editor.hpp"
+#include "ui/window.hpp"
+#include "ui/stack.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
@@ -21,9 +25,9 @@ void PrefabEditor::Initialize()
 
 }
 
-void PrefabEditor::AddPrefabData(PrefabDataSharedPtr pPrefabData)
+void PrefabEditor::AddPrefabData(const std::string& prefabPath, WindowSharedPtr pWindow)
 {
-    m_PrefabData.push_back(pPrefabData);
+    m_RegisteredPrefabs.push_back({prefabPath, pWindow});
 }
 
 void PrefabEditor::ShowPrefabEditor(bool state)
@@ -40,73 +44,153 @@ void PrefabEditor::DrawPrefabEditor()
 
     ImGui::Begin("Prefab Editor", &m_ShowPrefabEditor);
 
-    ImGui::BeginChild("PrefabList", ImVec2(300, 0), ImGuiChildFlags_Border);
-    for (const auto& pPrefabDataWeakPtr : m_PrefabData)
+    bool prefabLoaded = m_pSelectedPrefab.has_value();
+    ImGui::BeginDisabled(!prefabLoaded);
+
+    if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
     {
-        PrefabDataSharedPtr pPrefabData = pPrefabDataWeakPtr.lock();
-        if (pPrefabData)
+        Save();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
+    {
+        Revert();
+    }
+    ImGui::EndDisabled();
+
+    ImGui::BeginChild("PrefabList", ImVec2(300, 0), ImGuiChildFlags_Border);
+    for (const auto& registeredPrefab : m_RegisteredPrefabs)
+    {
+        WindowSharedPtr pWindow = registeredPrefab.pWindow.lock();
+        if (pWindow)
         {
-            const std::string label = ICON_FA_FILE_CODE " " + pPrefabData->GetPath();
-            if (ImGui::Selectable(label.c_str(), m_pSelectedPrefabData == pPrefabData))
+            const std::string label = ICON_FA_FILE_CODE " " + registeredPrefab.prefabPath;
+            if (ImGui::Selectable(label.c_str(), m_pSelectedPrefab.has_value() && m_pSelectedPrefab->prefabPath == registeredPrefab.prefabPath))
             {
-                m_pSelectedPrefabData = pPrefabData;
+                m_pSelectedPrefab = registeredPrefab;
             }
         }
     }
     ImGui::EndChild();
 
     ImGui::SameLine();
+    RenderHierarchy();
+    ImGui::SameLine();
+    RenderProperties();
+    ImGui::End();
+}
 
-    ImGui::BeginChild("PrefabData", ImVec2(0, 0), ImGuiChildFlags_Border);
-    if (m_pSelectedPrefabData)
+void PrefabEditor::RenderHierarchy()
+{
+    ImGui::BeginChild("Hierarchy", ImVec2(300, 0), ImGuiChildFlags_Border);
+
+    if (m_pSelectedPrefab.has_value())
     {
-        const bool isDisabled = !m_pSelectedPrefabData->WasModified();
-        ImGui::BeginDisabled(isDisabled);
-        if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
+        WindowSharedPtr pWindow = m_pSelectedPrefab->pWindow.lock();
+        if (pWindow)
         {
-            m_pSelectedPrefabData->Save();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
-        {
-            m_pSelectedPrefabData->Revert();
-        }
-        ImGui::EndDisabled();
-        ImGui::Separator();
-        const PrefabDataContainer& data = m_pSelectedPrefabData->GetData();
-        for (const auto& [key, value] : data)
-        {
-            if (std::holds_alternative<int>(value))
-            {
-                int v = std::get<int>(value);
-                ImGui::InputInt(key.c_str(), &v);
-                m_pSelectedPrefabData->Set(key, v);
-            }
-            else if (std::holds_alternative<float>(value))
-            {
-                float v = std::get<float>(value);
-                ImGui::InputFloat(key.c_str(), &v);
-                m_pSelectedPrefabData->Set(key, v);
-            }
-            else if (std::holds_alternative<std::string>(value))
-            {
-                std::string v = std::get<std::string>(value);
-                ImGui::InputText(key.c_str(), &v);
-                m_pSelectedPrefabData->Set(key, v);
-            }
-            else
-            {
-                ImGui::Text("%s: unsupported type", key.c_str());
-            }
+            RenderTreeElement(pWindow);
         }
     }
     else
     {
-        ImGui::Text("No prefab selected");
+        ImGui::TextDisabled("No prefab selected");
     }
 
     ImGui::EndChild();
-    ImGui::End();
+}
+
+void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
+{
+    std::stringstream label;
+    label << pElement->GetIcon() << " " << pElement->GetName();
+
+    bool isLeaf = true;
+    if (pElement->GetType() == ElementType::Window && static_pointer_cast<Window>(pElement)->GetStack())
+    {
+        isLeaf = false;
+    }
+    else if (pElement->GetType() == ElementType::Stack && static_pointer_cast<Stack>(pElement)->GetElements().size() > 0)
+    {
+        isLeaf = false;
+    }
+
+    ImGuiTreeNodeFlags nodeFlags = 0;
+    if (m_pSelectedElement.lock() == pElement)
+    {
+        nodeFlags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    if (isLeaf)
+    {
+        ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+        if (ImGui::IsItemClicked())
+        {
+            m_pSelectedElement = pElement;
+        }
+    }
+    else if (ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick))
+    {
+        if (ImGui::IsItemClicked())
+        {
+            m_pSelectedElement = pElement;
+        }
+
+        if (pElement->GetType() == ElementType::Window)
+        {
+            StackSharedPtr pStack = static_pointer_cast<Window>(pElement)->GetStack();
+            if (pStack)
+            {
+                RenderTreeElement(pStack);
+            }
+        }
+        else if (pElement->GetType() == ElementType::Stack)
+        {
+            for (const auto& pElement : static_pointer_cast<Stack>(pElement)->GetElements())
+            {
+                RenderTreeElement(pElement);
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void PrefabEditor::RenderProperties()
+{
+    ImGui::BeginChild("Properties", ImVec2(0, 0), ImGuiChildFlags_Border);
+    ElementSharedPtr pSelectedElement = m_pSelectedElement.lock();
+    if (pSelectedElement)
+    {
+        pSelectedElement->RenderProperties();
+    }
+    else
+    {
+        ImGui::TextDisabled("No element selected");
+    }
+    ImGui::EndChild();
+}
+
+void PrefabEditor::Save()
+{
+    if (!m_pSelectedPrefab.has_value())
+    {
+        return;
+    }
+
+    WindowSharedPtr pWindow = m_pSelectedPrefab->pWindow.lock();
+    if (!pWindow)
+    {
+        return;
+    }
+
+    nlohmann::json data = pWindow->Serialize();
+    pWindow->GetDataStore()->Inject(data);
+}
+
+void PrefabEditor::Revert()
+{
+
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

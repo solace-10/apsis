@@ -20,14 +20,18 @@ PrefabData::PrefabData(const std::string& path, OnValueSetCallbackFn callback)
 
 }
 
-void PrefabData::Initialize()
+void PrefabData::Initialize(OnLoadedCallbackFn onLoadedCallback)
 {
     using namespace Pandora;
-    GetResourceSystem()->RequestResource(m_Path, [this](ResourceSharedPtr pResource) {
+    GetResourceSystem()->RequestResource(m_Path, [this, onLoadedCallback](ResourceSharedPtr pResource) {
         m_pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
-        BuildFromDataStore();
+        //BuildFromDataStore();
         m_IsLoaded = true;
-        Game::Get()->GetPrefabEditor()->AddPrefabData(shared_from_this());
+        //Game::Get()->GetPrefabEditor()->AddPrefabData(shared_from_this());
+        if (onLoadedCallback)
+        {
+            onLoadedCallback(m_pDataStore->Data());
+        }
     });
 }
 

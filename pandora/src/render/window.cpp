@@ -43,6 +43,11 @@ Window::~Window()
 
 void Window::OnWindowResized(uint32_t width, uint32_t height)
 {
+    if (width == 0 || height == 0)
+    {
+        return;
+    }
+
     Log::Info() << "Window resized to " << width << "x" << height;
     m_Width = width;
     m_Height = height;

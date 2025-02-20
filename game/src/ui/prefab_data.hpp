@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <optional>
 #include <variant>
 
 #include <core/smart_ptr.hpp>
@@ -22,12 +23,13 @@ class PrefabData : public std::enable_shared_from_this<PrefabData>
 {
 public:
     using OnValueSetCallbackFn = std::function<void(const std::string& key, const PrefabDataValue& value)>;
+    using OnLoadedCallbackFn = std::function<void(const nlohmann::json& data)>;
 
     PrefabData() {}
     PrefabData(const std::string& path, OnValueSetCallbackFn callback);
     ~PrefabData() {}
 
-    void Initialize();
+    void Initialize(OnLoadedCallbackFn onLoadedCallback);
 
     void Save();
     void Revert();

@@ -60,7 +60,7 @@ void ResourceDataStore::Inject(const nlohmann::json& data)
 
 void ResourceDataStore::Save()
 {
-    const std::string dataDump = m_Data.dump();
+    const std::string dataDump = m_Data.dump(4);
     std::vector<uint8_t> data(dataDump.begin(), dataDump.end());
     if (GetVFS()->FileWrite(GetPath(), data))
     {

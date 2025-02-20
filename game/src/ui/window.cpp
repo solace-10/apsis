@@ -4,9 +4,15 @@
 #include <imgui.h>
 
 #include <core/log.hpp>
+#include <resources/resource.fwd.hpp>
+#include <resources/resource_data_store.hpp>
+#include <resources/resource_system.hpp>
 #include <pandora.hpp>
 
 #include "ui/window.hpp"
+#include "ui/prefab_editor.hpp"
+#include "ui/stack.hpp"
+#include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
 {
@@ -16,39 +22,65 @@ Window::Window()
 
 }
 
-void Window::Initialize()
+Window::~Window()
 {
-    Bind("x", [this](const PrefabDataValue& value) { SetX(std::get<int>(value)); });
-    Bind("y", [this](const PrefabDataValue& value) { SetY(std::get<int>(value)); });
-    Bind("w", [this](const PrefabDataValue& value) { SetWidth(std::get<int>(value)); });
-    Bind("h", [this](const PrefabDataValue& value) { SetHeight(std::get<int>(value)); });
-    Bind("title", [this](const PrefabDataValue& value) { SetTitle(std::get<std::string>(value)); });
+
 }
 
-void Window::LoadPrefab(const std::string& prefabPath)
+const std::string& Window::GetIcon() const
 {
-    m_pPrefabData = std::make_shared<PrefabData>(prefabPath, [this, prefabPath](const std::string& key, const PrefabDataValue& value) {
-        auto it = m_Bindings.find(key);
-        if (it != m_Bindings.end())
-        {
-            it->second(value);
-        }
-        else
-        {
-            Pandora::Log::Warning() << "Window::Initialize() - " << prefabPath << ": No binding found for key: " << key;
-        }
+    static const std::string icon(ICON_FA_WINDOW_MAXIMIZE);
+    return icon;
+}
+
+void Window::Initialize(const std::string& prefabPath)
+{
+    using namespace Pandora;
+    GetResourceSystem()->RequestResource(prefabPath, [this, prefabPath](ResourceSharedPtr pResource) {
+        m_pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        Deserialize(m_pDataStore->Data());
+        WindowSharedPtr pWindow = std::static_pointer_cast<Window>(shared_from_this());
+        Game::Get()->GetPrefabEditor()->AddPrefabData(prefabPath, pWindow);
     });
-    m_pPrefabData->Initialize();
+}
+
+nlohmann::json Window::Serialize() const
+{
+    nlohmann::json data = Element::Serialize();
+    data["w"] = m_Width;
+    data["h"] = m_Height;
+    if (m_pStack)
+    {
+        data["stack"] = m_pStack->Serialize();
+    }
+    return data;
+}
+
+void Window::Deserialize(const nlohmann::json& data)
+{
+    Element::Deserialize(data);
+    TryDeserialize(data, "w", m_Width, 256);
+    TryDeserialize(data, "h", m_Height, 256);
+
+    if (data.contains("stack"))
+    {
+        const nlohmann::json& stackData = data["stack"];
+        if (stackData.is_object())
+        {
+            m_pStack = std::make_shared<Stack>();
+            m_pStack->Deserialize(stackData);
+        }
+    }
 }
 
 void Window::Render()
 {
-    if (!m_pPrefabData->IsLoaded())
+    if (!m_pDataStore)
     {
         return;
     }
 
-    const ImVec2 windowSize(GetSize());
+    const ImVec2 windowSize(GetWidth(), GetHeight());
     ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
     ImVec2 windowPos(
         (viewportSize.x - windowSize.x) * 0.5f,
@@ -59,39 +91,36 @@ void Window::Render()
     ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
-    ImGui::Begin(m_Title.c_str(), nullptr, windowFlags);
+    ImGui::Begin("test", nullptr, windowFlags);
 
     RenderBackground();
 
-    for (auto& pElement : m_Elements)
+    if (m_pStack)
     {
         ImGui::SetCursorPos(ImVec2(0, 0));
-        pElement->Render();
+        m_pStack->Render();
     }
 
     ImGui::End();
     ImGui::PopStyleVar();
 }
 
+void Window::RenderProperties()
+{
+    Element::RenderProperties();
+    ImGui::InputInt("Width", &m_Width);
+    ImGui::InputInt("Height", &m_Height);
+}
+
 void Window::AddElement(ElementSharedPtr pElement)
 {
-    m_Elements.push_back(pElement);
-}
-
-void Window::Bind(const std::string& key, std::function<void(const PrefabDataValue&)> callback)
-{
-    m_Bindings[key] = callback;
-}
-
-void Window::SetTitle(const std::string& title)
-{
-    m_Title = title;
+    //m_Elements.push_back(pElement);
 }
 
 void Window::RenderBackground()
 {
     const ImVec2 cp0 = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
-    const ImVec2 cp1 = cp0 + GetSize();
+    const ImVec2 cp1 = cp0 + ImVec2(GetWidth(), GetHeight());
 
     //const Theme* pActiveTheme = g_pGame->GetThemeManager()->GetActiveTheme();
     static const ImU32 accentColor = IM_COL32(5, 250, 191, 255);

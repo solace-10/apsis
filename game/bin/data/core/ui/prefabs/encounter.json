@@ -1,10 +1,24 @@
 {
-    "title": "Encounter",
-    "w": 800,
-    "h": 700,
-    "image/x": 100,
-    "image/y": 32,
-    "image/w": 256,
-    "image/h": 256,
-    "image/src": "none"
+    "name": "encounter_window",
+    "h": 678,
+    "w": 1600,
+    "stack": {
+        "name": "stack",
+        "orientation": "horizontal",
+        "cells": "300px;*",
+        "elements": [
+            {
+                "type": "image",
+                "name": "encounter_image",
+                "source": "/ui/encounters/asteroid_field.png",
+                "cell": 0
+            },
+            {
+                "type": "text",
+                "name": "encounter_text",
+                "cell": 1,
+                "text": "<placeholder>"
+            }
+        ]
+    }
 }

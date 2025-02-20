@@ -1,78 +1,57 @@
 #pragma once
 
+#include <functional>
 #include <string>
+#include <unordered_map>
 
-#include <glm/vec2.hpp>
+#include <nlohmann/json.hpp>
 
 #include <core/smart_ptr.hpp>
+#include <imgui/fonts/icons_font_awesome.hpp>
 
-#include "ui/prefab_data.hpp"
+#include "ui/ui.fwd.hpp"
+#include "ui/property.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
 {
 
 DECLARE_SMART_PTR(Element);
-class Element
+class Element : public std::enable_shared_from_this<Element>
 {
 public:
     Element() {}
     virtual ~Element() {}
 
-    virtual void Render() {}
+    virtual ElementType GetType() const = 0;
+    virtual const std::string& GetIcon() const = 0;
 
-    void SetX(float x);
-    void SetY(float y);
-    void SetWidth(float width);
-    void SetHeight(float height);
-    void SetPosition(const glm::vec2& position);
-    void SetSize(const glm::vec2& size);
+    virtual void Render() = 0;
+    virtual void RenderProperties();
+    virtual nlohmann::json Serialize() const;
+    virtual void Deserialize(const nlohmann::json& data);
 
-    const glm::vec2& GetPosition() const;
-    const glm::vec2& GetSize() const;
+    void SetName(const std::string& name);
+    const std::string& GetName() const;
+
+    void BindProperty(const std::string& name, BaseProperty& property);
+
+protected:
+    bool TryDeserialize(const nlohmann::json& data, const std::string& key, std::string& value, const std::string& defaultValue);
+    bool TryDeserialize(const nlohmann::json& data, const std::string& key, int& value, int defaultValue);
 
 private:
-    glm::vec2 m_Position{0.0f, 0.0f};
-    glm::vec2 m_Size{512.0f, 512.0f};
+    PropertyContainer m_Properties;
+    std::string m_Name;
 };
 
-inline void Element::SetX(float x)
+inline void Element::SetName(const std::string& name)
 {
-    m_Position.x = x;
+    m_Name = name;
 }
 
-inline void Element::SetY(float y)
+inline const std::string& Element::GetName() const
 {
-    m_Position.y = y;
-}
-
-inline void Element::SetWidth(float width)
-{
-    m_Size.x = width;
-}
-
-inline void Element::SetHeight(float height)
-{
-    m_Size.y = height;
-}
-
-inline void Element::SetPosition(const glm::vec2& position)
-{
-    m_Position = position;
-}
-
-inline void Element::SetSize(const glm::vec2& size)
-{
-    m_Size = size;
-}
-
-inline const glm::vec2& Element::GetPosition() const
-{
-    return m_Position;
-}
-
-inline const glm::vec2& Element::GetSize() const
-{
-    return m_Size;
+    return m_Name;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI
