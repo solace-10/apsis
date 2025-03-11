@@ -29,6 +29,7 @@ private:
     void RenderProperties();
     void Save();
     void Revert();
+    void SelectElement(ElementSharedPtr pElement);
 
     bool m_ShowPrefabEditor{false};
 

@@ -27,16 +27,25 @@ void StackableElement::RenderProperties()
     }
 }
 
+nlohmann::json StackableElement::Serialize() const
+{
+    nlohmann::json data = Element::Serialize();
+    if (m_pStack.lock())
+    {
+        data["cell"] = m_Cell;
+    }
+    return data;
+}
+
 void StackableElement::Deserialize(const nlohmann::json& data)
 {
     Element::Deserialize(data);
     TryDeserialize(data, "cell", m_Cell, 0);
 }
 
-void StackableElement::SetStack(StackSharedPtr pStack, int cell)
+void StackableElement::SetStack(StackSharedPtr pStack)
 {
     m_pStack = pStack;
-    m_Cell = cell;
 }
 
 glm::vec2 StackableElement::GetCellPosition() const

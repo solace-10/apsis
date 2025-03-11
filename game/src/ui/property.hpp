@@ -21,6 +21,19 @@ public:
     operator T&() { return value; }
     operator T() const { return value; }
 
+    T& operator=(const T& other) { value = other; return value; }
+    T& operator*() { return value; }
+    const T& operator*() const { return value; }
+    T* operator->() { return &value; }
+    const T* operator->() const { return &value; }
+
+    bool operator==(const T& other) const { return value == other; }
+    bool operator!=(const T& other) const { return value != other; }
+    bool operator<(const T& other) const { return value < other; }
+    bool operator>(const T& other) const { return value > other; }
+    bool operator<=(const T& other) const { return value <= other; }
+    bool operator>=(const T& other) const { return value >= other; }
+
 private:
     T value;
 };

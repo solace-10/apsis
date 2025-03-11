@@ -23,7 +23,7 @@ const std::string& Image::GetIcon() const
 
 void Image::Render()
 {
-    const ImVec2 cp0 = ImGui::GetCursorScreenPos() + GetCellPosition();
+    const ImVec2 cp0 = ImGui::GetCursorScreenPos();
     const ImVec2 cp1 = cp0 + GetCellSize();
 
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
@@ -37,6 +37,11 @@ void Image::Render()
         pDrawList->AddRect(cp0, cp1, IM_COL32(255, 0, 0, 255));
         pDrawList->AddText(cp0 + ImVec2(8.0f, 8.0f), IM_COL32(255, 0, 0, 255), "Image missing");
     }
+
+    if (HasFlag(Flags::SelectedInEditor))
+    {
+        pDrawList->AddRect(cp0, cp1, IM_COL32(255, 0, 0, 255));
+    }
 }
 
 void Image::RenderProperties()
@@ -47,7 +52,15 @@ void Image::RenderProperties()
     if (ImGui::InputText("Source", &source))
     {
         SetSource(source);
-    }   
+    }
+}
+
+nlohmann::json Image::Serialize() const
+{
+    nlohmann::json data = StackableElement::Serialize();
+    data["size_mode"] = magic_enum::enum_name(m_SizeMode);
+    data["source"] = m_Source;
+    return data;
 }
 
 void Image::Deserialize(const nlohmann::json& data)
@@ -57,6 +70,8 @@ void Image::Deserialize(const nlohmann::json& data)
     std::string source;
     TryDeserialize(data, "source", source, "");
     SetSource(source);
+
+    TryDeserialize<SizeMode>(data, "size_mode", m_SizeMode, SizeMode::Source);
 }
 
 void Image::SetSource(const std::string& source)

@@ -35,11 +35,6 @@ public:
 
     void AddElement(ElementSharedPtr pElement);
 
-    void SetWidth(int width);
-    void SetHeight(int height);
-    int GetWidth() const;
-    int GetHeight() const;
-
     StackSharedPtr GetStack() const;
     Pandora::ResourceDataStore* GetDataStore() const;
 
@@ -47,35 +42,12 @@ private:
     void RenderBackground();
 
     Pandora::ResourceDataStoreSharedPtr m_pDataStore;
-
-    int m_Width{0};
-    int m_Height{0};
     StackSharedPtr m_pStack;
 };
 
 inline ElementType Window::GetType() const
 {
     return ElementType::Window;
-}
-
-inline void Window::SetWidth(int width)
-{
-    m_Width = width;
-}
-
-inline void Window::SetHeight(int height)
-{
-    m_Height = height;
-}
-
-inline int Window::GetWidth() const
-{
-    return m_Width;
-}
-
-inline int Window::GetHeight() const
-{
-    return m_Height;
 }
 
 inline StackSharedPtr Window::GetStack() const

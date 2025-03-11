@@ -126,14 +126,14 @@ void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
         ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
         if (ImGui::IsItemClicked())
         {
-            m_pSelectedElement = pElement;
+            SelectElement(pElement);
         }
     }
     else if (ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick))
     {
         if (ImGui::IsItemClicked())
         {
-            m_pSelectedElement = pElement;
+            SelectElement(pElement);
         }
 
         if (pElement->GetType() == ElementType::Window)
@@ -191,6 +191,18 @@ void PrefabEditor::Save()
 void PrefabEditor::Revert()
 {
 
+}
+
+void PrefabEditor::SelectElement(ElementSharedPtr pElement)
+{
+    ElementSharedPtr pPreviousSelectedElement = m_pSelectedElement.lock();
+    if (pPreviousSelectedElement)
+    {
+        pPreviousSelectedElement->RemoveFlag(Element::Flags::SelectedInEditor);
+    }
+
+    m_pSelectedElement = pElement;
+    pElement->AddFlag(Element::Flags::SelectedInEditor);
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

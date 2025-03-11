@@ -18,10 +18,12 @@ public:
 
     void Render() override;
     void RenderProperties() override;
+    nlohmann::json Serialize() const override;
     void Deserialize(const nlohmann::json& data) override;
 
-    void SetStack(StackSharedPtr pStack, int cell);
+    void SetStack(StackSharedPtr pStack);
     int GetCell() const;
+    void SetCell(int cell);
 
 protected:
     glm::vec2 GetCellPosition() const;
@@ -35,6 +37,11 @@ private:
 inline int StackableElement::GetCell() const
 {
     return m_Cell;
+}
+
+inline void StackableElement::SetCell(int cell)
+{
+    m_Cell = cell;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

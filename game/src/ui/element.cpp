@@ -1,5 +1,7 @@
+#include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include "imgui/imgui.hpp"
 #include "ui/element.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
@@ -9,17 +11,34 @@ nlohmann::json Element::Serialize() const
 {
     nlohmann::json data;
     data["name"] = m_Name;
+    data["type"] = magic_enum::enum_name(GetType());
+
+    if (!HasFlag(Flags::AutoSize))
+    {
+        data["width"] = m_Size.x;
+        data["height"] = m_Size.y;
+    }
+
     return data;
 }
 
 void Element::Deserialize(const nlohmann::json& data)
 {
     TryDeserialize(data, "name", m_Name, "element");
+    TryDeserialize(data, "width", m_Size.x, 0);
+    TryDeserialize(data, "height", m_Size.y, 0);
 }
 
 void Element::RenderProperties()
 {
-
+    if (!HasFlag(Flags::AutoSize))
+    {
+        int size[2] = {m_Size.x, m_Size.y};
+        if (ImGui::InputInt2("Size", size))
+        {
+            m_Size = glm::ivec2(size[0], size[1]);
+        }
+    }
 }
 
 void Element::BindProperty(const std::string& name, BaseProperty& property)

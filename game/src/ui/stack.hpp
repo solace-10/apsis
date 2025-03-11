@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 
 #include "ui/stackable_element.hpp"
@@ -22,6 +23,8 @@ public:
 
     ElementType GetType() const override;
     const std::string& GetIcon() const override;
+    void SetSize(const glm::ivec2& size) override;
+    void SetPosition(const glm::ivec2& position) override;
 
     void Render() override;
     void RenderProperties() override;
@@ -37,9 +40,61 @@ public:
     glm::vec2 GetCellSize(int cell) const;
 
 private:
+    enum class CellDimensionType
+    {
+        Fixed,
+        Percentage,
+        Auto
+    };
+
+    struct CellDefinition
+    {
+        CellDefinition()
+        {
+            dimension = CellDimensionType::Auto;
+            value = 0;
+        }
+
+        CellDefinition(CellDimensionType dimension, int value = 0)
+        {
+            this->dimension = dimension;
+            this->value = value;
+        }
+
+        CellDimensionType dimension;
+        int value;
+    };
+
+    struct Cell
+    {
+        Cell()
+        {
+            offset = 0;
+            length = 0;
+        }
+
+        Cell(int offset, int length)
+        {
+            this->offset = offset;
+            this->length = length;
+        }
+
+        int offset;
+        int length;
+    };
+    
+    void ProcessCellDefinitionDescription();
+    std::optional<CellDefinition> ParseCellDefinition(const std::string& cellDefinition) const;
+    void UpdateCells();
+
     std::vector<StackableElementSharedPtr> m_Elements;
     Orientation m_Orientation{Orientation::Vertical};
-    std::string m_CellDefinition{"*"};
+    std::string m_CellDefinitionDescription{"*"};
+    std::vector<CellDefinition> m_CellDefinitions;
+    bool m_ValidCellDefinition{true};
+    bool m_CellsDirty{true};
+    std::vector<Cell> m_Cells;
+    glm::ivec2 m_CursorScreenPosition{0};
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

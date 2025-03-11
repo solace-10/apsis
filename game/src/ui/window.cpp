@@ -17,6 +17,8 @@
 namespace WingsOfSteel::TheBrightestStar::UI
 {
 
+static const float sThemeWindowAccentHeight = 6.0f;
+
 Window::Window()
 {
 
@@ -47,8 +49,6 @@ void Window::Initialize(const std::string& prefabPath)
 nlohmann::json Window::Serialize() const
 {
     nlohmann::json data = Element::Serialize();
-    data["w"] = m_Width;
-    data["h"] = m_Height;
     if (m_pStack)
     {
         data["stack"] = m_pStack->Serialize();
@@ -59,9 +59,6 @@ nlohmann::json Window::Serialize() const
 void Window::Deserialize(const nlohmann::json& data)
 {
     Element::Deserialize(data);
-    TryDeserialize(data, "w", m_Width, 256);
-    TryDeserialize(data, "h", m_Height, 256);
-
     if (data.contains("stack"))
     {
         const nlohmann::json& stackData = data["stack"];
@@ -80,7 +77,7 @@ void Window::Render()
         return;
     }
 
-    const ImVec2 windowSize(GetWidth(), GetHeight());
+    const ImVec2 windowSize = GetSize();
     ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
     ImVec2 windowPos(
         (viewportSize.x - windowSize.x) * 0.5f,
@@ -97,8 +94,15 @@ void Window::Render()
 
     if (m_pStack)
     {
-        ImGui::SetCursorPos(ImVec2(0, 0));
+        m_pStack->SetPosition(glm::ivec2(0, sThemeWindowAccentHeight));
+        m_pStack->SetSize(glm::ivec2(windowSize.x, windowSize.y - sThemeWindowAccentHeight));
         m_pStack->Render();
+    }
+
+    if (HasFlag(Flags::SelectedInEditor))
+    {
+        ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+        pDrawList->AddRect(windowPos, windowPos + windowSize, IM_COL32(255, 0, 0, 255));
     }
 
     ImGui::End();
@@ -108,8 +112,6 @@ void Window::Render()
 void Window::RenderProperties()
 {
     Element::RenderProperties();
-    ImGui::InputInt("Width", &m_Width);
-    ImGui::InputInt("Height", &m_Height);
 }
 
 void Window::AddElement(ElementSharedPtr pElement)
@@ -120,7 +122,7 @@ void Window::AddElement(ElementSharedPtr pElement)
 void Window::RenderBackground()
 {
     const ImVec2 cp0 = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
-    const ImVec2 cp1 = cp0 + ImVec2(GetWidth(), GetHeight());
+    const ImVec2 cp1 = cp0 + GetSize();
 
     //const Theme* pActiveTheme = g_pGame->GetThemeManager()->GetActiveTheme();
     static const ImU32 accentColor = IM_COL32(5, 250, 191, 255);
@@ -144,8 +146,7 @@ void Window::RenderBackground()
     backgroundColors[ 4 ] = backgroundEndColor;
     pDrawList->AddConvexPolyFilledMultiColor(background.data(), backgroundColors.data(), static_cast<int>(background.size()));
 
-    const float topAccentHeight = 6.0f;
-    pDrawList->AddRectFilled(ImVec2(cp0.x, cp0.y), ImVec2(cp1.x, cp0.y + topAccentHeight), accentColor);
+    pDrawList->AddRectFilled(ImVec2(cp0.x, cp0.y), ImVec2(cp1.x, cp0.y + sThemeWindowAccentHeight), accentColor);
 
     static const int gridAlpha = 6;
     static const ImU32 gridColor = IM_COL32(255, 255, 255, gridAlpha);
