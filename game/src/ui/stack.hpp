@@ -70,17 +70,17 @@ private:
         Cell()
         {
             offset = 0;
-            length = 0;
+            size = glm::ivec2(0);
         }
 
-        Cell(int offset, int length)
+        Cell(int offset, glm::ivec2 size)
         {
             this->offset = offset;
-            this->length = length;
+            this->size = size;
         }
 
         int offset;
-        int length;
+        glm::ivec2 size;
     };
     
     void ProcessCellDefinitionDescription();

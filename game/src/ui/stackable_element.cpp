@@ -20,6 +20,7 @@ void StackableElement::Render()
 
 void StackableElement::RenderProperties()
 {
+    Element::RenderProperties();
     StackSharedPtr pStack = m_pStack.lock();
     if (pStack)
     {

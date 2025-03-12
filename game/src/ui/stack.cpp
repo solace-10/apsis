@@ -127,11 +127,11 @@ void Stack::Render()
         {
             if (m_Orientation == Orientation::Horizontal)
             {
-                pDrawList->AddRect(cursorScreenPosition + ImVec2(cell.offset, 0), cursorScreenPosition + ImVec2(cell.offset + cell.length, GetSize().y), IM_COL32(255, 0, 0, 255));
+                pDrawList->AddRect(cursorScreenPosition + ImVec2(cell.offset, 0), cursorScreenPosition + ImVec2(cell.offset + cell.size.x, cell.size.y), IM_COL32(255, 0, 0, 255));
             }
             else if (m_Orientation == Orientation::Vertical)
             {
-                pDrawList->AddRect(cursorScreenPosition + ImVec2(0, cell.offset), cursorScreenPosition + ImVec2(GetSize().x, cell.offset + cell.length), IM_COL32(255, 0, 0, 255));
+                pDrawList->AddRect(cursorScreenPosition + ImVec2(0, cell.offset), cursorScreenPosition + ImVec2(cell.size.x, cell.offset + cell.size.y), IM_COL32(255, 0, 0, 255));
             }
         }
     }
@@ -189,7 +189,12 @@ glm::vec2 Stack::GetCellPosition(int cell) const
 
 glm::vec2 Stack::GetCellSize(int cell) const
 {
-    return glm::vec2(128, 128);
+    if (cell >= 0 && cell < m_Cells.size())
+    {
+        return m_Cells[cell].size;
+    }
+
+    return glm::vec2(0, 0);
 }
 
 void Stack::ProcessCellDefinitionDescription()
@@ -279,29 +284,54 @@ void Stack::UpdateCells()
         CellDefinition& cellDefinition = m_CellDefinitions[i];
         if (cellDefinition.dimension == CellDimensionType::Fixed)
         {
-            m_Cells.emplace_back(
-                cellOffset,
-                cellDefinition.value
-            );
+            if (m_Orientation == Orientation::Horizontal)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(cellDefinition.value, stackSize.y));
+            }
+            else if (m_Orientation == Orientation::Vertical)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(stackSize.x, cellDefinition.value));
+            }
             cellOffset += cellDefinition.value;
             remainingSpace -= cellDefinition.value;
         }
         else if (cellDefinition.dimension == CellDimensionType::Percentage)
         {
             int value = static_cast<int>(static_cast<float>(remainingSpace) * static_cast<float>(cellDefinition.value) / 100.0f);
-            m_Cells.emplace_back(cellOffset, value);
+            if (m_Orientation == Orientation::Horizontal)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(value, stackSize.y));
+            }
+            else if (m_Orientation == Orientation::Vertical)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(stackSize.x, value));
+            }
             cellOffset += value;
             remainingSpace -= value;
         }
         else if (cellDefinition.dimension == CellDimensionType::Auto)
         {
-            m_Cells.emplace_back(cellOffset, 0);
+            if (m_Orientation == Orientation::Horizontal)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(0, stackSize.y));
+            }
+            else if (m_Orientation == Orientation::Vertical)
+            {
+                m_Cells.emplace_back(cellOffset, glm::ivec2(stackSize.x, 0));
+            }
         }
     }
 
     if (autoCellIndex != -1)
     {
-        m_Cells[autoCellIndex].length = remainingSpace;
+        if (m_Orientation == Orientation::Horizontal)
+        {
+            m_Cells[autoCellIndex].size.x = remainingSpace;
+        }
+        else if (m_Orientation == Orientation::Vertical)
+        {
+            m_Cells[autoCellIndex].size.y = remainingSpace;
+        }
 
         for (int i = autoCellIndex + 1; i < numCellDefinitions; ++i)
         {

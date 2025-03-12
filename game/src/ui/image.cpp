@@ -24,7 +24,16 @@ const std::string& Image::GetIcon() const
 void Image::Render()
 {
     const ImVec2 cp0 = ImGui::GetCursorScreenPos();
-    const ImVec2 cp1 = cp0 + GetCellSize();
+    ImVec2 cp1 = cp0;
+
+    if (m_SizeMode == SizeMode::Source)
+    {
+        cp1 = cp0 + glm::vec2(m_pTexture->GetWidth(), m_pTexture->GetHeight());
+    }
+    else
+    {
+        cp1 = cp0 + GetSize();
+    }
 
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
     if (m_pTexture)
@@ -53,6 +62,12 @@ void Image::RenderProperties()
     {
         SetSource(source);
     }
+
+    int sizeMode = static_cast<int>(m_SizeMode);
+    if (ImGui::Combo("Size mode", &sizeMode, "Source\0Fixed\0"))
+    {
+        SetSizeMode(static_cast<SizeMode>(sizeMode));
+    }
 }
 
 nlohmann::json Image::Serialize() const
@@ -71,7 +86,9 @@ void Image::Deserialize(const nlohmann::json& data)
     TryDeserialize(data, "source", source, "");
     SetSource(source);
 
-    TryDeserialize<SizeMode>(data, "size_mode", m_SizeMode, SizeMode::Source);
+    SizeMode sizeMode;
+    TryDeserialize(data, "size_mode", sizeMode, SizeMode::Source);
+    SetSizeMode(sizeMode);
 }
 
 void Image::SetSource(const std::string& source)
@@ -89,6 +106,20 @@ void Image::SetSource(const std::string& source)
                 m_pTexture = std::static_pointer_cast<ResourceTexture2D>(pResource);
             }
         });
+    }
+}
+
+void Image::SetSizeMode(SizeMode sizeMode)
+{
+    m_SizeMode = sizeMode;
+
+    if (m_SizeMode == SizeMode::Fixed)
+    {
+        RemoveFlag(Flags::AutoSize);
+    }
+    else
+    {
+        AddFlag(Flags::AutoSize);
     }
 }
 

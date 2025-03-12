@@ -1,24 +1,30 @@
 {
+    "height": 678,
     "name": "encounter_window",
-    "h": 678,
-    "w": 1600,
     "stack": {
-        "name": "stack",
-        "orientation": "horizontal",
-        "cells": "300px;*",
+        "cells": "1008;*",
         "elements": [
             {
-                "type": "image",
+                "cell": 0,
+                "height": 678,
                 "name": "encounter_image",
+                "size_mode": "Fixed",
                 "source": "/ui/encounters/asteroid_field.png",
-                "cell": 0
+                "type": "Image",
+                "width": 1008
             },
             {
-                "type": "text",
-                "name": "encounter_text",
                 "cell": 1,
-                "text": "<placeholder>"
+                "margin": 8,
+                "name": "encounter_text",
+                "text": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's melodious voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources - precious metals, minerals, perhaps even rare compounds. But the risk of detection… It was a delicate balance.\n\nThe silence was broken only by the gentle beep of various consoles and the soft hiss of the ship's systems as it hovered at the edge of the asteroid field, waiting for its captain's decision.",
+                "type": "Text"
             }
-        ]
-    }
+        ],
+        "name": "stack",
+        "orientation": "Horizontal",
+        "type": "Stack"
+    },
+    "type": "Window",
+    "width": 1600
 }

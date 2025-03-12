@@ -31,14 +31,13 @@ void Element::Deserialize(const nlohmann::json& data)
 
 void Element::RenderProperties()
 {
-    if (!HasFlag(Flags::AutoSize))
+    ImGui::BeginDisabled(HasFlag(Flags::AutoSize));
+    int size[2] = {m_Size.x, m_Size.y};
+    if (ImGui::InputInt2("Size", size))
     {
-        int size[2] = {m_Size.x, m_Size.y};
-        if (ImGui::InputInt2("Size", size))
-        {
-            m_Size = glm::ivec2(size[0], size[1]);
-        }
+        m_Size = glm::ivec2(size[0], size[1]);
     }
+    ImGui::EndDisabled();
 }
 
 void Element::BindProperty(const std::string& name, BaseProperty& property)

@@ -19,6 +19,9 @@ public:
 
     wgpu::TextureView GetTextureView() const;
 
+    int GetWidth() const;
+    int GetHeight() const;
+
 private:
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
     void LoadFromMemory(const std::string& label, const unsigned char* pData, size_t dataSize);
@@ -29,5 +32,15 @@ private:
     int m_Height{ 0 };
     int m_Channels{ 0 };
 };
+
+inline int ResourceTexture2D::GetWidth() const
+{
+    return m_Width;
+}
+
+inline int ResourceTexture2D::GetHeight() const
+{
+    return m_Height;
+}
 
 } // namespace WingsOfSteel::Pandora
