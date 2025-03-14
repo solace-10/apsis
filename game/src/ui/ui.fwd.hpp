@@ -9,6 +9,7 @@ enum class ElementType
     Stack,
     Image,
     Text,
+    EncounterButton,
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

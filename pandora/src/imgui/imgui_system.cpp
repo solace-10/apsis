@@ -4,7 +4,8 @@
 
 #include "imgui/imgui_system.hpp"
 
-#include "imgui/fonts/dejavu_sans_mono_data.hpp"
+#include "imgui/fonts/exo2_regular_data.hpp"
+#include "imgui/fonts/exo2_semi_bold_data.hpp"
 #include "imgui/fonts/icons_font_awesome.hpp"
 #include "imgui/fonts/icons_font_awesome_data.hpp"
 #include "render/debug_render.hpp"
@@ -111,19 +112,22 @@ void ImGuiSystem::SetGameMenuBarCallback(ImGuiGameMenuBarCallback callback)
 
 void ImGuiSystem::AddDefaultFont()
 {
-    const float defaultFontSize = 16.0f;
-    const float defaultIconsFontSize = 18.0f;
+    // Ideally font loading would be requested by the game and loaded asynchronously.
+    const float defaultFontSize = 22.0f;
+    const float defaultIconsFontSize = 22.0f;
 
     ImFontAtlas* pFontAtlas = ImGui::GetIO().Fonts;
-    m_pDefaultFont = pFontAtlas->AddFontFromMemoryCompressedTTF(sDejaVuSansMonoCompressedData, sDejaVuSansMonoCompressedSize, defaultFontSize);
-
+    m_pDefaultFont = pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2Regular_compressed_data, sExo2Regular_compressed_size, defaultFontSize);
+    
     // Merge FontAwesome into the default font. 
     const ImWchar iconsRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
     ImFontConfig iconsConfig;
     iconsConfig.MergeMode = true;
     iconsConfig.GlyphMinAdvanceX = defaultFontSize;
-    iconsConfig.GlyphOffset = ImVec2(0.0f, (defaultIconsFontSize - defaultFontSize) / 2.0f);
+    iconsConfig.GlyphOffset = ImVec2(0.0f, 2.0f);
     pFontAtlas->AddFontFromMemoryCompressedTTF(sFontAwesomeCompressedData, sFontAwesomeCompressedSize, defaultIconsFontSize, &iconsConfig, iconsRanges);
+
+    m_pDefaultFontSemiBold = pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, defaultFontSize);
 
     pFontAtlas->Build();
 }

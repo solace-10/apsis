@@ -15,10 +15,43 @@
             },
             {
                 "cell": 1,
-                "margin": 8,
-                "name": "encounter_text",
-                "text": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's melodious voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources - precious metals, minerals, perhaps even rare compounds. But the risk of detection… It was a delicate balance.\n\nThe silence was broken only by the gentle beep of various consoles and the soft hiss of the ship's systems as it hovered at the edge of the asteroid field, waiting for its captain's decision.",
-                "type": "Text"
+                "cells": "*;54;54;54",
+                "elements": [
+                    {
+                        "cell": 0,
+                        "margin": 8,
+                        "name": "encounter_text",
+                        "text": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic.",
+                        "type": "Text"
+                    },
+                    {
+                        "cell": 1,
+                        "icon": "/ui/icons/encounter_button_sensors.png",
+                        "margin": 8,
+                        "name": "button_option_1",
+                        "text": "\"Active sensors, EXA. Tell me what's out there.\"",
+                        "type": "EncounterButton"
+                    },
+                    {
+                        "cell": 2,
+                        "icon": "/ui/icons/encounter_button_engineering.png",
+                        "margin": 8,
+                        "name": "button_option_2",
+                        "text": "\"Launch the collectors, see what we can mine around us.\"",
+                        "type": "EncounterButton"
+                    },
+                    {
+                        "cell": 3,
+                        "icon": "/ui/icons/encounter_button_jump.png",
+                        "margin": 8,
+                        "name": "button_option_3",
+                        "text": "\"There's nothing for us here. Jump us out.\"",
+                        "type": "EncounterButton"
+                    }
+                ],
+                "name": "encounter_text_stack",
+                "orientation": "Vertical",
+                "type": "Stack"
             }
         ],
         "name": "stack",

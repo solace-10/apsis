@@ -1,9 +1,7 @@
 #include <imgui/imgui.hpp>
 #include <resources/resource_system.hpp>
 #include <vfs/vfs.hpp>
-
 #include <pandora.hpp>
-
 
 #include "ui/image.hpp"
 

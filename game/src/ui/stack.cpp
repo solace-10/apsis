@@ -117,6 +117,11 @@ void Stack::Render()
     for (const auto& pElement : m_Elements)
     {
         ImGui::SetCursorScreenPos(cursorScreenPosition + GetCellPosition(pElement->GetCell()));
+        if (pElement->GetType() == ElementType::Stack)
+        {
+            pElement->SetPosition(GetPosition() + GetCellPosition(pElement->GetCell()));
+            pElement->SetSize(GetCellSize(pElement->GetCell()));
+        }
         pElement->Render();
     }
 

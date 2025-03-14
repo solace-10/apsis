@@ -26,6 +26,13 @@ public:
 
     void SetGameMenuBarCallback(ImGuiGameMenuBarCallback callback);
 
+    enum class FontWeight
+    {
+        Regular,
+        SemiBold
+    };
+    ImFont* GetFont(FontWeight weight = FontWeight::Regular) const;
+
 private:
     void AddDefaultFont();
     void ApplyStyle();
@@ -35,6 +42,19 @@ private:
     bool m_ShowShaderEditor{ false };
     ImGuiGameMenuBarCallback m_GameMenuBarCallback;
     ImFont* m_pDefaultFont{ nullptr };
+    ImFont* m_pDefaultFontSemiBold{ nullptr };
 };
+
+inline ImFont* ImGuiSystem::GetFont(FontWeight weight) const
+{
+    if (weight == FontWeight::SemiBold)
+    {
+        return m_pDefaultFontSemiBold;
+    }
+    else
+    {
+        return m_pDefaultFont;
+    }
+}
 
 } // namespace WingsOfSteel::Pandora
