@@ -37,6 +37,15 @@ if(TARGET_PLATFORM_NATIVE)
         EXCLUDE_FROM_ALL
     )
     FetchContent_MakeAvailable(clipp)
+
+    FetchContent_Declare(
+        imgui-node-editor
+        GIT_REPOSITORY https://github.com/thedmd/imgui-node-editor.git
+        GIT_TAG e78e447900909a051817a760efe13fe83e6e1afc # Head as of 14/03/2025; necessary for compatibility with latest imgui.
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/imgui-node-editor
+        EXCLUDE_FROM_ALL
+    )
+    FetchContent_MakeAvailable(imgui-node-editor)
 endif()
 
 FetchContent_Declare(

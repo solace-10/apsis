@@ -22,13 +22,33 @@ set(SOURCE_FILES_IMGUI
     ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
 )
 
-add_library(pandora STATIC ${SOURCE_FILES} ${SOURCE_FILES_IMGUI})
+if(NOT TARGET_PLATFORM_WEB)
+    set(IMGUI_NODE_EDITOR_SOURCE_DIR ext/imgui-node-editor)
+    set(SOURCE_FILES_IMGUI_NODE_EDITOR
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/crude_json.cpp
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/crude_json.h
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_bezier_math.h
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_bezier_math.inl
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_canvas.cpp
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_canvas.h
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_extra_math.h
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_extra_math.inl
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_node_editor_api.cpp
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_node_editor_internal.h
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_node_editor_internal.inl
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_node_editor.cpp
+        ${IMGUI_NODE_EDITOR_SOURCE_DIR}/imgui_node_editor.h
+    )
+endif()
+
+add_library(pandora STATIC ${SOURCE_FILES} ${SOURCE_FILES_IMGUI} ${SOURCE_FILES_IMGUI_NODE_EDITOR})
 include("cmake/shared/TargetPlatforms.cmake")
 
 target_include_directories(pandora PUBLIC 
     src/
     ${IMGUI_SOURCE_DIR}
     ${IMGUI_SOURCE_DIR}/backends/
+    ${IMGUI_NODE_EDITOR_SOURCE_DIR}
     ext/delaunator-cpp/
     ext/entt/single_include/
     ext/stb/

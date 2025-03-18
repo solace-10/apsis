@@ -10,6 +10,7 @@
 #include "game.hpp"
 #include "sector/signal/sector_signal.hpp"
 #include "sector/sector.hpp"
+#include "sub_sector/encounters/encounter_editor.hpp"
 #include "sub_sector/signal/sub_sector_signal.hpp"
 #include "sub_sector/sub_sector.hpp"
 #include "ui/prefab_editor.hpp"
@@ -42,6 +43,8 @@ void Game::Initialize()
 
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
+
+    m_pEncounterEditor = std::make_unique<EncounterEditor>();
 
     m_pItemManager = std::make_unique<ItemManager>();
     //m_pSectorGenerator = std::make_unique<SectorGenerator>();
@@ -78,6 +81,7 @@ void Game::Initialize()
 void Game::Update(float delta)
 {
     m_pPrefabEditor->DrawPrefabEditor();
+    m_pEncounterEditor->Update();
 }
 
 void Game::Shutdown()
