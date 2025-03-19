@@ -8,7 +8,7 @@ namespace WingsOfSteel::TheBrightestStar
 class EncounterEditorIdGenerator
 {
 public:
-    EncounterEditorIdGenerator(uint32_t startId = 0)
+    EncounterEditorIdGenerator(uint32_t startId = 1)
     {
         m_Id = startId;
     }
@@ -19,7 +19,7 @@ private:
     static uint32_t m_Id;
 };
 
-inline uint32_t EncounterEditorIdGenerator::m_Id = 0;
+inline uint32_t EncounterEditorIdGenerator::m_Id = 1;
 
 inline uint32_t EncounterEditorIdGenerator::GenerateId()
 {

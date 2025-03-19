@@ -18,5 +18,11 @@ public:
     EncounterStageNode();
 };
 
+class StringNode : public Node
+{
+public:
+    StringNode();
+};    
+
 } // namespace WingsOfSteel::TheBrightestStar
 

@@ -12,7 +12,8 @@ namespace WingsOfSteel::TheBrightestStar
 enum class PinType
 {
     Flow,
-    Dice
+    Dice,
+    String
 };
 
 enum class PinKind
@@ -23,7 +24,8 @@ enum class PinKind
 
 enum class NodeType
 {
-    Blueprint
+    Standard,
+    String
 };
 
 enum class PinIconType
@@ -46,8 +48,8 @@ struct Pin
     PinType Type{PinType::Flow};
     PinKind Kind{PinKind::Input};
 
-    Pin(int id, const char* name, PinType type):
-        ID(id), Node(nullptr), Name(name), Type(type), Kind(PinKind::Input)
+    Pin(const char* name, PinType type):
+        ID(-1), Node(nullptr), Name(name), Type(type), Kind(PinKind::Input)
     {
     }
 };
@@ -60,11 +62,11 @@ public:
     std::vector<Pin> Inputs;
     std::vector<Pin> Outputs;
     ImColor Color{ImColor(255, 255, 255)};
-    NodeType Type{NodeType::Blueprint};
+    NodeType Type{NodeType::Standard};
     ImVec2 Size{0, 0};
 
-    Node(int id, const char* name, ImColor color = ImColor(255, 255, 255)):
-        ID(id), Name(name), Color(color), Type(NodeType::Blueprint), Size(0, 0)
+    Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeType type = NodeType::Standard):
+        ID(-1), Name(name), Color(color), Type(type), Size(0, 0)
     {
     }
 

@@ -22,8 +22,11 @@ public:
 
 private:
     void DrawNodes();
+    void DrawStandardNode(Node* pNode);
+    void DrawStringNode(Node* pNode);
     void DrawPins(Node* pNode);
     void DrawPinIcon(const Pin& pin, bool connected);
+    ImColor GetIconColor(PinType type) const;
     int GetPinGroupWidth(const std::vector<Pin>& pins) const;
     int GetPinWidth(const Pin& pin) const;
     int GetPinIconSize() const;

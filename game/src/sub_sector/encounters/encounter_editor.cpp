@@ -19,6 +19,10 @@ EncounterEditor::EncounterEditor()
     EncounterStageNode* pEncounterStageNode = new EncounterStageNode();
     pEncounterStageNode->Initialize(m_IdGenerator);
     m_Nodes.emplace_back(pEncounterStageNode);
+
+    StringNode* pStringNode = new StringNode();
+    pStringNode->Initialize(m_IdGenerator);
+    m_Nodes.emplace_back(pStringNode);
 }
 
 EncounterEditor::~EncounterEditor()
@@ -54,7 +58,16 @@ void EncounterEditor::DrawNodes()
         ImGui::Dummy(ImVec2(textSize.x, nodeTitleHeight));
         ImGui::PopStyleVar();
 
-        DrawPins(pNode);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 4));
+        if (pNode->Type == NodeType::Standard)
+        {
+            DrawStandardNode(pNode);
+        }
+        else if (pNode->Type == NodeType::String)
+        {
+            DrawStringNode(pNode);
+        }
+        ImGui::PopStyleVar();
 
         ImGui::SetCursorPos(cursorPos);
         
@@ -63,13 +76,49 @@ void EncounterEditor::DrawNodes()
         ImVec2 nodePadding = ImVec2(8, 8);
         ImVec2 cp0 = ImGui::GetCursorScreenPos() - nodePadding + ImVec2(1, 1);
         ImVec2 cp1 = cp0 + ImVec2(nodeSize.x, nodeTitleHeight) - ImVec2(2, 2);
-        pDrawList->AddRectFilled(cp0, cp1, IM_COL32(255, 0, 0, 120), 12.0, ImDrawFlags_RoundCornersTop);
+        ImVec4 titleColor(pNode->Color);
+        titleColor.w = 0.7f; // Make the title color a bit darker by reducing the alpha value.
+        pDrawList->AddRectFilled(cp0, cp1, ImColor(titleColor), 12.0, ImDrawFlags_RoundCornersTop);
 
         pDrawList->AddText(cp0 + ImVec2(8, 4), IM_COL32(255, 255, 255, 255), pNode->Name.c_str());
 
         ImGuiNodeEditor::EndNode();
     }
 }
+
+void EncounterEditor::DrawStandardNode(Node* pNode)
+{
+    DrawPins(pNode);
+}
+
+void EncounterEditor::DrawStringNode(Node* pNode)
+{
+    const int buttonWidth = 40;
+    ImVec2 pinsStartPos = ImGui::GetCursorPos();
+
+    if (ImGui::Button(ICON_FA_PEN, ImVec2(buttonWidth, 0)))
+    {
+
+    }
+
+    const int outputPinsWidth = GetPinGroupWidth(pNode->Outputs);
+    const int contentWidth = outputPinsWidth + buttonWidth + 8;
+    const int titleWidth = ImGui::CalcTextSize(pNode->Name.c_str()).x + 16;
+    const ImVec2 outputPinsStartPos = pinsStartPos + ImVec2(glm::max(contentWidth, titleWidth), 4);
+    ImVec2 outputPinPos = pinsStartPos + ImVec2(glm::max(contentWidth, titleWidth), 4);;
+
+    assert(pNode->Outputs.size() == 1);
+    Pin& outputPin = pNode->Outputs[0];
+    outputPinPos.x = outputPinsStartPos.x - GetPinWidth(outputPin);
+    ImGui::SetCursorPos(outputPinPos);
+
+    ImGuiNodeEditor::BeginPin(outputPin.ID, ImGuiNodeEditor::PinKind::Output);
+    ImGui::TextUnformatted(outputPin.Name.c_str());
+    ImGui::SameLine();
+    DrawPinIcon(outputPin, false);
+    ImGuiNodeEditor::EndPin();
+}
+
 
 int EncounterEditor::GetPinGroupWidth(const std::vector<Pin>& pins) const
 {
@@ -88,7 +137,6 @@ int EncounterEditor::GetPinGroupWidth(const std::vector<Pin>& pins) const
 
 void EncounterEditor::DrawPins(Node* pNode)
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 4));
     const int spaceBetweenPins = 28; 
     ImVec2 pinsStartPos = ImGui::GetCursorPos();
     ImVec2 inputPinPos = pinsStartPos;
@@ -106,10 +154,7 @@ void EncounterEditor::DrawPins(Node* pNode)
     const int outputPinsWidth = GetPinGroupWidth(pNode->Outputs);
     const int combinedPinsWidth = inputPinsWidth + outputPinsWidth + 16; // + 16 to create a gap between the two pin groups.
     const int titleWidth = ImGui::CalcTextSize(pNode->Name.c_str()).x + 16;
-
-    ImVec2 outputPinsStartPos = pinsStartPos + ImVec2(glm::max(combinedPinsWidth, titleWidth), 0);
-    int nodeWidth = ImGuiNodeEditor::GetNodeSize(pNode->ID).x;
-    //outputPinsStartPos.x = glm::max(outputPinsStartPos.x, ImGuiNodeEditor::GetNodeSize(pNode->ID).x);
+    const ImVec2 outputPinsStartPos = pinsStartPos + ImVec2(glm::max(combinedPinsWidth, titleWidth), 0);
     ImVec2 outputPinPos = outputPinsStartPos;
 
     for (Pin& outputPin : pNode->Outputs)
@@ -125,23 +170,36 @@ void EncounterEditor::DrawPins(Node* pNode)
         outputPinPos.y += spaceBetweenPins;
         ImGui::SetCursorPos(outputPinPos);
     }
-    ImGui::PopStyleVar();
 }
 
 void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
 {
     PinIconType iconType;
-    ImColor color = ImColor(255, 255, 255); //GetIconColor(pin.Type);
-    color.Value.w = 255 / 255.0f;
+    ImColor color = GetIconColor(pin.Type);
     switch (pin.Type)
     {
         case PinType::Flow: iconType = PinIconType::Flow; break;
+        case PinType::Dice: iconType = PinIconType::Square; break;
+        case PinType::String: iconType = PinIconType::RoundSquare; break;
         default: iconType = PinIconType::Circle; break;
     }
+
 
     const int pinIconSize = GetPinIconSize(); 
     PinIcon(ImVec2(pinIconSize, pinIconSize), iconType, connected, color, ImColor(32, 32, 32, 255));
 }
 
+ImColor EncounterEditor::GetIconColor(PinType type) const
+{
+    switch (type)
+    {
+        case PinType::Flow: return ImColor(255, 255, 255);
+        case PinType::Dice: return ImColor(255, 0, 0);
+        case PinType::String: return ImColor(124, 21, 153);
+        default: return ImColor(255, 255, 255);
+    }
+}
+
 } // namespace WingsOfSteel::TheBrightestStar
+
 
