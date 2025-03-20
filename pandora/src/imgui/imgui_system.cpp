@@ -149,7 +149,6 @@ void ImGuiSystem::ApplyStyle()
     pStyle->GrabMinSize              = 5.0f;
     pStyle->GrabRounding             = 3.0f;
 
-
     pStyle->Colors[ImGuiCol_Text]                  = ImColor(240, 240, 240, 255);
     pStyle->Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
     pStyle->Colors[ImGuiCol_WindowBg]              = ImColor(46, 46, 46, 240);
@@ -192,7 +191,7 @@ void ImGuiSystem::ApplyStyle()
     pStyle->Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
     pStyle->Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.02f, 0.98f, 0.75f, 1.00f);
     pStyle->Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.02f, 0.98f, 0.75f, 0.43f);
-    //pStyle->Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
+    pStyle->Colors[ImGuiCol_ModalWindowDimBg]      = ImColor(0, 0, 0, 150);
     pStyle->Colors[ImGuiCol_Separator]             = ImColor(5, 250, 191, 255);
 }
 

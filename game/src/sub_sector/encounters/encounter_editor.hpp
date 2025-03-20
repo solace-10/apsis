@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 
 #include <core/smart_ptr.hpp>
@@ -11,6 +12,9 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Encounter);
+class StringNode;
+
 DECLARE_SMART_PTR(EncounterEditor);
 class EncounterEditor
 {
@@ -21,6 +25,9 @@ public:
     void Update();
 
 private:
+    void DrawHeader();
+    void DrawEncounterList();
+    void DrawNodeEditor();
     void DrawNodes();
     void DrawStandardNode(Node* pNode);
     void DrawStringNode(Node* pNode);
@@ -30,10 +37,18 @@ private:
     int GetPinGroupWidth(const std::vector<Pin>& pins) const;
     int GetPinWidth(const Pin& pin) const;
     int GetPinIconSize() const;
+    void DrawStringEditor();
+    void AddNewEmptyEncounter();
+    void LoadEncounter(const std::string& encounterName);
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     std::vector<Node*> m_Nodes;
     EncounterEditorIdGenerator m_IdGenerator;
+    bool m_ShowStringEditor{false};
+    StringNode* m_pSelectedStringNode{nullptr};
+    std::string m_NewEncounterName;
+    EncounterSharedPtr m_pSelectedEncounter;
+    std::map<std::string, EncounterSharedPtr> m_Encounters;
 };
 
 inline int EncounterEditor::GetPinIconSize() const

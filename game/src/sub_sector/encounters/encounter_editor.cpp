@@ -23,6 +23,8 @@ EncounterEditor::EncounterEditor()
     StringNode* pStringNode = new StringNode();
     pStringNode->Initialize(m_IdGenerator);
     m_Nodes.emplace_back(pStringNode);
+
+    m_Encounters["h0_asteroid_field_1"] = nullptr;
 }
 
 EncounterEditor::~EncounterEditor()
@@ -34,17 +36,95 @@ void EncounterEditor::Update()
 {
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     ImGui::Begin("Encounter Editor");
-    ImGuiNodeEditor::SetCurrentEditor(m_pContext);
-    ImGuiNodeEditor::Begin("Encounter Editor");
-
-    DrawNodes();
-
-    ImGuiNodeEditor::End();
-    ImGuiNodeEditor::SetCurrentEditor(nullptr);
-
+    DrawHeader();
+    DrawEncounterList();
+    ImGui::SameLine();
+    DrawNodeEditor();
     ImGui::End();
+
+    DrawStringEditor();
 }
 
+void EncounterEditor::DrawHeader()
+{
+    if (ImGui::Button(ICON_FA_FILE_CIRCLE_PLUS " New"))
+    {
+        m_NewEncounterName = "";
+        ImGui::OpenPopup("New encounter");
+    }
+    ImGui::SameLine();
+
+    bool fileLoaded = true;
+    ImGui::BeginDisabled(!fileLoaded);
+    if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
+    {
+        //Save();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
+    {
+        //Revert();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_GEAR " Settings"))
+    {
+        //ShowSettings();
+    }
+    ImGui::EndDisabled();
+
+    if (ImGui::BeginPopupModal("New encounter", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+    {
+        ImGui::InputText("##encounterName", &m_NewEncounterName);
+        if (ImGui::Button("Create"))
+        {
+            AddNewEmptyEncounter();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void EncounterEditor::DrawEncounterList()
+{
+    ImGui::BeginChild("EncounterList", ImVec2(300, 0), ImGuiChildFlags_Border);
+    for (const auto& encounter : m_Encounters)
+    {
+        const std::string label = ICON_FA_FILE_CODE " " + encounter.first;
+        if (ImGui::Selectable(label.c_str(), m_pSelectedEncounter == encounter.second))
+        {
+            m_pSelectedEncounter = encounter.second;
+        }
+    }
+    ImGui::EndChild();
+}
+
+void EncounterEditor::DrawNodeEditor()
+{
+    ImGuiNodeEditor::SetCurrentEditor(m_pContext);
+    ImGuiNodeEditor::Begin("Encounter Editor");
+    DrawNodes();
+    ImGuiNodeEditor::End();
+    ImGuiNodeEditor::SetCurrentEditor(nullptr);
+}
+
+void EncounterEditor::DrawStringEditor()
+{
+    if (m_ShowStringEditor)
+    {
+        ImGui::OpenPopup("String editor");
+    }
+
+    if (ImGui::BeginPopupModal("String editor", &m_ShowStringEditor, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+    {
+        ImGui::InputTextMultiline("##hidden", &m_pSelectedStringNode->Value, ImVec2(600, ImGui::GetTextLineHeightWithSpacing() * 16));
+        ImGui::EndPopup();
+    }
+}
 void EncounterEditor::DrawNodes()
 {
     const int nodeTitleHeight = 36;
@@ -98,7 +178,8 @@ void EncounterEditor::DrawStringNode(Node* pNode)
 
     if (ImGui::Button(ICON_FA_PEN, ImVec2(buttonWidth, 0)))
     {
-
+        m_ShowStringEditor = true;
+        m_pSelectedStringNode = static_cast<StringNode*>(pNode);
     }
 
     const int outputPinsWidth = GetPinGroupWidth(pNode->Outputs);
@@ -118,7 +199,6 @@ void EncounterEditor::DrawStringNode(Node* pNode)
     DrawPinIcon(outputPin, false);
     ImGuiNodeEditor::EndPin();
 }
-
 
 int EncounterEditor::GetPinGroupWidth(const std::vector<Pin>& pins) const
 {
@@ -198,6 +278,11 @@ ImColor EncounterEditor::GetIconColor(PinType type) const
         case PinType::String: return ImColor(124, 21, 153);
         default: return ImColor(255, 255, 255);
     }
+}
+
+void EncounterEditor::AddNewEmptyEncounter()
+{
+    
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

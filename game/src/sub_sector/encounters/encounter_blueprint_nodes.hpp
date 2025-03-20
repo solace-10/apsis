@@ -22,6 +22,8 @@ class StringNode : public Node
 {
 public:
     StringNode();
+
+    std::string Value;
 };    
 
 } // namespace WingsOfSteel::TheBrightestStar
