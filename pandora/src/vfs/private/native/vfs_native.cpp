@@ -68,14 +68,21 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
 
 bool VFSNative::FileWrite(const std::string& path, const std::vector<uint8_t>& bytes)
 {
+    std::ofstream ofs;
+
     auto it = m_VFS.find(path);
     if (it == m_VFS.end())
     {
-        Log::Error() << "Unable to write file '" << path << "', file not in VFS.";
-        return false;
+        const std::filesystem::path nativePath = "data/core/" + path;
+        ofs.open(nativePath, std::ios::out | std::ios::binary);
+        m_VFS[path] = nativePath;
+        Log::Info() << "Created new file '" << path << "' at '" << nativePath << "'.";
+    }
+    else
+    {
+        ofs.open(it->second, std::ios::out | std::ios::binary);
     }
 
-    std::ofstream ofs(it->second, std::ios::out | std::ios::binary);
     if (ofs.is_open())
     {
         ofs.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());

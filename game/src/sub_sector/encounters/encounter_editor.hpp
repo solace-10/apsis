@@ -40,6 +40,7 @@ private:
     void DrawStringEditor();
     void AddNewEmptyEncounter();
     void LoadEncounter(const std::string& encounterName);
+    std::string GetEncounterName(const std::string& path) const;
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     std::vector<Node*> m_Nodes;

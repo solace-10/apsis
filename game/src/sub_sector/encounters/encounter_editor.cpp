@@ -1,9 +1,17 @@
 #include <glm/glm.hpp>
 
+#include <core/log.hpp>
+#include <resources/resource_data_store.hpp>
+#include <resources/resource_system.hpp>
+#include <vfs/file.hpp>
+#include <vfs/vfs.hpp>
+#include <pandora.hpp>
+
 #include "encounter_editor.hpp"
 
 #include "encounter_blueprint_nodes.hpp"
 #include "encounter_editor_widgets.hpp"
+#include "encounter.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -24,7 +32,20 @@ EncounterEditor::EncounterEditor()
     pStringNode->Initialize(m_IdGenerator);
     m_Nodes.emplace_back(pStringNode);
 
-    m_Encounters["h0_asteroid_field_1"] = nullptr;
+    using namespace Pandora;
+    const std::vector<std::string> encounters = GetVFS()->List("/encounters");
+    bool firstEncounterRequested = false;
+    for (const std::string& encounter : encounters)
+    {
+        const std::string encounterName = GetEncounterName(encounter);
+        m_Encounters[encounterName] = nullptr;
+
+        if (!firstEncounterRequested)
+        {
+            firstEncounterRequested = true;
+            LoadEncounter(encounterName);
+        }
+    }
 }
 
 EncounterEditor::~EncounterEditor()
@@ -95,9 +116,16 @@ void EncounterEditor::DrawEncounterList()
     for (const auto& encounter : m_Encounters)
     {
         const std::string label = ICON_FA_FILE_CODE " " + encounter.first;
-        if (ImGui::Selectable(label.c_str(), m_pSelectedEncounter == encounter.second))
+        if (ImGui::Selectable(label.c_str(), m_pSelectedEncounter != nullptr && m_pSelectedEncounter == encounter.second))
         {
-            m_pSelectedEncounter = encounter.second;
+            if (encounter.second == nullptr)
+            {
+                LoadEncounter(encounter.first);
+            }
+            else
+            {
+                m_pSelectedEncounter = encounter.second;
+            }
         }
     }
     ImGui::EndChild();
@@ -264,7 +292,6 @@ void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
         default: iconType = PinIconType::Circle; break;
     }
 
-
     const int pinIconSize = GetPinIconSize(); 
     PinIcon(ImVec2(pinIconSize, pinIconSize), iconType, connected, color, ImColor(32, 32, 32, 255));
 }
@@ -282,9 +309,51 @@ ImColor EncounterEditor::GetIconColor(PinType type) const
 
 void EncounterEditor::AddNewEmptyEncounter()
 {
-    
+    using namespace Pandora;
+    nlohmann::json json = nlohmann::json::object();
+    const std::string dataDump = json.dump(4);
+    std::vector<uint8_t> data(dataDump.begin(), dataDump.end());
+    const std::string path = "/encounters/" + m_NewEncounterName + ".json";
+    if (GetVFS()->FileWrite(path, data))
+    {
+        Log::Info() << "Created new empty encounter at '" << path << "'.";
+        LoadEncounter(m_NewEncounterName);
+        m_NewEncounterName = "";
+    }
+    else
+    {
+        Log::Warning() << "Failed to create new empty encounter at '" << path << "'.";
+    }
+}
+
+void EncounterEditor::LoadEncounter(const std::string& encounterName)
+{
+    using namespace Pandora;
+    const std::string path = "/encounters/" + encounterName + ".json";
+    GetResourceSystem()->RequestResource(path, [this, encounterName](ResourceSharedPtr pResource)
+    {
+        ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        if (pDataStore)
+        {
+            m_pSelectedEncounter = std::make_shared<Encounter>(pDataStore);
+            m_Encounters[encounterName] = m_pSelectedEncounter;
+        }
+    });
+}
+
+std::string EncounterEditor::GetEncounterName(const std::string& path) const
+{
+    const size_t lastSlashIndex = path.find_last_of("/");
+    if (lastSlashIndex == std::string::npos)
+    {
+        return path;
+    }
+    const size_t lastDotIndex = path.find_last_of(".");
+    if (lastDotIndex == std::string::npos)
+    {
+        return path;
+    }
+    return path.substr(lastSlashIndex + 1, lastDotIndex - lastSlashIndex - 1);
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
-
-
