@@ -21,8 +21,8 @@ public:
 
     void Update();
 
-    nlohmann::json Serialize() const;
-    void Deserialize(const nlohmann::json& data);
+    void Save();
+    void Revert();
 
     void AddNode(NodeUniquePtr pNode);
     const std::vector<Node*> GetNodes() const;

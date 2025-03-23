@@ -42,6 +42,8 @@ private:
     void AddNewEmptyEncounter();
     void LoadEncounter(const std::string& encounterName);
     std::string GetEncounterName(const std::string& path) const;
+    void SaveEncounter();
+    void RevertEncounter();
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     EncounterEditorIdGenerator m_IdGenerator;

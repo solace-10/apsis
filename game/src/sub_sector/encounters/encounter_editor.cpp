@@ -67,12 +67,12 @@ void EncounterEditor::DrawHeader()
     ImGui::BeginDisabled(!fileLoaded);
     if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
     {
-        //Save();
+        SaveEncounter();
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
     {
-        //Revert();
+        RevertEncounter();
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_GEAR " Settings"))
@@ -333,6 +333,22 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
             m_Encounters[encounterName] = m_pSelectedEncounter;
         }
     });
+}
+
+void EncounterEditor::SaveEncounter()
+{
+    if (m_pSelectedEncounter)
+    {
+        m_pSelectedEncounter->Save();
+    }
+}
+
+void EncounterEditor::RevertEncounter()
+{
+    if (m_pSelectedEncounter)
+    {
+        m_pSelectedEncounter->Revert();
+    }
 }
 
 std::string EncounterEditor::GetEncounterName(const std::string& path) const

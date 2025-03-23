@@ -16,7 +16,7 @@ void Encounter::Update()
 {
 }
 
-nlohmann::json Serialize() const
+void Encounter::Save()
 {
     nlohmann::json data;
     data["nodes"] = nlohmann::json::array();
@@ -26,9 +26,9 @@ nlohmann::json Serialize() const
     }
     
     data["links"] = nlohmann::json::array();
-    return data;
+    m_pDataStore->Inject(data);
 }
-void Deserialize(const nlohmann::json& data)
+void Encounter::Revert()
 {
     
 }
