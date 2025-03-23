@@ -20,18 +20,6 @@ EncounterEditor::EncounterEditor()
 {
     m_pContext = ImGuiNodeEditor::CreateEditor();
 
-    SectorEnteredNode* pSectorEnteredNode = new SectorEnteredNode();
-    pSectorEnteredNode->Initialize(m_IdGenerator);
-    m_Nodes.emplace_back(pSectorEnteredNode);
-
-    EncounterStageNode* pEncounterStageNode = new EncounterStageNode();
-    pEncounterStageNode->Initialize(m_IdGenerator);
-    m_Nodes.emplace_back(pEncounterStageNode);
-
-    StringNode* pStringNode = new StringNode();
-    pStringNode->Initialize(m_IdGenerator);
-    m_Nodes.emplace_back(pStringNode);
-
     using namespace Pandora;
     const std::vector<std::string> encounters = GetVFS()->List("/encounters");
     bool firstEncounterRequested = false;
@@ -136,6 +124,7 @@ void EncounterEditor::DrawNodeEditor()
     ImGuiNodeEditor::SetCurrentEditor(m_pContext);
     ImGuiNodeEditor::Begin("Encounter Editor");
     DrawNodes();
+    DrawContextMenus();
     ImGuiNodeEditor::End();
     ImGuiNodeEditor::SetCurrentEditor(nullptr);
 }
@@ -155,8 +144,13 @@ void EncounterEditor::DrawStringEditor()
 }
 void EncounterEditor::DrawNodes()
 {
+    if (m_pSelectedEncounter == nullptr)
+    {
+        return;
+    }
+
     const int nodeTitleHeight = 36;
-    for (Node* pNode : m_Nodes)
+    for (Node* pNode : m_pSelectedEncounter->GetNodes())
     {
         ImGuiNodeEditor::BeginNode(pNode->ID);
 
@@ -354,6 +348,132 @@ std::string EncounterEditor::GetEncounterName(const std::string& path) const
         return path;
     }
     return path.substr(lastSlashIndex + 1, lastDotIndex - lastSlashIndex - 1);
+}
+
+void EncounterEditor::DrawContextMenus()
+{
+    if (m_pSelectedEncounter == nullptr)
+    {
+        return;
+    }
+
+    auto openPopupPosition = ImGui::GetMousePos();
+    ImGuiNodeEditor::Suspend();
+    //if (ImGuiNodeEditor::ShowNodeContextMenu(&contextNodeId))
+    //    ImGui::OpenPopup("Node Context Menu");
+    //else if (ImGuiNodeEditor::ShowPinContextMenu(&contextPinId))
+    //    ImGui::OpenPopup("Pin Context Menu");
+    //else if (ImGuiNodeEditor::ShowLinkContextMenu(&contextLinkId))
+    //    ImGui::OpenPopup("Link Context Menu");
+
+    if (ImGuiNodeEditor::ShowBackgroundContextMenu())
+    {
+        ImGui::OpenPopup("Create New Node");
+    }
+    ImGuiNodeEditor::Resume();
+
+    ImGuiNodeEditor::Suspend();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+    /*
+    if (ImGui::BeginPopup("Node Context Menu"))
+    {
+        auto node = FindNode(contextNodeId);
+
+        ImGui::TextUnformatted("Node Context Menu");
+        ImGui::Separator();
+        if (node)
+        {
+            ImGui::Text("ID: %p", node->ID.AsPointer());
+            ImGui::Text("Type: %s", node->Type == NodeType::Blueprint ? "Blueprint" : (node->Type == NodeType::Tree ? "Tree" : "Comment"));
+            ImGui::Text("Inputs: %d", (int)node->Inputs.size());
+            ImGui::Text("Outputs: %d", (int)node->Outputs.size());
+        }
+        else
+            ImGui::Text("Unknown node: %p", contextNodeId.AsPointer());
+        ImGui::Separator();
+        if (ImGui::MenuItem("Delete"))
+            ImGuiNodeEditor::DeleteNode(contextNodeId);
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopup("Pin Context Menu"))
+    {
+        auto pin = FindPin(contextPinId);
+
+        ImGui::TextUnformatted("Pin Context Menu");
+        ImGui::Separator();
+        if (pin)
+        {
+            ImGui::Text("ID: %p", pin->ID.AsPointer());
+            if (pin->Node)
+                ImGui::Text("Node: %p", pin->Node->ID.AsPointer());
+            else
+                ImGui::Text("Node: %s", "<none>");
+        }
+        else
+            ImGui::Text("Unknown pin: %p", contextPinId.AsPointer());
+
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopup("Link Context Menu"))
+    {
+        auto link = FindLink(contextLinkId);
+
+        ImGui::TextUnformatted("Link Context Menu");
+        ImGui::Separator();
+        if (link)
+        {
+            ImGui::Text("ID: %p", link->ID.AsPointer());
+            ImGui::Text("From: %p", link->StartPinID.AsPointer());
+            ImGui::Text("To: %p", link->EndPinID.AsPointer());
+        }
+        else
+            ImGui::Text("Unknown link: %p", contextLinkId.AsPointer());
+        ImGui::Separator();
+        if (ImGui::MenuItem("Delete"))
+            ImGuiNodeEditor::DeleteLink(contextLinkId);
+        ImGui::EndPopup();
+    }
+    */
+
+    if (ImGui::BeginPopup("Create New Node"))
+    {
+        auto newNodePostion = openPopupPosition;
+        //ImGui::SetCursorScreenPos(ImGui::GetMousePosOnOpeningCurrentPopup());
+
+        //auto drawList = ImGui::GetWindowDrawList();
+        //drawList->AddCircleFilled(ImGui::GetMousePosOnOpeningCurrentPopup(), 10.0f, 0xFFFF00FF);
+
+        NodeUniquePtr pNode = nullptr;
+        if (ImGui::MenuItem("Sector entered"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Sector entered");
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Encounter stage"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Encounter stage");
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("String"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("String");
+        }
+
+        if (pNode)
+        {
+            //BuildNodes();
+            pNode->Initialize(m_IdGenerator);
+            ImGuiNodeEditor::SetNodePosition(pNode->ID, newNodePostion);
+            m_pSelectedEncounter->AddNode(std::move(pNode));
+        }
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopStyleVar();
+    ImGuiNodeEditor::Resume();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

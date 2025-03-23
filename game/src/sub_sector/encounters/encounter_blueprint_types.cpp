@@ -18,6 +18,19 @@ void Node::Initialize(EncounterEditorIdGenerator& idGenerator)
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+nlohmann::json Node::Serialize() const
+{
+    nlohmann::json data;
+    data["id"] = ID.Get();
+    data["name"] = Name;
+    return data;
+}
 
+void Node::Deserialize(const nlohmann::json& data)
+{
+    ID = data["id"].get<uint32_t>();
+    Name = data["name"];
+}
+
+} // namespace WingsOfSteel::TheBrightestStar
 

@@ -33,6 +33,7 @@ private:
     void DrawStringNode(Node* pNode);
     void DrawPins(Node* pNode);
     void DrawPinIcon(const Pin& pin, bool connected);
+    void DrawContextMenus();
     ImColor GetIconColor(PinType type) const;
     int GetPinGroupWidth(const std::vector<Pin>& pins) const;
     int GetPinWidth(const Pin& pin) const;
@@ -43,7 +44,6 @@ private:
     std::string GetEncounterName(const std::string& path) const;
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
-    std::vector<Node*> m_Nodes;
     EncounterEditorIdGenerator m_IdGenerator;
     bool m_ShowStringEditor{false};
     StringNode* m_pSelectedStringNode{nullptr};

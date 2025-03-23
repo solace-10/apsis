@@ -3,6 +3,24 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+NodeUniquePtr BlueprintNodeFactory::CreateNode(const std::string& nodeName)
+{
+    if (nodeName == "Sector entered")
+    {
+        return std::make_unique<SectorEnteredNode>();
+    }
+    else if (nodeName == "Encounter stage")
+    {
+        return std::make_unique<EncounterStageNode>();
+    }
+    else if (nodeName == "String")
+    {
+        return std::make_unique<StringNode>();
+    }
+
+    return nullptr;
+}
+
 SectorEnteredNode::SectorEnteredNode()
 : Node("Sector entered", ImColor(255, 0, 0))
 {

@@ -6,6 +6,12 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+class BlueprintNodeFactory
+{
+public:
+    static NodeUniquePtr CreateNode(const std::string& nodeName);
+};
+
 class SectorEnteredNode : public Node
 {
 public:

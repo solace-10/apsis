@@ -2,12 +2,17 @@
 
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
+#include <core/smart_ptr.hpp>
 #include <imgui/imgui.hpp>
 
 #include "encounter_editor_id_generator.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
+
+DECLARE_SMART_PTR(Node);
 
 enum class PinType
 {
@@ -38,7 +43,6 @@ enum class PinIconType
     Diamond 
 };
 
-struct Node;
 
 struct Pin
 {
@@ -71,6 +75,9 @@ public:
     }
 
     virtual void Initialize(EncounterEditorIdGenerator& idGenerator);
+
+    virtual nlohmann::json Serialize() const;
+    virtual void Deserialize(const nlohmann::json& data);
 };
 
 struct Link
