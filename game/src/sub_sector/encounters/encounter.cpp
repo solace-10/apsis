@@ -16,6 +16,23 @@ void Encounter::Update()
 {
 }
 
+nlohmann::json Serialize() const
+{
+    nlohmann::json data;
+    data["nodes"] = nlohmann::json::array();
+    for (auto& pNode : m_Nodes)
+    {
+        data["nodes"].push_back(pNode->Serialize());
+    }
+    
+    data["links"] = nlohmann::json::array();
+    return data;
+}
+void Deserialize(const nlohmann::json& data)
+{
+    
+}
+
 const std::vector<Node*> Encounter::GetNodes() const
 {
     std::vector<Node*> nodes;
