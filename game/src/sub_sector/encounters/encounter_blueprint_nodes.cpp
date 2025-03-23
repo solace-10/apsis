@@ -60,4 +60,3 @@ void Deserialize(const nlohmann::json& data)
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
-
