@@ -44,5 +44,21 @@ StringNode::StringNode()
     Outputs.emplace_back("Value", PinType::String);
 }
 
+nlohmann::json StringNode::Serialize() const
+{
+    nlohmann::json data{
+        "value": Value
+    };
+    return data;
+}
+
+void Deserialize(const nlohmann::json& data)
+{
+    if (data.contains("value"))
+    {
+        Value = data["value"].get<std::string>();
+    }
+}
+
 } // namespace WingsOfSteel::TheBrightestStar
 

@@ -28,6 +28,9 @@ class StringNode : public Node
 {
 public:
     StringNode();
+    
+    nlohmann::json Serialize() const override;
+    void Deserialize(const nlohmann::json& data) override;
 
     std::string Value;
 };    
