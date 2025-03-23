@@ -27,6 +27,12 @@ SectorEnteredNode::SectorEnteredNode()
     Outputs.emplace_back("", PinType::Flow);
 }
 
+SectorExitNode::SectorExitNode()
+: Node("Exit sector", ImColor(255, 0, 0))
+{
+    Inputs.emplace_back("", PinType::Flow);
+}
+
 EncounterStageNode::EncounterStageNode()
 : Node("Encounter stage", ImColor(5, 250, 191))
 {
