@@ -9,6 +9,10 @@ NodeUniquePtr BlueprintNodeFactory::CreateNode(const std::string& nodeName)
     {
         return std::make_unique<SectorEnteredNode>();
     }
+    else if (nodeName == "Sector exit")
+    {
+        return std::make_unique<SectorExitNode>();
+    }
     else if (nodeName == "Encounter stage")
     {
         return std::make_unique<EncounterStageNode>();
@@ -57,11 +61,13 @@ nlohmann::json StringNode::Serialize() const
     return data;
 }
 
-void Deserialize(const nlohmann::json& data)
+void StringNode::Deserialize(const nlohmann::json& data)
 {
-    if (data.contains("value"))
+    Node::Deserialize(data);
+    auto valueIt = data.find("value");
+    if (valueIt != data.end() && valueIt->is_string())
     {
-        Value = data["value"].get<std::string>();
+        Value = valueIt->get<std::string>();
     }
 }
 

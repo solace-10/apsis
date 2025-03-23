@@ -1,3 +1,5 @@
+#include <resources/resource_data_store.hpp>
+
 #include "encounter.hpp"
 
 namespace WingsOfSteel::TheBrightestStar

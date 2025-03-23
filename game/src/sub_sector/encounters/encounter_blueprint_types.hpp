@@ -68,6 +68,7 @@ public:
     ImColor Color{ImColor(255, 255, 255)};
     NodeType Type{NodeType::Standard};
     ImVec2 Size{0, 0};
+    ImVec2 Position{0, 0};
 
     Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeType type = NodeType::Standard):
         ID(-1), Name(name), Color(color), Type(type), Size(0, 0)

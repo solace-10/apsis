@@ -67,7 +67,9 @@ void EncounterEditor::DrawHeader()
     ImGui::BeginDisabled(!fileLoaded);
     if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
     {
-        SaveEncounter();
+        // The save needs to be deferred until we are inside the ImGuiNodeEditor logic, as the node
+        // positions are not available until then.
+        m_SaveEnqueued = true;
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_ROTATE_LEFT " Revert"))
@@ -125,6 +127,13 @@ void EncounterEditor::DrawNodeEditor()
     ImGuiNodeEditor::Begin("Encounter Editor");
     DrawNodes();
     DrawContextMenus();
+
+    if (m_SaveEnqueued)
+    {
+        SaveEncounter();
+        m_SaveEnqueued = false;
+    }
+
     ImGuiNodeEditor::End();
     ImGuiNodeEditor::SetCurrentEditor(nullptr);
 }
@@ -339,6 +348,12 @@ void EncounterEditor::SaveEncounter()
 {
     if (m_pSelectedEncounter)
     {
+        // Update the node positions for serialization when we're saving; no need to do this earlier.
+        for (Node* pNode : m_pSelectedEncounter->GetNodes())
+        {
+            pNode->Position = ImGuiNodeEditor::GetNodePosition(pNode->ID);
+        }
+
         m_pSelectedEncounter->Save();
     }
 }
@@ -461,6 +476,10 @@ void EncounterEditor::DrawContextMenus()
         if (ImGui::MenuItem("Sector entered"))
         {
             pNode = BlueprintNodeFactory::CreateNode("Sector entered");
+        }
+        if (ImGui::MenuItem("Sector exit"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Sector exit");
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Encounter stage"))

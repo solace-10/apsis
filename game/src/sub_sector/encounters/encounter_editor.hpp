@@ -48,6 +48,7 @@ private:
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     EncounterEditorIdGenerator m_IdGenerator;
     bool m_ShowStringEditor{false};
+    bool m_SaveEnqueued{false};
     StringNode* m_pSelectedStringNode{nullptr};
     std::string m_NewEncounterName;
     EncounterSharedPtr m_pSelectedEncounter;
