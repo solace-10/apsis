@@ -18,6 +18,12 @@ public:
     SectorEnteredNode();
 };
 
+class SectorExitNode : public Node
+{
+public:
+    SectorExitNode();
+};
+
 class EncounterStageNode : public Node
 {
 public:
