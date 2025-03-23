@@ -46,9 +46,8 @@ StringNode::StringNode()
 
 nlohmann::json StringNode::Serialize() const
 {
-    nlohmann::json data{
-        "value": Value
-    };
+    nlohmann::json data = Node::Serialize();
+    data["value"] = Value;
     return data;
 }
 
