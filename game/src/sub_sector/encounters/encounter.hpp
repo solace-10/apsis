@@ -28,6 +28,8 @@ public:
     const std::vector<Node*> GetNodes() const;
 
 private:
+    void Load();
+
     Pandora::ResourceDataStoreSharedPtr m_pDataStore;
     std::vector<NodeUniquePtr> m_Nodes;
 };

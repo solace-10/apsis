@@ -6,6 +6,7 @@ namespace WingsOfSteel::TheBrightestStar
 Encounter::Encounter(Pandora::ResourceDataStoreSharedPtr pDataStore)
 : m_pDataStore(pDataStore)
 {
+    Load();
 }
 
 Encounter::~Encounter()
@@ -28,7 +29,14 @@ void Encounter::Save()
     data["links"] = nlohmann::json::array();
     m_pDataStore->Inject(data);
 }
+
 void Encounter::Revert()
+{
+    m_Nodes.clear();
+    Load();
+}
+
+void Encounter::Load()
 {
     
 }
