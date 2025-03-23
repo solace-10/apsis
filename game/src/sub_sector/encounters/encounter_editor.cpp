@@ -440,10 +440,6 @@ void EncounterEditor::DrawContextMenus()
     if (ImGui::BeginPopup("Create New Node"))
     {
         auto newNodePostion = openPopupPosition;
-        //ImGui::SetCursorScreenPos(ImGui::GetMousePosOnOpeningCurrentPopup());
-
-        //auto drawList = ImGui::GetWindowDrawList();
-        //drawList->AddCircleFilled(ImGui::GetMousePosOnOpeningCurrentPopup(), 10.0f, 0xFFFF00FF);
 
         NodeUniquePtr pNode = nullptr;
         if (ImGui::MenuItem("Sector entered"))
@@ -463,7 +459,6 @@ void EncounterEditor::DrawContextMenus()
 
         if (pNode)
         {
-            //BuildNodes();
             pNode->Initialize(m_IdGenerator);
             ImGuiNodeEditor::SetNodePosition(pNode->ID, newNodePostion);
             m_pSelectedEncounter->AddNode(std::move(pNode));
