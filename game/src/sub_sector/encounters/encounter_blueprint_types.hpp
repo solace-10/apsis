@@ -61,6 +61,12 @@ struct Pin
 class Node
 {
 public:
+    enum class ExecutionResult
+    {
+        Continue,
+        Complete
+    };
+
     ImGuiNodeEditor::NodeId ID{0};
     std::string Name;
     std::vector<Pin> Inputs;
@@ -79,6 +85,9 @@ public:
 
     virtual nlohmann::json Serialize() const;
     virtual void Deserialize(const nlohmann::json& data);
+    
+    ExecutionResult Execute(float delta);
+    std::optional<ImGuiNodeEditor::NodeId> GetNextNode() const;
 };
 
 struct Link
