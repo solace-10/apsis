@@ -115,6 +115,7 @@ void EncounterEditor::DrawEncounterList()
             else
             {
                 m_pSelectedEncounter = encounter.second;
+                CreateIdGenerator();
             }
         }
     }
@@ -348,6 +349,7 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
             m_pSelectedEncounter = std::make_shared<Encounter>(pDataStore);
             m_Encounters[encounterName] = m_pSelectedEncounter;
             m_LoadEnqueued = true;
+            CreateIdGenerator();
         }
     });
 }
@@ -519,6 +521,42 @@ void EncounterEditor::RepositionNodes()
     for (Node* pNode : m_pSelectedEncounter->GetNodes())
     {
         ImGuiNodeEditor::SetNodePosition(pNode->ID, pNode->Position);
+    }
+}
+
+void EncounterEditor::CreateIdGenerator()
+{
+    if (m_pSelectedEncounter == nullptr)
+    {
+        m_IdGenerator = EncounterEditorIdGenerator();
+    }
+    else
+    {
+        uint32_t highestId = 0;
+        for (Node* pNode : m_pSelectedEncounter->GetNodes())
+        {
+            if (pNode->ID.Get() > highestId)
+            {
+                highestId = pNode->ID.Get();
+            }
+
+            for (Pin& inputPin : pNode->Inputs)
+            {
+                if (inputPin.ID.Get() > highestId)
+                {
+                    highestId = inputPin.ID.Get();
+                }
+            }
+
+            for (Pin& outputPin : pNode->Outputs)
+            {
+                if (outputPin.ID.Get() > highestId)
+                {
+                    highestId = outputPin.ID.Get();
+                }
+            }
+        }
+        m_IdGenerator = EncounterEditorIdGenerator(highestId + 1);
     }
 }
 

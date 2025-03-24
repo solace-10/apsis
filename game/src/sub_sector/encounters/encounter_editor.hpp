@@ -45,6 +45,7 @@ private:
     void SaveEncounter();
     void RevertEncounter();
     void RepositionNodes();
+    void CreateIdGenerator();
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     EncounterEditorIdGenerator m_IdGenerator;
