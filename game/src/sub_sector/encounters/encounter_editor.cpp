@@ -125,6 +125,13 @@ void EncounterEditor::DrawNodeEditor()
 {
     ImGuiNodeEditor::SetCurrentEditor(m_pContext);
     ImGuiNodeEditor::Begin("Encounter Editor");
+
+    if (m_LoadEnqueued)
+    {
+        RepositionNodes();
+        m_LoadEnqueued = false;
+    }
+
     DrawNodes();
     DrawContextMenus();
 
@@ -340,6 +347,7 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
         {
             m_pSelectedEncounter = std::make_shared<Encounter>(pDataStore);
             m_Encounters[encounterName] = m_pSelectedEncounter;
+            m_LoadEnqueued = true;
         }
     });
 }
@@ -504,6 +512,14 @@ void EncounterEditor::DrawContextMenus()
 
     ImGui::PopStyleVar();
     ImGuiNodeEditor::Resume();
+}
+
+void EncounterEditor::RepositionNodes()
+{
+    for (Node* pNode : m_pSelectedEncounter->GetNodes())
+    {
+        ImGuiNodeEditor::SetNodePosition(pNode->ID, pNode->Position);
+    }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

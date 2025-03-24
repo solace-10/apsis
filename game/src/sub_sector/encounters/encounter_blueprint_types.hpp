@@ -88,6 +88,9 @@ public:
     
     ExecutionResult Execute(float delta);
     std::optional<ImGuiNodeEditor::NodeId> GetNextNode() const;
+
+private:
+    void DeserializePins(std::vector<Pin>& pins, const nlohmann::json& data);
 };
 
 struct Link

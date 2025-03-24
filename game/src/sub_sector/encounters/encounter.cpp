@@ -1,6 +1,9 @@
+#include <core/log.hpp>
 #include <resources/resource_data_store.hpp>
+#include <pandora.hpp>
 
 #include "encounter.hpp"
+#include "encounter_blueprint_nodes.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -40,7 +43,29 @@ void Encounter::Revert()
 
 void Encounter::Load()
 {
-    
+    const nlohmann::json& encounterData = m_pDataStore->Data();
+    const auto nodesIt = encounterData.find("nodes");
+    if (nodesIt != encounterData.end() && nodesIt->is_array())
+    {
+        for (const auto& nodeData : *nodesIt)
+        {
+            const auto nodeNameIt = nodeData.find("name");
+            if (nodeNameIt != nodeData.end() && nodeNameIt->is_string())
+            {
+                const std::string nodeName = nodeNameIt->get<std::string>();
+                NodeUniquePtr pNode = BlueprintNodeFactory::CreateNode(nodeName);
+                if (pNode)
+                {
+                    pNode->Deserialize(nodeData);
+                    m_Nodes.emplace_back(std::move(pNode));
+                }
+                else
+                {
+                    Pandora::Log::Warning() << "Unknown node type: " << nodeName;
+                }
+            }
+        }
+    }
 }
 
 const std::vector<Node*> Encounter::GetNodes() const

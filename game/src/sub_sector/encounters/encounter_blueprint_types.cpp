@@ -1,3 +1,6 @@
+#include <core/log.hpp>
+#include <pandora.hpp>
+
 #include "encounter_blueprint_types.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -31,13 +34,25 @@ nlohmann::json Node::Serialize() const
     data["inputs"] = nlohmann::json::array();
     for (const Pin& input : Inputs)
     {
-        data["inputs"].push_back(input.ID.Get());
+        nlohmann::json pinData = {
+            {"id", input.ID.Get()},
+            {"name", input.Name},
+            {"type", input.Type}
+        };
+
+        data["inputs"].push_back(pinData);
     }
     
     data["outputs"] = nlohmann::json::array();
     for (const Pin& output : Outputs)
     {
-        data["outputs"].push_back(output.ID.Get());
+        nlohmann::json pinData = {
+            {"id", output.ID.Get()},
+            {"name", output.Name},
+            {"type", output.Type}
+        };
+
+        data["outputs"].push_back(pinData);
     }
 
     return data;
@@ -69,9 +84,67 @@ void Node::Deserialize(const nlohmann::json& data)
     }
 
     const auto inputsIt = data.find("inputs");
-    if (inputsIt != data.end() && inputsIt->is_array())
+    if (inputsIt != data.end())
     {
-        int a = 0;
+        DeserializePins(Inputs, *inputsIt);
+    }
+
+    const auto outputsIt = data.find("outputs");
+    if (outputsIt != data.end())
+    {
+        DeserializePins(Outputs, *outputsIt);
+    }
+}
+
+void Node::DeserializePins(std::vector<Pin>& pins, const nlohmann::json& data)
+{
+    if (!data.is_array() || pins.empty())
+    {
+        return;
+    }
+
+    for (const auto& pin : data)
+    {
+        if (pin.is_object())
+        {
+            const auto idIt = pin.find("id");
+            const auto nameIt = pin.find("name");
+            const auto typeIt = pin.find("type");
+
+            if (idIt != pin.end() && idIt->is_number_unsigned() &&
+                nameIt != pin.end() && nameIt->is_string() &&
+                typeIt != pin.end() && typeIt->is_number_unsigned())
+            {
+                const uint32_t id = idIt->get<uint32_t>();
+                const std::string name = nameIt->get<std::string>();
+                const PinType type = static_cast<PinType>(typeIt->get<uint32_t>());
+
+                bool pinAssigned = false;
+                for (auto& pin : pins)
+                {
+                    if (pin.Name == name && pin.Type == type)
+                    {
+                        pin.ID = id;
+                        pin.Node = this;
+                        pinAssigned = true;
+                        break;
+                    }
+                }
+
+                if (!pinAssigned)
+                {
+                    Pandora::Log::Warning() << "Pin not assigned (not found or name/type mismatch): " << name;
+                }
+            }
+            else
+            {
+                Pandora::Log::Warning() << "Invalid pin data.";
+            }
+        }
+        else
+        {
+            Pandora::Log::Warning() << "Invalid pin data.";
+        }
     }
 }
 
