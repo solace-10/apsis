@@ -5,23 +5,26 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+using BlueprintId = uint32_t;
+static constexpr BlueprintId InvalidBlueprintId = 0;
+
 class EncounterEditorIdGenerator
 {
 public:
-    EncounterEditorIdGenerator(uint32_t startId = 1)
+    EncounterEditorIdGenerator(BlueprintId startId = 1)
     {
         m_Id = startId;
     }
 
-    static uint32_t GenerateId();
+    static BlueprintId GenerateId();
 
 private:
-    static uint32_t m_Id;
+    static BlueprintId m_Id;
 };
 
-inline uint32_t EncounterEditorIdGenerator::m_Id = 1;
+inline BlueprintId EncounterEditorIdGenerator::m_Id = 1;
 
-inline uint32_t EncounterEditorIdGenerator::GenerateId()
+inline BlueprintId EncounterEditorIdGenerator::GenerateId()
 {
     return m_Id++;
 }

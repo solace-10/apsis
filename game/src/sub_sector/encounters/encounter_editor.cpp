@@ -135,6 +135,7 @@ void EncounterEditor::DrawNodeEditor()
 
     DrawNodes();
     DrawContextMenus();
+    UpdateEvents();
 
     if (m_SaveEnqueued)
     {
@@ -532,7 +533,7 @@ void EncounterEditor::CreateIdGenerator()
     }
     else
     {
-        uint32_t highestId = 0;
+        BlueprintId highestId = 0;
         for (Node* pNode : m_pSelectedEncounter->GetNodes())
         {
             if (pNode->ID.Get() > highestId)
@@ -558,6 +559,40 @@ void EncounterEditor::CreateIdGenerator()
         }
         m_IdGenerator = EncounterEditorIdGenerator(highestId + 1);
     }
+}
+
+void EncounterEditor::UpdateEvents()
+{
+    if (m_pSelectedEncounter == nullptr)
+    {
+        return;
+    }
+
+    if (ImGuiNodeEditor::BeginDelete())
+    {
+        ImGuiNodeEditor::NodeId nodeId = 0;
+        while (ImGuiNodeEditor::QueryDeletedNode(&nodeId))
+        {
+            if (ImGuiNodeEditor::AcceptDeletedItem())
+            {
+                m_pSelectedEncounter->RemoveNode(nodeId.Get());
+            }
+        }
+
+        /*
+        ImGuiNodeEditor::LinkId linkId = 0;
+        while (ImGuiNodeEditor::QueryDeletedLink(&linkId))
+        {
+            if (ImGuiNodeEditor::AcceptDeletedItem())
+            {
+                auto id = std::find_if(m_Links.begin(), m_Links.end(), [linkId](auto& link) { return link.ID == linkId; });
+                if (id != m_Links.end())
+                    m_Links.erase(id);
+            }
+        }
+        */
+    }
+    ImGuiNodeEditor::EndDelete();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

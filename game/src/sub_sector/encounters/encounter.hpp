@@ -25,6 +25,7 @@ public:
     void Revert();
 
     void AddNode(NodeUniquePtr pNode);
+    bool RemoveNode(BlueprintId id);
     const std::vector<Node*> GetNodes() const;
 
 private:

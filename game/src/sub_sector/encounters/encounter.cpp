@@ -78,4 +78,14 @@ const std::vector<Node*> Encounter::GetNodes() const
     return nodes;
 }
 
+bool Encounter::RemoveNode(BlueprintId id)
+{
+    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
+    if (it != m_Nodes.end())
+    {
+        m_Nodes.erase(it);
+        return true;
+    }
+    return false;
+}
 } // namespace WingsOfSteel::TheBrightestStar
