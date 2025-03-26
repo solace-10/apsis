@@ -134,6 +134,7 @@ void EncounterEditor::DrawNodeEditor()
     }
 
     DrawNodes();
+    DrawLinks();
     DrawContextMenus();
     UpdateEvents();
 
@@ -203,6 +204,17 @@ void EncounterEditor::DrawNodes()
         pDrawList->AddText(cp0 + ImVec2(8, 4), IM_COL32(255, 255, 255, 255), pNode->Name.c_str());
 
         ImGuiNodeEditor::EndNode();
+    }
+}
+
+void EncounterEditor::DrawLinks()
+{
+    if (m_pSelectedEncounter)
+    {
+        for (Link* pLink : m_pSelectedEncounter->GetLinks())
+        {
+            ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID);
+        }
     }
 }
 
@@ -557,6 +569,20 @@ void EncounterEditor::CreateIdGenerator()
                 }
             }
         }
+
+        for (Link* pLink : m_pSelectedEncounter->GetLinks())
+        {
+            if (pLink->StartPinID.Get() > highestId)
+            {
+                highestId = pLink->StartPinID.Get();
+            }
+            
+            if (pLink->EndPinID.Get() > highestId)
+            {
+                highestId = pLink->EndPinID.Get();
+            }
+        }
+
         m_IdGenerator = EncounterEditorIdGenerator(highestId + 1);
     }
 }
@@ -567,6 +593,51 @@ void EncounterEditor::UpdateEvents()
     {
         return;
     }
+
+    if (ImGuiNodeEditor::BeginCreate())
+    {
+        ImGuiNodeEditor::PinId inputPinId, outputPinId;
+        if (ImGuiNodeEditor::QueryNewLink(&inputPinId, &outputPinId))
+        {
+            // QueryNewLink returns true if editor want to create new link between pins.
+            //
+            // Link can be created only for two valid pins, it is up to you to
+            // validate if connection make sense. Editor is happy to make any.
+            //
+            // Link always goes from input to output. User may choose to drag
+            // link from output pin or input pin. This determine which pin ids
+            // are valid and which are not:
+            //   * input valid, output invalid - user started to drag new ling from input pin
+            //   * input invalid, output valid - user started to drag new ling from output pin
+            //   * input valid, output valid   - user dragged link over other pin, can be validated
+
+            Pin* pInputPin = m_pSelectedEncounter->GetPin(inputPinId.Get());
+            Pin* pOutputPin = m_pSelectedEncounter->GetPin(outputPinId.Get());
+
+            if (pInputPin && pOutputPin) // both are valid, let's accept link
+            {
+                if (pInputPin->Type != pOutputPin->Type || pInputPin->Kind == pOutputPin->Kind)
+                {
+                    // The pins are of different types, so we reject the link.
+                    ImGuiNodeEditor::RejectNewItem(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                }
+                else if (ImGuiNodeEditor::AcceptNewItem()) // ed::AcceptNewItem() return true when user release mouse button.
+                {
+                    // Since we accepted new link, lets add one to our list of links.
+                    LinkUniquePtr pLink = std::make_unique<Link>(m_IdGenerator.GenerateId(), inputPinId, outputPinId);
+                    m_pSelectedEncounter->AddLink(std::move(pLink));
+
+                    // Draw new link.
+                    //ImGuiNodeEditor::Link(m_Links.back().Id, m_Links.back().InputId, m_Links.back().OutputId);
+                }
+
+                // You may choose to reject connection between these nodes
+                // by calling ed::RejectNewItem(). This will allow editor to give
+                // visual feedback by changing link thickness and color.
+            }
+        }
+    }
+    ImGuiNodeEditor::EndCreate(); // Wraps up object creation action handling.
 
     if (ImGuiNodeEditor::BeginDelete())
     {

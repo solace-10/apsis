@@ -29,6 +29,7 @@ private:
     void DrawEncounterList();
     void DrawNodeEditor();
     void DrawNodes();
+    void DrawLinks();
     void DrawStandardNode(Node* pNode);
     void DrawStringNode(Node* pNode);
     void DrawPins(Node* pNode);

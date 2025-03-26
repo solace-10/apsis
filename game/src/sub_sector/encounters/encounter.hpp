@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -28,16 +29,23 @@ public:
     bool RemoveNode(BlueprintId id);
     const std::vector<Node*> GetNodes() const;
 
+    void AddLink(LinkUniquePtr pLink);
+    bool RemoveLink(BlueprintId id);
+    const std::vector<Link*> GetLinks() const;
+    Pin* GetPin(BlueprintId id) const;
+
 private:
     void Load();
 
     Pandora::ResourceDataStoreSharedPtr m_pDataStore;
     std::vector<NodeUniquePtr> m_Nodes;
+    std::vector<LinkUniquePtr> m_Links;
+    std::unordered_map<BlueprintId, Pin*> m_PinIdToPinMap;
 };
 
-inline void Encounter::AddNode(NodeUniquePtr pNode)
+inline void Encounter::AddLink(LinkUniquePtr pLink)
 {
-    m_Nodes.emplace_back(std::move(pNode));
+    m_Links.emplace_back(std::move(pLink));
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

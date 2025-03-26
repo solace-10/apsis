@@ -13,6 +13,7 @@ namespace WingsOfSteel::TheBrightestStar
 {
 
 DECLARE_SMART_PTR(Node);
+DECLARE_SMART_PTR(Link);
 
 enum class PinType
 {
@@ -90,7 +91,7 @@ public:
     std::optional<ImGuiNodeEditor::NodeId> GetNextNode() const;
 
 private:
-    void DeserializePins(std::vector<Pin>& pins, const nlohmann::json& data);
+    void DeserializePins(std::vector<Pin>& pins, PinKind pinKind, const nlohmann::json& data);
 };
 
 struct Link

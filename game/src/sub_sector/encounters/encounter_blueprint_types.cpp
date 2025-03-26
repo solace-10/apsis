@@ -13,11 +13,13 @@ void Node::Initialize(EncounterEditorIdGenerator& idGenerator)
     for (Pin& input : Inputs)
     {
         input.ID = idGenerator.GenerateId();
+        input.Kind = PinKind::Input;
     }
 
     for (Pin& output : Outputs)
     {
         output.ID = idGenerator.GenerateId();
+        output.Kind = PinKind::Output;
     }
 }
 
@@ -86,17 +88,17 @@ void Node::Deserialize(const nlohmann::json& data)
     const auto inputsIt = data.find("inputs");
     if (inputsIt != data.end())
     {
-        DeserializePins(Inputs, *inputsIt);
+        DeserializePins(Inputs, PinKind::Input, *inputsIt);
     }
 
     const auto outputsIt = data.find("outputs");
     if (outputsIt != data.end())
     {
-        DeserializePins(Outputs, *outputsIt);
+        DeserializePins(Outputs, PinKind::Output, *outputsIt);
     }
 }
 
-void Node::DeserializePins(std::vector<Pin>& pins, const nlohmann::json& data)
+void Node::DeserializePins(std::vector<Pin>& pins, PinKind pinKind, const nlohmann::json& data)
 {
     if (!data.is_array() || pins.empty())
     {
@@ -126,6 +128,7 @@ void Node::DeserializePins(std::vector<Pin>& pins, const nlohmann::json& data)
                     {
                         pin.ID = id;
                         pin.Node = this;
+                        pin.Kind = pinKind;
                         pinAssigned = true;
                         break;
                     }
