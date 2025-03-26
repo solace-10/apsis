@@ -32,6 +32,16 @@ void Encounter::Save()
     }
     
     data["links"] = nlohmann::json::array();
+    for (auto& pLink : m_Links)
+    {
+        nlohmann::json link
+        {
+            {"id", pLink->ID.Get()},
+            {"start", pLink->StartPinID.Get()},
+            {"end", pLink->EndPinID.Get()}
+        };
+        data["links"].push_back(link);
+    }
     m_pDataStore->Inject(data);
 }
 
@@ -63,6 +73,29 @@ void Encounter::Load()
                 {
                     Pandora::Log::Warning() << "Unknown node type: " << nodeName;
                 }
+            }
+        }
+    }
+
+    const auto linksIt = encounterData.find("links");
+    if (linksIt != encounterData.end() && linksIt->is_array())
+    {
+        for (const auto& linkData : *linksIt)
+        {
+            const auto linkIdIt = linkData.find("id");
+            const auto linkStartIt = linkData.find("start");
+            const auto linkEndIt = linkData.find("end");
+            if (linkIdIt != linkData.end() && linkIdIt->is_number_unsigned() &&
+                linkStartIt != linkData.end() && linkStartIt->is_number_unsigned() &&
+                linkEndIt != linkData.end() && linkEndIt->is_number_unsigned())
+            {
+                LinkUniquePtr pLink = std::make_unique<Link>
+                (
+                    linkIdIt->get<BlueprintId>(),
+                    linkStartIt->get<BlueprintId>(),
+                    linkEndIt->get<BlueprintId>()
+                );
+                AddLink(std::move(pLink)); 
             }
         }
     }

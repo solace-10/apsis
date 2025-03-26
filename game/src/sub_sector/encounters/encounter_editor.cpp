@@ -311,7 +311,7 @@ void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
     switch (pin.Type)
     {
         case PinType::Flow: iconType = PinIconType::Flow; break;
-        case PinType::Dice: iconType = PinIconType::Square; break;
+        case PinType::Outcome: iconType = PinIconType::Square; break;
         case PinType::String: iconType = PinIconType::RoundSquare; break;
         default: iconType = PinIconType::Circle; break;
     }
@@ -325,7 +325,7 @@ ImColor EncounterEditor::GetIconColor(PinType type) const
     switch (type)
     {
         case PinType::Flow: return ImColor(255, 255, 255);
-        case PinType::Dice: return ImColor(255, 0, 0);
+        case PinType::Outcome: return ImColor(255, 0, 0);
         case PinType::String: return ImColor(124, 21, 153);
         default: return ImColor(255, 255, 255);
     }

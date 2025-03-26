@@ -45,7 +45,7 @@ EncounterStageNode::EncounterStageNode()
     Outputs.emplace_back("Selected 1", PinType::Flow);
     Outputs.emplace_back("Selected 2", PinType::Flow);
     Outputs.emplace_back("Selected 3", PinType::Flow);
-    Outputs.emplace_back("Dice", PinType::Dice);
+    Outputs.emplace_back("Outcome", PinType::Outcome);
 }
 
 StringNode::StringNode()

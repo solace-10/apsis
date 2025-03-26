@@ -18,7 +18,7 @@ DECLARE_SMART_PTR(Link);
 enum class PinType
 {
     Flow,
-    Dice,
+    Outcome,
     String
 };
 

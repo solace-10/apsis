@@ -31,7 +31,7 @@ void Text::Render()
     if (!m_Text.empty())
     {
         //ImGui::PushTextWrapPos()
-        ImGui::TextWrapped(m_Text.c_str());
+        ImGui::TextWrapped("%s", m_Text.c_str());
     }
 
     if (HasFlag(Flags::SelectedInEditor))

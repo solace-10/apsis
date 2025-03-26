@@ -119,7 +119,7 @@ void VFSNative::BuildVFS()
     }
     else
     {
-        Log::Error() << "Failed to build VFS from '" << directory << "'. Incorrect working directory?";
+        Log::Error() << "Failed to build VFS from '" << directory << "'. Incorrect working directory (" << std::filesystem::current_path() << ")?";
     }
 }
 
