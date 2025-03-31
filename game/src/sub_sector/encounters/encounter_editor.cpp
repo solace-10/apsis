@@ -317,6 +317,9 @@ void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
     }
 
     const int pinIconSize = GetPinIconSize(); 
+    const ImVec2 pinCenter = ImGui::GetCursorScreenPos() + ImVec2(pinIconSize / 2, pinIconSize / 2);
+    ImGuiNodeEditor::PinPivotRect(pinCenter, pinCenter);
+
     PinIcon(ImVec2(pinIconSize, pinIconSize), iconType, connected, color, ImColor(32, 32, 32, 255));
 }
 
@@ -600,17 +603,6 @@ void EncounterEditor::UpdateEvents()
         if (ImGuiNodeEditor::QueryNewLink(&inputPinId, &outputPinId))
         {
             // QueryNewLink returns true if editor want to create new link between pins.
-            //
-            // Link can be created only for two valid pins, it is up to you to
-            // validate if connection make sense. Editor is happy to make any.
-            //
-            // Link always goes from input to output. User may choose to drag
-            // link from output pin or input pin. This determine which pin ids
-            // are valid and which are not:
-            //   * input valid, output invalid - user started to drag new ling from input pin
-            //   * input invalid, output valid - user started to drag new ling from output pin
-            //   * input valid, output valid   - user dragged link over other pin, can be validated
-
             Pin* pInputPin = m_pSelectedEncounter->GetPin(inputPinId.Get());
             Pin* pOutputPin = m_pSelectedEncounter->GetPin(outputPinId.Get());
 
@@ -621,7 +613,7 @@ void EncounterEditor::UpdateEvents()
                     // The pins are of different types, so we reject the link.
                     ImGuiNodeEditor::RejectNewItem(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
                 }
-                else if (ImGuiNodeEditor::AcceptNewItem()) // ed::AcceptNewItem() return true when user release mouse button.
+                else if (ImGuiNodeEditor::AcceptNewItem()) // AcceptNewItem() returns true when the user releases the mouse button.
                 {
                     // Since we accepted new link, lets add one to our list of links.
                     LinkUniquePtr pLink = std::make_unique<Link>(m_IdGenerator.GenerateId(), inputPinId, outputPinId);
@@ -630,10 +622,6 @@ void EncounterEditor::UpdateEvents()
                     // Draw new link.
                     //ImGuiNodeEditor::Link(m_Links.back().Id, m_Links.back().InputId, m_Links.back().OutputId);
                 }
-
-                // You may choose to reject connection between these nodes
-                // by calling ed::RejectNewItem(). This will allow editor to give
-                // visual feedback by changing link thickness and color.
             }
         }
     }
