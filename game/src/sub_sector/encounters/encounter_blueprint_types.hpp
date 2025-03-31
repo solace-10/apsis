@@ -47,14 +47,15 @@ enum class PinIconType
 
 struct Pin
 {
-    ImGuiNodeEditor::PinId ID{0};
+    ImGuiNodeEditor::PinId ID{InvalidBlueprintId};
     Node* Node{nullptr};
     std::string Name;
     PinType Type{PinType::Flow};
     PinKind Kind{PinKind::Input};
 
-    Pin(const char* name, PinType type):
-        ID(-1), Node(nullptr), Name(name), Type(type), Kind(PinKind::Input)
+    Pin(const char* name, PinType type)
+    : Name(name)
+    , Type(type)
     {
     }
 };
@@ -68,7 +69,7 @@ public:
         Complete
     };
 
-    ImGuiNodeEditor::NodeId ID{0};
+    ImGuiNodeEditor::NodeId ID{InvalidBlueprintId};
     std::string Name;
     std::vector<Pin> Inputs;
     std::vector<Pin> Outputs;
@@ -77,8 +78,10 @@ public:
     ImVec2 Size{0, 0};
     ImVec2 Position{0, 0};
 
-    Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeType type = NodeType::Standard):
-        ID(-1), Name(name), Color(color), Type(type), Size(0, 0)
+    Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeType type = NodeType::Standard)
+    : Name(name)
+    , Color(color)
+    , Type(type)
     {
     }
 
@@ -96,15 +99,17 @@ private:
 
 struct Link
 {
-    ImGuiNodeEditor::LinkId ID{0};
+    ImGuiNodeEditor::LinkId ID{InvalidBlueprintId};
 
     ImGuiNodeEditor::PinId StartPinID;
     ImGuiNodeEditor::PinId EndPinID;
 
     ImColor Color{ImColor(255, 255, 255)};
 
-    Link(ImGuiNodeEditor::LinkId id, ImGuiNodeEditor::PinId startPinId, ImGuiNodeEditor::PinId endPinId):
-        ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
+    Link(ImGuiNodeEditor::LinkId id, ImGuiNodeEditor::PinId startPinId, ImGuiNodeEditor::PinId endPinId)
+    : ID(id)
+    , StartPinID(startPinId)
+    , EndPinID(endPinId)
     {
     }
 };

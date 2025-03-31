@@ -113,13 +113,32 @@ const std::vector<Node*> Encounter::GetNodes() const
 
 void Encounter::AddNode(NodeUniquePtr pNode)
 {
+    using namespace Pandora;
+    if (pNode->ID.Get() == InvalidBlueprintId)
+    {
+        Log::Warning() << "Unable to add encounter node '" << pNode->Name << "' has it has an invalid ID.";
+        return;
+    }
+
     for (auto& pin : pNode->Inputs)
     {
+        if (pin.ID.Get() == InvalidBlueprintId)
+        {
+            Log::Warning() << "Unable to add input pin '" << pin.Name << "' to encounter node '" << pNode->Name << "' has it has an invalid ID.";
+            return;
+        }
+
         m_PinIdToPinMap[pin.ID.Get()] = &pin;
     }
 
     for (auto& pin : pNode->Outputs)
     {
+        if (pin.ID.Get() == InvalidBlueprintId)
+        {
+            Log::Warning() << "Unable to add output pin '" << pin.Name << "' to encounter node '" << pNode->Name << "' has it has an invalid ID.";
+            return;
+        }
+
         m_PinIdToPinMap[pin.ID.Get()] = &pin;
     }
 
