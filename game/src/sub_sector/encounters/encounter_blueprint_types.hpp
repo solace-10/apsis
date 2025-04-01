@@ -12,6 +12,7 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(Node);
 DECLARE_SMART_PTR(Link);
 
@@ -29,6 +30,14 @@ enum class PinKind
 };
 
 enum class NodeType
+{
+    SectorEntered,
+    SectorExit,
+    EncounterStage,
+    String
+};
+
+enum class NodeDisplayType
 {
     Standard,
     String
@@ -74,11 +83,11 @@ public:
     std::vector<Pin> Inputs;
     std::vector<Pin> Outputs;
     ImColor Color{ImColor(255, 255, 255)};
-    NodeType Type{NodeType::Standard};
+    NodeDisplayType Type{NodeDisplayType::Standard};
     ImVec2 Size{0, 0};
     ImVec2 Position{0, 0};
 
-    Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeType type = NodeType::Standard)
+    Node(const char* name, ImColor color = ImColor(255, 255, 255), NodeDisplayType type = NodeDisplayType::Standard)
     : Name(name)
     , Color(color)
     , Type(type)
@@ -86,14 +95,19 @@ public:
     }
 
     virtual void Initialize(EncounterEditorIdGenerator& idGenerator);
-
+    virtual NodeType GetNodeType() const = 0;
     virtual nlohmann::json Serialize() const;
     virtual void Deserialize(const nlohmann::json& data);
-    
-    ExecutionResult Execute(float delta);
-    std::optional<ImGuiNodeEditor::NodeId> GetNextNode() const;
+    virtual ExecutionResult Execute(Encounter* pEncounter, float delta);
+
+    Node* GetNextNode() const;
+
+protected:
+    void SetNextNode(Node* pNextNode);
 
 private:
+    Node* m_pNextNode{nullptr};
+
     void DeserializePins(std::vector<Pin>& pins, PinKind pinKind, const nlohmann::json& data);
 };
 

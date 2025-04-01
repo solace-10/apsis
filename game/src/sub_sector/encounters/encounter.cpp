@@ -18,8 +18,40 @@ Encounter::~Encounter()
 {
 }
 
-void Encounter::Update()
+void Encounter::Start()
 {
+    assert(!m_Started);
+    m_Started = false;
+
+    for (auto& pNode : m_Nodes)
+    {
+        if (pNode->GetNodeType() == NodeType::SectorEntered)
+        {
+            m_pCurrentNode = pNode.get();
+            break;
+        }
+    }
+}
+
+void Encounter::Update(float delta)
+{
+    if (m_pCurrentNode == nullptr || !m_Started)
+    {
+        return;
+    }
+
+    for (int numExecutions = 0; numExecutions < 10; ++numExecutions)
+    {
+        Node::ExecutionResult result = m_pCurrentNode->Execute(this, delta);
+        if (result == Node::ExecutionResult::Complete)
+        {
+            m_pCurrentNode = m_pCurrentNode->GetNextNode();
+        }
+        else if (result == Node::ExecutionResult::Continue)
+        {
+            break;
+        }
+    }
 }
 
 void Encounter::Save()
@@ -113,6 +145,7 @@ const std::vector<Node*> Encounter::GetNodes() const
 
 void Encounter::AddNode(NodeUniquePtr pNode)
 {
+    assert(!m_Started);
     using namespace Pandora;
     if (pNode->ID.Get() == InvalidBlueprintId)
     {
@@ -147,6 +180,7 @@ void Encounter::AddNode(NodeUniquePtr pNode)
 
 bool Encounter::RemoveNode(BlueprintId id)
 {
+    assert(!m_Started);
     auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
     if (it != m_Nodes.end())
     {
@@ -176,8 +210,26 @@ const std::vector<Link*> Encounter::GetLinks() const
     return links;
 }
 
+const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin) const
+{
+    std::vector<Node*> nodes;
+    for (const auto& link : m_Links)
+    {
+        if (link->StartPinID.Get() == pPin->ID.Get())
+        {
+            nodes.push_back(GetNode(link->EndPinID.Get()));
+        }
+        else if (link->EndPinID.Get() == pPin->ID.Get())
+        {
+            nodes.push_back(GetNode(link->StartPinID.Get()));
+        }
+    }
+    return nodes;
+}
+
 bool Encounter::RemoveLink(BlueprintId id)
 {
+    assert(!m_Started);
     auto it = std::find_if(m_Links.begin(), m_Links.end(), [id](const LinkUniquePtr& link) { return link->ID.Get() == id; });
     if (it != m_Links.end())
     {
@@ -193,6 +245,16 @@ Pin* Encounter::GetPin(BlueprintId id) const
     if (it != m_PinIdToPinMap.end())
     {
         return it->second;
+    }
+    return nullptr;
+}
+
+Node* Encounter::GetNode(BlueprintId id) const
+{
+    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
+    if (it != m_Nodes.end())
+    {
+        return it->get();
     }
     return nullptr;
 }

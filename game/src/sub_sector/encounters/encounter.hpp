@@ -20,7 +20,8 @@ public:
     Encounter(Pandora::ResourceDataStoreSharedPtr pDataStore);
     ~Encounter();
 
-    void Update();
+    void Start();
+    void Update(float delta);
 
     void Save();
     void Revert();
@@ -32,7 +33,11 @@ public:
     void AddLink(LinkUniquePtr pLink);
     bool RemoveLink(BlueprintId id);
     const std::vector<Link*> GetLinks() const;
+    const std::vector<Node*> GetLinkedNodes(Pin* pPin) const;
     Pin* GetPin(BlueprintId id) const;
+
+protected:
+    Node* GetNode(BlueprintId id) const;
 
 private:
     void Load();
@@ -41,6 +46,8 @@ private:
     std::vector<NodeUniquePtr> m_Nodes;
     std::vector<LinkUniquePtr> m_Links;
     std::unordered_map<BlueprintId, Pin*> m_PinIdToPinMap;
+    Node* m_pCurrentNode{nullptr};
+    bool m_Started{false};
 };
 
 inline void Encounter::AddLink(LinkUniquePtr pLink)

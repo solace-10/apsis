@@ -1,5 +1,16 @@
 {
-    "links": [],
+    "links": [
+        {
+            "end": 43,
+            "id": 49,
+            "start": 2
+        },
+        {
+            "end": 44,
+            "id": 50,
+            "start": 28
+        }
+    ],
     "nodes": [
         {
             "id": 1,
@@ -15,90 +26,6 @@
             "position": {
                 "x": -238.0,
                 "y": -92.0
-            }
-        },
-        {
-            "id": 11,
-            "inputs": [
-                {
-                    "id": 12,
-                    "name": "",
-                    "type": 0
-                },
-                {
-                    "id": 13,
-                    "name": "Description",
-                    "type": 2
-                }
-            ],
-            "name": "Encounter stage",
-            "outputs": [
-                {
-                    "id": 14,
-                    "name": "Selected 1",
-                    "type": 0
-                },
-                {
-                    "id": 15,
-                    "name": "Selected 2",
-                    "type": 0
-                },
-                {
-                    "id": 16,
-                    "name": "Selected 3",
-                    "type": 0
-                },
-                {
-                    "id": 17,
-                    "name": "Dice",
-                    "type": 1
-                }
-            ],
-            "position": {
-                "x": 42.0,
-                "y": -220.0
-            }
-        },
-        {
-            "id": 18,
-            "inputs": [
-                {
-                    "id": 19,
-                    "name": "",
-                    "type": 0
-                },
-                {
-                    "id": 20,
-                    "name": "Description",
-                    "type": 2
-                }
-            ],
-            "name": "Encounter stage",
-            "outputs": [
-                {
-                    "id": 21,
-                    "name": "Selected 1",
-                    "type": 0
-                },
-                {
-                    "id": 22,
-                    "name": "Selected 2",
-                    "type": 0
-                },
-                {
-                    "id": 23,
-                    "name": "Selected 3",
-                    "type": 0
-                },
-                {
-                    "id": 24,
-                    "name": "Dice",
-                    "type": 1
-                }
-            ],
-            "position": {
-                "x": 513.0,
-                "y": -252.0
             }
         },
         {
@@ -136,48 +63,6 @@
             "value": ""
         },
         {
-            "id": 33,
-            "inputs": [
-                {
-                    "id": 34,
-                    "name": "",
-                    "type": 0
-                },
-                {
-                    "id": 35,
-                    "name": "Description",
-                    "type": 2
-                }
-            ],
-            "name": "Encounter stage",
-            "outputs": [
-                {
-                    "id": 36,
-                    "name": "Selected 1",
-                    "type": 0
-                },
-                {
-                    "id": 37,
-                    "name": "Selected 2",
-                    "type": 0
-                },
-                {
-                    "id": 38,
-                    "name": "Selected 3",
-                    "type": 0
-                },
-                {
-                    "id": 39,
-                    "name": "Dice",
-                    "type": 1
-                }
-            ],
-            "position": {
-                "x": 513.0,
-                "y": 112.0
-            }
-        },
-        {
             "id": 40,
             "inputs": [],
             "name": "String",
@@ -193,6 +78,48 @@
                 "y": 308.0
             },
             "value": ""
+        },
+        {
+            "id": 42,
+            "inputs": [
+                {
+                    "id": 43,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 44,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 45,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 46,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 47,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 48,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 56.0,
+                "y": -175.0
+            }
         }
     ]
 }

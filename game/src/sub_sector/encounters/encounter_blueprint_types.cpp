@@ -151,5 +151,21 @@ void Node::DeserializePins(std::vector<Pin>& pins, PinKind pinKind, const nlohma
     }
 }
 
+Node::ExecutionResult Node::Execute(Encounter* pEncounter, float delta)
+{
+    SetNextNode(nullptr);
+    return ExecutionResult::Complete;
+}
+
+Node* Node::GetNextNode() const
+{
+    return m_pNextNode;
+}
+
+void Node::SetNextNode(Node* pNextNode)
+{
+    m_pNextNode = pNextNode;
+}
+
 } // namespace WingsOfSteel::TheBrightestStar
 
