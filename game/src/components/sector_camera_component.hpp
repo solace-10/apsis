@@ -12,11 +12,11 @@ namespace WingsOfSteel::Pandora
 namespace WingsOfSteel::TheBrightestStar
 {
 
-class SubSectorCameraComponent
+class SectorCameraComponent
 {
 public:
-    SubSectorCameraComponent() {}
-    ~SubSectorCameraComponent() {}
+    SectorCameraComponent() {}
+    ~SectorCameraComponent() {}
 
     glm::vec3 position{0.0f};
     glm::vec3 maximumDrift{0.0f};

@@ -1,6 +1,6 @@
 #include "hyperscape/hyperscape.hpp"
 
-#include "sector/signal/sector_signal.hpp"
+#include "sector/sector_signal.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {

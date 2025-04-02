@@ -9,10 +9,9 @@
 
 #include "components/player_controller_component.hpp"
 #include "components/ship_navigation_component.hpp"
-#include "components/sub_sector_camera_component.hpp"
-#include "sector/sector_info.hpp"
-#include "sub_sector/encounters/encounter_window.hpp"
-#include "sub_sector/sub_sector.hpp"
+#include "components/sector_camera_component.hpp"
+#include "sector/encounters/encounter_window.hpp"
+#include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/player_controller_system.hpp"
@@ -21,17 +20,17 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-SubSector::SubSector()
+Sector::Sector()
 {
 
 }
 
-SubSector::~SubSector()
+Sector::~Sector()
 {
 
 }
 
-void SubSector::Initialize()
+void Sector::Initialize()
 {
     using namespace Pandora;
 
@@ -48,21 +47,21 @@ void SubSector::Initialize()
     m_pCamera = CreateEntity();
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
 
-    SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->AddComponent<SubSectorCameraComponent>();
-    subSectorCameraComponent.position = glm::vec3(0.0f, 200.0f, -75.0f);
-    subSectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
-    subSectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
+    SectorCameraComponent& sectorCameraComponent = m_pCamera->AddComponent<SectorCameraComponent>();
+    sectorCameraComponent.position = glm::vec3(0.0f, 200.0f, -75.0f);
+    sectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
+    sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
     SetCamera(m_pCamera); 
 
     SpawnDome();
     SpawnPlayerShip();
-    subSectorCameraComponent.anchorEntity = m_pPlayerShip;
+    sectorCameraComponent.anchorEntity = m_pPlayerShip;
 
     m_pEncounterWindow = std::make_shared<EncounterWindow>();
     m_pEncounterWindow->Initialize("/ui/prefabs/encounter.json");
 }
 
-void SubSector::Update(float delta)
+void Sector::Update(float delta)
 {
     Pandora::Scene::Update(delta);
 
@@ -88,12 +87,12 @@ void SubSector::Update(float delta)
     DrawCameraDebugUI();
 }
 
-void SubSector::ShowCameraDebugUI(bool state)
+void Sector::ShowCameraDebugUI(bool state)
 {
     m_ShowCameraDebugUI = state;
 }
 
-void SubSector::DrawCameraDebugUI()
+void Sector::DrawCameraDebugUI()
 {
     if (!m_ShowCameraDebugUI)
     {
@@ -102,42 +101,42 @@ void SubSector::DrawCameraDebugUI()
 
     ImGui::Begin("Camera", &m_ShowCameraDebugUI);
 
-    SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->GetComponent<SubSectorCameraComponent>();
+    SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
 
-    ImGui::Checkbox("Debug Draw", &subSectorCameraComponent.debugDraw);
+    ImGui::Checkbox("Debug Draw", &sectorCameraComponent.debugDraw);
 
-    const glm::vec3& position = subSectorCameraComponent.position;
+    const glm::vec3& position = sectorCameraComponent.position;
     float fposition[3] = { position.x, position.y, position.z };
     if (ImGui::InputFloat3("Eye", fposition))
     {
-        subSectorCameraComponent.position = glm::vec3(fposition[0], fposition[1], fposition[2]);
+        sectorCameraComponent.position = glm::vec3(fposition[0], fposition[1], fposition[2]);
     }
 
-    const glm::vec3& drift = subSectorCameraComponent.maximumDrift;
+    const glm::vec3& drift = sectorCameraComponent.maximumDrift;
     float fdrift[3] = { drift.x, drift.y, drift.z };
     if (ImGui::InputFloat3("Drift", fdrift))
     {
-        subSectorCameraComponent.maximumDrift = glm::vec3(fdrift[0], fdrift[1], fdrift[2]);
+        sectorCameraComponent.maximumDrift = glm::vec3(fdrift[0], fdrift[1], fdrift[2]);
     }
 
     ImGui::End();
 }
 
-void SubSector::SpawnDome()
+void Sector::SpawnDome()
 {
     using namespace Pandora;
 
     m_pDome = CreateEntity();
 
-    SubSectorCameraComponent& subSectorCameraComponent = m_pCamera->GetComponent<SubSectorCameraComponent>();
+    SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
 
     TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), subSectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
 
     m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
 }
 
-void SubSector::SpawnPlayerShip()
+void Sector::SpawnPlayerShip()
 {
     using namespace Pandora;
 

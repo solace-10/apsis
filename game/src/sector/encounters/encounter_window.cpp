@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 
-#include "sub_sector/encounters/encounter_window.hpp"
+#include "sector/encounters/encounter_window.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {

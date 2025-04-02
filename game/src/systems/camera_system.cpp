@@ -6,7 +6,7 @@
 #include <core/log.hpp>
 #include <pandora.hpp>
 
-#include "components/sub_sector_camera_component.hpp"
+#include "components/sector_camera_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "systems/camera_system.hpp"
 
@@ -52,11 +52,11 @@ void CameraSystem::Update(float delta)
 
     if (pCamera->HasComponent<CameraComponent>())
     {
-        if (pCamera->HasComponent<SubSectorCameraComponent>())
+        if (pCamera->HasComponent<SectorCameraComponent>())
         {
-            SubSectorCameraComponent& subSectorCameraComponent = pCamera->GetComponent<SubSectorCameraComponent>();
+            SectorCameraComponent& sectorCameraComponent = pCamera->GetComponent<SectorCameraComponent>();
 
-            EntitySharedPtr pAnchorEntity = subSectorCameraComponent.anchorEntity.lock();
+            EntitySharedPtr pAnchorEntity = sectorCameraComponent.anchorEntity.lock();
             glm::vec3 anchorPosition(0.0f);
             glm::vec3 cameraWantedTarget = anchorPosition;
             if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
@@ -73,16 +73,16 @@ void CameraSystem::Update(float delta)
                 }
             }
 
-            glm::vec3 cameraPosition = subSectorCameraComponent.position + anchorPosition;
+            glm::vec3 cameraPosition = sectorCameraComponent.position + anchorPosition;
 
-            DampSpring(subSectorCameraComponent.target, cameraWantedTarget, subSectorCameraComponent.velocity, 1.0f, delta);
+            DampSpring(sectorCameraComponent.target, cameraWantedTarget, sectorCameraComponent.velocity, 1.0f, delta);
 
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-            cameraComponent.camera.LookAt(cameraPosition, subSectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
+            cameraComponent.camera.LookAt(cameraPosition, sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
 
-            if (subSectorCameraComponent.debugDraw)
+            if (sectorCameraComponent.debugDraw)
             {
-                GetDebugRender()->Circle(subSectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Red, 2.0f, 10.0f);
+                GetDebugRender()->Circle(sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Red, 2.0f, 10.0f);
                 GetDebugRender()->Circle(cameraWantedTarget, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Green, 2.0f, 10.0f);
             }
         }

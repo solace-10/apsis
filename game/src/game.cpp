@@ -8,11 +8,9 @@
 #include "items/item_info.hpp"
 #include "items/item_manager.hpp"
 #include "game.hpp"
-#include "sector/signal/sector_signal.hpp"
+#include "sector/encounters/encounter_editor.hpp"
+#include "sector/sector_signal.hpp"
 #include "sector/sector.hpp"
-#include "sub_sector/encounters/encounter_editor.hpp"
-#include "sub_sector/signal/sub_sector_signal.hpp"
-#include "sub_sector/sub_sector.hpp"
 #include "ui/prefab_editor.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -57,13 +55,7 @@ void Game::Initialize()
     SectorSignal* pSectorSignal = sectorSignals.back();
 
     m_pSector = pSectorSignal->Spawn();
-
-    auto subSectorSignals = m_pSector->GetSignals();
-    assert(subSectorSignals.size() == 1);
-    SubSectorSignal* pSubSectorSignal = subSectorSignals.back();
-
-    m_pSubSector = pSubSectorSignal->Spawn();
-    Pandora::SetActiveScene(m_pSubSector);
+    Pandora::SetActiveScene(m_pSector);
 
     // m_pCamera = std::make_shared<OrbitCamera>();
     // m_pCamera->LookAt(
@@ -92,14 +84,14 @@ void Game::Shutdown()
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.
 void Game::DrawImGuiMenuBar()
 {
-    if (m_pSubSector)
+    if (m_pSector)
     {
         if (ImGui::BeginMenu("Sub-sector"))
         {
             static bool sShowCameraWindow = false;
             if (ImGui::MenuItem("Camera", nullptr, &sShowCameraWindow))
             {
-                m_pSubSector->ShowCameraDebugUI(sShowCameraWindow);
+                m_pSector->ShowCameraDebugUI(sShowCameraWindow);
             }
             ImGui::EndMenu();
         }

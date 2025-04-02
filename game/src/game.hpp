@@ -11,7 +11,6 @@ DECLARE_SMART_PTR(PrefabEditor);
 DECLARE_SMART_PTR(Hyperscape);
 DECLARE_SMART_PTR(ItemManager);
 DECLARE_SMART_PTR(Sector);
-DECLARE_SMART_PTR(SubSector);
 DECLARE_SMART_PTR(EncounterEditor);
 
 namespace UI
@@ -42,7 +41,6 @@ private:
     ItemManagerUniquePtr m_pItemManager;
     HyperscapeUniquePtr m_pHyperscape;
     SectorSharedPtr m_pSector;
-    SubSectorSharedPtr m_pSubSector;
 
     UI::PrefabEditorUniquePtr m_pPrefabEditor;
     EncounterEditorUniquePtr m_pEncounterEditor;
