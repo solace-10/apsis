@@ -213,7 +213,13 @@ void EncounterEditor::DrawLinks()
     {
         for (Link* pLink : m_pSelectedEncounter->GetLinks())
         {
-            ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID);
+            if (!pLink->Color.has_value())
+            {
+                Pin* pPin = m_pSelectedEncounter->GetPin(pLink->StartPinID.Get());
+                pLink->Color = GetIconColor(pPin->Type);
+            }
+
+            ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID, pLink->Color.value());
         }
     }
 }
@@ -329,7 +335,7 @@ ImColor EncounterEditor::GetIconColor(PinType type) const
     {
         case PinType::Flow: return ImColor(255, 255, 255);
         case PinType::Outcome: return ImColor(255, 0, 0);
-        case PinType::String: return ImColor(124, 21, 153);
+        case PinType::String: return ImColor(204, 61, 233);
         default: return ImColor(255, 255, 255);
     }
 }

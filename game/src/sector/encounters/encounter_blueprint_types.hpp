@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -118,7 +119,8 @@ struct Link
     ImGuiNodeEditor::PinId StartPinID;
     ImGuiNodeEditor::PinId EndPinID;
 
-    ImColor Color{ImColor(255, 255, 255)};
+    // Setting the link color is deferred until the editor actually needs to draw it.
+    std::optional<ImColor> Color;
 
     Link(ImGuiNodeEditor::LinkId id, ImGuiNodeEditor::PinId startPinId, ImGuiNodeEditor::PinId endPinId)
     : ID(id)
