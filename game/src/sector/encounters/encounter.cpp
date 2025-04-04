@@ -153,6 +153,8 @@ void Encounter::AddNode(NodeUniquePtr pNode)
         return;
     }
 
+    std::unordered_map<BlueprintId, Pin*> pinsToRegister;
+
     for (auto& pin : pNode->Inputs)
     {
         if (pin.ID.Get() == InvalidBlueprintId)
@@ -161,7 +163,7 @@ void Encounter::AddNode(NodeUniquePtr pNode)
             return;
         }
 
-        m_PinIdToPinMap[pin.ID.Get()] = &pin;
+        pinsToRegister[pin.ID.Get()] = &pin;
     }
 
     for (auto& pin : pNode->Outputs)
@@ -172,7 +174,13 @@ void Encounter::AddNode(NodeUniquePtr pNode)
             return;
         }
 
-        m_PinIdToPinMap[pin.ID.Get()] = &pin;
+        pinsToRegister[pin.ID.Get()] = &pin;
+    }
+
+    // Only add the pins to m_PinIdToPinMap if all the pins for this node are valid.
+    for (auto& pinToRegister : pinsToRegister)
+    {
+        m_PinIdToPinMap[pinToRegister.first] = pinToRegister.second;
     }
 
     m_Nodes.emplace_back(std::move(pNode));
@@ -184,14 +192,25 @@ bool Encounter::RemoveNode(BlueprintId id)
     auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
     if (it != m_Nodes.end())
     {
-        for (auto& pin : (*it)->Inputs)
+        auto clearPinFn = [this](Pin& pin)
         {
             m_PinIdToPinMap.erase(pin.ID.Get());
+
+            auto it = std::find_if(m_Links.begin(), m_Links.end(), [pin](const LinkUniquePtr& link) { return link->StartPinID == pin.ID || link->EndPinID == pin.ID; });
+            if (it != m_Links.end())
+            {
+                RemoveLink((*it)->ID.Get());
+            }
+        };
+
+        for (auto& pin : (*it)->Inputs)
+        {
+            clearPinFn(pin);
         }
 
         for (auto& pin : (*it)->Outputs)
         {
-            m_PinIdToPinMap.erase(pin.ID.Get());
+            clearPinFn(pin);
         }
         
         m_Nodes.erase(it);
@@ -227,12 +246,38 @@ const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin) const
     return nodes;
 }
 
+inline void Encounter::AddLink(LinkUniquePtr pLink)
+{
+    Pin* pStartPin = GetPin(pLink->StartPinID.Get());
+    Pin* pEndPin = GetPin(pLink->EndPinID.Get());
+
+    if (pStartPin && pEndPin)
+    {
+        pStartPin->Connected = true;
+        pEndPin->Connected = true;
+        m_Links.emplace_back(std::move(pLink));
+    }
+}
+
 bool Encounter::RemoveLink(BlueprintId id)
 {
     assert(!m_Started);
     auto it = std::find_if(m_Links.begin(), m_Links.end(), [id](const LinkUniquePtr& link) { return link->ID.Get() == id; });
     if (it != m_Links.end())
     {
+        Link* pLink = it->get();
+        Pin* pStartPin = GetPin(pLink->StartPinID.Get());
+        if (pStartPin)
+        {
+            pStartPin->Connected = false;
+        }
+
+        Pin* pEndPin = GetPin(pLink->EndPinID.Get());
+        if (pEndPin)
+        {
+            pEndPin->Connected = false;
+        }
+        
         m_Links.erase(it);
         return true;
     }

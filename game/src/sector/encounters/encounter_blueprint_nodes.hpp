@@ -37,6 +37,14 @@ public:
     NodeType GetNodeType() const override;
 };
 
+class EncounterOptionNode : public Node
+{
+public:
+    EncounterOptionNode();
+
+    NodeType GetNodeType() const override;
+};
+
 class StringNode : public Node
 {
 public:
@@ -48,6 +56,22 @@ public:
 
     std::string Value;
 };    
+
+class DiceNode : public Node
+{
+public:
+    DiceNode();
+
+    NodeType GetNodeType() const override;
+};
+
+class ImageNode : public Node
+{
+public:
+    ImageNode();
+
+    NodeType GetNodeType() const override;
+};
 
 } // namespace WingsOfSteel::TheBrightestStar
 

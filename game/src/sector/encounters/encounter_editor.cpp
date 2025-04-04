@@ -116,6 +116,7 @@ void EncounterEditor::DrawEncounterList()
             {
                 m_pSelectedEncounter = encounter.second;
                 CreateIdGenerator();
+                ResetEditor();
             }
         }
     }
@@ -216,10 +217,13 @@ void EncounterEditor::DrawLinks()
             if (!pLink->Color.has_value())
             {
                 Pin* pPin = m_pSelectedEncounter->GetPin(pLink->StartPinID.Get());
-                pLink->Color = GetIconColor(pPin->Type);
+                if (pPin)
+                {
+                    pLink->Color = GetIconColor(pPin->Type);
+                }
             }
 
-            ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID, pLink->Color.value());
+            ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID, pLink->Color.value_or(ImColor(255, 255, 255)));
         }
     }
 }
@@ -319,6 +323,9 @@ void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
         case PinType::Flow: iconType = PinIconType::Flow; break;
         case PinType::Outcome: iconType = PinIconType::Square; break;
         case PinType::String: iconType = PinIconType::RoundSquare; break;
+        case PinType::EncounterOption: iconType = PinIconType::Diamond; break;
+        case PinType::Dice: iconType = PinIconType::Square; break;
+        case PinType::Image: iconType = PinIconType::Grid; break;
         default: iconType = PinIconType::Circle; break;
     }
 
@@ -326,7 +333,7 @@ void EncounterEditor::DrawPinIcon(const Pin& pin, bool connected)
     const ImVec2 pinCenter = ImGui::GetCursorScreenPos() + ImVec2(pinIconSize / 2, pinIconSize / 2);
     ImGuiNodeEditor::PinPivotRect(pinCenter, pinCenter);
 
-    PinIcon(ImVec2(pinIconSize, pinIconSize), iconType, connected, color, ImColor(32, 32, 32, 255));
+    PinIcon(ImVec2(pinIconSize, pinIconSize), iconType, pin.Connected, color, ImColor(32, 32, 32, 255));
 }
 
 ImColor EncounterEditor::GetIconColor(PinType type) const
@@ -336,6 +343,9 @@ ImColor EncounterEditor::GetIconColor(PinType type) const
         case PinType::Flow: return ImColor(255, 255, 255);
         case PinType::Outcome: return ImColor(255, 0, 0);
         case PinType::String: return ImColor(204, 61, 233);
+        case PinType::EncounterOption: return ImColor(5, 250, 191);
+        case PinType::Dice: return ImColor(255, 165, 0);
+        case PinType::Image: return ImColor(165, 255, 0);
         default: return ImColor(255, 255, 255);
     }
 }
@@ -372,6 +382,7 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
             m_Encounters[encounterName] = m_pSelectedEncounter;
             m_LoadEnqueued = true;
             CreateIdGenerator();
+            ResetEditor();
         }
     });
 }
@@ -470,11 +481,23 @@ void EncounterEditor::DrawContextMenus()
             pNode = BlueprintNodeFactory::CreateNode("Sector exit");
         }
         ImGui::Separator();
+        if (ImGui::MenuItem("Encounter option"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Encounter option");
+        }
         if (ImGui::MenuItem("Encounter stage"))
         {
             pNode = BlueprintNodeFactory::CreateNode("Encounter stage");
         }
         ImGui::Separator();
+        if (ImGui::MenuItem("Dice"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Dice");
+        }
+        if (ImGui::MenuItem("Image"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Image");
+        }
         if (ImGui::MenuItem("String"))
         {
             pNode = BlueprintNodeFactory::CreateNode("String");
@@ -614,6 +637,11 @@ void EncounterEditor::UpdateEvents()
         */
     }
     ImGuiNodeEditor::EndDelete();
+}
+
+void EncounterEditor::ResetEditor()
+{
+    m_LinkedPins.clear();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

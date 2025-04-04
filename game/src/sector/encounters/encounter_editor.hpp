@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <core/smart_ptr.hpp>
@@ -48,6 +49,7 @@ private:
     void RepositionNodes();
     void CreateIdGenerator();
     void UpdateEvents();
+    void ResetEditor();
 
     ImGuiNodeEditor::EditorContext* m_pContext{nullptr};
     EncounterEditorIdGenerator m_IdGenerator;
@@ -58,6 +60,7 @@ private:
     std::string m_NewEncounterName;
     EncounterSharedPtr m_pSelectedEncounter;
     std::map<std::string, EncounterSharedPtr> m_Encounters;
+    std::unordered_map<BlueprintId, bool> m_LinkedPins;
 };
 
 inline int EncounterEditor::GetPinIconSize() const

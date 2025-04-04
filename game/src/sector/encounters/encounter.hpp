@@ -50,9 +50,4 @@ private:
     bool m_Started{false};
 };
 
-inline void Encounter::AddLink(LinkUniquePtr pLink)
-{
-    m_Links.emplace_back(std::move(pLink));
-}
-
 } // namespace WingsOfSteel::TheBrightestStar

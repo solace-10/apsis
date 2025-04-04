@@ -17,11 +17,15 @@ DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(Node);
 DECLARE_SMART_PTR(Link);
 
+// DO NOT CHANGE THE ORDER OF THESE ENUMS
 enum class PinType
 {
     Flow,
     Outcome,
-    String
+    String,
+    EncounterOption,
+    Dice,
+    Image
 };
 
 enum class PinKind
@@ -35,7 +39,10 @@ enum class NodeType
     SectorEntered,
     SectorExit,
     EncounterStage,
-    String
+    EncounterOption,
+    String,
+    Dice,
+    Image
 };
 
 enum class NodeDisplayType
@@ -62,6 +69,7 @@ struct Pin
     std::string Name;
     PinType Type{PinType::Flow};
     PinKind Kind{PinKind::Input};
+    bool Connected{false};
 
     Pin(const char* name, PinType type)
     : Name(name)
