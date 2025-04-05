@@ -1,6 +1,8 @@
 #include <imgui.h>
 
 #include <render/debug_render.hpp>
+#include <resources/resource_data_store.hpp>
+#include <resources/resource_system.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/debug_render_component.hpp>
 #include <scene/components/model_component.hpp>
@@ -11,6 +13,7 @@
 #include "components/ship_navigation_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "sector/encounters/encounter_window.hpp"
+#include "sector/encounters/encounter.hpp"
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
@@ -53,12 +56,13 @@ void Sector::Initialize()
     sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
     SetCamera(m_pCamera); 
 
+    m_pEncounterWindow = std::make_shared<EncounterWindow>();
+    m_pEncounterWindow->Initialize("/ui/prefabs/encounter.json");
+
+    SpawnEncounter();
     SpawnDome();
     SpawnPlayerShip();
     sectorCameraComponent.anchorEntity = m_pPlayerShip;
-
-    m_pEncounterWindow = std::make_shared<EncounterWindow>();
-    m_pEncounterWindow->Initialize("/ui/prefabs/encounter.json");
 }
 
 void Sector::Update(float delta)
@@ -78,6 +82,11 @@ void Sector::Update(float delta)
     );
 
     Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
+
+    if (m_pEncounter)
+    {
+        m_pEncounter->Update(delta);
+    }
 
     if (m_pEncounterWindow)
     {
@@ -120,6 +129,24 @@ void Sector::DrawCameraDebugUI()
     }
 
     ImGui::End();
+}
+
+void Sector::SpawnEncounter()
+{
+    using namespace Pandora;
+
+    std::string encounterName = "h0_asteroid_field_1";
+    const std::string path = "/encounters/" + encounterName + ".json";
+    GetResourceSystem()->RequestResource(path, [this, encounterName](ResourceSharedPtr pResource)
+    {
+        ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        if (pDataStore)
+        {
+            m_pEncounter = std::make_shared<Encounter>(encounterName, pDataStore);
+            m_pEncounter->Bind(m_pEncounterWindow);
+            m_pEncounter->Start();
+        }
+    });
 }
 
 void Sector::SpawnDome()

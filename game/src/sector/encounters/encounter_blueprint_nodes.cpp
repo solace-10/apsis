@@ -1,5 +1,9 @@
-#include "encounter_blueprint_nodes.hpp"
-#include "encounter.hpp"
+#include <imgui/text_editor/text_editor.hpp>
+
+#include "sector/encounters/encounter_window.hpp"
+#include "sector/encounters/encounter_blueprint_nodes.hpp"
+#include "sector/encounters/encounter.hpp"
+
 namespace WingsOfSteel::TheBrightestStar
 {
 
@@ -54,10 +58,10 @@ NodeType SectorEnteredNode::GetNodeType() const
 
 Node::ExecutionResult SectorEnteredNode::Execute(Encounter* pEncounter, float delta)
 {
-    auto linkedNodes = pEncounter->GetLinkedNodes(&Outputs[0]);
-    if (!linkedNodes.empty())
+    Node* pLinkedNode = pEncounter->GetFirstLinkedNode(&Outputs[0]);
+    if (pLinkedNode)
     {
-        SetNextNode(linkedNodes[0]);
+        SetNextNode(pLinkedNode);
     }
 
     return ExecutionResult::Complete;
@@ -100,6 +104,25 @@ EncounterStageNode::EncounterStageNode()
 NodeType EncounterStageNode::GetNodeType() const
 {
     return NodeType::EncounterStage;
+}
+
+void EncounterStageNode::OnExecutionStarted(Encounter* pEncounter)
+{
+    auto pEncounterWindow = pEncounter->GetEncounterWindow();
+    if (pEncounterWindow)
+    {
+        auto pLinkedNode = pEncounter->GetFirstLinkedNode(&Inputs[1]);
+        if (pLinkedNode && pLinkedNode->GetNodeType() == NodeType::String)
+        {
+            auto pStringNode = static_cast<StringNode*>(pLinkedNode);
+            pEncounterWindow->AppendText(pStringNode->Value);
+        }
+    }
+}
+
+Node::ExecutionResult EncounterStageNode::Execute(Encounter* pEncounter, float delta)
+{
+    return Node::ExecutionResult::Continue;
 }
 
 ////////////////////////////////////////////////////////////

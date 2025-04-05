@@ -1,17 +1,21 @@
+#include <sstream>
+
 #include <glm/glm.hpp>
 
 #include <core/log.hpp>
+#include <imgui/text_editor/text_editor.hpp>
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_system.hpp>
 #include <vfs/file.hpp>
 #include <vfs/vfs.hpp>
 #include <pandora.hpp>
 
-#include "encounter_editor.hpp"
-
-#include "encounter_blueprint_nodes.hpp"
-#include "encounter_editor_widgets.hpp"
-#include "encounter.hpp"
+#include "sector/encounters/encounter_editor.hpp"
+#include "sector/encounters/encounter_blueprint_nodes.hpp"
+#include "sector/encounters/encounter_editor_widgets.hpp"
+#include "sector/encounters/encounter.hpp"
+#include "sector/sector.hpp"
+#include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -64,7 +68,8 @@ void EncounterEditor::DrawHeader()
     ImGui::SameLine();
 
     bool fileLoaded = true;
-    ImGui::BeginDisabled(!fileLoaded);
+    bool encounterPlaying = (m_pSelectedEncounter != nullptr && m_pSelectedEncounter->IsPlaying());
+    ImGui::BeginDisabled(!fileLoaded || encounterPlaying);
     if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
     {
         // The save needs to be deferred until we are inside the ImGuiNodeEditor logic, as the node
@@ -158,7 +163,15 @@ void EncounterEditor::DrawStringEditor()
 
     if (ImGui::BeginPopupModal("String editor", &m_ShowStringEditor, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
     {
-        ImGui::InputTextMultiline("##hidden", &m_pSelectedStringNode->Value, ImVec2(600, ImGui::GetTextLineHeightWithSpacing() * 16));
+        if (m_pSelectedStringNode->Editor == nullptr)
+        {
+            m_pSelectedStringNode->Editor = std::make_unique<Pandora::TextEditor>();
+            m_pSelectedStringNode->Editor->SetLanguageDefinition(Pandora::TextEditor::LanguageDefinition());
+            m_pSelectedStringNode->Editor->SetText(m_pSelectedStringNode->Value);
+        }
+
+        m_pSelectedStringNode->Editor->Render("String editor", ImVec2(600, ImGui::GetTextLineHeightWithSpacing() * 16));
+        m_pSelectedStringNode->Value = m_pSelectedStringNode->Editor->GetText();
         ImGui::EndPopup();
     }
 }
@@ -238,7 +251,9 @@ void EncounterEditor::DrawStringNode(Node* pNode)
     const int buttonWidth = 40;
     ImVec2 pinsStartPos = ImGui::GetCursorPos();
 
-    if (ImGui::Button(ICON_FA_PEN, ImVec2(buttonWidth, 0)))
+    std::stringstream buttonName;
+    buttonName << ICON_FA_PEN << "##" << pNode->ID.Get();
+    if (ImGui::Button(buttonName.str().c_str(), ImVec2(buttonWidth, 0)))
     {
         m_ShowStringEditor = true;
         m_pSelectedStringNode = static_cast<StringNode*>(pNode);
@@ -371,6 +386,17 @@ void EncounterEditor::AddNewEmptyEncounter()
 
 void EncounterEditor::LoadEncounter(const std::string& encounterName)
 {
+    Sector* pSector = Game::Get()->GetSector();
+    if (pSector != nullptr)
+    {
+        EncounterSharedPtr pEncounter = pSector->GetEncounter();
+        if (pEncounter != nullptr)
+        {
+            OnEncounterLoaded(pEncounter);
+            return;
+        }
+    }
+
     using namespace Pandora;
     const std::string path = "/encounters/" + encounterName + ".json";
     GetResourceSystem()->RequestResource(path, [this, encounterName](ResourceSharedPtr pResource)
@@ -378,18 +404,23 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
         ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         if (pDataStore)
         {
-            m_pSelectedEncounter = std::make_shared<Encounter>(pDataStore);
-            m_Encounters[encounterName] = m_pSelectedEncounter;
-            m_LoadEnqueued = true;
-            CreateIdGenerator();
-            ResetEditor();
+            OnEncounterLoaded(std::make_shared<Encounter>(encounterName, pDataStore));
         }
     });
 }
 
+void EncounterEditor::OnEncounterLoaded(EncounterSharedPtr pEncounter)
+{
+    m_pSelectedEncounter = pEncounter;
+    m_Encounters[m_pSelectedEncounter->GetName()] = m_pSelectedEncounter;
+    m_LoadEnqueued = true;
+    CreateIdGenerator();
+    ResetEditor();
+}
+
 void EncounterEditor::SaveEncounter()
 {
-    if (m_pSelectedEncounter)
+    if (m_pSelectedEncounter && !m_pSelectedEncounter->IsPlaying())
     {
         // Update the node positions for serialization when we're saving; no need to do this earlier.
         for (Node* pNode : m_pSelectedEncounter->GetNodes())
@@ -403,7 +434,7 @@ void EncounterEditor::SaveEncounter()
 
 void EncounterEditor::RevertEncounter()
 {
-    if (m_pSelectedEncounter)
+    if (m_pSelectedEncounter && !m_pSelectedEncounter->IsPlaying())
     {
         m_pSelectedEncounter->Revert();
     }
@@ -426,7 +457,7 @@ std::string EncounterEditor::GetEncounterName(const std::string& path) const
 
 void EncounterEditor::DrawContextMenus()
 {
-    if (m_pSelectedEncounter == nullptr)
+    if (m_pSelectedEncounter == nullptr || m_pSelectedEncounter->IsPlaying())
     {
         return;
     }
@@ -444,28 +475,6 @@ void EncounterEditor::DrawContextMenus()
 
     ImGuiNodeEditor::Suspend();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
-    /*
-    if (ImGui::BeginPopup("Node Context Menu"))
-    {
-        auto node = FindNode(contextNodeId);
-
-        ImGui::TextUnformatted("Node Context Menu");
-        ImGui::Separator();
-        if (node)
-        {
-            ImGui::Text("ID: %p", node->ID.AsPointer());
-            ImGui::Text("Type: %s", node->Type == NodeType::Blueprint ? "Blueprint" : (node->Type == NodeType::Tree ? "Tree" : "Comment"));
-            ImGui::Text("Inputs: %d", (int)node->Inputs.size());
-            ImGui::Text("Outputs: %d", (int)node->Outputs.size());
-        }
-        else
-            ImGui::Text("Unknown node: %p", contextNodeId.AsPointer());
-        ImGui::Separator();
-        if (ImGui::MenuItem("Delete"))
-            ImGuiNodeEditor::DeleteNode(contextNodeId);
-        ImGui::EndPopup();
-    }
-    */
 
     if (ImGui::BeginPopup("Create New Node"))
     {
@@ -577,7 +586,7 @@ void EncounterEditor::CreateIdGenerator()
 
 void EncounterEditor::UpdateEvents()
 {
-    if (m_pSelectedEncounter == nullptr)
+    if (m_pSelectedEncounter == nullptr || m_pSelectedEncounter->IsPlaying())
     {
         return;
     }

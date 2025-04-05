@@ -43,6 +43,7 @@ private:
     void DrawStringEditor();
     void AddNewEmptyEncounter();
     void LoadEncounter(const std::string& encounterName);
+    void OnEncounterLoaded(EncounterSharedPtr pEncounter);
     std::string GetEncounterName(const std::string& path) const;
     void SaveEncounter();
     void RevertEncounter();

@@ -151,10 +151,18 @@ void Node::DeserializePins(std::vector<Pin>& pins, PinKind pinKind, const nlohma
     }
 }
 
+void Node::OnExecutionStarted(Encounter* pEncounter)
+{
+}
+
 Node::ExecutionResult Node::Execute(Encounter* pEncounter, float delta)
 {
     SetNextNode(nullptr);
     return ExecutionResult::Complete;
+}
+
+void Node::OnExecutionEnded(Encounter* pEncounter)
+{
 }
 
 Node* Node::GetNextNode() const

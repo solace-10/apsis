@@ -107,7 +107,10 @@ public:
     virtual NodeType GetNodeType() const = 0;
     virtual nlohmann::json Serialize() const;
     virtual void Deserialize(const nlohmann::json& data);
+
+    virtual void OnExecutionStarted(Encounter* pEncounter);
     virtual ExecutionResult Execute(Encounter* pEncounter, float delta);
+    virtual void OnExecutionEnded(Encounter* pEncounter);
 
     Node* GetNextNode() const;
 

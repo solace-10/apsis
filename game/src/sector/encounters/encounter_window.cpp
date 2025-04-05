@@ -30,5 +30,9 @@ void EncounterWindow::Initialize(const std::string& prefabPath)
     */
 }
 
+void EncounterWindow::AppendText(const std::string& text)
+{
+    int a = 0;
+}
 
 } // namespace WingsOfSteel::TheBrightestStar

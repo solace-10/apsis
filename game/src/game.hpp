@@ -31,6 +31,8 @@ public:
     const ItemManager* GetItemManager() const;
     UI::PrefabEditor* GetPrefabEditor();
 
+    Sector* GetSector();
+
     static Game* Get();
 
 private:
@@ -54,6 +56,11 @@ inline const ItemManager* Game::GetItemManager() const
 inline UI::PrefabEditor* Game::GetPrefabEditor()
 {
     return m_pPrefabEditor.get();
+}
+
+inline Sector* Game::GetSector()
+{
+    return m_pSector.get();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

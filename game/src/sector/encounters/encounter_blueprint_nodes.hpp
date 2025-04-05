@@ -1,7 +1,14 @@
 #pragma once
 
+#include <core/smart_ptr.hpp>
+
 #include "encounter_blueprint_types.hpp"
 #include "encounter_editor_id_generator.hpp"
+
+namespace WingsOfSteel::Pandora
+{
+DECLARE_SMART_PTR(TextEditor);
+}
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -35,6 +42,9 @@ public:
     EncounterStageNode();
 
     NodeType GetNodeType() const override;
+
+    void OnExecutionStarted(Encounter* pEncounter) override;
+    ExecutionResult Execute(Encounter* pEncounter, float delta) override;
 };
 
 class EncounterOptionNode : public Node
@@ -55,7 +65,8 @@ public:
     void Deserialize(const nlohmann::json& data) override;
 
     std::string Value;
-};    
+    Pandora::TextEditorUniquePtr Editor;
+};
 
 class DiceNode : public Node
 {

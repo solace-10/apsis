@@ -8,8 +8,9 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-Encounter::Encounter(Pandora::ResourceDataStoreSharedPtr pDataStore)
+Encounter::Encounter(const std::string& name, Pandora::ResourceDataStoreSharedPtr pDataStore)
 : m_pDataStore(pDataStore)
+, m_Name(name)
 {
     Load();
 }
@@ -27,7 +28,9 @@ void Encounter::Start()
     {
         if (pNode->GetNodeType() == NodeType::SectorEntered)
         {
+            m_Started = true;
             m_pCurrentNode = pNode.get();
+            m_pCurrentNode->OnExecutionStarted(this);
             break;
         }
     }
@@ -42,10 +45,20 @@ void Encounter::Update(float delta)
 
     for (int numExecutions = 0; numExecutions < 10; ++numExecutions)
     {
+        if (m_pCurrentNode == nullptr)
+        {
+            break;
+        }
+
         Node::ExecutionResult result = m_pCurrentNode->Execute(this, delta);
         if (result == Node::ExecutionResult::Complete)
         {
+            m_pCurrentNode->OnExecutionEnded(this);
             m_pCurrentNode = m_pCurrentNode->GetNextNode();
+            if (m_pCurrentNode)
+            {
+                m_pCurrentNode->OnExecutionStarted(this);
+            }
         }
         else if (result == Node::ExecutionResult::Continue)
         {
@@ -232,21 +245,53 @@ const std::vector<Link*> Encounter::GetLinks() const
 const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin) const
 {
     std::vector<Node*> nodes;
-    for (const auto& link : m_Links)
+    for (const auto& pLink : m_Links)
     {
-        if (link->StartPinID.Get() == pPin->ID.Get())
+        Node* pNode = GetLinkedNode(pPin, pLink.get());
+        if (pNode)
         {
-            nodes.push_back(GetNode(link->EndPinID.Get()));
-        }
-        else if (link->EndPinID.Get() == pPin->ID.Get())
-        {
-            nodes.push_back(GetNode(link->StartPinID.Get()));
+            nodes.push_back(pNode);
         }
     }
     return nodes;
 }
 
-inline void Encounter::AddLink(LinkUniquePtr pLink)
+Node* Encounter::GetFirstLinkedNode(Pin* pPin) const
+{
+    for (const auto& pLink : m_Links)
+    {
+        Node* pNode = GetLinkedNode(pPin, pLink.get());
+        if (pNode)
+        {
+            return pNode;
+        }
+    }
+    return nullptr;
+}
+
+Node* Encounter::GetLinkedNode(Pin* pPin, Link* pLink) const
+{
+    Pin* pLinkedPin = nullptr;
+    if (pLink->StartPinID.Get() == pPin->ID.Get())
+    {
+        pLinkedPin = GetPin(pLink->EndPinID.Get());
+    }
+    else if (pLink->EndPinID.Get() == pPin->ID.Get())
+    {
+        pLinkedPin = GetPin(pLink->StartPinID.Get());
+    }
+
+    if (pLinkedPin == nullptr)
+    {
+        return nullptr;
+    }
+    else
+    {
+        return pLinkedPin->Node;
+    }
+}
+
+void Encounter::AddLink(LinkUniquePtr pLink)
 {
     Pin* pStartPin = GetPin(pLink->StartPinID.Get());
     Pin* pEndPin = GetPin(pLink->EndPinID.Get());

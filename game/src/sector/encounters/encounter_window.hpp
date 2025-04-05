@@ -18,6 +18,8 @@ public:
 
     void Initialize(const std::string& prefabPath) override;
 
+    void AppendText(const std::string& text);
+
 private:
     //UI::ImageSharedPtr m_pEncounterImage;
     //UI::TextSharedPtr m_pEncounterText;

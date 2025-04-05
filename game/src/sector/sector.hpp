@@ -6,6 +6,7 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(EncounterWindow);
 
 DECLARE_SMART_PTR(Sector);
@@ -19,22 +20,26 @@ public:
     void Update(float delta) override;
 
     void ShowCameraDebugUI(bool state);
-    //void ShowSignalsDebugUI(bool state);
+
+    EncounterSharedPtr GetEncounter() const;
 
 private:
     void DrawCameraDebugUI();
-    //void DrawSignalsDebugUI();
+    void SpawnEncounter();
     void SpawnDome();
     void SpawnPlayerShip();
 
-    //Sector* m_pSector;
-    //SectorSignal* m_pSectorSignal;
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
     Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowCameraDebugUI = false;
-    //bool m_ShowSignalsDebugUI;
     EncounterWindowSharedPtr m_pEncounterWindow;
+    EncounterSharedPtr m_pEncounter;
 };
+
+inline EncounterSharedPtr Sector::GetEncounter() const
+{
+    return m_pEncounter;
+}
 
 } // namespace WingsOfSteel::TheBrightestStar
