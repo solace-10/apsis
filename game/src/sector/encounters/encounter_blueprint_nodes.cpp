@@ -58,7 +58,7 @@ NodeType SectorEnteredNode::GetNodeType() const
 
 Node::ExecutionResult SectorEnteredNode::Execute(Encounter* pEncounter, float delta)
 {
-    Node* pLinkedNode = pEncounter->GetFirstLinkedNode(&Outputs[0]);
+    Node* pLinkedNode = pEncounter->GetFirstLinkedNode(&Outputs[0], true);
     if (pLinkedNode)
     {
         SetNextNode(pLinkedNode);

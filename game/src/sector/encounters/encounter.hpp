@@ -39,8 +39,8 @@ public:
     void AddLink(LinkUniquePtr pLink);
     bool RemoveLink(BlueprintId id);
     const std::vector<Link*> GetLinks() const;
-    const std::vector<Node*> GetLinkedNodes(Pin* pPin) const;
-    Node* GetFirstLinkedNode(Pin* pPin) const;
+    const std::vector<Node*> GetLinkedNodes(Pin* pPin, bool markAsFlowing = false) const;
+    Node* GetFirstLinkedNode(Pin* pPin, bool markAsFlowing = false) const;
 
     Pin* GetPin(BlueprintId id) const;
 
@@ -67,12 +67,6 @@ private:
 inline bool Encounter::IsPlaying() const
 {
     return m_Started;
-}
-
-inline void Encounter::Stop()
-{
-    m_Started = false;
-    m_pCurrentNode = nullptr;
 }
 
 inline const std::string& Encounter::GetName() const

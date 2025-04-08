@@ -67,9 +67,8 @@ void EncounterEditor::DrawHeader()
     }
     ImGui::SameLine();
 
-    bool fileLoaded = true;
-    bool encounterPlaying = (m_pSelectedEncounter != nullptr && m_pSelectedEncounter->IsPlaying());
-    ImGui::BeginDisabled(!fileLoaded || encounterPlaying);
+    const bool encounterPlaying = (m_pSelectedEncounter != nullptr && m_pSelectedEncounter->IsPlaying());
+    ImGui::BeginDisabled(encounterPlaying);
     if (ImGui::Button(ICON_FA_FLOPPY_DISK " Save"))
     {
         // The save needs to be deferred until we are inside the ImGuiNodeEditor logic, as the node
@@ -87,6 +86,35 @@ void EncounterEditor::DrawHeader()
         //ShowSettings();
     }
     ImGui::EndDisabled();
+
+    ImGui::SameLine();
+    // Are we playing this specific encounter? If so, we can stop it so it can be edited.
+    Sector* pSector = Game::Get()->GetSector();
+    ImGui::BeginDisabled(!m_pSelectedEncounter || !pSector);
+    if (encounterPlaying && pSector && m_pSelectedEncounter == pSector->GetEncounter())
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
+        if (ImGui::Button(ICON_FA_STOP " Stop"))
+        {
+            pSector->GetEncounter()->Stop();
+        }
+        ImGui::PopStyleColor(3);
+    }
+    else
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.8f, 0.2f, 1.0f)); 
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.9f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.7f, 0.1f, 1.0f));
+        if (ImGui::Button(ICON_FA_PLAY " Play") && pSector)
+        {
+            pSector->ForceEncounter(m_pSelectedEncounter);
+        }
+        ImGui::PopStyleColor(3);
+    }
+    ImGui::EndDisabled();
+
 
     if (ImGui::BeginPopupModal("New encounter", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
     {
@@ -243,6 +271,11 @@ void EncounterEditor::DrawLinks()
             }
 
             ImGuiNodeEditor::Link(pLink->ID, pLink->StartPinID, pLink->EndPinID, pLink->Color.value_or(ImColor(255, 255, 255)));
+
+            if (pLink->Flow)
+            {
+                ImGuiNodeEditor::Flow(pLink->ID, ImGuiNodeEditor::FlowDirection::Forward);
+            }
         }
     }
 }
@@ -396,7 +429,7 @@ void EncounterEditor::LoadEncounter(const std::string& encounterName)
     if (pSector != nullptr)
     {
         EncounterSharedPtr pEncounter = pSector->GetEncounter();
-        if (pEncounter != nullptr)
+        if (pEncounter != nullptr && pEncounter->GetName() == encounterName)
         {
             OnEncounterLoaded(pEncounter);
             return;

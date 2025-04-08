@@ -22,6 +22,7 @@ public:
     void ShowCameraDebugUI(bool state);
 
     EncounterSharedPtr GetEncounter() const;
+    void ForceEncounter(EncounterSharedPtr pEncounter);
 
 private:
     void DrawCameraDebugUI();

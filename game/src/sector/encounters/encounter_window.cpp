@@ -29,4 +29,12 @@ void EncounterWindow::AppendText(const std::string& text)
     }
 }
 
+void EncounterWindow::ClearText()
+{
+    if (m_pEncounterText)
+    {
+        m_pEncounterText->SetText("");
+    }
+}
+
 } // namespace WingsOfSteel::TheBrightestStar

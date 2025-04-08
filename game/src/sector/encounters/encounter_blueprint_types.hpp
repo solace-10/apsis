@@ -133,6 +133,8 @@ struct Link
     // Setting the link color is deferred until the editor actually needs to draw it.
     std::optional<ImColor> Color;
 
+    bool Flow{false};
+
     Link(ImGuiNodeEditor::LinkId id, ImGuiNodeEditor::PinId startPinId, ImGuiNodeEditor::PinId endPinId)
     : ID(id)
     , StartPinID(startPinId)

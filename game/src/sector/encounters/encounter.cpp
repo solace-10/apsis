@@ -4,6 +4,7 @@
 
 #include "encounter.hpp"
 #include "encounter_blueprint_nodes.hpp"
+#include "encounter_window.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -24,6 +25,12 @@ void Encounter::Start()
     assert(!m_Started);
     m_Started = false;
 
+    EncounterWindowSharedPtr pEncounterWindow = m_pEncounterWindow.lock();
+    if (pEncounterWindow)
+    {
+        pEncounterWindow->ClearText();
+    }
+
     for (auto& pNode : m_Nodes)
     {
         if (pNode->GetNodeType() == NodeType::SectorEntered)
@@ -33,6 +40,17 @@ void Encounter::Start()
             m_pCurrentNode->OnExecutionStarted(this);
             break;
         }
+    }
+}
+
+void Encounter::Stop()
+{
+    m_Started = false;
+    m_pCurrentNode = nullptr;
+
+    for (auto& pLink : m_Links)
+    {
+        pLink->Flow = false;
     }
 }
 
@@ -242,7 +260,7 @@ const std::vector<Link*> Encounter::GetLinks() const
     return links;
 }
 
-const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin) const
+const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin, bool markAsFlowing) const
 {
     std::vector<Node*> nodes;
     for (const auto& pLink : m_Links)
@@ -250,19 +268,29 @@ const std::vector<Node*> Encounter::GetLinkedNodes(Pin* pPin) const
         Node* pNode = GetLinkedNode(pPin, pLink.get());
         if (pNode)
         {
+            if (markAsFlowing)
+            {
+                pLink->Flow = true;
+            }
+
             nodes.push_back(pNode);
         }
     }
     return nodes;
 }
 
-Node* Encounter::GetFirstLinkedNode(Pin* pPin) const
+Node* Encounter::GetFirstLinkedNode(Pin* pPin, bool markAsFlowing) const
 {
     for (const auto& pLink : m_Links)
     {
         Node* pNode = GetLinkedNode(pPin, pLink.get());
         if (pNode)
         {
+            if (markAsFlowing)
+            {
+                pLink->Flow = true;
+            }
+
             return pNode;
         }
     }

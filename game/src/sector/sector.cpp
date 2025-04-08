@@ -149,6 +149,18 @@ void Sector::SpawnEncounter()
     });
 }
 
+void Sector::ForceEncounter(EncounterSharedPtr pEncounter)
+{
+    if (m_pEncounter)
+    {
+        m_pEncounter->Stop();
+    }
+
+    m_pEncounter = pEncounter;
+    m_pEncounter->Bind(m_pEncounterWindow);
+    m_pEncounter->Start();
+}
+
 void Sector::SpawnDome()
 {
     using namespace Pandora;

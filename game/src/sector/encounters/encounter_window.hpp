@@ -19,6 +19,7 @@ public:
     void OnInitializationCompleted() override;
 
     void AppendText(const std::string& text);
+    void ClearText();
 
 private:
     //UI::ImageSharedPtr m_pEncounterImage;
