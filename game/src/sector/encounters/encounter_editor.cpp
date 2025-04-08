@@ -219,6 +219,12 @@ void EncounterEditor::DrawNodes()
 
         ImGuiNodeEditor::EndNode();
     }
+
+    if (m_RecenterEnqueued)
+    {
+        ImGuiNodeEditor::NavigateToContent(1.0f);
+        m_RecenterEnqueued = false;
+    }
 }
 
 void EncounterEditor::DrawLinks()
@@ -651,6 +657,7 @@ void EncounterEditor::UpdateEvents()
 void EncounterEditor::ResetEditor()
 {
     m_LinkedPins.clear();
+    m_RecenterEnqueued = true;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

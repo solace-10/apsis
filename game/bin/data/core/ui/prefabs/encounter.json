@@ -21,7 +21,7 @@
                         "cell": 0,
                         "margin": 8,
                         "name": "encounter_text",
-                        "text": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic.",
+                        "text": "",
                         "type": "Text"
                     },
                     {

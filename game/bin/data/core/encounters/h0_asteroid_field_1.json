@@ -1,19 +1,69 @@
 {
     "links": [
         {
-            "end": 4,
-            "id": 10,
+            "end": 34,
+            "id": 45,
+            "start": 44
+        },
+        {
+            "end": 33,
+            "id": 46,
             "start": 2
         },
         {
-            "end": 5,
-            "id": 13,
-            "start": 12
+            "end": 36,
+            "id": 51,
+            "start": 50
+        },
+        {
+            "end": 49,
+            "id": 54,
+            "start": 53
+        },
+        {
+            "end": 48,
+            "id": 57,
+            "start": 56
+        },
+        {
+            "end": 37,
+            "id": 62,
+            "start": 61
+        },
+        {
+            "end": 59,
+            "id": 65,
+            "start": 64
+        },
+        {
+            "end": 60,
+            "id": 68,
+            "start": 67
+        },
+        {
+            "end": 70,
+            "id": 77,
+            "start": 74
+        },
+        {
+            "end": 71,
+            "id": 78,
+            "start": 76
+        },
+        {
+            "end": 38,
+            "id": 79,
+            "start": 72
+        },
+        {
+            "end": 35,
+            "id": 82,
+            "start": 81
         },
         {
             "end": 15,
-            "id": 16,
-            "start": 8
+            "id": 83,
+            "start": 41
         }
     ],
     "nodes": [
@@ -29,68 +79,9 @@
                 }
             ],
             "position": {
-                "x": -167.0,
-                "y": -136.0
+                "x": -295.0,
+                "y": -56.0
             }
-        },
-        {
-            "id": 3,
-            "inputs": [
-                {
-                    "id": 4,
-                    "name": "",
-                    "type": 0
-                },
-                {
-                    "id": 5,
-                    "name": "Description",
-                    "type": 2
-                }
-            ],
-            "name": "Encounter stage",
-            "outputs": [
-                {
-                    "id": 6,
-                    "name": "Selected 1",
-                    "type": 0
-                },
-                {
-                    "id": 7,
-                    "name": "Selected 2",
-                    "type": 0
-                },
-                {
-                    "id": 8,
-                    "name": "Selected 3",
-                    "type": 0
-                },
-                {
-                    "id": 9,
-                    "name": "Outcome",
-                    "type": 1
-                }
-            ],
-            "position": {
-                "x": 358.0,
-                "y": -136.0
-            }
-        },
-        {
-            "id": 11,
-            "inputs": [],
-            "name": "String",
-            "outputs": [
-                {
-                    "id": 12,
-                    "name": "Value",
-                    "type": 2
-                }
-            ],
-            "position": {
-                "x": 42.0,
-                "y": -44.0
-            },
-            "value": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
         },
         {
             "id": 14,
@@ -104,8 +95,283 @@
             "name": "Exit sector",
             "outputs": [],
             "position": {
-                "x": 828.0,
-                "y": 88.0
+                "x": 972.0,
+                "y": 680.0
+            }
+        },
+        {
+            "id": 32,
+            "inputs": [
+                {
+                    "id": 33,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 34,
+                    "name": "Description",
+                    "type": 2
+                },
+                {
+                    "id": 35,
+                    "name": "Image",
+                    "type": 5
+                },
+                {
+                    "id": 36,
+                    "name": "Option 1",
+                    "type": 3
+                },
+                {
+                    "id": 37,
+                    "name": "Option 2",
+                    "type": 3
+                },
+                {
+                    "id": 38,
+                    "name": "Option 3",
+                    "type": 3
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 39,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 40,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 41,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 42,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 310.0,
+                "y": -56.0
+            }
+        },
+        {
+            "id": 43,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 44,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": -22.0,
+                "y": 20.0
+            },
+            "value": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n\"Captain,\" EXA's voice echoed through the bridge speakers, \"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
+        },
+        {
+            "id": 47,
+            "inputs": [
+                {
+                    "id": 48,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 49,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 50,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": -116.0,
+                "y": 344.0
+            }
+        },
+        {
+            "id": 52,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 53,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 420.0
+            },
+            "value": ""
+        },
+        {
+            "id": 55,
+            "inputs": [],
+            "name": "Dice",
+            "outputs": [
+                {
+                    "id": 56,
+                    "name": "Value",
+                    "type": 4
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 328.0
+            }
+        },
+        {
+            "id": 58,
+            "inputs": [
+                {
+                    "id": 59,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 60,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 61,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": -116.0,
+                "y": 668.0
+            }
+        },
+        {
+            "id": 63,
+            "inputs": [],
+            "name": "Dice",
+            "outputs": [
+                {
+                    "id": 64,
+                    "name": "Value",
+                    "type": 4
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 632.0
+            }
+        },
+        {
+            "id": 66,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 67,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 740.0
+            },
+            "value": ""
+        },
+        {
+            "id": 69,
+            "inputs": [
+                {
+                    "id": 70,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 71,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 72,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": -116.0,
+                "y": 940.0
+            }
+        },
+        {
+            "id": 73,
+            "inputs": [],
+            "name": "Dice",
+            "outputs": [
+                {
+                    "id": 74,
+                    "name": "Value",
+                    "type": 4
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 904.0
+            }
+        },
+        {
+            "id": 75,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 76,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": -374.0,
+                "y": 1012.0
+            },
+            "value": ""
+        },
+        {
+            "id": 80,
+            "inputs": [],
+            "name": "Image",
+            "outputs": [
+                {
+                    "id": 81,
+                    "name": "Value",
+                    "type": 5
+                }
+            ],
+            "position": {
+                "x": 10.0,
+                "y": 120.0
             }
         }
     ]

@@ -30,4 +30,9 @@ private:
     int m_Margin;
 };
 
+inline const std::string& Text::GetText() const
+{
+    return m_Text;
+}
+
 } // namespace WingsOfSteel::TheBrightestStar::UI

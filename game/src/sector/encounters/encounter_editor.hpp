@@ -57,6 +57,7 @@ private:
     bool m_ShowStringEditor{false};
     bool m_SaveEnqueued{false};
     bool m_LoadEnqueued{false};
+    bool m_RecenterEnqueued{false};
     StringNode* m_pSelectedStringNode{nullptr};
     std::string m_NewEncounterName;
     EncounterSharedPtr m_pSelectedEncounter;

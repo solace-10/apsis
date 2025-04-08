@@ -1,6 +1,7 @@
 #include <array>
 #include <numbers>
 #include <string>
+#include <sstream>
 #include <imgui.h>
 
 #include <core/log.hpp>
@@ -43,6 +44,7 @@ void Window::Initialize(const std::string& prefabPath)
         Deserialize(m_pDataStore->Data());
         WindowSharedPtr pWindow = std::static_pointer_cast<Window>(shared_from_this());
         Game::Get()->GetPrefabEditor()->AddPrefabData(prefabPath, pWindow);
+        OnInitializationCompleted();
     });
 }
 
@@ -114,11 +116,6 @@ void Window::RenderProperties()
     Element::RenderProperties();
 }
 
-void Window::AddElement(ElementSharedPtr pElement)
-{
-    //m_Elements.push_back(pElement);
-}
-
 void Window::RenderBackground()
 {
     const ImVec2 cp0 = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
@@ -161,6 +158,60 @@ void Window::RenderBackground()
     {
         pDrawList->AddLine(ImVec2(cp0.x, y), ImVec2(cp1.x, y), gridColor, gridThickness);
     }
+}
+
+ElementSharedPtr Window::FindElementInternal(const std::string& path) const
+{
+    std::vector<std::string> tokens;
+    std::stringstream ss(path);
+    std::string token;
+    while(std::getline(ss, token, '/'))
+    {
+        tokens.push_back(token);
+    }
+
+    if (tokens.size() < 3 || !m_pStack)
+    {
+        return nullptr;
+    }
+
+    return FindElementHierarchyDescent(tokens, 2, m_pStack);
+}
+
+ElementSharedPtr Window::FindElementHierarchyDescent(const std::vector<std::string>& tokens, size_t currentElementIdx, StackSharedPtr pStackElement) const
+{
+    if (currentElementIdx + 1 == tokens.size())
+    {
+        return nullptr;
+    }
+
+    const size_t nextElementIdx = currentElementIdx + 1;
+    const std::string& nextElementName = tokens[nextElementIdx];
+    for (auto& pChildElement : pStackElement->GetElements())
+    {
+        if (pChildElement->GetName() == nextElementName)
+        {
+            const bool isLeaf = (nextElementIdx == tokens.size() - 1);
+            if (isLeaf)
+            {
+                return pChildElement;
+            }
+            else
+            {
+                StackSharedPtr pStackChildElement = std::dynamic_pointer_cast<Stack>(pChildElement);
+                if (pStackChildElement)
+                {
+                    return FindElementHierarchyDescent(tokens, nextElementIdx, pStackChildElement);
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI
