@@ -28,6 +28,7 @@ void Encounter::Start()
     EncounterWindowSharedPtr pEncounterWindow = m_pEncounterWindow.lock();
     if (pEncounterWindow)
     {
+        pEncounterWindow->SetCurrentStage(nullptr);
         pEncounterWindow->ClearText();
     }
 
@@ -51,6 +52,12 @@ void Encounter::Stop()
     for (auto& pLink : m_Links)
     {
         pLink->Flow = false;
+    }
+
+    EncounterWindowSharedPtr pEncounterWindow = m_pEncounterWindow.lock();
+    if (pEncounterWindow)
+    {
+        pEncounterWindow->SetCurrentStage(nullptr);
     }
 }
 
@@ -126,11 +133,11 @@ void Encounter::Load()
             if (nodeNameIt != nodeData.end() && nodeNameIt->is_string())
             {
                 const std::string nodeName = nodeNameIt->get<std::string>();
-                NodeUniquePtr pNode = BlueprintNodeFactory::CreateNode(nodeName);
+                NodeSharedPtr pNode = BlueprintNodeFactory::CreateNode(nodeName);
                 if (pNode)
                 {
                     pNode->Deserialize(nodeData);
-                    AddNode(std::move(pNode));
+                    AddNode(pNode);
                 }
                 else
                 {
@@ -174,7 +181,7 @@ const std::vector<Node*> Encounter::GetNodes() const
     return nodes;
 }
 
-void Encounter::AddNode(NodeUniquePtr pNode)
+void Encounter::AddNode(NodeSharedPtr pNode)
 {
     assert(!m_Started);
     using namespace Pandora;
@@ -220,7 +227,7 @@ void Encounter::AddNode(NodeUniquePtr pNode)
 bool Encounter::RemoveNode(BlueprintId id)
 {
     assert(!m_Started);
-    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
+    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeSharedPtr& node) { return node->ID.Get() == id; });
     if (it != m_Nodes.end())
     {
         auto clearPinFn = [this](Pin& pin)
@@ -369,7 +376,7 @@ Pin* Encounter::GetPin(BlueprintId id) const
 
 Node* Encounter::GetNode(BlueprintId id) const
 {
-    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeUniquePtr& node) { return node->ID.Get() == id; });
+    auto it = std::find_if(m_Nodes.begin(), m_Nodes.end(), [id](const NodeSharedPtr& node) { return node->ID.Get() == id; });
     if (it != m_Nodes.end())
     {
         return it->get();

@@ -4,6 +4,8 @@
 #include <resources/resource.fwd.hpp>
 #include <resources/resource_texture_2d.hpp>
 
+#include "sector/encounters/encounter_blueprint_nodes.hpp"
+#include "ui/events.hpp"
 #include "ui/stackable_element.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
@@ -27,6 +29,8 @@ public:
     void SetText(const std::string& text);
     const std::string& GetText() const;
 
+    void SetOnClickedEvent(const OnClickedEvent& event);
+
 private:
     void SetIconSource(const std::string& source);
 
@@ -34,6 +38,12 @@ private:
     int m_Margin;
     Pandora::ResourceTexture2DSharedPtr m_pIconTexture;
     Property<std::string> m_IconSource;
+    OnClickedEvent m_OnClickedEvent;
 };
+
+inline void EncounterButton::SetOnClickedEvent(const OnClickedEvent& event)
+{
+    m_OnClickedEvent = event;
+}
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

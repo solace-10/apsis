@@ -32,7 +32,7 @@ public:
 
     const std::string& GetName() const;
 
-    void AddNode(NodeUniquePtr pNode);
+    void AddNode(NodeSharedPtr pNode);
     bool RemoveNode(BlueprintId id);
     const std::vector<Node*> GetNodes() const;
 
@@ -55,7 +55,7 @@ private:
     void Load();
 
     Pandora::ResourceDataStoreSharedPtr m_pDataStore;
-    std::vector<NodeUniquePtr> m_Nodes;
+    std::vector<NodeSharedPtr> m_Nodes;
     std::vector<LinkUniquePtr> m_Links;
     std::unordered_map<BlueprintId, Pin*> m_PinIdToPinMap;
     Node* m_pCurrentNode{nullptr};

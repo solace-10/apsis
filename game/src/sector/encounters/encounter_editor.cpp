@@ -519,7 +519,7 @@ void EncounterEditor::DrawContextMenus()
     {
         auto newNodePostion = openPopupPosition;
 
-        NodeUniquePtr pNode = nullptr;
+        NodeSharedPtr pNode = nullptr;
         if (ImGui::MenuItem("Sector entered"))
         {
             pNode = BlueprintNodeFactory::CreateNode("Sector entered");

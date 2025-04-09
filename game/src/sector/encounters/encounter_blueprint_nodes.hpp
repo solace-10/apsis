@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <core/smart_ptr.hpp>
 
 #include "encounter_blueprint_types.hpp"
@@ -16,9 +18,10 @@ namespace WingsOfSteel::TheBrightestStar
 class BlueprintNodeFactory
 {
 public:
-    static NodeUniquePtr CreateNode(const std::string& nodeName);
+    static NodeSharedPtr CreateNode(const std::string& nodeName);
 };
 
+DECLARE_SMART_PTR(SectorEnteredNode);
 class SectorEnteredNode : public Node
 {
 public:
@@ -28,6 +31,7 @@ public:
     ExecutionResult Execute(Encounter* pEncounter, float delta) override;
 };
 
+DECLARE_SMART_PTR(SectorExitNode);
 class SectorExitNode : public Node
 {
 public:
@@ -36,17 +40,31 @@ public:
     NodeType GetNodeType() const override;
 };
 
+DECLARE_SMART_PTR(EncounterStageNode);
 class EncounterStageNode : public Node
 {
 public:
+    enum class Option
+    {
+        Option1,
+        Option2,
+        Option3
+    };
+
     EncounterStageNode();
 
     NodeType GetNodeType() const override;
 
+    void OnOptionSelected(Option option);
+
     void OnExecutionStarted(Encounter* pEncounter) override;
     ExecutionResult Execute(Encounter* pEncounter, float delta) override;
+
+private:
+    std::optional<Option> m_SelectedOption;
 };
 
+DECLARE_SMART_PTR(EncounterOptionNode);
 class EncounterOptionNode : public Node
 {
 public:
@@ -55,6 +73,7 @@ public:
     NodeType GetNodeType() const override;
 };
 
+DECLARE_SMART_PTR(StringNode);
 class StringNode : public Node
 {
 public:
@@ -68,6 +87,7 @@ public:
     Pandora::TextEditorUniquePtr Editor;
 };
 
+DECLARE_SMART_PTR(DiceNode);
 class DiceNode : public Node
 {
 public:
@@ -76,6 +96,7 @@ public:
     NodeType GetNodeType() const override;
 };
 
+DECLARE_SMART_PTR(ImageNode);
 class ImageNode : public Node
 {
 public:

@@ -7,35 +7,35 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-NodeUniquePtr BlueprintNodeFactory::CreateNode(const std::string& nodeName)
+NodeSharedPtr BlueprintNodeFactory::CreateNode(const std::string& nodeName)
 {
     if (nodeName == "Sector entered")
     {
-        return std::make_unique<SectorEnteredNode>();
+        return std::make_shared<SectorEnteredNode>();
     }
     else if (nodeName == "Exit sector")
     {
-        return std::make_unique<SectorExitNode>();
+        return std::make_shared<SectorExitNode>();
     }
     else if (nodeName == "Encounter stage")
     {
-        return std::make_unique<EncounterStageNode>();
+        return std::make_shared<EncounterStageNode>();
     }
     else if (nodeName == "Encounter option")
     {
-        return std::make_unique<EncounterOptionNode>();
+        return std::make_shared<EncounterOptionNode>();
     }
     else if (nodeName == "Dice")
     {
-        return std::make_unique<DiceNode>();
+        return std::make_shared<DiceNode>();
     }
     else if (nodeName == "Image")
     {
-        return std::make_unique<ImageNode>();
+        return std::make_shared<ImageNode>();
     }
     else if (nodeName == "String")
     {
-        return std::make_unique<StringNode>();
+        return std::make_shared<StringNode>();
     }
 
     return nullptr;
@@ -117,11 +117,36 @@ void EncounterStageNode::OnExecutionStarted(Encounter* pEncounter)
             auto pStringNode = static_cast<StringNode*>(pLinkedNode);
             pEncounterWindow->AppendText(pStringNode->Value);
         }
+
+        pEncounterWindow->SetCurrentStage(std::static_pointer_cast<EncounterStageNode>(shared_from_this()));
     }
+
+    m_SelectedOption.reset();
+}
+
+void EncounterStageNode::OnOptionSelected(Option option)
+{
+    m_SelectedOption = option;
 }
 
 Node::ExecutionResult EncounterStageNode::Execute(Encounter* pEncounter, float delta)
 {
+    if (m_SelectedOption)
+    {
+        const uint32_t optionIndex = static_cast<uint32_t>(m_SelectedOption.value());
+
+        auto pLinkedNode = pEncounter->GetFirstLinkedNode(&Outputs[optionIndex], true);
+        if (pLinkedNode)
+        {
+            SetNextNode(pLinkedNode);
+        }
+        else
+        {
+            Pandora::Log::Warning() << "No linked node found for option: " << optionIndex;
+        }
+        return ExecutionResult::Complete;
+    }
+
     return Node::ExecutionResult::Continue;
 }
 

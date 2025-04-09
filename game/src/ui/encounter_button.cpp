@@ -33,12 +33,9 @@ void EncounterButton::Render()
 
     const ImVec2 screenSize = GetCellSize() - glm::vec2(m_Margin * 2);
     const ImVec2 iconSize(screenSize.y, screenSize.y);
-    if (ImGui::InvisibleButton(GetName().c_str(), screenSize))
+    if (ImGui::InvisibleButton(GetName().c_str(), screenSize) && m_OnClickedEvent)
     {
-        //if ( pSourceView && !m_OnClickEvent.empty() )
-        //{
-        //    pSourceView->OnClickEvent( shared_from_this(), m_OnClickEvent );
-        //}
+        m_OnClickedEvent();
     }
 
     ImGui::SetCursorScreenPos(cp0); // This needs to be set again so the cursor position is correct as the InvisibleButton modifies it.
