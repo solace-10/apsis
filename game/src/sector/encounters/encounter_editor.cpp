@@ -526,7 +526,7 @@ void EncounterEditor::DrawContextMenus()
         }
         if (ImGui::MenuItem("Sector exit"))
         {
-            pNode = BlueprintNodeFactory::CreateNode("Sector exit");
+            pNode = BlueprintNodeFactory::CreateNode("Exit sector");
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Encounter option"))
@@ -549,6 +549,11 @@ void EncounterEditor::DrawContextMenus()
         if (ImGui::MenuItem("String"))
         {
             pNode = BlueprintNodeFactory::CreateNode("String");
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Outcome conditional"))
+        {
+            pNode = BlueprintNodeFactory::CreateNode("Outcome conditional");
         }
 
         if (pNode)
@@ -671,18 +676,14 @@ void EncounterEditor::UpdateEvents()
             }
         }
 
-        /*
         ImGuiNodeEditor::LinkId linkId = 0;
         while (ImGuiNodeEditor::QueryDeletedLink(&linkId))
         {
             if (ImGuiNodeEditor::AcceptDeletedItem())
             {
-                auto id = std::find_if(m_Links.begin(), m_Links.end(), [linkId](auto& link) { return link.ID == linkId; });
-                if (id != m_Links.end())
-                    m_Links.erase(id);
+                m_pSelectedEncounter->RemoveLink(linkId.Get());
             }
         }
-        */
     }
     ImGuiNodeEditor::EndDelete();
 }

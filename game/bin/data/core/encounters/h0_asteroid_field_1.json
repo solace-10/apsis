@@ -64,6 +64,76 @@
             "end": 15,
             "id": 83,
             "start": 41
+        },
+        {
+            "end": 85,
+            "id": 93,
+            "start": 81
+        },
+        {
+            "end": 84,
+            "id": 97,
+            "start": 96
+        },
+        {
+            "end": 100,
+            "id": 104,
+            "start": 103
+        },
+        {
+            "end": 99,
+            "id": 107,
+            "start": 106
+        },
+        {
+            "end": 86,
+            "id": 108,
+            "start": 101
+        },
+        {
+            "end": 110,
+            "id": 115,
+            "start": 114
+        },
+        {
+            "end": 111,
+            "id": 118,
+            "start": 117
+        },
+        {
+            "end": 87,
+            "id": 119,
+            "start": 112
+        },
+        {
+            "end": 122,
+            "id": 129,
+            "start": 125
+        },
+        {
+            "end": 88,
+            "id": 130,
+            "start": 123
+        },
+        {
+            "end": 136,
+            "id": 137,
+            "start": 91
+        },
+        {
+            "end": 138,
+            "id": 143,
+            "start": 39
+        },
+        {
+            "end": 139,
+            "id": 144,
+            "start": 42
+        },
+        {
+            "end": 83,
+            "id": 145,
+            "start": 141
         }
     ],
     "nodes": [
@@ -95,8 +165,8 @@
             "name": "Exit sector",
             "outputs": [],
             "position": {
-                "x": 972.0,
-                "y": 680.0
+                "x": 764.0,
+                "y": -8.0
             }
         },
         {
@@ -370,8 +440,304 @@
                 }
             ],
             "position": {
-                "x": 10.0,
-                "y": 120.0
+                "x": -54.0,
+                "y": -536.0
+            }
+        },
+        {
+            "id": 82,
+            "inputs": [
+                {
+                    "id": 83,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 84,
+                    "name": "Description",
+                    "type": 2
+                },
+                {
+                    "id": 85,
+                    "name": "Image",
+                    "type": 5
+                },
+                {
+                    "id": 86,
+                    "name": "Option 1",
+                    "type": 3
+                },
+                {
+                    "id": 87,
+                    "name": "Option 2",
+                    "type": 3
+                },
+                {
+                    "id": 88,
+                    "name": "Option 3",
+                    "type": 3
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 89,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 90,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 91,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 92,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 2422.0,
+                "y": -532.0
+            }
+        },
+        {
+            "id": 95,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 96,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 2138.0,
+                "y": -508.0
+            },
+            "value": "With a flicker of blue light, EXA complied, bathing the asteroid field in a high-resolution sensor sweep. The data streamed in, painting a vivid picture of the surrounding space.\n\n\"Captain, preliminary results indicate a typical asteroid field composition. Predominantly iron and rock, with traces of rare earth metals. No signs of artificial structures, but...\" EXA paused, its digital voice laced with curiosity.\n\n\"There is an object on the edge of our scan range that doesn't quite fit the natural profile. It's small, roughly the size of a probe, and emits a faint, anomalous energy signature.\" The main view screen updated, highlighting the mysterious object in yellow.\n\n\"It's probably just an old, derelict satellite or probe, but its energy signature suggests some form of propulsion or communication system may still be active.\"\n\nYou pondered the possibilities, weighing the potential gains against the risks of diverting resources to investigate."
+        },
+        {
+            "id": 98,
+            "inputs": [
+                {
+                    "id": 99,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 100,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 101,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": 2036.0,
+                "y": -404.0
+            }
+        },
+        {
+            "id": 102,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 103,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 1834.0,
+                "y": -380.0
+            },
+            "value": "\"Bring us closer, and prepare a team to retrieve the object.\""
+        },
+        {
+            "id": 105,
+            "inputs": [],
+            "name": "Dice",
+            "outputs": [
+                {
+                    "id": 106,
+                    "name": "Value",
+                    "type": 4
+                }
+            ],
+            "position": {
+                "x": 1834.0,
+                "y": -472.0
+            }
+        },
+        {
+            "id": 109,
+            "inputs": [
+                {
+                    "id": 110,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 111,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 112,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": 2036.0,
+                "y": -244.0
+            }
+        },
+        {
+            "id": 113,
+            "inputs": [],
+            "name": "Dice",
+            "outputs": [
+                {
+                    "id": 114,
+                    "name": "Value",
+                    "type": 4
+                }
+            ],
+            "position": {
+                "x": 1834.0,
+                "y": -264.0
+            }
+        },
+        {
+            "id": 116,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 117,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 1834.0,
+                "y": -172.0
+            },
+            "value": "\"Focus on mining operations within the field.\""
+        },
+        {
+            "id": 120,
+            "inputs": [
+                {
+                    "id": 121,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 122,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 123,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": 2036.0,
+                "y": -72.0
+            }
+        },
+        {
+            "id": 124,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 125,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 1834.0,
+                "y": -60.0
+            },
+            "value": "\"Nothing valuable here, jump us out.\""
+        },
+        {
+            "id": 135,
+            "inputs": [
+                {
+                    "id": 136,
+                    "name": "",
+                    "type": 0
+                }
+            ],
+            "name": "Exit sector",
+            "outputs": [],
+            "position": {
+                "x": 2860.0,
+                "y": -472.0
+            }
+        },
+        {
+            "id": 137,
+            "inputs": [
+                {
+                    "id": 138,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 139,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "name": "Outcome conditional",
+            "outputs": [
+                {
+                    "id": 140,
+                    "name": "Positive",
+                    "type": 0
+                },
+                {
+                    "id": 141,
+                    "name": "Neutral",
+                    "type": 0
+                },
+                {
+                    "id": 142,
+                    "name": "Negative",
+                    "type": 0
+                }
+            ],
+            "position": {
+                "x": 1196.0,
+                "y": -8.0
             }
         }
     ]

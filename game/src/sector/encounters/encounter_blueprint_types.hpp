@@ -42,7 +42,8 @@ enum class NodeType
     EncounterOption,
     String,
     Dice,
-    Image
+    Image,
+    OutcomeConditional
 };
 
 enum class NodeDisplayType
@@ -61,6 +62,12 @@ enum class PinIconType
     Diamond 
 };
 
+enum class EncounterOutcome
+{
+    Positive,
+    Neutral,
+    Negative
+};
 
 struct Pin
 {

@@ -1,5 +1,8 @@
 #include <imgui/text_editor/text_editor.hpp>
 
+#include <pandora.hpp>
+#include <core/log.hpp>
+
 #include "sector/encounters/encounter_window.hpp"
 #include "sector/encounters/encounter_blueprint_nodes.hpp"
 #include "sector/encounters/encounter.hpp"
@@ -37,7 +40,12 @@ NodeSharedPtr BlueprintNodeFactory::CreateNode(const std::string& nodeName)
     {
         return std::make_shared<StringNode>();
     }
+    else if (nodeName == "Outcome conditional")
+    {
+        return std::make_shared<OutcomeConditionalNode>();
+    }
 
+    Pandora::Log::Warning() << "Unknown node name: " << nodeName;
     return nullptr;
 }
 
@@ -228,5 +236,53 @@ NodeType ImageNode::GetNodeType() const
 {
     return NodeType::Image;
 }
+
+////////////////////////////////////////////////////////////
+// OutcomeConditional
+////////////////////////////////////////////////////////////
+
+OutcomeConditionalNode::OutcomeConditionalNode()
+: Node("Outcome conditional", ImColor(255, 80, 0))
+{
+    Inputs.emplace_back("", PinType::Flow);
+    Inputs.emplace_back("Outcome", PinType::Outcome);
+    Outputs.emplace_back("Positive", PinType::Flow);
+    Outputs.emplace_back("Neutral", PinType::Flow);
+    Outputs.emplace_back("Negative", PinType::Flow);
+}
+
+NodeType OutcomeConditionalNode::GetNodeType() const
+{
+    return NodeType::OutcomeConditional;
+}
+
+Node::ExecutionResult OutcomeConditionalNode::Execute(Encounter* pEncounter, float delta)
+{
+    EncounterOutcome outcome = EncounterOutcome::Neutral;
+    auto pInputOutcomeNode = pEncounter->GetFirstLinkedNode(&Inputs[1]);
+    if (pInputOutcomeNode)
+    {
+        IHasOutcomeOutput* pOutcomeInterface = dynamic_cast<IHasOutcomeOutput*>(pInputOutcomeNode);
+        if (pOutcomeInterface)
+        {
+            outcome = pOutcomeInterface->GetEncounterOutcome();
+        }
+    }
+
+    const uint32_t optionIndex = static_cast<uint32_t>(outcome);
+    assert(optionIndex < Outputs.size());
+
+    auto pLinkedNode = pEncounter->GetFirstLinkedNode(&Outputs[optionIndex], true);
+    if (pLinkedNode)
+    {
+        SetNextNode(pLinkedNode);
+    }
+    else
+    {
+        Pandora::Log::Warning() << "No linked node found for option: " << optionIndex;
+    }
+    return ExecutionResult::Complete;
+}
+
 
 } // namespace WingsOfSteel::TheBrightestStar

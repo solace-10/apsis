@@ -31,6 +31,21 @@ public:
     ExecutionResult Execute(Encounter* pEncounter, float delta) override;
 };
 
+class IHasOutcomeOutput
+{
+public:
+    IHasOutcomeOutput() {}
+    ~IHasOutcomeOutput() {}
+
+    inline EncounterOutcome GetEncounterOutcome() const { return m_Outcome; }
+
+protected:
+    inline void SetEncounterOutcome(EncounterOutcome outcome) { m_Outcome = outcome; }
+
+private:
+    EncounterOutcome m_Outcome{EncounterOutcome::Neutral};
+};
+
 DECLARE_SMART_PTR(SectorExitNode);
 class SectorExitNode : public Node
 {
@@ -41,7 +56,7 @@ public:
 };
 
 DECLARE_SMART_PTR(EncounterStageNode);
-class EncounterStageNode : public Node
+class EncounterStageNode : public Node, public IHasOutcomeOutput
 {
 public:
     enum class Option
@@ -103,6 +118,17 @@ public:
     ImageNode();
 
     NodeType GetNodeType() const override;
+};
+
+DECLARE_SMART_PTR(OutcomeConditionalNode);
+class OutcomeConditionalNode : public Node
+{
+public:
+    OutcomeConditionalNode();
+
+    NodeType GetNodeType() const override;
+
+    ExecutionResult Execute(Encounter* pEncounter, float delta) override;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar
