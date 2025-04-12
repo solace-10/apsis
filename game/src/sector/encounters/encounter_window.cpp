@@ -27,7 +27,7 @@ void EncounterWindow::AppendText(const std::string& text)
         }
         else
         {
-            currentText += "---\n\n" + text;
+            currentText += "\n\n___\n\n" + text;
             m_pEncounterText->SetText(currentText);
         }
     }

@@ -103,6 +103,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(imgui)
 
 FetchContent_Declare(
+    imgui_markdown
+    GIT_REPOSITORY https://github.com/solace-10/imgui_markdown.git
+    GIT_TAG 85cd6062e041fa66d69426ed23b5495d329345ab # Head as of 11/04/2025
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/imgui_markdown
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(imgui_markdown)
+
+FetchContent_Declare(
     magic_enum
     GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
     GIT_TAG e55b9b54d5cf61f8e117cafb17846d7d742dd3b4 # v0.9.5

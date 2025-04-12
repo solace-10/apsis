@@ -77,4 +77,20 @@ bool Element::TryDeserialize(const nlohmann::json& data, const std::string& key,
     return false;
 }
 
+bool Element::TryDeserialize(const nlohmann::json& data, const std::string& key, bool& value, bool defaultValue)
+{
+    if (data.contains(key))
+    {
+        auto& untypedValue = data[key];
+        if (untypedValue.is_boolean())
+        {
+            value = untypedValue.get<bool>();
+            return true;
+        }
+    }
+
+    value = defaultValue;
+    return false;
+}
+
 } // namespace WingsOfSteel::TheBrightestStar::UI

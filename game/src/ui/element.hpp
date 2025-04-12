@@ -57,6 +57,7 @@ public:
 protected:
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, std::string& value, const std::string& defaultValue);
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, int& value, int defaultValue);
+    bool TryDeserialize(const nlohmann::json& data, const std::string& key, bool& value, bool defaultValue);
 
     template <typename T, typename = std::enable_if_t<std::is_enum_v<T>>>
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, T& value, T defaultValue)

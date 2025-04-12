@@ -49,6 +49,7 @@ target_include_directories(pandora PUBLIC
     ${IMGUI_SOURCE_DIR}
     ${IMGUI_SOURCE_DIR}/backends/
     ${IMGUI_NODE_EDITOR_SOURCE_DIR}
+    ext/imgui_markdown/
     ext/delaunator-cpp/
     ext/entt/single_include/
     ext/stb/
