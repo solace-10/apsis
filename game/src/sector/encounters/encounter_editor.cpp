@@ -15,6 +15,7 @@
 #include "sector/encounters/encounter_editor_widgets.hpp"
 #include "sector/encounters/encounter.hpp"
 #include "sector/sector.hpp"
+#include "ui/internal/default_markdown.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -189,17 +190,16 @@ void EncounterEditor::DrawStringEditor()
         ImGui::OpenPopup("String editor");
     }
 
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("String editor", &m_ShowStringEditor, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
     {
-        if (m_pSelectedStringNode->Editor == nullptr)
-        {
-            m_pSelectedStringNode->Editor = std::make_unique<Pandora::TextEditor>();
-            m_pSelectedStringNode->Editor->SetLanguageDefinition(Pandora::TextEditor::LanguageDefinition());
-            m_pSelectedStringNode->Editor->SetText(m_pSelectedStringNode->Value);
-        }
-
-        m_pSelectedStringNode->Editor->Render("String editor", ImVec2(600, ImGui::GetTextLineHeightWithSpacing() * 16));
-        m_pSelectedStringNode->Value = m_pSelectedStringNode->Editor->GetText();
+        ImVec2 viewSize(600, ImGui::GetTextLineHeightWithSpacing() * 32);
+        ImGui::InputTextMultiline("##string_editor", &m_pSelectedStringNode->Value, viewSize);
+        ImGui::SameLine();
+        ImGui::BeginChild("markdown_viewer", viewSize);
+        ImGui::Markdown(m_pSelectedStringNode->Value.c_str(), m_pSelectedStringNode->Value.length(), UI::Internal::DefaultMarkdown::Get());
+        ImGui::EndChild();
         ImGui::EndPopup();
     }
 }

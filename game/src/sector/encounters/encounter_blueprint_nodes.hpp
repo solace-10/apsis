@@ -99,7 +99,6 @@ public:
     void Deserialize(const nlohmann::json& data) override;
 
     std::string Value;
-    Pandora::TextEditorUniquePtr Editor;
 };
 
 DECLARE_SMART_PTR(DiceNode);
