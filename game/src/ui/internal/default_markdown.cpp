@@ -14,7 +14,7 @@ const ImGui::MarkdownConfig& DefaultMarkdown::Get()
     }
 
     sDefaultMarkdownConfig.linkCallback =         LinkCallback;
-    sDefaultMarkdownConfig.tooltipCallback =      nullptr;
+    sDefaultMarkdownConfig.tooltipCallback =      nullptr; //ImGui::defaultMarkdownTooltipCallback;
     sDefaultMarkdownConfig.imageCallback =        nullptr;
     sDefaultMarkdownConfig.linkIcon =             ICON_FA_LINK;
     //sDefaultMarkdownConfig.headingFormats[0] =    { H1, true };
@@ -59,6 +59,25 @@ void DefaultMarkdown::FormatCallback(const ImGui::MarkdownFormatInfo& markdownFo
             }
             
             break;
+        }
+        case ImGui::MarkdownFormatType::LINK:
+        {
+            static const ImVec4 sDefaultColor(0.95f, 0.68f, 0.60f, 1.00f);
+            static const ImVec4 sHoveredColor(1.00f, 0.88f, 0.85f, 1.00f);
+
+            if (start)
+            {
+                // TODO:
+                // This doesn't actually work for coloring the entire word as the `itemHovered` flag isn't set until
+                // after the link text is written.
+                // The markdown renderer needs to be modified to support this, in `TextRegion::RenderLinkText`.
+                ImGui::PushStyleColor(ImGuiCol_Text, markdownFormatInfo.itemHovered ? sHoveredColor : sDefaultColor);
+            }
+            else
+            {
+                ImGui::PopStyleColor();
+                ImGui::UnderLine(markdownFormatInfo.itemHovered ? sHoveredColor : sDefaultColor);
+            }
         }
         default:
         {
