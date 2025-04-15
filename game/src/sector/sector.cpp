@@ -9,9 +9,11 @@
 #include <scene/components/transform_component.hpp>
 #include <pandora.hpp>
 
+#include "components/dice_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "dice/dice_generator.hpp"
 #include "sector/encounters/encounter_window.hpp"
 #include "sector/encounters/encounter.hpp"
 #include "sector/sector.hpp"
@@ -180,20 +182,24 @@ void Sector::SpawnPlayerShip()
     using namespace Pandora;
 
     m_pPlayerShip = CreateEntity();
-
-    // DebugRenderComponent& debugRenderComponent = m_pPlayerShip->AddComponent<DebugRenderComponent>();
-    // debugRenderComponent.color = Color::Cyan;
-    // debugRenderComponent.shape = DebugRenderShape::Box;
-    // debugRenderComponent.length = 50.0f;
-    // debugRenderComponent.width = 25.0f;
-    // debugRenderComponent.height = 10.0f;
-
+    
     TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
     m_pPlayerShip->AddComponent<ModelComponent>("/models/flagship/light_carrier/light_carrier.glb");
     m_pPlayerShip->AddComponent<ShipNavigationComponent>();
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
+    
+    DiceComponent& diceComponent = m_pPlayerShip->AddComponent<DiceComponent>();
+    const size_t diceToGenerate = diceComponent.Dice[0].size();
+    for (uint32_t diceCategory = 0; diceCategory < static_cast<size_t>(DiceCategory::Count); diceCategory++)
+    {
+        std::vector<Dice> dice = DiceGenerator::Generate(diceToGenerate);
+        for (uint32_t diceIndex = 0; diceIndex < diceToGenerate; diceIndex++)
+        {
+            diceComponent.Dice[diceCategory][diceIndex] = dice[diceIndex];
+        }
+    }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

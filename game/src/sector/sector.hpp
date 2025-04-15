@@ -24,6 +24,8 @@ public:
     EncounterSharedPtr GetEncounter() const;
     void ForceEncounter(EncounterSharedPtr pEncounter);
 
+    Pandora::EntitySharedPtr GetPlayerShip() const;
+
 private:
     void DrawCameraDebugUI();
     void SpawnEncounter();
@@ -41,6 +43,11 @@ private:
 inline EncounterSharedPtr Sector::GetEncounter() const
 {
     return m_pEncounter;
+}
+
+inline Pandora::EntitySharedPtr Sector::GetPlayerShip() const
+{
+    return m_pPlayerShip;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

@@ -5,6 +5,7 @@
 #include "ui/prefab_editor.hpp"
 #include "ui/window.hpp"
 #include "ui/stack.hpp"
+#include "ui/ui.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel::TheBrightestStar::UI
@@ -82,7 +83,7 @@ void PrefabEditor::DrawPrefabEditor()
 
 void PrefabEditor::RenderHierarchy()
 {
-    ImGui::BeginChild("Hierarchy", ImVec2(300, 0), ImGuiChildFlags_Border);
+    ImGui::BeginChild("Hierarchy", ImVec2(500, 0), ImGuiChildFlags_Border);
 
     if (m_pSelectedPrefab.has_value())
     {
@@ -90,6 +91,7 @@ void PrefabEditor::RenderHierarchy()
         if (pWindow)
         {
             RenderTreeElement(pWindow);
+            HandleCreateElementPopup();
         }
     }
     else
@@ -124,17 +126,11 @@ void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
     if (isLeaf)
     {
         ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-        if (ImGui::IsItemClicked())
-        {
-            SelectElement(pElement);
-        }
+        HandleClickedEvent(pElement);
     }
     else if (ImGui::TreeNodeEx(label.str().c_str(), nodeFlags | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick))
     {
-        if (ImGui::IsItemClicked())
-        {
-            SelectElement(pElement);
-        }
+        HandleClickedEvent(pElement);
 
         if (pElement->GetType() == ElementType::Window)
         {
@@ -153,6 +149,73 @@ void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
         }
 
         ImGui::TreePop();
+    }
+}
+
+void PrefabEditor::HandleClickedEvent(ElementSharedPtr pElement)
+{
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+    {
+        SelectElement(pElement);
+    }
+    else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    {
+        SelectElement(pElement);
+
+        if (pElement->GetType() == ElementType::Stack)
+        {
+            m_CreateElementPopup = true;
+        }
+    }
+}
+
+void PrefabEditor::HandleCreateElementPopup()
+{
+    ElementSharedPtr pSelectedElement = m_pSelectedElement.lock();
+    if (!pSelectedElement || pSelectedElement->GetType() != ElementType::Stack)
+    {
+        return;
+    }
+
+    StackSharedPtr pStack = std::static_pointer_cast<Stack>(pSelectedElement);
+
+    if (m_CreateElementPopup)
+    {
+        ImGui::OpenPopup("create_element_popup");
+        m_CreateElementPopup = false;
+    }
+
+    if (ImGui::BeginPopup("create_element_popup"))
+    {
+        ElementSharedPtr pNewElement;
+        if (ImGui::MenuItem(ICON_FA_DICE " Dice"))
+        {
+            pNewElement = CreateElement("Dice");
+        }
+        if (ImGui::MenuItem(ICON_FA_HEADING " Heading"))
+        {
+            pNewElement = CreateElement("Heading");
+        }
+        if (ImGui::MenuItem(ICON_FA_IMAGE " Image"))
+        {
+            pNewElement = CreateElement("Image");
+        }
+        if (ImGui::MenuItem(ICON_FA_BARS " Stack"))
+        {
+            pNewElement = CreateElement("Stack");
+        }
+        if (ImGui::MenuItem(ICON_FA_FONT " Text"))
+        {
+            pNewElement = CreateElement("Text");
+        }
+
+        if (pNewElement)
+        {
+            StackableElementSharedPtr pStackableElement = std::static_pointer_cast<StackableElement>(pNewElement);
+            pStack->AddElement(pStackableElement);
+        }
+
+        ImGui::EndPopup();
     }
 }
 

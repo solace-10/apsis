@@ -10,6 +10,10 @@ enum class ElementType
     Image,
     Text,
     EncounterButton,
+    EncounterDiceSelector,
+    Panel,
+    Heading,
+    Dice,
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

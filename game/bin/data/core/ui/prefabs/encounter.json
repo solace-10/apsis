@@ -14,6 +14,119 @@
                 "width": 1008
             },
             {
+                "cell": 0,
+                "cells": "96;*;96",
+                "elements": [
+                    {
+                        "cell": 1,
+                        "cells": "104;800;104",
+                        "elements": [
+                            {
+                                "cell": 1,
+                                "name": "panel",
+                                "type": "Panel"
+                            },
+                            {
+                                "cell": 1,
+                                "cells": "32;*;32",
+                                "elements": [
+                                    {
+                                        "cell": 1,
+                                        "cells": "8;32;96;32;*",
+                                        "elements": [
+                                            {
+                                                "cell": 1,
+                                                "cells": "224;32;224;32;224",
+                                                "elements": [
+                                                    {
+                                                        "cell": 0,
+                                                        "is_dynamic": false,
+                                                        "name": "heading_ship_1",
+                                                        "text": "EVERFLAME",
+                                                        "type": "Heading",
+                                                        "underlined": true
+                                                    },
+                                                    {
+                                                        "cell": 2,
+                                                        "is_dynamic": false,
+                                                        "name": "heading_ship_2",
+                                                        "text": "SKYFORGER",
+                                                        "type": "Heading",
+                                                        "underlined": true
+                                                    },
+                                                    {
+                                                        "cell": 4,
+                                                        "is_dynamic": false,
+                                                        "name": "heading_ship_3",
+                                                        "text": "ARBELLATRIS",
+                                                        "type": "Heading",
+                                                        "underlined": true
+                                                    }
+                                                ],
+                                                "name": "titles",
+                                                "orientation": "Horizontal",
+                                                "type": "Stack"
+                                            },
+                                            {
+                                                "cell": 2,
+                                                "cells": "96;32;96;32;96;32;96;32;96;32;96",
+                                                "elements": [
+                                                    {
+                                                        "cell": 0,
+                                                        "name": "die_1",
+                                                        "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 2,
+                                                        "name": "die_2",
+                                                        "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 4,
+                                                        "name": "die_3",
+                                                        "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 6,
+                                                        "name": "die_4",
+                                                        "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 8,
+                                                        "name": "die_5",
+                                                        "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 10,
+                                                        "name": "die_6",
+                                                        "type": "Dice"
+                                                    }
+                                                ],
+                                                "name": "dice",
+                                                "orientation": "Horizontal",
+                                                "type": "Stack"
+                                            }
+                                        ],
+                                        "name": "stack_v",
+                                        "orientation": "Vertical",
+                                        "type": "Stack"
+                                    }
+                                ],
+                                "name": "stack_h",
+                                "orientation": "Horizontal",
+                                "type": "Stack"
+                            }
+                        ],
+                        "name": "stack",
+                        "orientation": "Horizontal",
+                        "type": "Stack"
+                    }
+                ],
+                "name": "encounter_image_stack",
+                "orientation": "Vertical",
+                "type": "Stack"
+            },
+            {
                 "cell": 1,
                 "cells": "*;54;54;54",
                 "elements": [

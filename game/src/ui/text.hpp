@@ -34,8 +34,6 @@ public:
     void SetDynamic(bool isDynamic);
     bool IsDynamic() const;
 
-    //static const 
-
 private:
     std::string m_Text;
     int m_Margin{0};

@@ -246,7 +246,7 @@
                 "x": -22.0,
                 "y": 20.0
             },
-            "value": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n_\"Captain,\"_ EXA's voice echoed through the bridge speakers, _\"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"_\n\nThe AI's words were punctuated by the soft hum of the ship's engines, the air was crisp and clean, recycled by the efficient life support systems.\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
+            "value": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n_\"Captain,\"_ EXA's voice echoed through the bridge speakers, _\"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"_\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
         },
         {
             "id": 47,
@@ -290,7 +290,7 @@
                 "x": -374.0,
                 "y": 420.0
             },
-            "value": ""
+            "value": "\"Active sensors, EXA. Tell me what's out there.\""
         },
         {
             "id": 55,
@@ -366,7 +366,7 @@
                 "x": -374.0,
                 "y": 740.0
             },
-            "value": ""
+            "value": "\"Launch the collectors, see what we can mine around us.\""
         },
         {
             "id": 69,
@@ -426,7 +426,7 @@
                 "x": -374.0,
                 "y": 1012.0
             },
-            "value": ""
+            "value": "\"There's nothing for us here. Jump us out.\""
         },
         {
             "id": 80,
@@ -521,7 +521,7 @@
                 "x": 2138.0,
                 "y": -508.0
             },
-            "value": "With a flicker of blue light, EXA complied, bathing the asteroid field in a high-resolution sensor sweep. The data streamed in, painting a vivid picture of the surrounding space.\n\n_\"Captain, preliminary results indicate a typical asteroid field composition. Predominantly iron and rock, with traces of rare earth metals. No signs of artificial structures, but...\"_ EXA paused, its digital voice laced with curiosity.\n\n_\"There is an object on the edge of our scan range that doesn't quite fit the natural profile. It's small, roughly the size of a probe, and emits a faint, anomalous energy signature.\"_ The main view screen updated, highlighting the mysterious object in yellow.\n\n_\"It's probably just an old, derelict satellite or probe, but its energy signature suggests some form of propulsion or communication system may still be active.\"_\n\nYou pondered the possibilities, weighing the potential gains against the risks of diverting resources to investigate."
+            "value": "_\"Compliance.\"_, EXA replied, bathing the asteroid field in a high-resolution sensor sweep. The data streamed in, painting a vivid picture of the surrounding space.\n\n_\"Preliminary results indicate a typical asteroid field composition. Predominantly_ [corsite](corsite) _and_ [valnum,](valnum) _with traces of rare metals. No signs of artificial structures, but...\"_ EXA paused, its digital voice laced with curiosity.\n\n_\"There is an object on the edge of our scan range that doesn't quite fit the natural profile. It's small, roughly the size of a probe, and emits a faint, anomalous energy signature.\"_ The main view screen updated, highlighting the mysterious object in yellow. It is but a speck at this distance.\n\n_\"It's probably just an old, derelict satellite or probe, but its energy signature suggests some form of propulsion or communication system may still be active.\"_"
         },
         {
             "id": 98,

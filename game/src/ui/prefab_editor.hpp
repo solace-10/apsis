@@ -29,6 +29,8 @@ private:
     void RenderProperties();
     void Save();
     void Revert();
+    void HandleClickedEvent(ElementSharedPtr pElement);
+    void HandleCreateElementPopup();
     void SelectElement(ElementSharedPtr pElement);
 
     bool m_ShowPrefabEditor{false};
@@ -42,6 +44,7 @@ private:
     std::vector<RegisteredPrefab> m_RegisteredPrefabs;
     std::optional<RegisteredPrefab> m_pSelectedPrefab;
     ElementWeakPtr m_pSelectedElement;
+    bool m_CreateElementPopup{false};
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI
