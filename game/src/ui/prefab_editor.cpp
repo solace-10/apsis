@@ -192,6 +192,10 @@ void PrefabEditor::HandleCreateElementPopup()
         {
             pNewElement = CreateElement("Dice");
         }
+        if (ImGui::MenuItem(ICON_FA_DIVIDE " Divider"))
+        {
+            pNewElement = CreateElement("Divider");
+        }
         if (ImGui::MenuItem(ICON_FA_HEADING " Heading"))
         {
             pNewElement = CreateElement("Heading");

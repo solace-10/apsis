@@ -2,6 +2,7 @@
 #include <pandora.hpp>
 
 #include "ui/dice.hpp"
+#include "ui/divider.hpp"
 #include "ui/encounter_button.hpp"
 #include "ui/encounter_dice_selector.hpp"
 #include "ui/heading.hpp"
@@ -19,6 +20,10 @@ ElementSharedPtr CreateElement(const std::string& typeName)
     if (typeName == "Dice")
     {
         return std::make_shared<Dice>();
+    }
+    else if (typeName == "Divider")
+    {
+        return std::make_shared<Divider>();
     }
     else if (typeName == "Heading")
     {

@@ -14,6 +14,7 @@ enum class ElementType
     Panel,
     Heading,
     Dice,
+    Divider
 };
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

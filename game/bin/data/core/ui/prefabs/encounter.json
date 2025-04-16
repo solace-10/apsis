@@ -32,7 +32,7 @@
                                 "elements": [
                                     {
                                         "cell": 1,
-                                        "cells": "8;32;96;32;*",
+                                        "cells": "8;32;96;32;224",
                                         "elements": [
                                             {
                                                 "cell": 1,
@@ -103,6 +103,25 @@
                                                     }
                                                 ],
                                                 "name": "dice",
+                                                "orientation": "Horizontal",
+                                                "type": "Stack"
+                                            },
+                                            {
+                                                "cell": 3,
+                                                "name": "divider",
+                                                "type": "Divider"
+                                            },
+                                            {
+                                                "cell": 4,
+                                                "cells": "224;32;*",
+                                                "elements": [
+                                                    {
+                                                        "cell": 0,
+                                                        "name": "",
+                                                        "type": "Dice"
+                                                    }
+                                                ],
+                                                "name": "details_stack_h",
                                                 "orientation": "Horizontal",
                                                 "type": "Stack"
                                             }
