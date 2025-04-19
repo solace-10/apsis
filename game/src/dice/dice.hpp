@@ -15,9 +15,7 @@ enum class DiceCategory
     Engineering,
     Navigation,
     Warfare,
-    Science,
-
-    Count
+    Science
 };
 
 enum class DiceModifiers

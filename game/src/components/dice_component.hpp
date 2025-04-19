@@ -24,7 +24,7 @@ public:
     const DiceContainer& GetDice(DiceCategory category) const;
 
 private:
-    std::array<DiceContainer, static_cast<size_t>(DiceCategory::Count)> m_Dice;
+    std::array<DiceContainer, magic_enum::enum_count<DiceCategory>()> m_Dice;
 };
 
 inline DiceComponent::DiceContainer& DiceComponent::GetDice(DiceCategory category)

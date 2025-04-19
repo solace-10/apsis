@@ -227,7 +227,7 @@ void Sector::GenerateDice()
 
     view.each([](const auto entity, DiceComponent& diceComponent)
     {
-        for (size_t categoryIdx = 0; categoryIdx < static_cast<size_t>(DiceCategory::Count); categoryIdx++)
+        for (size_t categoryIdx = 0; categoryIdx < magic_enum::enum_count<DiceCategory>(); categoryIdx++)
         {
             DiceCategory category = static_cast<DiceCategory>(categoryIdx);
             DiceComponent::DiceContainer& diceContainer = diceComponent.GetDice(category);
