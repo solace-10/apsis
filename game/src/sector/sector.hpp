@@ -8,6 +8,7 @@ namespace WingsOfSteel::TheBrightestStar
 
 DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(EncounterWindow);
+DECLARE_SMART_PTR(Fleet);
 
 DECLARE_SMART_PTR(Sector);
 class Sector : public Pandora::Scene
@@ -30,12 +31,16 @@ private:
     void DrawCameraDebugUI();
     void SpawnEncounter();
     void SpawnDome();
-    void SpawnPlayerShip();
+    void SpawnPlayerFleet();
+    void GenerateDice();
+
+    Pandora::EntitySharedPtr SpawnShip(const std::string& name, const std::string& modelPath);
 
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
+    FleetSharedPtr m_pPlayerFleet;
     Pandora::EntitySharedPtr m_pPlayerShip;
-    bool m_ShowCameraDebugUI = false;
+    bool m_ShowCameraDebugUI{false};
     EncounterWindowSharedPtr m_pEncounterWindow;
     EncounterSharedPtr m_pEncounter;
 };

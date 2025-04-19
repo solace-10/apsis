@@ -28,9 +28,13 @@ public:
     void SetDice(const ::WingsOfSteel::TheBrightestStar::Dice& dice);
     void ClearDice();
 
+    void SetSelected(bool isSelected);
+    bool IsSelected() const;
+
 private:
     std::optional<::WingsOfSteel::TheBrightestStar::Dice> m_Dice;
     float m_AnimationTimer{0.0f};
+    bool m_IsSelected{false};
 };
 
 inline void Dice::SetDice(const ::WingsOfSteel::TheBrightestStar::Dice& dice)
@@ -41,6 +45,16 @@ inline void Dice::SetDice(const ::WingsOfSteel::TheBrightestStar::Dice& dice)
 inline void Dice::ClearDice()
 {
     m_Dice = std::nullopt;
+}
+
+inline void Dice::SetSelected(bool isSelected)
+{
+    m_IsSelected = isSelected;
+}
+
+inline bool Dice::IsSelected() const
+{
+    return m_IsSelected;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

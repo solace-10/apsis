@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include <core/smart_ptr.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
@@ -30,7 +32,8 @@ public:
     Dice(DiceValue value) 
     : m_Value(value)
     {
-
+        assert(value >= 1);
+        assert(value <= 6);
     }
     ~Dice() {}
 

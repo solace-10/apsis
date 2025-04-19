@@ -11,6 +11,7 @@
 
 #include "components/dice_component.hpp"
 #include "components/player_controller_component.hpp"
+#include "components/ship_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "dice/dice_generator.hpp"
@@ -21,6 +22,7 @@
 #include "systems/debug_render_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
+#include "fleet.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -61,9 +63,9 @@ void Sector::Initialize()
     m_pEncounterWindow = std::make_shared<EncounterWindow>();
     m_pEncounterWindow->Initialize("/ui/prefabs/encounter.json");
 
-    SpawnEncounter();
     SpawnDome();
-    SpawnPlayerShip();
+    SpawnPlayerFleet();
+    SpawnEncounter();
     sectorCameraComponent.anchorEntity = m_pPlayerShip;
 }
 
@@ -144,6 +146,7 @@ void Sector::SpawnEncounter()
         ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         if (pDataStore)
         {
+            GenerateDice();
             m_pEncounter = std::make_shared<Encounter>(encounterName, pDataStore);
             m_pEncounter->Bind(m_pEncounterWindow);
             m_pEncounter->Start();
@@ -158,6 +161,7 @@ void Sector::ForceEncounter(EncounterSharedPtr pEncounter)
         m_pEncounter->Stop();
     }
 
+    GenerateDice();
     m_pEncounter = pEncounter;
     m_pEncounter->Bind(m_pEncounterWindow);
     m_pEncounter->Start();
@@ -177,29 +181,64 @@ void Sector::SpawnDome()
     m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
 }
 
-void Sector::SpawnPlayerShip()
+void Sector::SpawnPlayerFleet()
 {
     using namespace Pandora;
 
-    m_pPlayerShip = CreateEntity();
+    m_pPlayerFleet = std::make_shared<Fleet>();
+
+    m_pPlayerShip = SpawnShip("Everflame", "/models/flagship/light_carrier/light_carrier.glb");
+    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
+    m_pPlayerShip->AddComponent<DiceComponent>();
+    m_pPlayerFleet->AddShip(m_pPlayerShip);
+
+    std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
+    for (const std::string& name : escortNames)
+    {
+        Pandora::EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
+        pEscort->AddComponent<DiceComponent>();
+        m_pPlayerFleet->AddShip(pEscort);
+    }
+}
+
+Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::string& modelPath)
+{
+    using namespace Pandora;
+
+    Pandora::EntitySharedPtr pShip = CreateEntity();
     
-    TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
+    TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-    m_pPlayerShip->AddComponent<ModelComponent>("/models/flagship/light_carrier/light_carrier.glb");
-    m_pPlayerShip->AddComponent<ShipNavigationComponent>();
-    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
-    
-    DiceComponent& diceComponent = m_pPlayerShip->AddComponent<DiceComponent>();
-    const size_t diceToGenerate = diceComponent.Dice[0].size();
-    for (uint32_t diceCategory = 0; diceCategory < static_cast<size_t>(DiceCategory::Count); diceCategory++)
+    pShip->AddComponent<ModelComponent>(modelPath);
+    pShip->AddComponent<ShipNavigationComponent>();
+
+    ShipComponent& shipComponent = pShip->AddComponent<ShipComponent>();
+    shipComponent.SetName(name);
+
+    return pShip;
+}
+
+void Sector::GenerateDice()
+{
+    using namespace Pandora;
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<DiceComponent>();
+
+    view.each([](const auto entity, DiceComponent& diceComponent)
     {
-        std::vector<Dice> dice = DiceGenerator::Generate(diceToGenerate);
-        for (uint32_t diceIndex = 0; diceIndex < diceToGenerate; diceIndex++)
+        for (size_t categoryIdx = 0; categoryIdx < static_cast<size_t>(DiceCategory::Count); categoryIdx++)
         {
-            diceComponent.Dice[diceCategory][diceIndex] = dice[diceIndex];
+            DiceCategory category = static_cast<DiceCategory>(categoryIdx);
+            DiceComponent::DiceContainer& diceContainer = diceComponent.GetDice(category);
+            std::vector<Dice> rolledDice = DiceGenerator::Generate(diceContainer.size());
+            assert(rolledDice.size() == diceContainer.size());
+            for (size_t i = 0; i < diceContainer.size(); i++)
+            {
+                diceContainer[i] = rolledDice[i];
+            }
         }
-    }
+    });
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
