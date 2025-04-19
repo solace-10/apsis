@@ -15,7 +15,7 @@
             },
             {
                 "cell": 0,
-                "cells": "96;*;96",
+                "cells": "124;*;124",
                 "elements": [
                     {
                         "cell": 1,
@@ -59,7 +59,7 @@
                                                         "is_dynamic": false,
                                                         "level": "Heading2",
                                                         "name": "heading_ship_3",
-                                                        "text": "ARBELLATRIS",
+                                                        "text": "FRACTAL BLOSSOM",
                                                         "type": "Heading"
                                                     }
                                                 ],
@@ -122,7 +122,7 @@
                                                     },
                                                     {
                                                         "cell": 2,
-                                                        "cells": "44;16;44;44;*",
+                                                        "cells": "44;16;44;*;38",
                                                         "elements": [
                                                             {
                                                                 "cell": 0,
@@ -184,6 +184,15 @@
                                                                 "name": "die_modifiers",
                                                                 "text": "<modifiers>",
                                                                 "type": "Text"
+                                                            },
+                                                            {
+                                                                "cell": 4,
+                                                                "icon": "/ui/icons/encounter_button_jump.png",
+                                                                "margin": 0,
+                                                                "mode": "Important",
+                                                                "name": "DefaultButton",
+                                                                "text": "\"Confirm.\"",
+                                                                "type": "Button"
                                                             }
                                                         ],
                                                         "name": "die_details",
@@ -233,25 +242,28 @@
                         "cell": 1,
                         "icon": "/ui/icons/encounter_button_sensors.png",
                         "margin": 8,
+                        "mode": "Standard",
                         "name": "button_option_1",
                         "text": "\"Active sensors, EXA. Tell me what's out there.\"",
-                        "type": "EncounterButton"
+                        "type": "Button"
                     },
                     {
                         "cell": 2,
                         "icon": "/ui/icons/encounter_button_engineering.png",
                         "margin": 8,
+                        "mode": "Standard",
                         "name": "button_option_2",
                         "text": "\"Launch the collectors, see what we can mine around us.\"",
-                        "type": "EncounterButton"
+                        "type": "Button"
                     },
                     {
                         "cell": 3,
                         "icon": "/ui/icons/encounter_button_jump.png",
                         "margin": 8,
+                        "mode": "Standard",
                         "name": "button_option_3",
                         "text": "\"There's nothing for us here. Jump us out.\"",
-                        "type": "EncounterButton"
+                        "type": "Button"
                     }
                 ],
                 "name": "encounter_text_stack",

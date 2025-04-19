@@ -11,12 +11,12 @@
 namespace WingsOfSteel::TheBrightestStar::UI
 {
 
-DECLARE_SMART_PTR(EncounterButton);
-class EncounterButton : public StackableElement
+DECLARE_SMART_PTR(Button);
+class Button : public StackableElement
 {
 public:
-    EncounterButton();
-    ~EncounterButton() override {}
+    Button();
+    ~Button() override {}
 
     ElementType GetType() const override;
     const std::string& GetIcon() const override;
@@ -31,17 +31,26 @@ public:
 
     void SetOnClickedEvent(const OnClickedEvent& event);
 
+    enum class Mode
+    {
+        Standard,
+        Important
+    };
+    
 private:
     void SetIconSource(const std::string& source);
 
+    Mode m_Mode{Mode::Standard};
     std::string m_Text;
-    int m_Margin;
+    int m_Margin{0};
     Pandora::ResourceTexture2DSharedPtr m_pIconTexture;
     Property<std::string> m_IconSource;
     OnClickedEvent m_OnClickedEvent;
+    float m_BackgroundAnimation{0.0f};
+    float m_BackgroundOffset{0.0f};
 };
 
-inline void EncounterButton::SetOnClickedEvent(const OnClickedEvent& event)
+inline void Button::SetOnClickedEvent(const OnClickedEvent& event)
 {
     m_OnClickedEvent = event;
 }

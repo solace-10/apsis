@@ -9,7 +9,7 @@ enum class ElementType
     Stack,
     Image,
     Text,
-    EncounterButton,
+    Button,
     Panel,
     Heading,
     Dice,

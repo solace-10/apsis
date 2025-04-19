@@ -188,6 +188,10 @@ void PrefabEditor::HandleCreateElementPopup()
     if (ImGui::BeginPopup("create_element_popup"))
     {
         ElementSharedPtr pNewElement;
+        if (ImGui::MenuItem(ICON_FA_CODE_BRANCH " Button"))
+        {
+            pNewElement = CreateElement("Button");
+        }
         if (ImGui::MenuItem(ICON_FA_DICE " Dice"))
         {
             pNewElement = CreateElement("Dice");
@@ -216,6 +220,8 @@ void PrefabEditor::HandleCreateElementPopup()
         if (pNewElement)
         {
             StackableElementSharedPtr pStackableElement = std::static_pointer_cast<StackableElement>(pNewElement);
+            const std::string defaultName = std::string("Default").append(magic_enum::enum_name(pNewElement->GetType()));
+            pNewElement->SetName(defaultName);
             pStack->AddElement(pStackableElement);
         }
 

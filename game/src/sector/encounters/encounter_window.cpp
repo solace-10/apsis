@@ -11,9 +11,9 @@ namespace WingsOfSteel::TheBrightestStar
 void EncounterWindow::OnInitializationCompleted()
 {
     m_pEncounterText = FindElement<UI::Text>("/encounter_window/stack/encounter_text_stack/encounter_text");
-    m_pEncounterButtons[0] = FindElement<UI::EncounterButton>("/encounter_window/stack/encounter_text_stack/button_option_1");
-    m_pEncounterButtons[1] = FindElement<UI::EncounterButton>("/encounter_window/stack/encounter_text_stack/button_option_2");
-    m_pEncounterButtons[2] = FindElement<UI::EncounterButton>("/encounter_window/stack/encounter_text_stack/button_option_3");
+    m_pEncounterButtons[0] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_1");
+    m_pEncounterButtons[1] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_2");
+    m_pEncounterButtons[2] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_3");
 }
 
 void EncounterWindow::AppendText(const std::string& text)
