@@ -4,7 +4,6 @@
 #include "ui/dice.hpp"
 #include "ui/divider.hpp"
 #include "ui/encounter_button.hpp"
-#include "ui/encounter_dice_selector.hpp"
 #include "ui/heading.hpp"
 #include "ui/image.hpp"
 #include "ui/panel.hpp"
@@ -48,10 +47,6 @@ ElementSharedPtr CreateElement(const std::string& typeName)
     else if (typeName == "EncounterButton")
     {
         return std::make_shared<EncounterButton>();
-    }
-    else if (typeName == "EncounterDiceSelector")
-    {
-        return std::make_shared<EncounterDiceSelector>();
     }
     else
     {

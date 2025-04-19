@@ -302,7 +302,7 @@ void Stack::UpdateCells()
         }
         else if (cellDefinition.dimension == CellDimensionType::Percentage)
         {
-            int value = static_cast<int>(static_cast<float>(remainingSpace) * static_cast<float>(cellDefinition.value) / 100.0f);
+            int value = static_cast<int>(static_cast<float>(stackLength) * static_cast<float>(cellDefinition.value) / 100.0f);
             if (m_Orientation == Orientation::Horizontal)
             {
                 m_Cells.emplace_back(cellOffset, glm::ivec2(value, stackSize.y));
@@ -312,7 +312,7 @@ void Stack::UpdateCells()
                 m_Cells.emplace_back(cellOffset, glm::ivec2(stackSize.x, value));
             }
             cellOffset += value;
-            remainingSpace -= value;
+            remainingSpace = glm::max(remainingSpace - value, 0);
         }
         else if (cellDefinition.dimension == CellDimensionType::Auto)
         {

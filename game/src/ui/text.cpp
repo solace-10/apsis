@@ -1,4 +1,5 @@
 #include <imgui/imgui.hpp>
+#include <magic_enum.hpp>
 
 #include "ui/internal/default_markdown.hpp"
 #include "ui/text.hpp"
@@ -37,13 +38,17 @@ void Text::Render()
 
     if (!m_Text.empty())
     {
-        if (m_IsMarkdown)
+        if (m_Mode == Mode::Markdown)
         {
             ImGui::Markdown(m_Text.c_str(), m_Text.length(), Internal::DefaultMarkdown::Get());
         }
-        else
+        else if (m_Mode == Mode::MultiLine)
         {
             ImGui::TextWrapped("%s", m_Text.c_str());
+        }
+        else if (m_Mode == Mode::SingleLine)
+        {
+            ImGui::TextUnformatted(m_Text.c_str());
         }
     }
 
@@ -63,13 +68,26 @@ void Text::RenderProperties()
     StackableElement::RenderProperties();
     ImGui::InputInt("Margin", &m_Margin);
 
+    int mode = static_cast<int>(m_Mode);
+    if (ImGui::Combo("Mode", &mode, "Single line\0Multi line\0Markdown\0"))
+    {
+        m_Mode = static_cast<Mode>(mode);
+    }
+
     ImGui::BeginDisabled(m_IsDynamic);
     ImGui::InputTextMultiline("Text", &m_Text);
     ImGui::EndDisabled();
 
-    ImGui::Checkbox("Markdown", &m_IsMarkdown);
     ImGui::Checkbox("Scrollable", &m_IsScrollable);
     ImGui::Checkbox("Dynamic", &m_IsDynamic);
+
+    ImGui::BeginDisabled(m_Mode != Mode::SingleLine);
+    int alignment = static_cast<int>(m_Alignment);
+    if (ImGui::Combo("Alignment", &alignment, "Left\0Right\0Center\0"))
+    {
+        m_Alignment = static_cast<Alignment>(alignment);
+    }
+    ImGui::EndDisabled();
 }
 
 void Text::Deserialize(const nlohmann::json& data)
@@ -81,9 +99,10 @@ void Text::Deserialize(const nlohmann::json& data)
     SetText(text);
 
     TryDeserialize(data, "margin", m_Margin, 0);
-    TryDeserialize(data, "is_markdown", m_IsMarkdown, false);
     TryDeserialize(data, "is_scrollable", m_IsScrollable, false);
     TryDeserialize(data, "is_dynamic", m_IsDynamic, false);
+    TryDeserialize<Mode>(data, "mode", m_Mode, Mode::SingleLine);
+    TryDeserialize<Alignment>(data, "alignment", m_Alignment, Alignment::Left);
 }
 
 nlohmann::json Text::Serialize() const
@@ -95,9 +114,10 @@ nlohmann::json Text::Serialize() const
         data["text"] = m_Text;
     }
     data["margin"] = m_Margin;
-    data["is_markdown"] = m_IsMarkdown;
     data["is_scrollable"] = m_IsScrollable;
     data["is_dynamic"] = m_IsDynamic;
+    data["mode"] = magic_enum::enum_name(m_Mode);
+    data["alignment"] = magic_enum::enum_name(m_Alignment);
     return data;
 }
 

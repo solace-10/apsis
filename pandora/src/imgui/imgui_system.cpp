@@ -41,7 +41,7 @@ ImGuiSystem::ImGuiSystem()
     init_info.DepthStencilFormat = WGPUTextureFormat_Undefined;
     ImGui_ImplWGPU_Init(&init_info);
 
-    AddDefaultFont();
+    RegisterFonts();
     ApplyStyle();
 }
 
@@ -110,14 +110,14 @@ void ImGuiSystem::SetGameMenuBarCallback(ImGuiGameMenuBarCallback callback)
     m_GameMenuBarCallback = callback;
 }
 
-void ImGuiSystem::AddDefaultFont()
+void ImGuiSystem::RegisterFonts()
 {
     // Ideally font loading would be requested by the game and loaded asynchronously.
     const float defaultFontSize = 22.0f;
     const float defaultIconsFontSize = 22.0f;
 
     ImFontAtlas* pFontAtlas = ImGui::GetIO().Fonts;
-    m_pDefaultFont = pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2Regular_compressed_data, sExo2Regular_compressed_size, defaultFontSize);
+    ImFont* pDefaultFont = pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2Regular_compressed_data, sExo2Regular_compressed_size, defaultFontSize);
     
     // Merge FontAwesome into the default font. 
     const ImWchar iconsRanges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
@@ -126,10 +126,18 @@ void ImGuiSystem::AddDefaultFont()
     iconsConfig.GlyphMinAdvanceX = defaultFontSize;
     iconsConfig.GlyphOffset = ImVec2(0.0f, 2.0f);
     pFontAtlas->AddFontFromMemoryCompressedTTF(sFontAwesomeCompressedData, sFontAwesomeCompressedSize, defaultIconsFontSize, &iconsConfig, iconsRanges);
+    RegisterFont(Font::EXO2_REGULAR_22, pDefaultFont);
 
-    m_pDefaultFontSemiBold = pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, defaultFontSize);
+    RegisterFont(Font::EXO2_SEMIBOLD_22, pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, defaultFontSize));
+
+    RegisterFont(Font::EXO2_SEMIBOLD_32, pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, 32.0f));
 
     pFontAtlas->Build();
+}
+
+void ImGuiSystem::RegisterFont(Font font, ImFont* pImFont)
+{
+    m_Fonts[static_cast<size_t>(font)] = pImFont;
 }
 
 void ImGuiSystem::ApplyStyle()

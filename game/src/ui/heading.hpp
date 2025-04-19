@@ -28,10 +28,16 @@ public:
     void SetDynamic(bool isDynamic);
     bool IsDynamic() const;
 
+    enum class HeadingLevel
+    {
+        Heading1,
+        Heading2
+    };
+
 private:
     std::string m_Text{"<placeholder>"};
     bool m_IsDynamic{false};
-    bool m_Underlined{true};
+    HeadingLevel m_HeadingLevel{HeadingLevel::Heading1};
 };
 
 inline void Heading::SetText(const std::string& text)

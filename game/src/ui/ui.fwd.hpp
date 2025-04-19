@@ -10,7 +10,6 @@ enum class ElementType
     Image,
     Text,
     EncounterButton,
-    EncounterDiceSelector,
     Panel,
     Heading,
     Dice,

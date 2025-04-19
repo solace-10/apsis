@@ -41,26 +41,26 @@
                                                     {
                                                         "cell": 0,
                                                         "is_dynamic": false,
+                                                        "level": "Heading2",
                                                         "name": "heading_ship_1",
                                                         "text": "EVERFLAME",
-                                                        "type": "Heading",
-                                                        "underlined": true
+                                                        "type": "Heading"
                                                     },
                                                     {
                                                         "cell": 2,
                                                         "is_dynamic": false,
+                                                        "level": "Heading2",
                                                         "name": "heading_ship_2",
                                                         "text": "SKYFORGER",
-                                                        "type": "Heading",
-                                                        "underlined": true
+                                                        "type": "Heading"
                                                     },
                                                     {
                                                         "cell": 4,
                                                         "is_dynamic": false,
+                                                        "level": "Heading2",
                                                         "name": "heading_ship_3",
                                                         "text": "ARBELLATRIS",
-                                                        "type": "Heading",
-                                                        "underlined": true
+                                                        "type": "Heading"
                                                     }
                                                 ],
                                                 "name": "titles",
@@ -117,8 +117,78 @@
                                                 "elements": [
                                                     {
                                                         "cell": 0,
-                                                        "name": "",
+                                                        "name": "chosen_die",
                                                         "type": "Dice"
+                                                    },
+                                                    {
+                                                        "cell": 2,
+                                                        "cells": "44;16;44;44;*",
+                                                        "elements": [
+                                                            {
+                                                                "cell": 0,
+                                                                "is_dynamic": false,
+                                                                "level": "Heading1",
+                                                                "name": "die_heading",
+                                                                "text": "ELECTRONICS VI",
+                                                                "type": "Heading"
+                                                            },
+                                                            {
+                                                                "cell": 2,
+                                                                "cells": "33%;33%;33%",
+                                                                "elements": [
+                                                                    {
+                                                                        "alignment": "Left",
+                                                                        "cell": 0,
+                                                                        "is_dynamic": false,
+                                                                        "is_scrollable": false,
+                                                                        "margin": 0,
+                                                                        "mode": "SingleLine",
+                                                                        "name": "die_positive",
+                                                                        "text": "<positive>",
+                                                                        "type": "Text"
+                                                                    },
+                                                                    {
+                                                                        "alignment": "Left",
+                                                                        "cell": 1,
+                                                                        "is_dynamic": false,
+                                                                        "is_scrollable": false,
+                                                                        "margin": 0,
+                                                                        "mode": "SingleLine",
+                                                                        "name": "die_neutral",
+                                                                        "text": "<neutral>",
+                                                                        "type": "Text"
+                                                                    },
+                                                                    {
+                                                                        "alignment": "Left",
+                                                                        "cell": 2,
+                                                                        "is_dynamic": false,
+                                                                        "is_scrollable": false,
+                                                                        "margin": 0,
+                                                                        "mode": "SingleLine",
+                                                                        "name": "die_negative",
+                                                                        "text": "<negative>",
+                                                                        "type": "Text"
+                                                                    }
+                                                                ],
+                                                                "name": "die_breakdown",
+                                                                "orientation": "Horizontal",
+                                                                "type": "Stack"
+                                                            },
+                                                            {
+                                                                "alignment": "Left",
+                                                                "cell": 3,
+                                                                "is_dynamic": false,
+                                                                "is_scrollable": false,
+                                                                "margin": 0,
+                                                                "mode": "SingleLine",
+                                                                "name": "die_modifiers",
+                                                                "text": "<modifiers>",
+                                                                "type": "Text"
+                                                            }
+                                                        ],
+                                                        "name": "die_details",
+                                                        "orientation": "Vertical",
+                                                        "type": "Stack"
                                                     }
                                                 ],
                                                 "name": "details_stack_h",
@@ -150,11 +220,12 @@
                 "cells": "*;54;54;54",
                 "elements": [
                     {
+                        "alignment": "Left",
                         "cell": 0,
                         "is_dynamic": true,
-                        "is_markdown": true,
                         "is_scrollable": true,
                         "margin": 8,
+                        "mode": "Markdown",
                         "name": "encounter_text",
                         "type": "Text"
                     },

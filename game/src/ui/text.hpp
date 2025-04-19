@@ -28,18 +28,30 @@ public:
     void SetScrollable(bool isScrollable);
     bool IsScrollable() const;
 
-    void SetMarkdown(bool isMarkdown);
-    bool IsMarkdown() const;
-
     void SetDynamic(bool isDynamic);
     bool IsDynamic() const;
+
+    enum class Alignment
+    {
+        Left,
+        Center,
+        Right
+    };
+
+    enum class Mode
+    {
+        SingleLine,
+        MultiLine,
+        Markdown
+    };
 
 private:
     std::string m_Text;
     int m_Margin{0};
+    Mode m_Mode{Mode::SingleLine};
     bool m_IsScrollable{false};
-    bool m_IsMarkdown{false};
     bool m_IsDynamic{false};
+    Alignment m_Alignment{Alignment::Left};
 };
 
 inline const std::string& Text::GetText() const
@@ -55,16 +67,6 @@ inline void Text::SetScrollable(bool isScrollable)
 inline bool Text::IsScrollable() const
 {
     return m_IsScrollable;
-}
-
-inline void Text::SetMarkdown(bool isMarkdown)
-{
-    m_IsMarkdown = isMarkdown;
-}
-
-inline bool Text::IsMarkdown() const
-{
-    return m_IsMarkdown;
 }
 
 inline void Text::SetDynamic(bool isDynamic)
