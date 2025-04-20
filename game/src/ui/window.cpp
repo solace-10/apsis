@@ -67,6 +67,7 @@ void Window::Deserialize(const nlohmann::json& data)
         if (stackData.is_object())
         {
             m_pStack = std::make_shared<Stack>();
+            m_pStack->SetParent(shared_from_this());
             m_pStack->Deserialize(stackData);
         }
     }

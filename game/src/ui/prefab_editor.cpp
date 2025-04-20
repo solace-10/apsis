@@ -91,7 +91,7 @@ void PrefabEditor::RenderHierarchy()
         if (pWindow)
         {
             RenderTreeElement(pWindow);
-            HandleCreateElementPopup();
+            HandleElementPopup();
         }
     }
     else
@@ -161,72 +161,102 @@ void PrefabEditor::HandleClickedEvent(ElementSharedPtr pElement)
     else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
     {
         SelectElement(pElement);
-
-        if (pElement->GetType() == ElementType::Stack)
-        {
-            m_CreateElementPopup = true;
-        }
+        m_ElementPopup = true;
     }
 }
 
-void PrefabEditor::HandleCreateElementPopup()
+void PrefabEditor::HandleElementPopup()
 {
     ElementSharedPtr pSelectedElement = m_pSelectedElement.lock();
-    if (!pSelectedElement || pSelectedElement->GetType() != ElementType::Stack)
+    if (!pSelectedElement)
     {
         return;
     }
 
-    StackSharedPtr pStack = std::static_pointer_cast<Stack>(pSelectedElement);
-
-    if (m_CreateElementPopup)
+    if (m_ElementPopup)
     {
-        ImGui::OpenPopup("create_element_popup");
-        m_CreateElementPopup = false;
+        ImGui::OpenPopup("element_popup");
+        m_ElementPopup = false;
     }
 
-    if (ImGui::BeginPopup("create_element_popup"))
+    if (ImGui::BeginPopup("element_popup"))
     {
-        ElementSharedPtr pNewElement;
-        if (ImGui::MenuItem(ICON_FA_CODE_BRANCH " Button"))
+        if (ImGui::MenuItem(ICON_FA_ROAD " Copy path"))
         {
-            pNewElement = CreateElement("Button");
-        }
-        if (ImGui::MenuItem(ICON_FA_DICE " Dice"))
-        {
-            pNewElement = CreateElement("Dice");
-        }
-        if (ImGui::MenuItem(ICON_FA_DIVIDE " Divider"))
-        {
-            pNewElement = CreateElement("Divider");
-        }
-        if (ImGui::MenuItem(ICON_FA_HEADING " Heading"))
-        {
-            pNewElement = CreateElement("Heading");
-        }
-        if (ImGui::MenuItem(ICON_FA_IMAGE " Image"))
-        {
-            pNewElement = CreateElement("Image");
-        }
-        if (ImGui::MenuItem(ICON_FA_BARS " Stack"))
-        {
-            pNewElement = CreateElement("Stack");
-        }
-        if (ImGui::MenuItem(ICON_FA_FONT " Text"))
-        {
-            pNewElement = CreateElement("Text");
+            CopyPath(pSelectedElement.get());
         }
 
-        if (pNewElement)
+        if (pSelectedElement->GetType() == ElementType::Stack)
         {
-            StackableElementSharedPtr pStackableElement = std::static_pointer_cast<StackableElement>(pNewElement);
-            const std::string defaultName = std::string("Default").append(magic_enum::enum_name(pNewElement->GetType()));
-            pNewElement->SetName(defaultName);
-            pStack->AddElement(pStackableElement);
+            StackSharedPtr pStack = std::static_pointer_cast<Stack>(pSelectedElement);
+            if (pStack)
+            {
+                ImGui::Separator();
+
+                ElementSharedPtr pNewElement;
+                if (ImGui::MenuItem(ICON_FA_CODE_BRANCH " Button"))
+                {
+                    pNewElement = CreateElement("Button");
+                }
+                if (ImGui::MenuItem(ICON_FA_DICE " Dice"))
+                {
+                    pNewElement = CreateElement("Dice");
+                }
+                if (ImGui::MenuItem(ICON_FA_DIVIDE " Divider"))
+                {
+                    pNewElement = CreateElement("Divider");
+                }
+                if (ImGui::MenuItem(ICON_FA_HEADING " Heading"))
+                {
+                    pNewElement = CreateElement("Heading");
+                }
+                if (ImGui::MenuItem(ICON_FA_IMAGE " Image"))
+                {
+                    pNewElement = CreateElement("Image");
+                }
+                if (ImGui::MenuItem(ICON_FA_BARS " Stack"))
+                {
+                    pNewElement = CreateElement("Stack");
+                }
+                if (ImGui::MenuItem(ICON_FA_FONT " Text"))
+                {
+                    pNewElement = CreateElement("Text");
+                }
+
+                if (pNewElement)
+                {
+                    StackableElementSharedPtr pStackableElement = std::static_pointer_cast<StackableElement>(pNewElement);
+                    const std::string defaultName = std::string("Default").append(magic_enum::enum_name(pNewElement->GetType()));
+                    pNewElement->SetName(defaultName);
+                    pStack->AddElement(pStackableElement);
+                }
+            }
         }
 
         ImGui::EndPopup();
     }
+}
+
+void PrefabEditor::CopyPath(Element* pElement)
+{
+    std::vector<Element*> hierarchy;
+    hierarchy.push_back(pElement);
+    for (Element* pParentElement = pElement->GetParent(); pParentElement != nullptr; pParentElement = pParentElement->GetParent())
+    {
+        hierarchy.push_back(pParentElement);
+    }
+
+    std::string path("/");
+    for (int i = hierarchy.size() - 1; i >= 0; i--)
+    {
+        path += hierarchy[i]->GetName();
+        if (i > 0)
+        {
+            path += "/";
+        }
+    }
+
+    ImGui::SetClipboardText(path.c_str());
 }
 
 void PrefabEditor::RenderProperties()

@@ -47,6 +47,7 @@ void StackableElement::Deserialize(const nlohmann::json& data)
 void StackableElement::SetStack(StackSharedPtr pStack)
 {
     m_pStack = pStack;
+    SetParent(pStack);
 }
 
 glm::vec2 StackableElement::GetCellPosition() const

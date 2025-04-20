@@ -54,6 +54,9 @@ public:
     void RemoveFlag(Flags flag);
     bool HasFlag(Flags flag) const;
 
+    Element* GetParent() const;
+    void SetParent(ElementSharedPtr pElement);
+
 protected:
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, std::string& value, const std::string& defaultValue);
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, int& value, int defaultValue);
@@ -73,10 +76,21 @@ protected:
 private:
     PropertyContainer m_Properties;
     std::string m_Name;
+    ElementWeakPtr m_pParentElement;
     uint32_t m_Flags{0};
     glm::ivec2 m_Size{0};
     glm::ivec2 m_Position{0};
 };
+
+inline Element* Element::GetParent() const
+{
+    return m_pParentElement.lock().get();
+}
+
+inline void Element::SetParent(ElementSharedPtr pElement)
+{
+    m_pParentElement = pElement;
+}
 
 inline void Element::SetName(const std::string& name)
 {
