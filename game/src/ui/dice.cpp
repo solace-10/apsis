@@ -23,7 +23,7 @@ ElementType Dice::GetType() const
 
 const std::string& Dice::GetIcon() const
 {
-    static const std::string icon(ICON_FA_DICE);
+    static const std::string icon(ICON_FA_DICE_FIVE);
     return icon;
 }
 

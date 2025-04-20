@@ -198,7 +198,7 @@ void PrefabEditor::HandleElementPopup()
                 {
                     pNewElement = CreateElement("Button");
                 }
-                if (ImGui::MenuItem(ICON_FA_DICE " Dice"))
+                if (ImGui::MenuItem(ICON_FA_DICE_FIVE " Dice"))
                 {
                     pNewElement = CreateElement("Dice");
                 }
