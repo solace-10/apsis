@@ -41,11 +41,6 @@
             "start": 67
         },
         {
-            "end": 70,
-            "id": 77,
-            "start": 74
-        },
-        {
             "end": 71,
             "id": 78,
             "start": 76
@@ -306,7 +301,8 @@
             "position": {
                 "x": -374.0,
                 "y": 328.0
-            }
+            },
+            "value": "Electronics"
         },
         {
             "id": 58,
@@ -349,7 +345,8 @@
             "position": {
                 "x": -374.0,
                 "y": 632.0
-            }
+            },
+            "value": "Engineering"
         },
         {
             "id": 66,
@@ -393,22 +390,6 @@
             "position": {
                 "x": -116.0,
                 "y": 940.0
-            }
-        },
-        {
-            "id": 73,
-            "inputs": [],
-            "name": "Dice",
-            "outputs": [
-                {
-                    "id": 74,
-                    "name": "Value",
-                    "type": 4
-                }
-            ],
-            "position": {
-                "x": -374.0,
-                "y": 904.0
             }
         },
         {
@@ -581,7 +562,8 @@
             "position": {
                 "x": 1834.0,
                 "y": -472.0
-            }
+            },
+            "value": "Navigation"
         },
         {
             "id": 109,
@@ -624,7 +606,8 @@
             "position": {
                 "x": 1834.0,
                 "y": -264.0
-            }
+            },
+            "value": "Engineering"
         },
         {
             "id": 116,

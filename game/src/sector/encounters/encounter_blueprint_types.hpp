@@ -49,7 +49,8 @@ enum class NodeType
 enum class NodeDisplayType
 {
     Standard,
-    String
+    String,
+    Dice
 };
 
 enum class PinIconType

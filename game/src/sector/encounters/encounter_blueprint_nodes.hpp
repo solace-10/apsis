@@ -4,6 +4,7 @@
 
 #include <core/smart_ptr.hpp>
 
+#include "dice/dice.hpp"
 #include "encounter_blueprint_types.hpp"
 #include "encounter_editor_id_generator.hpp"
 
@@ -108,6 +109,10 @@ public:
     DiceNode();
 
     NodeType GetNodeType() const override;
+    nlohmann::json Serialize() const override;
+    void Deserialize(const nlohmann::json& data) override;
+
+    DiceCategory Value{DiceCategory::Electronics};
 };
 
 DECLARE_SMART_PTR(ImageNode);

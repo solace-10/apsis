@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include <glm/glm.hpp>
+#include <magic_enum.hpp>
 
 #include <core/log.hpp>
 #include <imgui/text_editor/text_editor.hpp>
@@ -56,6 +57,7 @@ void EncounterEditor::Update()
     DrawNodeEditor();
     ImGui::End();
 
+    DrawDiceEditor();
     DrawStringEditor();
 }
 
@@ -190,7 +192,7 @@ void EncounterEditor::DrawStringEditor()
         ImGui::OpenPopup("String editor");
     }
 
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    const ImVec2 center(ImGui::GetMainViewport()->GetCenter());
     ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("String editor", &m_ShowStringEditor, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
     {
@@ -203,6 +205,30 @@ void EncounterEditor::DrawStringEditor()
         ImGui::EndPopup();
     }
 }
+
+void EncounterEditor::DrawDiceEditor()
+{
+    if (m_ShowDiceEditor)
+    {
+        ImGui::OpenPopup("Dice editor");
+    }
+
+    const ImVec2 center(ImGui::GetMainViewport()->GetCenter());
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("Dice editor", &m_ShowDiceEditor, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+    {
+        for (size_t i = 0; i < magic_enum::enum_count<DiceCategory>(); i++)
+        {
+            DiceCategory category = static_cast<DiceCategory>(i);
+            if (ImGui::RadioButton(magic_enum::enum_name(category).data(), category == m_pSelectedDiceNode->Value))
+            {
+                m_pSelectedDiceNode->Value = category;
+            }
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void EncounterEditor::DrawNodes()
 {
     if (m_pSelectedEncounter == nullptr)
@@ -229,6 +255,10 @@ void EncounterEditor::DrawNodes()
         else if (pNode->Type == NodeDisplayType::String)
         {
             DrawStringNode(pNode);
+        }
+        else if (pNode->Type == NodeDisplayType::Dice)
+        {
+            DrawDiceNode(pNode);
         }
         ImGui::PopStyleVar();
 
@@ -296,6 +326,37 @@ void EncounterEditor::DrawStringNode(Node* pNode)
     {
         m_ShowStringEditor = true;
         m_pSelectedStringNode = static_cast<StringNode*>(pNode);
+    }
+
+    const int outputPinsWidth = GetPinGroupWidth(pNode->Outputs);
+    const int contentWidth = outputPinsWidth + buttonWidth + 8;
+    const int titleWidth = ImGui::CalcTextSize(pNode->Name.c_str()).x + 16;
+    const ImVec2 outputPinsStartPos = pinsStartPos + ImVec2(glm::max(contentWidth, titleWidth), 4);
+    ImVec2 outputPinPos = pinsStartPos + ImVec2(glm::max(contentWidth, titleWidth), 4);;
+
+    assert(pNode->Outputs.size() == 1);
+    Pin& outputPin = pNode->Outputs[0];
+    outputPinPos.x = outputPinsStartPos.x - GetPinWidth(outputPin);
+    ImGui::SetCursorPos(outputPinPos);
+
+    ImGuiNodeEditor::BeginPin(outputPin.ID, ImGuiNodeEditor::PinKind::Output);
+    ImGui::TextUnformatted(outputPin.Name.c_str());
+    ImGui::SameLine();
+    DrawPinIcon(outputPin, false);
+    ImGuiNodeEditor::EndPin();
+}
+
+void EncounterEditor::DrawDiceNode(Node* pNode)
+{
+    const int buttonWidth = 40;
+    ImVec2 pinsStartPos = ImGui::GetCursorPos();
+
+    std::stringstream buttonName;
+    buttonName << ICON_FA_DICE_D6 << "##" << pNode->ID.Get();
+    if (ImGui::Button(buttonName.str().c_str(), ImVec2(buttonWidth, 0)))
+    {
+        m_ShowDiceEditor = true;
+        m_pSelectedDiceNode = static_cast<DiceNode*>(pNode);
     }
 
     const int outputPinsWidth = GetPinGroupWidth(pNode->Outputs);

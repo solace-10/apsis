@@ -14,8 +14,8 @@ enum class DiceCategory
     Electronics = 0,
     Engineering,
     Navigation,
-    Warfare,
-    Science
+    Science,
+    Warfare
 };
 
 enum class DiceModifiers

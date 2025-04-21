@@ -212,7 +212,7 @@ void StringNode::Deserialize(const nlohmann::json& data)
 ////////////////////////////////////////////////////////////
 
 DiceNode::DiceNode()
-: Node("Dice", ImColor(255, 165, 0))
+: Node("Dice", ImColor(255, 165, 0), NodeDisplayType::Dice)
 {
     Outputs.emplace_back("Value", PinType::Dice);
 }
@@ -220,6 +220,23 @@ DiceNode::DiceNode()
 NodeType DiceNode::GetNodeType() const
 {
     return NodeType::Dice;
+}
+
+nlohmann::json DiceNode::Serialize() const
+{
+    nlohmann::json data = Node::Serialize();
+    data["value"] = magic_enum::enum_name(Value);
+    return data;
+}
+
+void DiceNode::Deserialize(const nlohmann::json& data)
+{
+    Node::Deserialize(data);
+    
+    if (data.contains("value"))
+    {
+        Value = magic_enum::enum_cast<DiceCategory>(data["value"].get<std::string>()).value_or(DiceCategory::Electronics);
+    }
 }
 
 ////////////////////////////////////////////////////////////

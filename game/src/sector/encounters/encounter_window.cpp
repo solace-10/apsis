@@ -14,6 +14,18 @@ void EncounterWindow::OnInitializationCompleted()
     m_pEncounterButtons[0] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_1");
     m_pEncounterButtons[1] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_2");
     m_pEncounterButtons[2] = FindElement<UI::Button>("/encounter_window/stack/encounter_text_stack/button_option_3");
+
+    m_ShipElements[0].pShipName = FindElement<UI::Heading>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/titles/heading_ship_1");
+    m_ShipElements[0].ShipDice[0] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_1");
+    m_ShipElements[0].ShipDice[1] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_2");
+
+    m_ShipElements[1].pShipName = FindElement<UI::Heading>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/titles/heading_ship_2");
+    m_ShipElements[1].ShipDice[0] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_3");
+    m_ShipElements[1].ShipDice[1] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_4");
+
+    m_ShipElements[2].pShipName = FindElement<UI::Heading>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/titles/heading_ship_3");
+    m_ShipElements[2].ShipDice[0] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_5");
+    m_ShipElements[2].ShipDice[1] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_6");
 }
 
 void EncounterWindow::AppendText(const std::string& text)

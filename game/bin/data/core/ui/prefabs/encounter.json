@@ -2,10 +2,10 @@
     "height": 678,
     "name": "encounter_window",
     "stack": {
-        "cells": "1008;*",
+        "cells": "*;1008",
         "elements": [
             {
-                "cell": 0,
+                "cell": 1,
                 "height": 678,
                 "name": "encounter_image",
                 "size_mode": "Fixed",
@@ -14,7 +14,7 @@
                 "width": 1008
             },
             {
-                "cell": 0,
+                "cell": 1,
                 "cells": "124;*;124",
                 "elements": [
                     {
@@ -190,7 +190,7 @@
                                                                 "icon": "/ui/icons/encounter_button_jump.png",
                                                                 "margin": 0,
                                                                 "mode": "Important",
-                                                                "name": "DefaultButton",
+                                                                "name": "button_confirm",
                                                                 "text": "\"Confirm.\"",
                                                                 "type": "Button"
                                                             }
@@ -225,7 +225,7 @@
                 "type": "Stack"
             },
             {
-                "cell": 1,
+                "cell": 0,
                 "cells": "*;54;54;54",
                 "elements": [
                     {
