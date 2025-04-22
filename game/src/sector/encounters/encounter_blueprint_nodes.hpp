@@ -16,6 +16,10 @@ DECLARE_SMART_PTR(TextEditor);
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(DiceNode);
+DECLARE_SMART_PTR(EncounterOptionNode);
+DECLARE_SMART_PTR(StringNode);
+
 class BlueprintNodeFactory
 {
 public:
@@ -76,8 +80,11 @@ public:
     void OnExecutionStarted(Encounter* pEncounter) override;
     ExecutionResult Execute(Encounter* pEncounter, float delta) override;
 
+    std::vector<EncounterOptionNode*> GetLinkedEncounterNodes(Encounter* pEncounter);
+
 private:
     std::optional<Option> m_SelectedOption;
+    std::vector<size_t> m_EncounterOptionPinIndices;
 };
 
 DECLARE_SMART_PTR(EncounterOptionNode);
@@ -87,6 +94,13 @@ public:
     EncounterOptionNode();
 
     NodeType GetNodeType() const override;
+
+    DiceNode* GetLinkedDiceNode(Encounter* pEncounter);
+    StringNode* GetLinkedStringNode(Encounter* pEncounter);
+
+private:
+    size_t m_DiceNodePinIndex{0};
+    size_t m_StringNodePinIndex{0};
 };
 
 DECLARE_SMART_PTR(StringNode);

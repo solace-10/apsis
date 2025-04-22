@@ -100,9 +100,14 @@ EncounterStageNode::EncounterStageNode()
     Inputs.emplace_back("", PinType::Flow);
     Inputs.emplace_back("Description", PinType::String);
     Inputs.emplace_back("Image", PinType::Image);
-    Inputs.emplace_back("Option 1", PinType::EncounterOption);
-    Inputs.emplace_back("Option 2", PinType::EncounterOption);
-    Inputs.emplace_back("Option 3", PinType::EncounterOption);
+
+    const std::array<std::string, 3> optionNames = { "Option 1", "Option 2", "Option 3" };
+    for (const std::string& optionName : optionNames)
+    {
+        m_EncounterOptionPinIndices.push_back(Inputs.size());
+        Inputs.emplace_back(optionName.c_str(), PinType::EncounterOption);
+    }
+
     Outputs.emplace_back("Selected 1", PinType::Flow);
     Outputs.emplace_back("Selected 2", PinType::Flow);
     Outputs.emplace_back("Selected 3", PinType::Flow);
@@ -126,7 +131,7 @@ void EncounterStageNode::OnExecutionStarted(Encounter* pEncounter)
             pEncounterWindow->AppendText(pStringNode->Value);
         }
 
-        pEncounterWindow->SetCurrentStage(std::static_pointer_cast<EncounterStageNode>(shared_from_this()));
+        pEncounterWindow->SetCurrentStage(pEncounter, std::static_pointer_cast<EncounterStageNode>(shared_from_this()));
     }
 
     m_SelectedOption.reset();
@@ -158,6 +163,18 @@ Node::ExecutionResult EncounterStageNode::Execute(Encounter* pEncounter, float d
     return Node::ExecutionResult::Continue;
 }
 
+std::vector<EncounterOptionNode*> EncounterStageNode::GetLinkedEncounterNodes(Encounter* pEncounter)
+{
+    std::vector<EncounterOptionNode*> optionNodes;
+
+    for (size_t pinIndex : m_EncounterOptionPinIndices)
+    {
+        optionNodes.push_back(dynamic_cast<EncounterOptionNode*>(pEncounter->GetFirstLinkedNode(&Inputs[pinIndex])));
+    }
+
+    return optionNodes;
+}
+
 ////////////////////////////////////////////////////////////
 // Encounter option
 ////////////////////////////////////////////////////////////
@@ -165,9 +182,23 @@ Node::ExecutionResult EncounterStageNode::Execute(Encounter* pEncounter, float d
 EncounterOptionNode::EncounterOptionNode()
 : Node("Encounter option", ImColor(5, 250, 191))
 {
+    m_DiceNodePinIndex = 0;
     Inputs.emplace_back("Dice", PinType::Dice);
+
+    m_StringNodePinIndex = 1;
     Inputs.emplace_back("Description", PinType::String);
+
     Outputs.emplace_back("Option", PinType::EncounterOption);
+}
+
+StringNode* EncounterOptionNode::GetLinkedStringNode(Encounter* pEncounter)
+{
+    return dynamic_cast<StringNode*>(pEncounter->GetFirstLinkedNode(&Inputs[m_StringNodePinIndex]));
+}
+
+DiceNode* EncounterOptionNode::GetLinkedDiceNode(Encounter* pEncounter)
+{
+    return dynamic_cast<DiceNode*>(pEncounter->GetFirstLinkedNode(&Inputs[m_DiceNodePinIndex]));
 }
 
 NodeType EncounterOptionNode::GetNodeType() const

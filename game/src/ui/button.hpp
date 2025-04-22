@@ -30,6 +30,7 @@ public:
     const std::string& GetText() const;
 
     void SetOnClickedEvent(const OnClickedEvent& event);
+    void SetIconSource(const std::string& source);
 
     enum class Mode
     {
@@ -38,8 +39,6 @@ public:
     };
     
 private:
-    void SetIconSource(const std::string& source);
-
     Mode m_Mode{Mode::Standard};
     std::string m_Text;
     int m_Margin{0};

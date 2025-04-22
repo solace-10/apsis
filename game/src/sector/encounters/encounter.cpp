@@ -28,7 +28,7 @@ void Encounter::Start()
     EncounterWindowSharedPtr pEncounterWindow = m_pEncounterWindow.lock();
     if (pEncounterWindow)
     {
-        pEncounterWindow->SetCurrentStage(nullptr);
+        pEncounterWindow->SetCurrentStage(nullptr, nullptr);
         pEncounterWindow->ClearText();
     }
 
@@ -57,7 +57,7 @@ void Encounter::Stop()
     EncounterWindowSharedPtr pEncounterWindow = m_pEncounterWindow.lock();
     if (pEncounterWindow)
     {
-        pEncounterWindow->SetCurrentStage(nullptr);
+        pEncounterWindow->SetCurrentStage(nullptr, nullptr);
     }
 }
 

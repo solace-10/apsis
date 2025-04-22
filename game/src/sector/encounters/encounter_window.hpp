@@ -14,6 +14,7 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(EncounterStageNode);
 
 DECLARE_SMART_PTR(EncounterWindow);
@@ -28,7 +29,7 @@ public:
     void AppendText(const std::string& text);
     void ClearText();
 
-    void SetCurrentStage(EncounterStageNodeSharedPtr pStage);
+    void SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage);
 
 private:
     EncounterStageNodeWeakPtr m_pCurrentStage;

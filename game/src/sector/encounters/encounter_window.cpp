@@ -1,9 +1,11 @@
+#include <cassert>
 #include <string>
 
 #include <imgui.h>
 
 #include "sector/encounters/encounter_blueprint_nodes.hpp"
 #include "sector/encounters/encounter_window.hpp"
+#include "sector/encounters/encounter.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -53,25 +55,73 @@ void EncounterWindow::ClearText()
     }
 }
 
-void EncounterWindow::SetCurrentStage(EncounterStageNodeSharedPtr pStage)
+void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage)
 {
     m_pCurrentStage = pStage;
-    for (int i = 0; i < 3; ++i)
+
+    if (!pEncounter || !pStage)
     {
-        if (m_pEncounterButtons[i])
+        return;
+    }
+
+    std::vector<EncounterOptionNode*> encounterOptionNodes = pStage->GetLinkedEncounterNodes(pEncounter);
+    size_t numBindings = m_pEncounterButtons.size();
+    assert(encounterOptionNodes.size() == numBindings);
+
+    for (size_t i = 0; i < numBindings; ++i)
+    {
+        UI::Button* pEncounterButton = m_pEncounterButtons[i].get();
+        if (pEncounterButton)
         {
-            m_pEncounterButtons[i]->SetOnClickedEvent(
-                [this, i]()
+            EncounterOptionNode* pEncounterOptionNode = encounterOptionNodes[i];
+            if (pEncounterOptionNode)
+            {
+                StringNode* pStringNode = pEncounterOptionNode->GetLinkedStringNode(pEncounter);
+                if (pStringNode)
                 {
-                    EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
-                    if (pStage)
-                    {
-                        // This logic will likely get more complicated if we have fewer than 3 options.
-                        const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(i);
-                        pStage->OnOptionSelected(option);
-                    }
+                    pEncounterButton->SetText(pStringNode->Value);
                 }
-            );
+                else
+                {
+                    pEncounterButton->SetText("<MISSING DESCRIPTION>");
+                }
+
+                DiceNode* pDiceNode = pEncounterOptionNode->GetLinkedDiceNode(pEncounter);
+                if (pDiceNode)
+                {
+                    static const std::array<std::string, magic_enum::enum_count<DiceCategory>()> categoryIcons =
+                    {
+                        "/ui/icons/encounter_button_electronics.png",
+                        "/ui/icons/encounter_button_engineering.png",
+                        "/ui/icons/encounter_button_jump.png",
+                        "/ui/icons/encounter_button_jump.png",
+                        "/ui/icons/encounter_button_jump.png"
+                    };
+                    pEncounterButton->SetIconSource(categoryIcons[static_cast<size_t>(pDiceNode->Value)]);
+                }
+                else
+                {
+                    static const std::string jumpIcon("/ui/icons/encounter_button_jump.png");
+                    pEncounterButton->SetIconSource(jumpIcon);
+                }
+
+                pEncounterButton->SetOnClickedEvent(
+                    [this, i]()
+                    {
+                        EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
+                        if (pStage)
+                        {
+                            // This logic will likely get more complicated if we have fewer than 3 options.
+                            const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(i);
+                            pStage->OnOptionSelected(option);
+                        }
+                    }
+                );
+            }
+            else
+            {
+                // TODO: Disable the button.
+            }
         }
     }
 }

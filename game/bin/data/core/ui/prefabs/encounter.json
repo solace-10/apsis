@@ -240,7 +240,7 @@
                     },
                     {
                         "cell": 1,
-                        "icon": "/ui/icons/encounter_button_sensors.png",
+                        "icon": "/ui/icons/encounter_button_electronics.png",
                         "margin": 8,
                         "mode": "Standard",
                         "name": "button_option_1",
