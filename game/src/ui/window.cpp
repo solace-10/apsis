@@ -75,7 +75,7 @@ void Window::Deserialize(const nlohmann::json& data)
 
 void Window::Render()
 {
-    if (!m_pDataStore)
+    if (!m_pDataStore || HasFlag(Flags::Hidden))
     {
         return;
     }
@@ -95,7 +95,7 @@ void Window::Render()
 
     RenderBackground();
 
-    if (m_pStack)
+    if (m_pStack && !m_pStack->HasFlag(Flags::Hidden))
     {
         m_pStack->SetPosition(glm::ivec2(0, sThemeWindowAccentHeight));
         m_pStack->SetSize(glm::ivec2(windowSize.x, windowSize.y - sThemeWindowAccentHeight));
@@ -176,7 +176,16 @@ ElementSharedPtr Window::FindElementInternal(const std::string& path) const
         return nullptr;
     }
 
-    return FindElementHierarchyDescent(tokens, 2, m_pStack);
+    ElementSharedPtr pFoundElement = FindElementHierarchyDescent(tokens, 2, m_pStack);
+    if (pFoundElement)
+    {
+        pFoundElement->AddFlag(Flags::Bound);
+        return pFoundElement;
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 ElementSharedPtr Window::FindElementHierarchyDescent(const std::vector<std::string>& tokens, size_t currentElementIdx, StackSharedPtr pStackElement) const

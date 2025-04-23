@@ -23,9 +23,13 @@ class Element : public std::enable_shared_from_this<Element>
 public:
     enum class Flags
     {
-        None = 0,
+        None             = 0,
         SelectedInEditor = 1 << 0,
-        AutoSize = 1 << 1,
+        AutoSize         = 1 << 1,
+        Selected         = 1 << 2,
+        Disabled         = 1 << 3,
+        Bound            = 1 << 4,
+        Hidden           = 1 << 5
     };
 
     Element() {}

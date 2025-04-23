@@ -38,7 +38,7 @@ void Button::Render()
 
     const ImVec2 screenSize = GetCellSize() - glm::vec2(m_Margin * 2);
     const ImVec2 iconSize(screenSize.y, screenSize.y);
-    if (screenSize.x > 0.0f && screenSize.y > 0.0f && ImGui::InvisibleButton(GetName().c_str(), screenSize) && m_OnClickedEvent)
+    if (screenSize.x > 0.0f && screenSize.y > 0.0f && ImGui::InvisibleButton(GetName().c_str(), screenSize) && m_OnClickedEvent && !HasFlag(Flags::Selected))
     {
         m_OnClickedEvent();
     }
@@ -46,7 +46,7 @@ void Button::Render()
     ImGui::SetCursorScreenPos(cp0); // This needs to be set again so the cursor position is correct as the InvisibleButton modifies it.
     
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
-    const bool hovered = ImGui::IsItemHovered();
+    const bool highlighted = ImGui::IsItemHovered() || HasFlag(Flags::Selected);
 
     if (m_Mode == Mode::Standard)
     {
@@ -62,7 +62,7 @@ void Button::Render()
             v += ImVec2(0.5f, 0.5f);
         }
 
-        if (hovered)
+        if (highlighted)
         {
             pDrawList->AddConvexPolyFilled(buttonBorder.data(), static_cast<int>(buttonBorder.size()), Theme::ButtonHovered);
         }
@@ -71,7 +71,7 @@ void Button::Render()
     }
     else
     {
-        if (hovered)
+        if (highlighted)
         {
             pDrawList->AddRectFilled(cp0 + ImVec2(16.0f, 0.0f), cp1, Theme::ButtonHovered);
         }
@@ -120,7 +120,7 @@ void Button::Render()
     if (!m_Text.empty())
     {
         ImGui::SetCursorScreenPos(cp0 + glm::vec2(48.0f, 7.0f));
-        const ImColor textColor = hovered ? Theme::ButtonTextHovered : Theme::ButtonText;
+        const ImColor textColor = highlighted ? Theme::ButtonTextHovered : Theme::ButtonText;
         ImGui::PushStyleColor(ImGuiCol_Text, static_cast<ImVec4>(textColor));
 
         if (m_Mode == Mode::Standard)

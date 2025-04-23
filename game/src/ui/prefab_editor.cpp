@@ -5,6 +5,7 @@
 #include "ui/prefab_editor.hpp"
 #include "ui/window.hpp"
 #include "ui/stack.hpp"
+#include "ui/theme.hpp"
 #include "ui/ui.hpp"
 #include "game.hpp"
 
@@ -104,8 +105,14 @@ void PrefabEditor::RenderHierarchy()
 
 void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
 {
+    const bool isBound = pElement->HasFlag(Element::Flags::Bound);
     std::stringstream label;
-    label << pElement->GetIcon() << " " << pElement->GetName();
+    label << pElement->GetIcon() << " ";
+    if (isBound)
+    {
+        label << ICON_FA_LINK << " ";
+    }
+    label <<  pElement->GetName();
 
     bool isLeaf = true;
     if (pElement->GetType() == ElementType::Window && static_pointer_cast<Window>(pElement)->GetStack())
@@ -121,6 +128,11 @@ void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
     if (m_pSelectedElement.lock() == pElement)
     {
         nodeFlags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    if (isBound)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, (ImVec4)Theme::AccentColor);
     }
 
     if (isLeaf)
@@ -149,6 +161,11 @@ void PrefabEditor::RenderTreeElement(ElementSharedPtr pElement)
         }
 
         ImGui::TreePop();
+    }
+    
+    if (isBound)
+    {
+        ImGui::PopStyleColor();
     }
 }
 

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <array>
+#include <optional>
 
 #include <core/smart_ptr.hpp>
 
 #include "ui/button.hpp"
+#include "ui/button_group.hpp"
 #include "ui/dice.hpp"
 #include "ui/heading.hpp"
 #include "ui/image.hpp"
@@ -30,6 +32,7 @@ public:
     void ClearText();
 
     void SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage);
+    void SetCurrentStageOption(int optionIndex);
 
 private:
     EncounterStageNodeWeakPtr m_pCurrentStage;
@@ -43,6 +46,9 @@ private:
         std::array<UI::DiceSharedPtr, 2> ShipDice; 
     };
     std::array<ShipElements, 3> m_ShipElements;
+    UI::ButtonGroupSharedPtr m_pEncounterButtonGroup;
+    std::optional<int> m_SelectedStageOption;
+    UI::ElementSharedPtr m_pSelectionPanel;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

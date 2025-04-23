@@ -10,8 +10,8 @@
 #include <pandora.hpp>
 
 #include "components/dice_component.hpp"
+#include "components/name_component.hpp"
 #include "components/player_controller_component.hpp"
-#include "components/ship_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "dice/dice_generator.hpp"
@@ -212,9 +212,7 @@ Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::s
 
     pShip->AddComponent<ModelComponent>(modelPath);
     pShip->AddComponent<ShipNavigationComponent>();
-
-    ShipComponent& shipComponent = pShip->AddComponent<ShipComponent>();
-    shipComponent.SetName(name);
+    pShip->AddComponent<NameComponent>(name);
 
     return pShip;
 }
@@ -239,6 +237,11 @@ void Sector::GenerateDice()
             }
         }
     });
+}
+
+Fleet* Sector::GetPlayerFleet() const
+{
+    return m_pPlayerFleet.get();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

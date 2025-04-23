@@ -26,6 +26,7 @@ public:
     void ForceEncounter(EncounterSharedPtr pEncounter);
 
     Pandora::EntitySharedPtr GetPlayerShip() const;
+    Fleet* GetPlayerFleet() const;
 
 private:
     void DrawCameraDebugUI();

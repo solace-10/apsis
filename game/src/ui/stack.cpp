@@ -116,6 +116,11 @@ void Stack::Render()
 
     for (const auto& pElement : m_Elements)
     {
+        if (pElement->HasFlag(Flags::Hidden))
+        {
+            continue;
+        }
+
         ImGui::SetCursorScreenPos(cursorScreenPosition + GetCellPosition(pElement->GetCell()));
         if (pElement->GetType() == ElementType::Stack)
         {
