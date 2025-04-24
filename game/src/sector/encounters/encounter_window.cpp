@@ -106,6 +106,7 @@ void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeS
                 DiceNode* pDiceNode = pEncounterOptionNode->GetLinkedDiceNode(pEncounter);
                 if (pDiceNode)
                 {
+                    DiceCategory diceCategory = pDiceNode->Value;
                     static const std::array<std::string, magic_enum::enum_count<DiceCategory>()> categoryIcons =
                     {
                         "/ui/icons/encounter_button_electronics.png",
@@ -114,29 +115,29 @@ void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeS
                         "/ui/icons/encounter_button_jump.png",
                         "/ui/icons/encounter_button_jump.png"
                     };
-                    pEncounterButton->SetIconSource(categoryIcons[static_cast<size_t>(pDiceNode->Value)]);
+                    pEncounterButton->SetIconSource(categoryIcons[static_cast<size_t>(diceCategory)]);
+
+                    pEncounterButton->SetOnClickedEvent(
+                        [this, pEncounterButton, i, diceCategory]()
+                        {
+                            m_pEncounterButtonGroup->Select(pEncounterButton);
+                            SetCurrentStageOption(diceCategory, i);
+    
+                            // EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
+                            // if (pStage)
+                            // {
+                            //     // This logic will likely get more complicated if we have fewer than 3 options.
+                            //     const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(i);
+                            //     pStage->OnOptionSelected(option);
+                            // }
+                        }
+                    );
                 }
                 else
                 {
                     static const std::string jumpIcon("/ui/icons/encounter_button_jump.png");
                     pEncounterButton->SetIconSource(jumpIcon);
                 }
-
-                pEncounterButton->SetOnClickedEvent(
-                    [this, pEncounterButton, i]()
-                    {
-                        m_pEncounterButtonGroup->Select(pEncounterButton);
-                        SetCurrentStageOption(i);
-
-                        // EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
-                        // if (pStage)
-                        // {
-                        //     // This logic will likely get more complicated if we have fewer than 3 options.
-                        //     const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(i);
-                        //     pStage->OnOptionSelected(option);
-                        // }
-                    }
-                );
             }
             else
             {
@@ -147,7 +148,7 @@ void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeS
     }
 }
 
-void EncounterWindow::SetCurrentStageOption(int optionIndex)
+void EncounterWindow::SetCurrentStageOption(DiceCategory diceCategory, int optionIndex)
 {
     m_SelectedStageOption = optionIndex;
     m_pSelectionPanel->RemoveFlag(Flags::Hidden);
@@ -155,6 +156,7 @@ void EncounterWindow::SetCurrentStageOption(int optionIndex)
     entt::registry& registry = Pandora::GetActiveScene()->GetRegistry();
     auto view = registry.view<const DiceComponent, const NameComponent>();
 
+    m_SelectedDie = std::nullopt;
     size_t shipIndex = 0;
     for (auto entity : view)
     {
@@ -162,20 +164,61 @@ void EncounterWindow::SetCurrentStageOption(int optionIndex)
         m_ShipElements[shipIndex].pShipName->SetText(nameComponent.Value);
 
         const auto& diceComponent = view.get<DiceComponent>(entity);
-        const auto& diceContainer = diceComponent.GetDice(DiceCategory::Electronics);
+        const auto& diceContainer = diceComponent.GetDice(diceCategory);
         for (size_t dieIndex = 0; dieIndex < diceContainer.size(); dieIndex++)
         {
+            UI::DiceSharedPtr& pUIDie = m_ShipElements[shipIndex].ShipDice[dieIndex];
             std::optional<Dice> die = diceContainer[dieIndex];
             if (die.has_value())
             {
-                m_ShipElements[shipIndex].ShipDice[dieIndex]->SetDice(die.value());
+                pUIDie->SetDice(die.value());
+
+                if (!m_SelectedDie.has_value())
+                {
+                    pUIDie->AddFlag(UI::Element::Flags::Selected);
+                    SetCurrentSelectedDie(die.value());
+                }
+                else
+                {
+                    pUIDie->RemoveFlag(UI::Element::Flags::Selected);
+                }
+
+                pUIDie->SetOnClickedEvent([this, die](){
+                    if (die.has_value())
+                    {
+                        SetCurrentSelectedDie(die.value());
+                    }
+                });
             }
             else
             {
-                m_ShipElements[shipIndex].ShipDice[dieIndex]->ClearDice();
+                pUIDie->ClearDice();
+                pUIDie->RemoveFlag(UI::Element::Flags::Selected);
+                pUIDie->SetOnClickedEvent([](){});
             }
         }
         shipIndex++;
+    }
+}
+
+void EncounterWindow::SetCurrentSelectedDie(const Dice& die)
+{
+    m_SelectedDie = die;
+
+    for (auto& shipElement : m_ShipElements)
+    {
+        for (auto& pUIDie : shipElement.ShipDice)
+        {
+            std::optional<Dice> uiDie = pUIDie->GetDice();
+            if (uiDie.has_value() && uiDie.value().GetId() == die.GetId())
+            {
+                pUIDie->AddFlag(Flags::Selected);
+            }
+            else
+            {
+                pUIDie->RemoveFlag(Flags::Selected);
+            }
+        }
     }
 }
 

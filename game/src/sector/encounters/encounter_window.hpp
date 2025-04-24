@@ -5,6 +5,7 @@
 
 #include <core/smart_ptr.hpp>
 
+#include "dice/dice.hpp"
 #include "ui/button.hpp"
 #include "ui/button_group.hpp"
 #include "ui/dice.hpp"
@@ -32,7 +33,8 @@ public:
     void ClearText();
 
     void SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage);
-    void SetCurrentStageOption(int optionIndex);
+    void SetCurrentStageOption(DiceCategory diceCategory, int optionIndex);
+    void SetCurrentSelectedDie(const Dice& die);
 
 private:
     EncounterStageNodeWeakPtr m_pCurrentStage;
@@ -49,6 +51,7 @@ private:
     UI::ButtonGroupSharedPtr m_pEncounterButtonGroup;
     std::optional<int> m_SelectedStageOption;
     UI::ElementSharedPtr m_pSelectionPanel;
+    std::optional<Dice> m_SelectedDie;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

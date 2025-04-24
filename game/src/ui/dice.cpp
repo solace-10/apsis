@@ -34,13 +34,13 @@ void Dice::Render()
     const ImVec2 cp1 = cp0 + contentSize;
 
     ImGui::SetCursorScreenPos(cp0);
-    if (contentSize.x > 0.0f && contentSize.y > 0.0f && ImGui::InvisibleButton(GetName().c_str(), contentSize) /*&& m_OnClickedEvent*/)
+    if (contentSize.x > 0.0f && contentSize.y > 0.0f && ImGui::InvisibleButton(GetName().c_str(), contentSize) && m_OnClickedEvent && !HasFlag(Flags::Selected))
     {
-        //m_OnClickedEvent();
+        m_OnClickedEvent();
     }
     ImGui::SetCursorScreenPos(cp0); // This needs to be set again so the cursor position is correct as the InvisibleButton modifies it.
     
-    const bool isHovered = ImGui::IsItemHovered();
+    const bool isHighlighted = ImGui::IsItemHovered() || HasFlag(Flags::Selected);
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
     int notchSize = 12;
@@ -59,7 +59,7 @@ void Dice::Render()
         IM_COL32(0, 0, 0, 120)
     );
 
-    if (isHovered && m_Dice.has_value())
+    if (isHighlighted && m_Dice.has_value())
     {
         pDrawList->AddPolyline(
             background.data(),
@@ -175,22 +175,6 @@ void Dice::Render()
     {
         ImGui::GetWindowDrawList()->AddRect(cp0, cp1, IM_COL32(255, 0, 0, 255));
     }
-}
-
-void Dice::RenderProperties()
-{
-    StackableElement::RenderProperties();
-}
-
-void Dice::Deserialize(const nlohmann::json& data)
-{
-    StackableElement::Deserialize(data);
-}
-
-nlohmann::json Dice::Serialize() const
-{
-    nlohmann::json data = StackableElement::Serialize();
-    return data;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI
