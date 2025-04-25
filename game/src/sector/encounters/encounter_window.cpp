@@ -131,14 +131,6 @@ void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeS
                         {
                             m_pEncounterButtonGroup->Select(pEncounterButton);
                             SetCurrentStageOption(diceCategory, i);
-    
-                            // EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
-                            // if (pStage)
-                            // {
-                            //     // This logic will likely get more complicated if we have fewer than 3 options.
-                            //     const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(i);
-                            //     pStage->OnOptionSelected(option);
-                            // }
                         }
                     );
                 }
@@ -185,17 +177,17 @@ void EncounterWindow::SetCurrentStageOption(DiceCategory dieCategory, int option
                 if (!m_SelectedDie.has_value())
                 {
                     pUIDie->AddFlag(UI::Element::Flags::Selected);
-                    SetCurrentSelectedDie(dieCategory, die.value());
+                    SetCurrentSelectedDie(dieCategory, die.value(), optionIndex);
                 }
                 else
                 {
                     pUIDie->RemoveFlag(UI::Element::Flags::Selected);
                 }
 
-                pUIDie->SetOnClickedEvent([this, dieCategory, die](){
+                pUIDie->SetOnClickedEvent([this, dieCategory, die, optionIndex](){
                     if (die.has_value())
                     {
-                        SetCurrentSelectedDie(dieCategory, die.value());
+                        SetCurrentSelectedDie(dieCategory, die.value(), optionIndex);
                     }
                 });
             }
@@ -210,7 +202,7 @@ void EncounterWindow::SetCurrentStageOption(DiceCategory dieCategory, int option
     }
 }
 
-void EncounterWindow::SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die)
+void EncounterWindow::SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die, int optionIndex)
 {
     m_SelectedDie = die;
     m_DieDetails.pDie->SetDice(die);
@@ -250,6 +242,18 @@ void EncounterWindow::SetCurrentSelectedDie(DiceCategory dieCategory, const Dice
             }
         }
     }
+
+    m_pConfirmButton->SetOnClickedEvent(
+        [this, optionIndex, die]()
+        {
+            EncounterStageNodeSharedPtr pStage = m_pCurrentStage.lock();
+            if (pStage)
+            {
+                const EncounterStageNode::Option option = static_cast<EncounterStageNode::Option>(optionIndex);
+                pStage->OnOptionSelected(option, die);
+            }
+        }
+    );
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

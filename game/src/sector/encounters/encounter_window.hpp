@@ -34,7 +34,7 @@ public:
 
     void SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage);
     void SetCurrentStageOption(DiceCategory dieCategory, int optionIndex);
-    void SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die);
+    void SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die, int optionIndex);
 
 private:
     EncounterStageNodeWeakPtr m_pCurrentStage;

@@ -75,7 +75,7 @@ public:
 
     NodeType GetNodeType() const override;
 
-    void OnOptionSelected(Option option);
+    void OnOptionSelected(Option option, const Dice& die);
 
     void OnExecutionStarted(Encounter* pEncounter) override;
     ExecutionResult Execute(Encounter* pEncounter, float delta) override;
@@ -83,6 +83,9 @@ public:
     std::vector<EncounterOptionNode*> GetLinkedEncounterNodes(Encounter* pEncounter);
 
 private:
+    EncounterOutcome GenerateOutcome(const Dice& die);
+    void ConsumeDie(const Dice& die);
+
     std::optional<Option> m_SelectedOption;
     std::vector<size_t> m_EncounterOptionPinIndices;
 };

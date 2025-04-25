@@ -1,3 +1,5 @@
+#include <random>
+
 #include <imgui/text_editor/text_editor.hpp>
 
 #include <pandora.hpp>
@@ -137,9 +139,11 @@ void EncounterStageNode::OnExecutionStarted(Encounter* pEncounter)
     m_SelectedOption.reset();
 }
 
-void EncounterStageNode::OnOptionSelected(Option option)
+void EncounterStageNode::OnOptionSelected(Option option, const Dice& die)
 {
     m_SelectedOption = option;
+    SetEncounterOutcome(GenerateOutcome(die));
+    ConsumeDie(die);
 }
 
 Node::ExecutionResult EncounterStageNode::Execute(Encounter* pEncounter, float delta)
@@ -173,6 +177,32 @@ std::vector<EncounterOptionNode*> EncounterStageNode::GetLinkedEncounterNodes(En
     }
 
     return optionNodes;
+}
+
+EncounterOutcome EncounterStageNode::GenerateOutcome(const Dice& die)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0f, 1.0f);
+    const float roll = dis(gen);
+    
+    if (roll < die.GetPositiveChance())
+    {
+        return EncounterOutcome::Positive;
+    }
+    else if (roll < die.GetPositiveChance() + die.GetNeutralChance()) 
+    {
+        return EncounterOutcome::Neutral;
+    }
+    else
+    {
+        return EncounterOutcome::Negative;
+    }
+}
+
+void EncounterStageNode::ConsumeDie(const Dice& die)
+{
+
 }
 
 ////////////////////////////////////////////////////////////
@@ -327,7 +357,7 @@ Node::ExecutionResult OutcomeConditionalNode::Execute(Encounter* pEncounter, flo
     }
     else
     {
-        Pandora::Log::Warning() << "No linked node found for option: " << optionIndex;
+        Pandora::Log::Warning() << "No linked node found for outcome: " << magic_enum::enum_name(outcome);
     }
     return ExecutionResult::Complete;
 }
