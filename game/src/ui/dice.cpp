@@ -72,27 +72,28 @@ void Dice::Render()
     m_AnimationTimer += ImGui::GetIO().DeltaTime;
 
     const ImVec2 center = cp0 + contentSize / 2;
+    const float scale = contentSize.x / 96.0f;
 
     if (m_Dice.has_value())
     {
         const int dieValue = m_Dice.value().GetValue();
         if (dieValue == 1)
         {
-            pDrawList->AddCircleFilled(center, 10.0f, Theme::DieNegativeColor);
-            pDrawList->AddEllipse(center, ImVec2(18.0f + glm::cos(m_AnimationTimer) * 18.0f, 36.0f), Theme::DieNegativeColor, 0.0f, 0, 1.5f);
+            pDrawList->AddCircleFilled(center, 10.0f * scale, Theme::DieNegativeColor);
+            pDrawList->AddEllipse(center, ImVec2(18.0f * scale + glm::cos(m_AnimationTimer) * 18.0f * scale, 36.0f * scale), Theme::DieNegativeColor, 0.0f, 0, 1.5f);
         }
         else if (dieValue == 2)
         {
-            const int radius = 28;
+            const int radius = static_cast<int>(28.0f * scale);
             pDrawList->AddCircle(center, radius, Theme::DieNegativeColor, 0, 1.5f);
 
             const ImVec2 orbit(glm::cos(m_AnimationTimer) * radius, glm::sin(m_AnimationTimer) * radius);
-            pDrawList->AddCircleFilled(center + orbit, 8.0f, Theme::DieNegativeColor);
-            pDrawList->AddCircleFilled(center - orbit, 8.0f, Theme::DieNegativeColor);
+            pDrawList->AddCircleFilled(center + orbit, 8.0f * scale, Theme::DieNegativeColor);
+            pDrawList->AddCircleFilled(center - orbit, 8.0f * scale, Theme::DieNegativeColor);
         }
         else if (dieValue == 3)
         {
-            const int radius = 28;
+            const int radius = static_cast<int>(28.0f * scale);
             pDrawList->AddCircle(center, radius, Theme::DieNeutralColor, 0, 1.5f);
 
             const float angle1 = m_AnimationTimer;
@@ -106,19 +107,19 @@ void Dice::Render()
                 center + ImVec2(glm::cos(angle3) * radius, glm::sin(angle3) * radius)
             };
 
-            pDrawList->AddCircleFilled(orbits[0], 8.0f, Theme::DieNeutralColor);
-            pDrawList->AddCircleFilled(orbits[1], 8.0f, Theme::DieNeutralColor);
-            pDrawList->AddCircleFilled(orbits[2], 8.0f, Theme::DieNeutralColor);
+            pDrawList->AddCircleFilled(orbits[0], 8.0f * scale, Theme::DieNeutralColor);
+            pDrawList->AddCircleFilled(orbits[1], 8.0f * scale, Theme::DieNeutralColor);
+            pDrawList->AddCircleFilled(orbits[2], 8.0f * scale, Theme::DieNeutralColor);
 
             pDrawList->AddPolyline(orbits.data(), orbits.size(), Theme::DieNeutralColor, ImDrawFlags_Closed, 1.5f);
         }
         else if (dieValue == 4)
         {
-            const int outerRadius = 36;
+            const int outerRadius = static_cast<float>(36.0f * scale);
             pDrawList->AddCircle(center, outerRadius, Theme::DieNeutralColor, 0, 1.5f);
 
-            const int innerRadius = 20;
-            pDrawList->AddCircleFilled(center, 8.0f, Theme::DieNeutralColor);
+            const int innerRadius = static_cast<float>(20.0f * scale);
+            pDrawList->AddCircleFilled(center, 8.0f * scale, Theme::DieNeutralColor);
 
             const std::array<float, 3> angles =
             {
@@ -136,13 +137,13 @@ void Dice::Render()
 
             for (const ImVec2& orbit : orbits)
             {
-                pDrawList->AddCircleFilled(center + orbit, 8.0f, Theme::DieNeutralColor);
+                pDrawList->AddCircleFilled(center + orbit, 8.0f * scale, Theme::DieNeutralColor);
                 pDrawList->AddLine(center, center + orbit, Theme::DieNeutralColor, 1.5f);
             }
         }
         else if (dieValue == 5)
         {
-            const int offset = 28;
+            const int offset = static_cast<float>(28.0f * scale);
             std::array<ImVec2, 5> points =
             { 
                 center - ImVec2(offset, offset),
@@ -154,17 +155,17 @@ void Dice::Render()
 
             for (const ImVec2& point : points)
             {
-                pDrawList->AddCircleFilled(point, 8.0f, Theme::DiePositiveColor);
+                pDrawList->AddCircleFilled(point, 8.0f * scale, Theme::DiePositiveColor);
             }
 
             pDrawList->AddPolyline(points.data(), points.size(), Theme::DiePositiveColor, ImDrawFlags_None, 1.5f);
         }
         else if (dieValue == 6)
         {
-            pDrawList->AddCircleFilled(center, 10.0f, Theme::DiePositiveColor);
+            pDrawList->AddCircleFilled(center, 10.0f * scale, Theme::DiePositiveColor);
             for (int i = 0; i < 5; i++)
             {
-                const float halfRadius = 18.0f - static_cast<float>(i) * 2.0f;
+                const float halfRadius = (18.0f - static_cast<float>(i) * 2.0f) * scale;
                 const float animationTimer = m_AnimationTimer * (1.0f - static_cast<float>(i) / 10.0f);
                 pDrawList->AddEllipse(center, ImVec2(halfRadius + glm::cos(animationTimer) * halfRadius, halfRadius * 2.0f), Theme::DiePositiveColor, 0.0f, 0, 1.5f);
             }
