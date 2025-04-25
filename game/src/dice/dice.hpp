@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include <core/smart_ptr.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
@@ -35,10 +33,17 @@ public:
     using Id = uint32_t;
     Id GetId() const;
 
+    float GetPositiveChance() const;
+    float GetNeutralChance() const;
+    float GetNegativeChance() const;
+
 private:
     DiceValue m_Value{1};
     DiceModifiers m_Modifiers{DiceModifiers::None};
     Id m_Id{0};
+    float m_PositiveChance{0.0f};
+    float m_NeutralChance{0.0f};
+    float m_NegativeChance{0.0f};
 };
 
 inline DiceValue Dice::GetValue() const
@@ -49,6 +54,21 @@ inline DiceValue Dice::GetValue() const
 inline Dice::Id Dice::GetId() const
 {
     return m_Id;
+}
+
+inline float Dice::GetPositiveChance() const
+{
+    return m_PositiveChance;
+}
+
+inline float Dice::GetNeutralChance() const
+{
+    return m_NeutralChance;
+}
+
+inline float Dice::GetNegativeChance() const
+{
+    return m_NegativeChance;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

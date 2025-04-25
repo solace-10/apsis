@@ -104,11 +104,9 @@ void Heading::RenderProperties()
 {
     StackableElement::RenderProperties();
 
-    ImGui::BeginDisabled(m_IsDynamic);
+    ImGui::BeginDisabled(HasFlag(Flags::Bound));
     ImGui::InputTextMultiline("Text", &m_Text);
     ImGui::EndDisabled();
-
-    ImGui::Checkbox("Dynamic", &m_IsDynamic);
 
     int level = static_cast<int>(m_HeadingLevel);
     if (ImGui::Combo("Heading level", &level, "Level 1\0Level 2\0"))
@@ -125,7 +123,6 @@ void Heading::Deserialize(const nlohmann::json& data)
     TryDeserialize(data, "text", text, "<placeholder>");
     SetText(text);
 
-    TryDeserialize(data, "is_dynamic", m_IsDynamic, false);
     TryDeserialize<HeadingLevel>(data, "level", m_HeadingLevel, HeadingLevel::Heading1);
 }
 
@@ -133,11 +130,10 @@ nlohmann::json Heading::Serialize() const
 {
     nlohmann::json data = StackableElement::Serialize();
 
-    if (!m_IsDynamic)
+    if (!HasFlag(Flags::Bound))
     {
         data["text"] = m_Text;
     }
-    data["is_dynamic"] = m_IsDynamic;
     data["level"] = magic_enum::enum_name(m_HeadingLevel);
     return data;
 }

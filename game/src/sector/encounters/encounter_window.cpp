@@ -41,6 +41,15 @@ void EncounterWindow::OnInitializationCompleted()
     m_ShipElements[2].ShipDice[1] = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/dice/die_6");
 
     m_pSelectionPanel = FindElement<UI::Element>("/encounter_window/stack/encounter_image_stack/stack");
+
+    m_DieDetails.pDie = FindElement<UI::Dice>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/chosen_die");
+    m_DieDetails.pHeading = FindElement<UI::Heading>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/die_heading");
+    m_DieDetails.pBreakdownPositive = FindElement<UI::Text>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/die_breakdown/die_positive");
+    m_DieDetails.pBreakdownNeutral = FindElement<UI::Text>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/die_breakdown/die_neutral");
+    m_DieDetails.pBreakdownNegative = FindElement<UI::Text>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/die_breakdown/die_negative");
+    m_DieDetails.pModifiers = FindElement<UI::Text>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/die_modifiers");
+
+    m_pConfirmButton = FindElement<UI::Button>("/encounter_window/stack/encounter_image_stack/stack/stack_h/stack_v/details_stack_h/die_details/button_confirm");
 }
 
 void EncounterWindow::AppendText(const std::string& text)
@@ -148,7 +157,7 @@ void EncounterWindow::SetCurrentStage(Encounter* pEncounter, EncounterStageNodeS
     }
 }
 
-void EncounterWindow::SetCurrentStageOption(DiceCategory diceCategory, int optionIndex)
+void EncounterWindow::SetCurrentStageOption(DiceCategory dieCategory, int optionIndex)
 {
     m_SelectedStageOption = optionIndex;
     m_pSelectionPanel->RemoveFlag(Flags::Hidden);
@@ -164,7 +173,7 @@ void EncounterWindow::SetCurrentStageOption(DiceCategory diceCategory, int optio
         m_ShipElements[shipIndex].pShipName->SetText(nameComponent.Value);
 
         const auto& diceComponent = view.get<DiceComponent>(entity);
-        const auto& diceContainer = diceComponent.GetDice(diceCategory);
+        const auto& diceContainer = diceComponent.GetDice(dieCategory);
         for (size_t dieIndex = 0; dieIndex < diceContainer.size(); dieIndex++)
         {
             UI::DiceSharedPtr& pUIDie = m_ShipElements[shipIndex].ShipDice[dieIndex];
@@ -176,17 +185,17 @@ void EncounterWindow::SetCurrentStageOption(DiceCategory diceCategory, int optio
                 if (!m_SelectedDie.has_value())
                 {
                     pUIDie->AddFlag(UI::Element::Flags::Selected);
-                    SetCurrentSelectedDie(die.value());
+                    SetCurrentSelectedDie(dieCategory, die.value());
                 }
                 else
                 {
                     pUIDie->RemoveFlag(UI::Element::Flags::Selected);
                 }
 
-                pUIDie->SetOnClickedEvent([this, die](){
+                pUIDie->SetOnClickedEvent([this, dieCategory, die](){
                     if (die.has_value())
                     {
-                        SetCurrentSelectedDie(die.value());
+                        SetCurrentSelectedDie(dieCategory, die.value());
                     }
                 });
             }
@@ -201,9 +210,30 @@ void EncounterWindow::SetCurrentStageOption(DiceCategory diceCategory, int optio
     }
 }
 
-void EncounterWindow::SetCurrentSelectedDie(const Dice& die)
+void EncounterWindow::SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die)
 {
     m_SelectedDie = die;
+    m_DieDetails.pDie->SetDice(die);
+
+    static const std::array<std::string, 5> diceCategories = { "ELECTRONICS", "ENGINEERING", "NAVIGATION", "SCIENCE", "WARFARE" }; 
+    static const std::array<std::string, 6> diceNumerals = { "I", "II", "III", "IV", "V", "VI" };
+    std::stringstream heading;
+    heading << diceCategories[static_cast<size_t>(dieCategory)] << " " << diceNumerals[static_cast<size_t>(die.GetValue() - 1)];
+    m_DieDetails.pHeading->SetText(heading.str());
+
+    std::stringstream positive;
+    positive << "POS: " << static_cast<int>(die.GetPositiveChance() * 100.0f) << "%";
+    m_DieDetails.pBreakdownPositive->SetText(positive.str());
+
+    std::stringstream neutral;
+    neutral << "NEU: " << static_cast<int>(die.GetNeutralChance() * 100.0f) << "%";
+    m_DieDetails.pBreakdownNeutral->SetText(neutral.str());
+
+    std::stringstream negative;
+    negative << "NEG: " << static_cast<int>(die.GetNegativeChance() * 100.0f) << "%";
+    m_DieDetails.pBreakdownNegative->SetText(negative.str());
+
+    m_DieDetails.pModifiers->SetText("None");
 
     for (auto& shipElement : m_ShipElements)
     {

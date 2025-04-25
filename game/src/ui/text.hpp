@@ -28,9 +28,6 @@ public:
     void SetScrollable(bool isScrollable);
     bool IsScrollable() const;
 
-    void SetDynamic(bool isDynamic);
-    bool IsDynamic() const;
-
     enum class Alignment
     {
         Left,
@@ -50,7 +47,6 @@ private:
     int m_Margin{0};
     Mode m_Mode{Mode::SingleLine};
     bool m_IsScrollable{false};
-    bool m_IsDynamic{false};
     Alignment m_Alignment{Alignment::Left};
 };
 
@@ -67,16 +63,6 @@ inline void Text::SetScrollable(bool isScrollable)
 inline bool Text::IsScrollable() const
 {
     return m_IsScrollable;
-}
-
-inline void Text::SetDynamic(bool isDynamic)
-{
-    m_IsDynamic = isDynamic;
-}
-
-inline bool Text::IsDynamic() const
-{
-    return m_IsDynamic;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

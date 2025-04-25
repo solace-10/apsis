@@ -25,9 +25,6 @@ public:
     void SetText(const std::string& text);
     const std::string& GetText() const;
 
-    void SetDynamic(bool isDynamic);
-    bool IsDynamic() const;
-
     enum class HeadingLevel
     {
         Heading1,
@@ -36,7 +33,6 @@ public:
 
 private:
     std::string m_Text{"<placeholder>"};
-    bool m_IsDynamic{false};
     HeadingLevel m_HeadingLevel{HeadingLevel::Heading1};
 };
 
@@ -48,16 +44,6 @@ inline void Heading::SetText(const std::string& text)
 inline const std::string& Heading::GetText() const
 {
     return m_Text;
-}
-
-inline void Heading::SetDynamic(bool isDynamic)
-{
-    m_IsDynamic = isDynamic;
-}
-
-inline bool Heading::IsDynamic() const
-{
-    return m_IsDynamic;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar::UI

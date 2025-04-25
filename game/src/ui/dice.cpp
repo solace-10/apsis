@@ -40,7 +40,7 @@ void Dice::Render()
     }
     ImGui::SetCursorScreenPos(cp0); // This needs to be set again so the cursor position is correct as the InvisibleButton modifies it.
     
-    const bool isHighlighted = ImGui::IsItemHovered() || HasFlag(Flags::Selected);
+    const bool isHighlighted = (ImGui::IsItemHovered() && m_OnClickedEvent) || HasFlag(Flags::Selected);
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
     int notchSize = 12;

@@ -33,8 +33,8 @@ public:
     void ClearText();
 
     void SetCurrentStage(Encounter* pEncounter, EncounterStageNodeSharedPtr pStage);
-    void SetCurrentStageOption(DiceCategory diceCategory, int optionIndex);
-    void SetCurrentSelectedDie(const Dice& die);
+    void SetCurrentStageOption(DiceCategory dieCategory, int optionIndex);
+    void SetCurrentSelectedDie(DiceCategory dieCategory, const Dice& die);
 
 private:
     EncounterStageNodeWeakPtr m_pCurrentStage;
@@ -52,6 +52,18 @@ private:
     std::optional<int> m_SelectedStageOption;
     UI::ElementSharedPtr m_pSelectionPanel;
     std::optional<Dice> m_SelectedDie;
+
+    struct DieDetails
+    {
+        UI::DiceSharedPtr pDie;
+        UI::HeadingSharedPtr pHeading;
+        UI::TextSharedPtr pBreakdownPositive;
+        UI::TextSharedPtr pBreakdownNeutral;
+        UI::TextSharedPtr pBreakdownNegative;
+        UI::TextSharedPtr pModifiers;
+    };
+    DieDetails m_DieDetails;
+    UI::ButtonSharedPtr m_pConfirmButton;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

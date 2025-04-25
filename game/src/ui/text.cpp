@@ -74,12 +74,11 @@ void Text::RenderProperties()
         m_Mode = static_cast<Mode>(mode);
     }
 
-    ImGui::BeginDisabled(m_IsDynamic);
+    ImGui::BeginDisabled(HasFlag(Flags::Bound));
     ImGui::InputTextMultiline("Text", &m_Text);
     ImGui::EndDisabled();
 
     ImGui::Checkbox("Scrollable", &m_IsScrollable);
-    ImGui::Checkbox("Dynamic", &m_IsDynamic);
 
     ImGui::BeginDisabled(m_Mode != Mode::SingleLine);
     int alignment = static_cast<int>(m_Alignment);
@@ -100,7 +99,6 @@ void Text::Deserialize(const nlohmann::json& data)
 
     TryDeserialize(data, "margin", m_Margin, 0);
     TryDeserialize(data, "is_scrollable", m_IsScrollable, false);
-    TryDeserialize(data, "is_dynamic", m_IsDynamic, false);
     TryDeserialize<Mode>(data, "mode", m_Mode, Mode::SingleLine);
     TryDeserialize<Alignment>(data, "alignment", m_Alignment, Alignment::Left);
 }
@@ -109,13 +107,12 @@ nlohmann::json Text::Serialize() const
 {
     nlohmann::json data = StackableElement::Serialize();
 
-    if (!m_IsDynamic)
+    if (!HasFlag(Flags::Bound))
     {
         data["text"] = m_Text;
     }
     data["margin"] = m_Margin;
     data["is_scrollable"] = m_IsScrollable;
-    data["is_dynamic"] = m_IsDynamic;
     data["mode"] = magic_enum::enum_name(m_Mode);
     data["alignment"] = magic_enum::enum_name(m_Alignment);
     return data;
