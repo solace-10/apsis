@@ -21,9 +21,11 @@
         {
             "name": "windows",
             "hidden": true,
-            "generator": "Visual Studio 17 2022",
+            "generator": "Ninja",
             "cacheVariables": {
-                "TARGET_PLATFORM_WINDOWS": "ON"
+                "TARGET_PLATFORM_WINDOWS": "ON",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
             },
             "condition": {
                 "type": "equals",
@@ -98,23 +100,7 @@
         {
             "name": "core",
             "configurePreset": "core",
-            "hidden": true,
-            "jobs": 16,
-            "targets": [
-                "game"
-            ]
-        },
-        {
-            "name": "tools",
-            "hidden": true,
-            "configurePreset": "native",
-            "inherits": [
-                "core"
-            ],
-            "targets": [
-                "dome",
-                "forge"
-            ]
+            "hidden": true
         },
         {
             "name": "debug-windows",
@@ -123,6 +109,11 @@
             "configurePreset": "debug-windows",
             "inherits": [
                 "core"
+            ],
+            "targets": [
+                "game",
+                "dome",
+                "forge"
             ]
         },
         {
@@ -132,6 +123,9 @@
             "configurePreset": "debug-linux",
             "inherits": [
                 "core"
+            ],
+            "targets": [
+                "game"
             ]
         },
         {
@@ -139,8 +133,11 @@
             "description": "Build The Brightest Star in Debug",
             "displayName": "Debug (Web)",
             "configurePreset": "debug-web",
-            "inherits":[
+            "inherits": [
                 "core"
+            ],
+            "targets": [
+                "game"
             ]
         }
     ]

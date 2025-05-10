@@ -2,7 +2,8 @@ include(FetchContent)
 
 message(STATUS "Pandora: fetching external dependencies...")
 
-set(FETCHCONTENT_QUIET FALSE)
+set(FETCHCONTENT_QUIET OFF)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 if(TARGET_PLATFORM_NATIVE)
     # By default Dawn uses Chromium's build system and dependency management.
