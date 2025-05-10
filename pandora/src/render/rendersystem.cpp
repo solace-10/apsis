@@ -250,6 +250,7 @@ void RenderSystem::CreateGlobalUniforms()
     memset(&m_GlobalUniforms, 0, sizeof(GlobalUniforms));
     m_GlobalUniforms.projectionMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+    m_GlobalUniforms.cameraPosition = glm::vec4(0.0f);
     m_GlobalUniforms.time = 0.0f;
 
     BufferDescriptor bufferDescriptor{
@@ -299,11 +300,13 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
         CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
         m_GlobalUniforms.projectionMatrix = cameraComponent.camera.GetProjectionMatrix();
         m_GlobalUniforms.viewMatrix = cameraComponent.camera.GetViewMatrix();
+        m_GlobalUniforms.cameraPosition = glm::vec4(cameraComponent.camera.GetPosition(), 1.0f);
     }
     else
     {
         m_GlobalUniforms.projectionMatrix = glm::ortho(0.0f, static_cast<float>(GetWindow()->GetWidth()), 0.0f, static_cast<float>(GetWindow()->GetHeight()));
         m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
+        m_GlobalUniforms.cameraPosition = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
     m_GlobalUniforms.time = static_cast<float>(glfwGetTime());

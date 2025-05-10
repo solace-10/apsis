@@ -2,6 +2,7 @@
 
 #include <delaunator.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 // clang-format off
 #define TINYGLTF_NOEXCEPTION
@@ -87,7 +88,7 @@ std::vector<IndexedTriangle> GeometryProcessor::GetTriangles(const std::vector<V
     return indexedTriangles;
 }
 
-void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::vector<IndexedTriangle>& triangles) const
+void GeometryProcessor::Export(const glm::vec2& sourceImageSize, const std::vector<Vertex>& vertices, const std::vector<IndexedTriangle>& triangles) const
 {
     tinygltf::Model model;
     tinygltf::Scene scene;
@@ -96,7 +97,7 @@ void GeometryProcessor::Export(const std::vector<Vertex>& vertices, const std::v
     std::vector<float> vertexPositionData;
     std::vector<float> vertexColorData;
 
-    std::vector<Vertex> transformedVertices = TransformVertices(vertices, 10.0f);
+    std::vector<Vertex> transformedVertices = TransformVertices(sourceImageSize, vertices);
     for (const auto& vertex : transformedVertices)
     {
         vertexPositionData.push_back(vertex.position.x);
@@ -276,33 +277,35 @@ void GeometryProcessor::CalculateColorBounds(const std::vector<Vertex>& vertices
     }
 }
 
-std::vector<Vertex> GeometryProcessor::TransformVertices(const std::vector<Vertex>& vertices, float scale) const
+std::vector<Vertex> GeometryProcessor::TransformVertices(const glm::vec2& sourceTextureSize, const std::vector<Vertex>& vertices) const
 {
-    auto domeProjection = [](const glm::vec3& pos) {
-        const float modifier = 4.0f;
-        glm::vec3 position = pos;
-        position.x *= modifier;
-        position.y *= modifier;
-        position.z = 1.0f;
-
-        const glm::vec3 direction = glm::normalize(position);
-
-
-        return direction;
+    auto sphereProjection = [](const glm::vec2& pos) {
+        const float phi = pos.x * glm::two_pi<float>();
+        const float theta = pos.y * glm::pi<float>();
+        
+        const float x = std::cos(phi) * std::sin(theta);
+        const float y = std::cos(theta); 
+        const float z = std::sin(phi) * std::sin(theta);
+        
+        return glm::vec3(x, y, z);
     };
 
-    float textureSize = 1024.0f;
-
-    std::vector<Vertex> transformedVertices;
+    std::vector<Vertex> normalizedVertices;
     for (const auto& vertex : vertices)
     {
-        Vertex transformedVertex;
-        transformedVertex.color = vertex.color;
-        transformedVertex.position = vertex.position / textureSize - glm::vec3(0.5f, 0.5f, 0.0f); // Normalize the position from the texture size and center it.
-        transformedVertex.position.y = -transformedVertex.position.y; // Flip Y axis as 0 is at the top in the texture.
-        transformedVertex.position = domeProjection(transformedVertex.position);
-        transformedVertex.position *= scale;
+        Vertex normalizedVertex;
+        normalizedVertex.position = vertex.position / glm::vec3(sourceTextureSize, 1.0f);
+        normalizedVertex.color = vertex.color;
+        normalizedVertices.push_back(normalizedVertex);
+    }
 
+    std::vector<Vertex> transformedVertices;
+    for (const auto& vertex : normalizedVertices)
+    {
+        Vertex transformedVertex(vertex);
+        transformedVertex.color = vertex.color;
+        transformedVertex.position.y = -transformedVertex.position.y; // Flip Y axis as 0 is at the top in the texture.
+        transformedVertex.position = sphereProjection(glm::vec2(transformedVertex.position.x, transformedVertex.position.y));
         transformedVertices.push_back(transformedVertex);
     }
     return transformedVertices;

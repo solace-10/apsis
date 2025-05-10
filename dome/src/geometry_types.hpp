@@ -6,20 +6,20 @@ namespace WingsOfSteel::Dome
 {
 
 struct Point {
-    int x;
-    int y;
+    int x{0};
+    int y{0};
 };
 
 struct Vertex {
-    glm::vec3 position;
-    glm::vec3 color;
+    glm::vec3 position{0.0f};
+    glm::vec3 color{1.0f};
 };
 
 struct IndexedTriangle
 {
-    int v0;
-    int v1;
-    int v2;
+    int v0{0};
+    int v1{0};
+    int v2{0};
 };
 
 } // namespace WingsOfSteel::Dome

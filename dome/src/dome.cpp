@@ -39,9 +39,9 @@ void Dome::Initialize()
     {
         Log::Error() << "Failed to load texture.";
     }
-    else if (m_pSourceTexture->GetWidth() != m_pSourceTexture->GetHeight())
+    else if (m_pSourceTexture->GetWidth() != m_pSourceTexture->GetHeight() * 2)
     {
-        Log::Error() << "Source texture must be square.";
+        Log::Error() << "Source texture must have a 2:1 ratio.";
     }
     else
     {
@@ -141,7 +141,8 @@ void Dome::Update(float delta)
 
         if (ImGui::Button("Export"))
         {
-            m_pGeometryProcessor->Export(m_ColorizedVertices, m_IndexedTriangles);
+            glm::vec2 sourceTextureSize(m_pSourceTexture->GetWidth(), m_pSourceTexture->GetHeight());
+            m_pGeometryProcessor->Export(sourceTextureSize, m_ColorizedVertices, m_IndexedTriangles);
         }
 
         ImGui::EndChild();
@@ -150,7 +151,7 @@ void Dome::Update(float delta)
 
     // Right
     {
-        const ImVec2 textureSize = ImVec2(1024, 1024);
+        const ImVec2 textureSize = ImVec2(1536, 768);
         ImGui::BeginChild("item view", textureSize, 0, ImGuiWindowFlags_NoScrollbar); // Leave room for 1 line below us
 
         BufferedTexture2D* pSelectedTexture = nullptr;

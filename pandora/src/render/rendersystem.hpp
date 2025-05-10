@@ -3,6 +3,7 @@
 #include <functional>
 
 #include <glm/mat4x4.hpp>
+#include <glm/vec4.hpp>
 #include <webgpu/webgpu_cpp.h>
 
 #include "core/smart_ptr.hpp"
@@ -49,6 +50,7 @@ private:
     {
         glm::mat4x4 projectionMatrix;
         glm::mat4x4 viewMatrix;
+        glm::vec4 cameraPosition;
         float time;
         float _unused[3];
     };

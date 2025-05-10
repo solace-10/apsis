@@ -94,8 +94,12 @@ void Sector::Update(float delta)
 
     if (m_pEncounterWindow)
     {
-        m_pEncounterWindow->Render();
+        //m_pEncounterWindow->Render();
     }
+
+    using namespace Pandora;
+    TransformComponent& transformComponent = m_pDome->GetComponent<TransformComponent>();
+    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     DrawCameraDebugUI();
 }
@@ -176,7 +180,10 @@ void Sector::SpawnDome()
     SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
 
     TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+    //transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+
+    static float rotation = 90.0f;
+    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
 
     m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
 }
