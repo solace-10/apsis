@@ -179,6 +179,7 @@ public:
 		static const LanguageDefinition& CPlusPlus();
 		static const LanguageDefinition& HLSL();
 		static const LanguageDefinition& GLSL();
+		static const LanguageDefinition& WGSL();
 		static const LanguageDefinition& C();
 		static const LanguageDefinition& SQL();
 		static const LanguageDefinition& AngelScript();

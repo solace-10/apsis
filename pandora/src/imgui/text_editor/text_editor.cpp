@@ -2929,6 +2929,91 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
 	return langDef;
 }
 
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::WGSL()
+{
+	static bool inited = false;
+	static LanguageDefinition langDef;
+	if (!inited)
+	{
+		static const char* const keywords[] = {
+			"var", "let", "const", "uniform", "storage", "workgroup", "private", "function",
+			"fn", "@vertex", "@fragment", "@compute", "@location", "@builtin", "@group", "@binding",
+			"if", "else", "loop", "break", "continue", "return", "switch", "case", "default",
+			"struct", "type", "alias", "override", "array", "atomic", "ptr"
+		};
+		for (auto& k : keywords)
+		{
+			langDef.mKeywords.insert(k);
+		}
+
+		static const char* const identifiers[] = {
+			"f32", "i32", "u32", "bool",
+			"vec2", "vec2f", "vec2i", "vec2u", "vec2h",
+			"vec3", "vec3f", "vec3i", "vec3u", "vec3h",
+			"vec4", "vec4f", "vec4i", "vec4u", "vec4h",
+			"mat2x2", "mat2x2f", "mat2x2i", "mat2x2u", "mat2x2h",
+			"mat2x3", "mat2x3f", "mat2x3i", "mat2x3u", "mat2x3h",
+			"mat2x4", "mat2x4f", "mat2x4i", "mat2x4u", "mat2x4h",
+			"mat3x2", "mat3x2f", "mat3x2i", "mat3x2u", "mat3x2h",
+			"mat3x3", "mat3x3f", "mat3x3i", "mat3x3u", "mat3x3h",
+			"mat3x4", "mat3x4f", "mat3x4i", "mat3x4u", "mat3x4h",
+			"mat4x2", "mat4x2f", "mat4x2i", "mat4x2u", "mat4x2h",
+			"mat4x3", "mat4x3f", "mat4x3i", "mat4x3u", "mat4x3h",
+			"mat4x4", "mat4x4f", "mat4x4i", "mat4x4u", "mat4x4h",
+			"sampler",
+			"texture_1d", "texture_2d", "texture_2d_array", "texture_3d", "texture_cube", "texture_cube_array",
+			"texture_multisampled_2d", "texture_storage_1d", "texture_storage_2d", "texture_storage_2d_array",
+			"texture_storage_3d", "texture_depth_2d", "texture_depth_2d_array", "texture_depth_cube",
+			"texture_depth_cube_array", "texture_depth_multisampled_2d",
+			"abs", "acos", "acosh", "all", "any", "arrayLength", "asin", "asinh", "atan", "atan2", "atanh",
+			"atomicAdd", "atomicLoad", "atomicStore", "bitcast", "ceil", "clamp", "cos", "cosh",
+			"countLeadingZeros", "countOneBits", "countTrailingZeros", "cross", "degrees", "determinant",
+			"distance", "dot", "dpdx", "dpdxCoarse", "dpdxFine", "dpdy", "dpdyCoarse", "dpdyFine",
+			"exp", "exp2", "extractBits", "faceForward", "firstLeadingBit", "firstTrailingBit", "floor",
+			"fma", "fract", "frexp", "fwidth", "fwidthCoarse", "fwidthFine", "gather_depth_compare",
+			"gather_x_components", "insertBits", "inverseSqrt", "ldexp", "length", "log", "log2",
+			"max", "min", "mix", "modf", "normalize", "pack2x16float", "pack2x16snorm", "pack2x16unorm",
+			"pack4x8snorm", "pack4x8unorm", "pow", "quantizeToF16", "radians", "reflect", "refract",
+			"reverseBits", "round", "saturate", "select", "sign", "sin", "sinh", "smoothstep", "sqrt",
+			"step", "storageBarrier", "tan", "tanh", "textureDimensions", "textureGather",
+			"textureGatherCompare", "textureLoad", "textureNumLayers", "textureNumLevels",
+			"textureNumSamples", "textureSample", "textureSampleBaseClampToEdge", "textureSampleBias",
+			"textureSampleCompare", "textureSampleCompareLevel", "textureSampleGrad",
+			"textureSampleLevel", "textureStore", "transpose", "trunc", "unpack2x16float",
+			"unpack2x16snorm", "unpack2x16unorm", "unpack4x8snorm", "unpack4x8unorm",
+			"workgroupBarrier", "workgroupUniformLoad"
+		};
+		for (auto& k : identifiers)
+		{
+			Identifier id;
+			id.mDeclaration = "Built-in function";
+			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+		}
+
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_@][a-zA-Z0-9_@]*", PaletteIndex::Identifier));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+
+		langDef.mCommentStart = "/*";
+		langDef.mCommentEnd = "*/";
+		langDef.mSingleLineComment = "//";
+
+		langDef.mCaseSensitive = true;
+		langDef.mAutoIndentation = true;
+
+		langDef.mName = "WGSL";
+
+		inited = true;
+	}
+	return langDef;
+}
+
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
 {
 	static bool inited = false;

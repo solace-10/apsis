@@ -69,7 +69,7 @@ void ShaderEditor::Initialize()
 			IM_COL32(  5, 250, 191, 255), // Punctuation
 			IM_COL32(230, 230, 230, 255), // Preprocessor
 			IM_COL32(230, 230, 230, 255), // Identifier
-			IM_COL32(230, 230, 230, 255), // Known identifier
+			IM_COL32(  0, 210, 170, 200), // Known identifier
 			IM_COL32(230, 230, 230, 255), // Preproc identifier
 			IM_COL32(160, 160, 160, 255), // Comment (single line)
 			IM_COL32(160, 160, 160, 255), // Comment (multi line)
@@ -96,6 +96,7 @@ void ShaderEditor::Initialize()
                 .previouslyOpened = false
             };
 
+            data.editor.SetLanguageDefinition(TextEditor::LanguageDefinition::WGSL());
             data.editor.SetPalette(palette);
             data.editor.SetText(pResourceShader->GetShaderCode());
             data.code = data.editor.GetText();
