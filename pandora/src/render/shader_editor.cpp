@@ -1,6 +1,7 @@
 #include "render/shader_editor.hpp"
 
 #include "imgui/fonts/icons_font_awesome.hpp"
+#include "imgui/imgui_system.hpp"
 #include "resources/resource_shader.hpp"
 #include "resources/resource_system.hpp"
 #include "vfs/vfs.hpp"
@@ -41,7 +42,9 @@ void ShaderEditor::Update()
             ShaderEditorData& data = m_Shaders[m_Selected];
             if (data.previouslyOpened)
             {
+                ImGui::PushFont(Pandora::GetImGuiSystem()->GetFont(Font::UBUNTU_MONO_18));
                 data.editor.Render("Shader editor", ImVec2(), true);
+                ImGui::PopFont();
             }
         }
     }

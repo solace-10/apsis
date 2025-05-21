@@ -8,6 +8,7 @@
 #include "imgui/fonts/exo2_semi_bold_data.hpp"
 #include "imgui/fonts/icons_font_awesome.hpp"
 #include "imgui/fonts/icons_font_awesome_data.hpp"
+#include "imgui/fonts/ubuntu_mono_data.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
 #include "render/rendersystem.hpp"
@@ -127,10 +128,9 @@ void ImGuiSystem::RegisterFonts()
     iconsConfig.GlyphOffset = ImVec2(0.0f, 2.0f);
     pFontAtlas->AddFontFromMemoryCompressedTTF(sFontAwesomeCompressedData, sFontAwesomeCompressedSize, defaultIconsFontSize, &iconsConfig, iconsRanges);
     RegisterFont(Font::EXO2_REGULAR_22, pDefaultFont);
-
     RegisterFont(Font::EXO2_SEMIBOLD_22, pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, defaultFontSize));
-
     RegisterFont(Font::EXO2_SEMIBOLD_32, pFontAtlas->AddFontFromMemoryCompressedTTF(sExo2SemiBold_compressed_data, sExo2SemiBold_compressed_size, 32.0f));
+    RegisterFont(Font::UBUNTU_MONO_18, pFontAtlas->AddFontFromMemoryCompressedTTF(sUbuntuMono_compressed_data, sUbuntuMono_compressed_size, 18.0f));
 
     pFontAtlas->Build();
 }
