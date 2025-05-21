@@ -61,27 +61,27 @@ void ShaderEditor::Initialize()
     m_Initialized = true;
 
     const static TextEditor::Palette palette = { {
-			0xff7f7f7f,	// None
-			0xffff0c06,	// Keyword	
-			0xff008000,	// Number
-			0xff2020a0,	// String
-			0xff304070, // Char literal
-			0xff000000, // Punctuation
-			0xff406060,	// Preprocessor
-			0xff404040, // Identifier
-			0xff606010, // Known identifier
-			0xffc040a0, // Preproc identifier
-			0xff205020, // Comment (single line)
-			0xff405020, // Comment (multi line)
-			IM_COL32(255, 250, 242, 148), // Background
-            IM_COL32(  0,   0,   0, 255), // Cursor
-			0x80600000, // Selection
-			0xa00010ff, // ErrorMarker
-			0x80f08000, // Breakpoint
-			0xff505000, // Line number
-			0x40000000, // Current line fill
-			0x40808080, // Current line fill (inactive)
-			0x40000000, // Current line edge
+			IM_COL32(230, 230, 230, 255), // None
+			IM_COL32(  5, 250, 191, 255), // Keyword	
+			IM_COL32(255, 140,   0, 255), // Number
+			IM_COL32(230, 230, 230, 255), // String
+			IM_COL32(230, 230, 230, 255), // Char literal
+			IM_COL32(  5, 250, 191, 255), // Punctuation
+			IM_COL32(230, 230, 230, 255), // Preprocessor
+			IM_COL32(230, 230, 230, 255), // Identifier
+			IM_COL32(230, 230, 230, 255), // Known identifier
+			IM_COL32(230, 230, 230, 255), // Preproc identifier
+			IM_COL32(160, 160, 160, 255), // Comment (single line)
+			IM_COL32(160, 160, 160, 255), // Comment (multi line)
+			IM_COL32( 46,  46,  46, 240), // Background
+            IM_COL32(  5, 250, 191, 255), // Cursor
+			IM_COL32(  5, 250, 191,  60), // Selection
+			IM_COL32(160,   0,  16, 255), // ErrorMarker
+			IM_COL32(160,   0,  16, 255), // Breakpoint
+			IM_COL32(140, 140, 140, 255), // Line number
+			IM_COL32(255, 255, 255,  20), // Current line fill
+			IM_COL32(255, 255, 255,  20), // Current line fill (inactive)
+			IM_COL32(  0,   0,   0,   0), // Current line edge
 		} };
 
     auto shadersList = GetVFS()->List("/shaders");
