@@ -3,6 +3,11 @@ struct VertexInput
     @location(0) position: vec3f
 };
 
+/*
+	this needs to be removed
+*/
+
+// This needs to be removed
 struct VertexOutput 
 {
     @builtin(position) position: vec4f
@@ -10,8 +15,8 @@ struct VertexOutput
 
 struct GlobalUniforms
 {
-    projectionMatrix : mat4x4<f32>,
-    viewMatrix : mat4x4<f32>,
+    projectionMatrix : mat4x4f,
+    viewMatrix : mat4x4f,
     time : f32
 };
 

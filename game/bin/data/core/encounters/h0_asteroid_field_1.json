@@ -129,6 +129,61 @@
             "end": 83,
             "id": 145,
             "start": 141
+        },
+        {
+            "end": 155,
+            "id": 160,
+            "start": 89
+        },
+        {
+            "end": 144,
+            "id": 176,
+            "start": 157
+        },
+        {
+            "end": 145,
+            "id": 177,
+            "start": 162
+        },
+        {
+            "end": 166,
+            "id": 178,
+            "start": 158
+        },
+        {
+            "end": 167,
+            "id": 179,
+            "start": 164
+        },
+        {
+            "end": 150,
+            "id": 182,
+            "start": 181
+        },
+        {
+            "end": 172,
+            "id": 183,
+            "start": 181
+        },
+        {
+            "end": 188,
+            "id": 197,
+            "start": 185
+        },
+        {
+            "end": 187,
+            "id": 198,
+            "start": 159
+        },
+        {
+            "end": 190,
+            "id": 203,
+            "start": 202
+        },
+        {
+            "end": 201,
+            "id": 206,
+            "start": 205
         }
     ],
     "nodes": [
@@ -241,7 +296,7 @@
                 "x": -22.0,
                 "y": 20.0
             },
-            "value": "In the vast, starry expanse of the cosmos, your starship glides out of the hyperspace gate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n_\"Captain,\"_ EXA's voice echoed through the bridge speakers, _\"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"_\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
+            "value": "In the vast, starry expanse of the cosmos, the fleet glides out of the slipgate towards a hulking mass of asteroids. Like ancient, battered sentinels, the space rocks floated in the void, their jagged surfaces glinting dully in the faint light of a distant sun.\n\nInside the ship's command center, you gaze intently at the main view screen, your eyes narrowed in concentration as you consider your options.\n\n_\"Captain,\"_ EXA's voice echoed through the bridge speakers, _\"We are approaching the asteroid field. Passive scans reveal no signs of activity within, but an active sensor pulse may alert any potential observers.\"_\n\nThe asteroids represented a potential bounty of valuable resources: precious metals, minerals, perhaps even something more... exotic."
         },
         {
             "id": 47,
@@ -722,6 +777,340 @@
                 "x": 1196.0,
                 "y": -8.0
             }
+        },
+        {
+            "id": 143,
+            "inputs": [
+                {
+                    "id": 144,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 145,
+                    "name": "Description",
+                    "type": 2
+                },
+                {
+                    "id": 146,
+                    "name": "Image",
+                    "type": 5
+                },
+                {
+                    "id": 147,
+                    "name": "Option 1",
+                    "type": 3
+                },
+                {
+                    "id": 148,
+                    "name": "Option 2",
+                    "type": 3
+                },
+                {
+                    "id": 149,
+                    "name": "Option 3",
+                    "type": 3
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 150,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 151,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 152,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 153,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 3996.0,
+                "y": -1392.0
+            }
+        },
+        {
+            "id": 154,
+            "inputs": [
+                {
+                    "id": 155,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 156,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "name": "Outcome conditional",
+            "outputs": [
+                {
+                    "id": 157,
+                    "name": "Positive",
+                    "type": 0
+                },
+                {
+                    "id": 158,
+                    "name": "Neutral",
+                    "type": 0
+                },
+                {
+                    "id": 159,
+                    "name": "Negative",
+                    "type": 0
+                }
+            ],
+            "position": {
+                "x": 3079.0,
+                "y": -992.0
+            }
+        },
+        {
+            "id": 161,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 162,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 3706.0,
+                "y": -1372.0
+            },
+            "value": "At your command, the fleet gracefully maneuvered through the asteroid field, expertly avoiding collisions as it homed in on the mysterious object. The thrusters fired in short bursts, each carefully calculated to maintain stability and control. As the ship drew nearer, the object came into sharper focus on the main view screen.\n\n_\"It appears to be an ancient probe, Captain,\"_ EXA reported. _\"Judging by its design and the energy signature, it is an early_ [Diaspora](Diaspora) _model.\"_\n\nWithin the hour the probe is retrieved and being analyzed by the engineering team. Progress is slow, the ancient connection protocols providing a challenge for both the signal engineers and EXA alike.\n\nBut eventually their efforts pay off, and the probe's data is successfully recovered. There is nothing cutting edge within its databanks, but the thousand years of collected astrogation data will no doubt prove beneficial.\n\n_Rewards:_\n_+2 Unencrypted Databanks_"
+        },
+        {
+            "id": 163,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 164,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 3722.0,
+                "y": -876.0
+            },
+            "value": "With a subtle shift, the ship adjusted course, maneuvering closer to the anomalous object over the course of the next few hours.\n\nThe object, no larger than a probe, drifted listlessly, a dark, metallic sphere marred by dents and scorched patches. A lonely, flickering light pulsed at one end, casting erratic shadows across its surface.\n\n_\"Receiving telemetry now,\"_ EXA reported, its voice crisp and measured. _\"The object appears to be a derelict navigation buoy, likely from the early days of the_ [Diaspora.](Diaspora) _Its propulsion systems are offline, and it's running on backup power.\"_\n\nIt is of little use, and soon the engineering team breaks it down for parts.\n\n_Rewards:_\n_+5 Supplies_"
+        },
+        {
+            "id": 165,
+            "inputs": [
+                {
+                    "id": 166,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 167,
+                    "name": "Description",
+                    "type": 2
+                },
+                {
+                    "id": 168,
+                    "name": "Image",
+                    "type": 5
+                },
+                {
+                    "id": 169,
+                    "name": "Option 1",
+                    "type": 3
+                },
+                {
+                    "id": 170,
+                    "name": "Option 2",
+                    "type": 3
+                },
+                {
+                    "id": 171,
+                    "name": "Option 3",
+                    "type": 3
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 172,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 173,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 174,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 175,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 4006.0,
+                "y": -864.0
+            }
+        },
+        {
+            "id": 180,
+            "inputs": [
+                {
+                    "id": 181,
+                    "name": "",
+                    "type": 0
+                }
+            ],
+            "name": "Exit sector",
+            "outputs": [],
+            "position": {
+                "x": 4619.0,
+                "y": -1075.0
+            }
+        },
+        {
+            "id": 184,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 185,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 3706.0,
+                "y": -396.0
+            },
+            "value": "As the fleet drew nearer to the anomalous object, EXA magnified the image on the main view screen. The object, although roughly the size of a probe, looked more like a jury-rigged mess rather than anything coming out of a Corellian factory.\n\n_\"Object is in retrieval range.\"_, one of your crew reports while looking at their screen. \n\nAnd then a blinding flash of light erupts from its surface. The ship shudders violently as an electromagnetic pulse rips through its systems, causing displays and consoles to flicker.\n\nAlarms blare as automated systems react to the EMP blast. EXA's voice cuts through the chaos: _\"Captain, we have multiple incoming hostiles! Multiple unidentified gunships are emerging from the asteroid field. They do not match any known Corellian profiles.\"_\n\n_\"So,\"_ you growl, _\"looks like today's going to be interesting after all.\"_"
+        },
+        {
+            "id": 186,
+            "inputs": [
+                {
+                    "id": 187,
+                    "name": "",
+                    "type": 0
+                },
+                {
+                    "id": 188,
+                    "name": "Description",
+                    "type": 2
+                },
+                {
+                    "id": 189,
+                    "name": "Image",
+                    "type": 5
+                },
+                {
+                    "id": 190,
+                    "name": "Option 1",
+                    "type": 3
+                },
+                {
+                    "id": 191,
+                    "name": "Option 2",
+                    "type": 3
+                },
+                {
+                    "id": 192,
+                    "name": "Option 3",
+                    "type": 3
+                }
+            ],
+            "name": "Encounter stage",
+            "outputs": [
+                {
+                    "id": 193,
+                    "name": "Selected 1",
+                    "type": 0
+                },
+                {
+                    "id": 194,
+                    "name": "Selected 2",
+                    "type": 0
+                },
+                {
+                    "id": 195,
+                    "name": "Selected 3",
+                    "type": 0
+                },
+                {
+                    "id": 196,
+                    "name": "Outcome",
+                    "type": 1
+                }
+            ],
+            "position": {
+                "x": 3996.0,
+                "y": -440.0
+            }
+        },
+        {
+            "id": 199,
+            "inputs": [
+                {
+                    "id": 200,
+                    "name": "Dice",
+                    "type": 4
+                },
+                {
+                    "id": 201,
+                    "name": "Description",
+                    "type": 2
+                }
+            ],
+            "name": "Encounter option",
+            "outputs": [
+                {
+                    "id": 202,
+                    "name": "Option",
+                    "type": 3
+                }
+            ],
+            "position": {
+                "x": 3612.0,
+                "y": -200.0
+            }
+        },
+        {
+            "id": 204,
+            "inputs": [],
+            "name": "String",
+            "outputs": [
+                {
+                    "id": 205,
+                    "name": "Value",
+                    "type": 2
+                }
+            ],
+            "position": {
+                "x": 3370.0,
+                "y": -172.0
+            },
+            "value": "\"Battlestations!\""
         }
     ]
 }

@@ -51,22 +51,11 @@ struct LocalUniforms
 	
 	let NdotL = dot(in.worldNormal, lightDir);
 	
-	var diffuseStrength = 0.0;
-	if (NdotL >= 0.0)
-	{
-		diffuseStrength = 1.0;
-	}
-	//diffuseStrength = max(NdotL, 0.0);
-	let ambientStrength = vec3f(0.2);
+	var diffuseStrength = max(NdotL, 0.0);
+	let ambientStrength = vec3f(0.0);
 	
-	let viewDir = uGlobalUniforms.viewMatrix[0].xyz;
-	let rimDot = max(1 - dot(viewDir, in.worldNormal), 0);
-	let rimAmount = 0.7;
-	let rimIntensity = smoothstep(rimAmount - 0.01, rimAmount + 0.01, rimDot);
-	//let rim = rimIntensity;
-	let rim = 0.0;
 	
 	let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
 	//return vec4f(in.worldNormal, 1.0);
-    return vec4f(objectColor * (ambientStrength + diffuseStrength + rim), 1);
+    return vec4f(objectColor * (ambientStrength + diffuseStrength), 1);
 }

@@ -194,18 +194,18 @@ void Sector::SpawnPlayerFleet()
 
     m_pPlayerFleet = std::make_shared<Fleet>();
 
-    m_pPlayerShip = SpawnShip("Everflame", "/models/flagship/light_carrier/light_carrier.glb");
+    m_pPlayerShip = SpawnShip("Everflame", "/models/flagship/light_carrier/standard_core.glb");
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
     m_pPlayerShip->AddComponent<DiceComponent>();
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
-    std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
-    for (const std::string& name : escortNames)
-    {
-        Pandora::EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
-        pEscort->AddComponent<DiceComponent>();
-        m_pPlayerFleet->AddShip(pEscort);
-    }
+    // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
+    // for (const std::string& name : escortNames)
+    // {
+    //     Pandora::EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
+    //     pEscort->AddComponent<DiceComponent>();
+    //     m_pPlayerFleet->AddShip(pEscort);
+    // }
 }
 
 Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::string& modelPath)
