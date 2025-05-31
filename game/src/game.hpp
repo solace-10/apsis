@@ -11,7 +11,6 @@ DECLARE_SMART_PTR(PrefabEditor);
 DECLARE_SMART_PTR(Hyperscape);
 DECLARE_SMART_PTR(ItemManager);
 DECLARE_SMART_PTR(Sector);
-DECLARE_SMART_PTR(EncounterEditor);
 
 namespace UI
 {
@@ -45,7 +44,6 @@ private:
     SectorSharedPtr m_pSector;
 
     UI::PrefabEditorUniquePtr m_pPrefabEditor;
-    EncounterEditorUniquePtr m_pEncounterEditor;
 };
 
 inline const ItemManager* Game::GetItemManager() const

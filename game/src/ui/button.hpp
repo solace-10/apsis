@@ -4,7 +4,6 @@
 #include <resources/resource.fwd.hpp>
 #include <resources/resource_texture_2d.hpp>
 
-#include "sector/encounters/encounter_blueprint_nodes.hpp"
 #include "ui/events.hpp"
 #include "ui/stackable_element.hpp"
 

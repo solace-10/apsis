@@ -74,7 +74,6 @@ target_compile_definitions(pandora PUBLIC
 )
 
 target_link_libraries(pandora PUBLIC 
-    LinearMath Bullet3Common BulletDynamics BulletCollision
     freetype
     glm::glm
     magic_enum::magic_enum 
@@ -88,8 +87,10 @@ if(TARGET_PLATFORM_WINDOWS)
     target_compile_options(pandora PUBLIC /Zi) # Debug information format: Program database.
     target_compile_options(pandora PUBLIC /MP) # Enable parallel compilation.
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
+    target_link_libraries(pandora PUBLIC LinearMath Bullet3Common BulletDynamics BulletCollision)
 elseif(TARGET_PLATFORM_LINUX)
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
+    target_link_libraries(pandora PUBLIC LinearMath Bullet3Common BulletDynamics BulletCollision)
 elseif(TARGET_PLATFORM_WEB)
     target_compile_options(pandora PUBLIC 
         "-O0"
@@ -99,6 +100,7 @@ elseif(TARGET_PLATFORM_WEB)
     )
     target_link_options(pandora PUBLIC 
         "-sDEFAULT_TO_CXX"
+        "-sUSE_BULLET=1"
         "-sUSE_WEBGPU=1" 
         "-sUSE_GLFW=3" 
         "-sFETCH" 
