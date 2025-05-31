@@ -49,6 +49,16 @@ if(TARGET_PLATFORM_NATIVE)
     FetchContent_MakeAvailable(imgui-node-editor)
 endif()
 
+
+FetchContent_Declare(
+    bullet3
+    GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+    GIT_TAG ebe1916b90acae8b13cd8c6b637d8327cdc64e94 # 3.17
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/bullet3
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(bullet3)
+
 FetchContent_Declare(
     debug-draw
     GIT_REPOSITORY https://github.com/glampert/debug-draw.git

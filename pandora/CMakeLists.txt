@@ -74,6 +74,7 @@ target_compile_definitions(pandora PUBLIC
 )
 
 target_link_libraries(pandora PUBLIC 
+    LinearMath Bullet3Common BulletDynamics BulletCollision
     freetype
     glm::glm
     magic_enum::magic_enum 
