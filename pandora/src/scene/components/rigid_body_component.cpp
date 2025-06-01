@@ -26,7 +26,7 @@ RigidBodyComponent::RigidBodyComponent(const RigidBodyConstructionInfo& ci)
     btVector3 localInertia(0.0f, 0.0f, 0.0f);
     if (m_MotionType == MotionType::Dynamic)
     {
-        pCollisionShape->calculateLocalInertia(static_cast<btScalar>( m_Mass ), localInertia);
+        pCollisionShape->calculateLocalInertia(static_cast<btScalar>(m_Mass), localInertia);
     }
 
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -51,32 +51,32 @@ RigidBodyComponent::RigidBodyComponent(const RigidBodyConstructionInfo& ci)
 glm::mat4x4 RigidBodyComponent::GetWorldTransform() const
 {
     btTransform tr;
-    m_pMotionState->getWorldTransform( tr );
+    m_pMotionState->getWorldTransform(tr);
 
-    float mat[ 16 ];
-    tr.getOpenGLMatrix( mat );
+    float mat[16];
+    tr.getOpenGLMatrix(mat);
 
-    return glm::make_mat4x4( mat );
+    return glm::make_mat4x4(mat);
 }
 
 glm::vec3 RigidBodyComponent::GetPosition() const
 {
     btTransform tr;
-    m_pMotionState->getWorldTransform( tr );
+    m_pMotionState->getWorldTransform(tr);
     const btVector3& position = tr.getOrigin();
-    return glm::vec3( position.x(), position.y(), position.z() );
+    return glm::vec3(position.x(), position.y(), position.z());
 }
 
 glm::vec3 RigidBodyComponent::GetLinearVelocity() const
 {
     const btVector3& linearVelocity = m_pRigidBody->getLinearVelocity();
-    return glm::vec3( linearVelocity.x(), linearVelocity.y(), linearVelocity.z() );
+    return glm::vec3(linearVelocity.x(), linearVelocity.y(), linearVelocity.z());
 }
 
 glm::vec3 RigidBodyComponent::GetAngularVelocity() const
 {
     const btVector3& angularVelocity = m_pRigidBody->getAngularVelocity();
-    return glm::vec3( angularVelocity.x(), angularVelocity.y(), angularVelocity.z() );
+    return glm::vec3(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
 }
 
 void RigidBodyComponent::SetLinearDamping(float value)
@@ -133,7 +133,7 @@ void RigidBodyComponent::ApplyAngularForce(const glm::vec3& force)
 
 void RigidBodyComponent::ApplyLinearForce(const glm::vec3& force)
 {
-    m_pRigidBody->applyCentralForce(btVector3( force.x, force.y, force.z));
+    m_pRigidBody->applyCentralForce(btVector3(force.x, force.y, force.z));
 }
 
 void RigidBodyComponent::ApplyAngularImpulse(const glm::vec3& impulse)
@@ -162,9 +162,9 @@ void RigidBodyComponent::CalculateInvInertiaTensorWorld()
     // column major (note the [j][i] = [i][j]) but in practice this makes no difference for
     // this matrix, as it only has values on the diagonals.
     const btMatrix3x3& invInertiaTensorWorld = m_pRigidBody->getInvInertiaTensorWorld();
-    for ( int i = 0; i < 3; i++ )
+    for (int i = 0; i < 3; i++)
     {
-        for ( int j = 0; j < 3; j++ )
+        for (int j = 0; j < 3; j++)
         {
             m_InvInertiaTensorWorld[j][i] = invInertiaTensorWorld[i][j];
         }

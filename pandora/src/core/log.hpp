@@ -41,29 +41,29 @@ public:
     class Stream
     {
     public:
-        Stream( Level level );
+        Stream(Level level);
         ~Stream();
 
         template <typename T>
-        Stream& operator<<( T const& value )
+        Stream& operator<<(T const& value)
         {
             m_Collector << value;
             return *this;
         }
 
 #if defined(TARGET_PLATFORM_WINDOWS)
-        Stream& operator<<( const std::filesystem::path& value )
+        Stream& operator<<(const std::filesystem::path& value)
         {
             // Cleanup all the slashes and display them in Windows' standard format ('\').
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            m_Collector << std::regex_replace( converter.to_bytes( value ), std::regex( "(\\\\|/)" ), "\\" );
+            m_Collector << std::regex_replace(converter.to_bytes(value), std::regex("(\\\\|/)"), "\\");
             return *this;
         }
 
-        Stream& operator<<( const std::wstring& value )
+        Stream& operator<<(const std::wstring& value)
         {
             std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-            m_Collector << converter.to_bytes( value );
+            m_Collector << converter.to_bytes(value);
             return *this;
         }
 #endif
@@ -77,13 +77,13 @@ public:
     static Stream Warning();
     static Stream Error();
 
-    static void AddLogTarget( LogTargetSharedPtr pLogTarget );
-    static void RemoveLogTarget( LogTargetSharedPtr pLogTarget );
+    static void AddLogTarget(LogTargetSharedPtr pLogTarget);
+    static void RemoveLogTarget(LogTargetSharedPtr pLogTarget);
 
 private:
     using LogTargetList = std::list<LogTargetSharedPtr>;
 
-    static void LogInternal( const std::string& text, Log::Level level );
+    static void LogInternal(const std::string& text, Log::Level level);
     static void AbortOnError(Log::Level level);
 
     static std::mutex m_Mutex;
@@ -99,10 +99,10 @@ class ILogTarget
 {
 public:
     virtual ~ILogTarget() {}
-    virtual void Log( const std::string& text, Log::Level level ) = 0;
+    virtual void Log(const std::string& text, Log::Level level) = 0;
 
 protected:
-    static const std::string& GetPrefix( Log::Level level );
+    static const std::string& GetPrefix(Log::Level level);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ protected:
 class StdOutLogger : public ILogTarget
 {
 public:
-    virtual void Log( const std::string& text, Log::Level type ) override;
+    virtual void Log(const std::string& text, Log::Level type) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,9 +126,9 @@ public:
 class FileLogger : public ILogTarget
 {
 public:
-    FileLogger( const std::filesystem::path& filePath );
+    FileLogger(const std::filesystem::path& filePath);
     virtual ~FileLogger() override;
-    virtual void Log( const std::string& text, Log::Level type ) override;
+    virtual void Log(const std::string& text, Log::Level type) override;
 
 private:
     std::ofstream m_File;
@@ -144,7 +144,7 @@ private:
 class MessageBoxLogger : public ILogTarget
 {
 public:
-    virtual void Log( const std::string& text, Log::Level type ) override;
+    virtual void Log(const std::string& text, Log::Level type) override;
 };
 #endif
 

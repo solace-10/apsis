@@ -54,21 +54,21 @@ public:
     const glm::vec3& GetCentreOfMass() const { return m_CentreOfMass; }
 
 private:
-    int32_t m_Mass{1};
-    MotionType m_MotionType{MotionType::Dynamic};
-    glm::mat4x4 m_WorldTransform{1};
+    int32_t m_Mass{ 1 };
+    MotionType m_MotionType{ MotionType::Dynamic };
+    glm::mat4x4 m_WorldTransform{ 1 };
     CollisionShapeSharedPtr m_pShape;
-    float m_LinearDamping{0.0f};
-    float m_AngularDamping{0.0f};
-    float m_Friction{0.0f};
-    glm::vec3 m_CentreOfMass{0.0f, 0.0f, 0.0f};
+    float m_LinearDamping{ 0.0f };
+    float m_AngularDamping{ 0.0f };
+    float m_Friction{ 0.0f };
+    glm::vec3 m_CentreOfMass{ 0.0f, 0.0f, 0.0f };
 };
 
 class RigidBodyComponent
 {
 public:
     RigidBodyComponent(const RigidBodyConstructionInfo& ci);
-    
+
     btRigidBody* GetBulletRigidBody() { return m_pRigidBody.get(); }
     const btRigidBody* GetBulletRigidBody() const { return m_pRigidBody.get(); }
     glm::mat4x4 GetWorldTransform() const;
@@ -105,14 +105,14 @@ private:
     CollisionShapeSharedPtr m_pShape;
     std::unique_ptr<btRigidBody> m_pRigidBody;
     std::unique_ptr<btMotionState> m_pMotionState;
-    MotionType m_MotionType{MotionType::Dynamic};
-    int32_t m_Mass{1};
-    float m_LinearDamping{0.0f};
-    float m_AngularDamping{0.0f};
-    glm::vec3 m_CentreOfMass{0.0f, 0.0f, 0.0f};
-    glm::vec3 m_LinearFactor{0.0f, 0.0f, 0.0f};
-    glm::vec3 m_AngularFactor{0.0f, 0.0f, 0.0f};
-    glm::mat3x3 m_InvInertiaTensorWorld{1.0f};
+    MotionType m_MotionType{ MotionType::Dynamic };
+    int32_t m_Mass{ 1 };
+    float m_LinearDamping{ 0.0f };
+    float m_AngularDamping{ 0.0f };
+    glm::vec3 m_CentreOfMass{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 m_LinearFactor{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 m_AngularFactor{ 0.0f, 0.0f, 0.0f };
+    glm::mat3x3 m_InvInertiaTensorWorld{ 1.0f };
 };
 
 } // namespace WingsOfSteel::Pandora

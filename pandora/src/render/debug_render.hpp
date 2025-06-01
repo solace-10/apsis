@@ -107,7 +107,7 @@ public:
 
 private:
     std::unique_ptr<Private::DebugRenderImpl> m_pImpl;
-    std::unique_ptr<DebugRenderDemo> m_pDemo;  
+    std::unique_ptr<DebugRenderDemo> m_pDemo;
 };
 
 } // namespace WingsOfSteel::Pandora

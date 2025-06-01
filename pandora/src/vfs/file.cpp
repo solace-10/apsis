@@ -17,7 +17,6 @@ File::File(const std::string& path, const FileData& data)
 
 File::~File()
 {
-
 }
 
 const FileData& File::GetData() const

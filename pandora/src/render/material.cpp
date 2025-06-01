@@ -1,15 +1,15 @@
 #include <array>
 
+#include "pandora.hpp"
 #include "render/material.hpp"
 #include "render/rendersystem.hpp"
 #include "resources/resource_texture_2d.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 Material::Material(const MaterialSpec& materialSpec)
-: m_Spec(materialSpec)
+    : m_Spec(materialSpec)
 {
     InitializeBindGroupLayout();
     InitializeBlendState();
@@ -21,15 +21,13 @@ Material::~Material()
 
 void Material::InitializeBindGroupLayout()
 {
-    auto CreateDefaultTextureLayoutEntry = [](uint32_t binding) -> wgpu::BindGroupLayoutEntry
-    {
+    auto CreateDefaultTextureLayoutEntry = [](uint32_t binding) -> wgpu::BindGroupLayoutEntry {
         wgpu::BindGroupLayoutEntry textureLayoutEntry{
             .binding = binding,
             .visibility = wgpu::ShaderStage::Fragment,
-            .texture{ 
+            .texture{
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D
-            }
+                .viewDimension = wgpu::TextureViewDimension::e2D }
         };
         return textureLayoutEntry;
     };
@@ -46,21 +44,16 @@ void Material::InitializeBindGroupLayout()
         .binding = 0,
         .visibility = wgpu::ShaderStage::Fragment,
         .sampler{
-            .type = wgpu::SamplerBindingType::Filtering
-        }
+            .type = wgpu::SamplerBindingType::Filtering }
     };
 
-    std::vector<wgpu::BindGroupLayoutEntry> layoutEntries =
-    {
+    std::vector<wgpu::BindGroupLayoutEntry> layoutEntries = {
         samplerLayoutEntry
     };
 
-    std::vector<wgpu::BindGroupEntry> entries =
-    {
-        {
-            .binding = 0,
-            .sampler = sampler
-        }
+    std::vector<wgpu::BindGroupEntry> entries = {
+        { .binding = 0,
+            .sampler = sampler }
     };
 
     std::array<wgpu::TextureView, 5> textureViews{
@@ -80,9 +73,7 @@ void Material::InitializeBindGroupLayout()
             entries.push_back(
                 wgpu::BindGroupEntry{
                     .binding = binding,
-                    .textureView = textureViews[i]
-                }
-            );
+                    .textureView = textureViews[i] });
         }
     }
 
@@ -107,12 +98,10 @@ void Material::InitializeBlendState()
     m_BlendState = wgpu::BlendState{
         .color{
             .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::Zero
-        },
+            .dstFactor = wgpu::BlendFactor::Zero },
         .alpha{
             .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::Zero
-        }
+            .dstFactor = wgpu::BlendFactor::Zero }
     };
 }
 

@@ -9,9 +9,9 @@ class ShaderCompilationError
 {
 public:
     ShaderCompilationError(const std::string& message, uint32_t lineNumber, uint32_t linePosition)
-    : m_Message(message)
-    , m_LineNumber(lineNumber)
-    , m_LinePosition(linePosition)
+        : m_Message(message)
+        , m_LineNumber(lineNumber)
+        , m_LinePosition(linePosition)
     {
     }
 

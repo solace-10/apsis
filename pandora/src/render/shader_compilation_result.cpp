@@ -4,14 +4,12 @@ namespace WingsOfSteel::Pandora
 {
 
 ShaderCompilationResult::ShaderCompilationResult(uint32_t id)
-: m_CompilationId(id)
+    : m_CompilationId(id)
 {
-
 }
 
 ShaderCompilationResult::~ShaderCompilationResult()
 {
-
 }
 
 ShaderCompilationResult::State ShaderCompilationResult::GetState() const

@@ -15,14 +15,14 @@ public:
     ~Camera() {}
 
     void LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up);
-    
+
     void SetNearPlane(float distance);
     float GetNearPlane() const;
     void SetFarPlane(float distance);
     float GetFarPlane() const;
     void SetFieldOfView(float degrees);
     float GetFieldOfView() const;
-    
+
     const glm::vec3& GetPosition() const;
     const glm::vec3& GetTarget() const;
     const glm::mat4& GetViewMatrix() const;

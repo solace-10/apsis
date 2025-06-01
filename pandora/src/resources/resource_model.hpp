@@ -1,7 +1,7 @@
 #pragma once
 
-#include "resources/resource.hpp"
 #include "resources/resource.fwd.hpp"
+#include "resources/resource.hpp"
 
 #include <atomic>
 #include <optional>
@@ -17,10 +17,10 @@
 
 namespace tinygltf
 {
-    class Accessor;
-    class Model;
-    class Primitive;
-}
+class Accessor;
+class Model;
+class Primitive;
+} // namespace tinygltf
 
 namespace WingsOfSteel::Pandora
 {
@@ -41,12 +41,13 @@ public:
     {
     public:
         Node(const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, std::optional<uint32_t> meshId)
-        : m_Transform(transform)
-        , m_Name(name)
-        , m_Children(children)
-        , m_IsRoot(isRoot)
-        , m_MeshId(meshId)
-        {}
+            : m_Transform(transform)
+            , m_Name(name)
+            , m_Children(children)
+            , m_IsRoot(isRoot)
+            , m_MeshId(meshId)
+        {
+        }
 
         ~Node() {}
 
@@ -103,7 +104,7 @@ private:
             uint64_t count;
         };
         std::vector<VertexBufferData> vertexData;
-        
+
         struct IndexData
         {
             uint32_t bufferIndex;

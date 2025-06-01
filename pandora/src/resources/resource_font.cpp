@@ -8,12 +8,10 @@ namespace WingsOfSteel::Pandora
 
 ResourceFont::ResourceFont()
 {
-
 }
 
 ResourceFont::~ResourceFont()
 {
-
 }
 
 void ResourceFont::Load(const std::string& path)
@@ -21,11 +19,9 @@ void ResourceFont::Load(const std::string& path)
     Resource::Load(path);
 
     GetVFS()->FileRead(path,
-        [this](FileReadResult result, FileSharedPtr pFile)
-        {
+        [this](FileReadResult result, FileSharedPtr pFile) {
             this->LoadInternal(result, pFile);
-        }
-    );
+        });
 }
 
 ResourceType ResourceFont::GetResourceType() const
@@ -47,7 +43,7 @@ void ResourceFont::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
     else
     {
-        SetState(ResourceState::Error);   
+        SetState(ResourceState::Error);
     }
 }
 

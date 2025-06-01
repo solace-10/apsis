@@ -16,7 +16,7 @@ public:
 
     inline wgpu::Texture& GetTexture() { return m_Texture; }
     inline wgpu::TextureView& GetTextureView() { return m_TextureView; }
-    inline wgpu::Sampler& GetSampler() { return m_Sampler; }  
+    inline wgpu::Sampler& GetSampler() { return m_Sampler; }
 
 private:
     wgpu::Texture m_Texture;

@@ -11,17 +11,14 @@ namespace WingsOfSteel::Pandora
 
 Scene::Scene()
 {
-
 }
 
 Scene::~Scene()
 {
-
 }
 
 void Scene::Initialize()
 {
-    
 }
 
 void Scene::Update(float delta)
@@ -45,7 +42,6 @@ EntitySharedPtr Scene::CreateEntity()
 
     return pEntity;
 }
-
 
 void Scene::RemoveEntity(EntitySharedPtr pEntity)
 {

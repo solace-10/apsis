@@ -26,7 +26,7 @@ public:
     EntitySharedPtr CreateEntity();
     void RemoveEntity(EntitySharedPtr pEntity);
 
-    template<typename T>
+    template <typename T>
     T* GetSystem() const
     {
         static_assert(std::is_base_of<System, T>::value, "T must inherit from System");
@@ -40,7 +40,7 @@ public:
         return nullptr;
     }
 
-    template<typename T, typename... Args>
+    template <typename T, typename... Args>
     T* AddSystem(Args&&... args)
     {
         static_assert(std::is_base_of<System, T>::value, "T must inherit from System");

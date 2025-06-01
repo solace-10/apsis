@@ -5,7 +5,6 @@ namespace WingsOfSteel::Pandora
 
 DepthTexture::DepthTexture()
 {
-    
 }
 
 DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height, const std::string& label)
@@ -17,8 +16,7 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
         .size{
             .width = width,
             .height = height,
-            .depthOrArrayLayers = 1
-        },
+            .depthOrArrayLayers = 1 },
         .format = wgpu::TextureFormat::Depth32Float
     };
 
@@ -35,7 +33,6 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
 
 DepthTexture::~DepthTexture()
 {
-
 }
 
 } // namespace WingsOfSteel::Pandora

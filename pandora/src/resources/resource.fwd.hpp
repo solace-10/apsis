@@ -6,11 +6,11 @@
 namespace WingsOfSteel::Pandora
 {
 
-#define DECLARE_RESOURCE_TYPE(x) \
-    class x; \
-    using x ## UniquePtr = std::unique_ptr<x>; \
-    using x ## SharedPtr = std::shared_ptr<x>; \
-    using x ## WeakPtr = std::weak_ptr<x>
+#define DECLARE_RESOURCE_TYPE(x)             \
+    class x;                                 \
+    using x##UniquePtr = std::unique_ptr<x>; \
+    using x##SharedPtr = std::shared_ptr<x>; \
+    using x##WeakPtr = std::weak_ptr<x>
 
 DECLARE_RESOURCE_TYPE(Resource);
 DECLARE_RESOURCE_TYPE(ResourceDataStore);

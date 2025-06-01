@@ -29,30 +29,29 @@ using CollisionShapeContainer = std::vector<CollisionShapeSharedPtr>;
 class CollisionShape
 {
 public:
-	CollisionShape() {}
-	virtual ~CollisionShape() {}
+    CollisionShape() {}
+    virtual ~CollisionShape() {}
 
-	enum class Type
-	{
-		Box,
-		Compound,
-		Sphere,
-		ConvexHull,
-		Cylinder
-	};
+    enum class Type
+    {
+        Box,
+        Compound,
+        Sphere,
+        ConvexHull,
+        Cylinder
+    };
 
-	virtual Type GetType() const = 0;
-	void SetUserData(void* pUserData);
-	void* GetUserData() const;
+    virtual Type GetType() const = 0;
+    void SetUserData(void* pUserData);
+    void* GetUserData() const;
 
     const btCollisionShape* GetBulletShape() const { return m_pShape.get(); }
     btCollisionShape* GetBulletShape() { return m_pShape.get(); }
 
 protected:
-	std::unique_ptr<btCollisionShape> m_pShape;
-	void* m_pUserData{nullptr};
+    std::unique_ptr<btCollisionShape> m_pShape;
+    void* m_pUserData{ nullptr };
 };
-
 
 /////////////////////////////////////////////////////////////////////
 // CollisionShapeBox
@@ -61,11 +60,10 @@ protected:
 class CollisionShapeBox : public CollisionShape
 {
 public:
-	CollisionShapeBox(float width, float height, float depth);
+    CollisionShapeBox(float width, float height, float depth);
 
-	virtual Type GetType() const override { return Type::Box; }
+    virtual Type GetType() const override { return Type::Box; }
 };
-
 
 /////////////////////////////////////////////////////////////////////
 // CollisionShapeCompound
@@ -74,22 +72,21 @@ public:
 class CollisionShapeCompound : public CollisionShape
 {
 public:
-	CollisionShapeCompound();
+    CollisionShapeCompound();
 
-	void AddChildShape(CollisionShapeSharedPtr pShape, const glm::mat4x4& localTransform);
-	void RemoveChildShape(CollisionShapeSharedPtr pShape);
-	void RemoveChildShape(uint32_t index);
-	CollisionShapeSharedPtr GetChildShape(uint32_t index) const;
-	glm::mat4x4 GetChildTransform(uint32_t index) const;
-	uint32_t GetChildrenCount() const;
+    void AddChildShape(CollisionShapeSharedPtr pShape, const glm::mat4x4& localTransform);
+    void RemoveChildShape(CollisionShapeSharedPtr pShape);
+    void RemoveChildShape(uint32_t index);
+    CollisionShapeSharedPtr GetChildShape(uint32_t index) const;
+    glm::mat4x4 GetChildTransform(uint32_t index) const;
+    uint32_t GetChildrenCount() const;
 
-	virtual Type GetType() const override { return Type::Compound; }
+    virtual Type GetType() const override { return Type::Compound; }
 
 private:
-	using ChildShapeContainer = std::vector< std::pair<CollisionShapeSharedPtr, glm::mat4x4 >>;
-	ChildShapeContainer m_ChildShapes;
+    using ChildShapeContainer = std::vector<std::pair<CollisionShapeSharedPtr, glm::mat4x4>>;
+    ChildShapeContainer m_ChildShapes;
 };
-
 
 /////////////////////////////////////////////////////////////////////
 // CollisionShapeSphere
@@ -98,26 +95,24 @@ private:
 class CollisionShapeSphere : public CollisionShape
 {
 public:
-	CollisionShapeSphere(float radius);
+    CollisionShapeSphere(float radius);
 
-	virtual Type GetType() const override { return Type::Sphere; }
+    virtual Type GetType() const override { return Type::Sphere; }
 };
-
 
 /////////////////////////////////////////////////////////////////////
 // CollisionShapeConvexHull
 /////////////////////////////////////////////////////////////////////
 
-using ConvexHullVertices = std::vector< glm::vec3 >;
+using ConvexHullVertices = std::vector<glm::vec3>;
 
 class CollisionShapeConvexHull : public CollisionShape
 {
 public:
-	CollisionShapeConvexHull( const ConvexHullVertices& vertices );
+    CollisionShapeConvexHull(const ConvexHullVertices& vertices);
 
-	virtual Type GetType() const override { return Type::ConvexHull; }
+    virtual Type GetType() const override { return Type::ConvexHull; }
 };
-
 
 /////////////////////////////////////////////////////////////////////
 // CollisionShapeCylinder
@@ -126,16 +121,16 @@ public:
 class CollisionShapeCylinder : public CollisionShape
 {
 public:
-	enum class Axis
-	{
-		X,
-		Y,
-		Z
-	};
+    enum class Axis
+    {
+        X,
+        Y,
+        Z
+    };
 
-	CollisionShapeCylinder(Axis axis, float width, float height, float depth);
+    CollisionShapeCylinder(Axis axis, float width, float height, float depth);
 
-	virtual Type GetType() const override { return Type::Cylinder; }
+    virtual Type GetType() const override { return Type::Cylinder; }
 };
 
 } // namespace WingsOfSteel::Pandora

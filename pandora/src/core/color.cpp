@@ -3,6 +3,7 @@
 namespace WingsOfSteel::Pandora
 {
 
+// clang-format off
 const Color Color::AliceBlue         = {0.941176f, 0.972549f, 1.000000f};
 const Color Color::AntiqueWhite      = {0.980392f, 0.921569f, 0.843137f};
 const Color Color::Aquamarine        = {0.498039f, 1.000000f, 0.831373f};
@@ -142,5 +143,6 @@ const Color Color::White             = {1.000000f, 1.000000f, 1.000000f};
 const Color Color::WhiteSmoke        = {0.960784f, 0.960784f, 0.960784f};
 const Color Color::Yellow            = {1.000000f, 1.000000f, 0.000000f};
 const Color Color::YellowGreen       = {0.603922f, 0.803922f, 0.196078f};
+// clang-format on
 
 } // namespace WingsOfSteel::Pandora

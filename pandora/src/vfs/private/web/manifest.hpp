@@ -17,7 +17,7 @@ class Manifest
 public:
     Manifest();
     ~Manifest();
-    
+
     void Initialize();
 
     bool IsValid() const;

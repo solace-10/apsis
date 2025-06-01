@@ -1,5 +1,5 @@
-#include "resources/resource_system.hpp"
 #include "pandora.hpp"
+#include "resources/resource_system.hpp"
 
 #include "scene/components/model_component.hpp"
 

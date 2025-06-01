@@ -10,21 +10,21 @@
 #include <xxhash.h>
 
 #include "core/log.hpp"
+#include "vfs/file.hpp"
 #include "vfs/private/web/manifest.hpp"
 #include "vfs/private/web/manifest_entry.hpp"
-#include "vfs/file.hpp"
 
 namespace WingsOfSteel::Pandora::Private
 {
 
-void downloadSucceeded(emscripten_fetch_t *fetch) 
+void downloadSucceeded(emscripten_fetch_t* fetch)
 {
     Log::Info() << "Finished downloading " << fetch->numBytes << " bytes from URL " << fetch->url;
     // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
     emscripten_fetch_close(fetch); // Free data associated with the fetch.
 }
 
-void downloadFailed(emscripten_fetch_t *fetch) 
+void downloadFailed(emscripten_fetch_t* fetch)
 {
     Log::Info() << "Downloading " << fetch->url << " failed, HTTP failure status code: " << fetch->status;
     emscripten_fetch_close(fetch); // Also free data on failure.
@@ -37,7 +37,6 @@ VFSWeb::VFSWeb()
 
 VFSWeb::~VFSWeb()
 {
-
 }
 
 void VFSWeb::Initialize()
@@ -51,7 +50,6 @@ void VFSWeb::Update()
 {
     if (m_InProgress.has_value())
     {
-
     }
 
     if (!m_Queue.empty() && !m_InProgress.has_value() && m_pManifest->IsValid())
@@ -77,8 +75,7 @@ void VFSWeb::Update()
             strcpy(attr.requestMethod, "GET");
             attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_PERSIST_FILE;
             attr.userData = this;
-            attr.onsuccess = [](emscripten_fetch_t* pFetch)
-            { 
+            attr.onsuccess = [](emscripten_fetch_t* pFetch) {
                 VFSWeb* pVFS = reinterpret_cast<VFSWeb*>(pFetch->userData);
                 std::stringstream downloadHash;
                 downloadHash << XXH3_64bits(pFetch->data, pFetch->numBytes * sizeof(char));
@@ -103,8 +100,7 @@ void VFSWeb::Update()
                 pVFS->m_InProgress.reset();
                 emscripten_fetch_close(pFetch);
             };
-            attr.onerror = [](emscripten_fetch_t* pFetch)
-            {
+            attr.onerror = [](emscripten_fetch_t* pFetch) {
                 VFSWeb* pVFS = reinterpret_cast<VFSWeb*>(pFetch->userData);
                 assert(pVFS->m_InProgress.has_value());
                 Log::Error() << "Failed to download " << pVFS->m_InProgress->path;
@@ -115,7 +111,7 @@ void VFSWeb::Update()
         }
     }
 }
-    
+
 void VFSWeb::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
     QueuedFile queuedFile;

@@ -26,10 +26,10 @@ public:
     ShaderInjectedSignal& GetShaderInjectedSignal();
 
 private:
-    template<typename T> void RegisterResource(const std::string& extension)
+    template <typename T>
+    void RegisterResource(const std::string& extension)
     {
-        m_ResourceCreationFunctions[extension] = []()
-        {
+        m_ResourceCreationFunctions[extension] = []() {
             return std::make_shared<T>();
         };
     }

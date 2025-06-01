@@ -26,7 +26,7 @@ public:
     void OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity);
 
 private:
-    Scene* m_pScene{nullptr};
+    Scene* m_pScene{ nullptr };
     std::unique_ptr<btDefaultCollisionConfiguration> m_pCollisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_pDispatcher;
     std::unique_ptr<btDbvtBroadphase> m_pBroadphase;

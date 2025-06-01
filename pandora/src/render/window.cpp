@@ -12,8 +12,8 @@
 
 #include "core/log.hpp"
 #include "imgui_impl_wgpu.h"
-#include "render/rendersystem.hpp"
 #include "pandora.hpp"
+#include "render/rendersystem.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -24,7 +24,7 @@ void OnWindowResizedCallback(GLFWwindow* pWindow, int width, int height)
 }
 
 Window::Window(const WindowSettings& windowSettings)
-: m_pWindow(nullptr)
+    : m_pWindow(nullptr)
 {
     assert(windowSettings.GetMode() != WindowMode::Fullscreen); // Not implemented yet.
     windowSettings.GetSize(m_Width, m_Height);
@@ -67,7 +67,7 @@ void Window::ConfigureSurface()
         wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
         canvasDesc.selector = "#canvas";
 
-        wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
+        wgpu::SurfaceDescriptor surfaceDesc{ .nextInChain = &canvasDesc };
 
         m_Surface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
 #endif

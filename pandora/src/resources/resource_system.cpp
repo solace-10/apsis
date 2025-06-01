@@ -24,7 +24,6 @@ ResourceSystem::ResourceSystem()
 
 ResourceSystem::~ResourceSystem()
 {
-
 }
 
 void ResourceSystem::Update()
@@ -43,7 +42,7 @@ void ResourceSystem::Update()
         }
     }
 
-    m_PendingResources.remove_if([](const PendingResource& pendingResource){
+    m_PendingResources.remove_if([](const PendingResource& pendingResource) {
         return pendingResource.pResource->GetState() == ResourceState::Loaded;
     });
 }
@@ -68,10 +67,10 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     if (resourceCreatorIt == m_ResourceCreationFunctions.end())
     {
         Log::Error() << "ResourceSystem: don't know how to create resource for '" << path << "'.";
-        return; 
+        return;
     }
 
-    Log::Info() << "ResourceSystem: requesting load for '" << path << "'."; 
+    Log::Info() << "ResourceSystem: requesting load for '" << path << "'.";
 
     ResourceSharedPtr pResource = resourceCreatorIt->second();
     m_Resources[path] = pResource;
@@ -80,9 +79,7 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     m_PendingResources.push_back(
         PendingResource{
             .pResource = pResource,
-            .onResourceAvailable = onResourceAvailable
-        }
-    );
+            .onResourceAvailable = onResourceAvailable });
 }
 
 ShaderInjectedSignal& ResourceSystem::GetShaderInjectedSignal()

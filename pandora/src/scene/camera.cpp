@@ -1,16 +1,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "pandora.hpp"
 #include "render/window.hpp"
 #include "scene/camera.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 Camera::Camera(float fov, float nearPlane, float farPlane)
-: m_Fov(fov)
-, m_NearPlane(nearPlane)
-, m_FarPlane(farPlane)
+    : m_Fov(fov)
+    , m_NearPlane(nearPlane)
+    , m_FarPlane(farPlane)
 {
     CalculateProjectionMatrix();
 }

@@ -17,19 +17,19 @@ public:
     Entity(Scene* pScene);
     virtual ~Entity();
 
-    template<typename T, typename... Args>
+    template <typename T, typename... Args>
     T& AddComponent(Args&&... args)
     {
         return m_pScene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
     }
 
-    template<typename T>
+    template <typename T>
     bool HasComponent() const
     {
         return m_pScene->m_Registry.try_get<T>(m_EntityHandle) != nullptr;
     }
 
-    template<typename T>
+    template <typename T>
     T& GetComponent()
     {
         return m_pScene->m_Registry.get<T>(m_EntityHandle);

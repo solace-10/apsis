@@ -12,15 +12,13 @@
 namespace WingsOfSteel::Pandora::Private
 {
 
-Manifest::Manifest() 
-: m_IsValid(false)
+Manifest::Manifest()
+    : m_IsValid(false)
 {
-
 }
 
-Manifest::~Manifest() 
+Manifest::~Manifest()
 {
-
 }
 
 void Manifest::Initialize()
@@ -35,14 +33,12 @@ void Manifest::Initialize()
     strcpy(attr.requestMethod, "GET");
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_REPLACE;
     attr.userData = this;
-    attr.onsuccess = [](emscripten_fetch_t* pFetch)
-    {
+    attr.onsuccess = [](emscripten_fetch_t* pFetch) {
         Manifest* pManifest = reinterpret_cast<Manifest*>(pFetch->userData);
         pManifest->OnDownloadSucceeded(pFetch->url, pFetch->data, pFetch->numBytes);
         emscripten_fetch_close(pFetch);
     };
-    attr.onerror = [](emscripten_fetch_t* pFetch)
-    {
+    attr.onerror = [](emscripten_fetch_t* pFetch) {
         Manifest* pManifest = reinterpret_cast<Manifest*>(pFetch->userData);
         pManifest->OnDownloadFailed(pFetch->url, pFetch->status);
         emscripten_fetch_close(pFetch);

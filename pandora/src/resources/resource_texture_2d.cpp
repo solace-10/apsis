@@ -1,8 +1,8 @@
 #include "resources/resource_texture_2d.hpp"
 
 #include "core/log.hpp"
-#include "render/rendersystem.hpp"
 #include "pandora.hpp"
+#include "render/rendersystem.hpp"
 
 // clang-format off
 #define STB_IMAGE_IMPLEMENTATION
@@ -38,11 +38,9 @@ void ResourceTexture2D::Load(const std::string& path)
     Resource::Load(path);
 
     GetVFS()->FileRead(path,
-        [this](FileReadResult result, FileSharedPtr pFile)
-        {
+        [this](FileReadResult result, FileSharedPtr pFile) {
             this->LoadInternal(result, pFile);
-        }
-    );
+        });
 }
 
 ResourceType ResourceTexture2D::GetResourceType() const
@@ -63,7 +61,7 @@ void ResourceTexture2D::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
     else
     {
-        SetState(ResourceState::Error);   
+        SetState(ResourceState::Error);
     }
 }
 
@@ -77,8 +75,7 @@ void ResourceTexture2D::LoadFromMemory(const std::string& label, const unsigned 
         &m_Width,
         &m_Height,
         &channelsInMemory,
-        m_Channels 
-    );
+        m_Channels);
     const size_t textureDataSize = m_Width * m_Height * m_Channels;
 
     if (pTextureData)

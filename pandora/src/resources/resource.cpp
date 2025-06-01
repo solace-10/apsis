@@ -4,14 +4,12 @@ namespace WingsOfSteel::Pandora
 {
 
 Resource::Resource()
-: m_State(ResourceState::Unloaded)
+    : m_State(ResourceState::Unloaded)
 {
-
 }
 
 Resource::~Resource()
 {
-
 }
 
 void Resource::Load(const std::string& path)

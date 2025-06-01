@@ -9,7 +9,7 @@ class TagComponent
 {
 public:
     TagComponent(const std::string& value)
-    : m_Tag(value)
+        : m_Tag(value)
     {
     }
 

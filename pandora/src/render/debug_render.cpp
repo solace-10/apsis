@@ -1,13 +1,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
-#include "render/private/debug_render_impl.hpp"
+#include "pandora.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
+#include "render/private/debug_render_impl.hpp"
 #include "render/window.hpp"
 #include "scene/components/camera_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -22,7 +22,6 @@ DebugRender::DebugRender()
 
 DebugRender::~DebugRender()
 {
-
 }
 
 DebugRenderDemo* DebugRender::GetDemo() const

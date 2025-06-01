@@ -1,27 +1,25 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "core/color.hpp"
+#include "pandora.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
 #include "render/window.hpp"
 #include "scene/camera.hpp"
 #include "scene/scene.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 DebugRenderDemo::DebugRenderDemo()
-: m_Show(false)
+    : m_Show(false)
 {
-
 }
-    
+
 DebugRenderDemo::~DebugRenderDemo()
 {
-
 }
-    
+
 void DebugRenderDemo::Show(bool state)
 {
     m_Show = state;
@@ -83,12 +81,11 @@ void DebugRenderDemo::DrawMiscObjects()
 
     // Axis-aligned bounding box:
     const glm::vec3 bbMins(-1.0f, -0.9f, -1.0f);
-    const glm::vec3 bbMaxs(1.0f,  2.2f,  1.0f);
+    const glm::vec3 bbMaxs(1.0f, 2.2f, 1.0f);
     const glm::vec3 bbCenter(
         (bbMins[0] + bbMaxs[0]) * 0.5f,
         (bbMins[1] + bbMaxs[1]) * 0.5f,
-        (bbMins[2] + bbMaxs[2]) * 0.5f
-    );
+        (bbMins[2] + bbMaxs[2]) * 0.5f);
     DrawLabel(origin, "AABB");
     GetDebugRender()->Aabb(bbMins, bbMaxs, Color::Orange);
     GetDebugRender()->Point(bbCenter, Color::White, 15.0f);

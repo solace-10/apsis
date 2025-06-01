@@ -25,7 +25,7 @@ public:
     // Copy constructor and assignment create a new signal.
     Signal(Signal const& /*unused*/) {}
 
-    Signal &operator=(Signal const& other)
+    Signal& operator=(Signal const& other)
     {
         if (this != &other)
         {
@@ -35,12 +35,13 @@ public:
     }
 
     // Move constructor and assignment operator work as expected.
-    Signal(Signal&& other) noexcept 
-    : m_Slots(std::move(other.m_Slots))
-    , m_CurrentId(other.m_CurrentId) 
-    {}
+    Signal(Signal&& other) noexcept
+        : m_Slots(std::move(other.m_Slots))
+        , m_CurrentId(other.m_CurrentId)
+    {
+    }
 
-    Signal &operator=(Signal &&other) noexcept
+    Signal& operator=(Signal&& other) noexcept
     {
         if (this != &other)
         {
@@ -53,7 +54,7 @@ public:
 
     // Connects a std::function to the signal. The returned
     // value can be used to disconnect the function again.
-    SignalId Connect(std::function<void(Args...)> const &slot) const
+    SignalId Connect(std::function<void(Args...)> const& slot) const
     {
         m_Slots.insert(std::make_pair(++m_CurrentId, slot));
         return m_CurrentId;
@@ -62,20 +63,20 @@ public:
     // Convenience method to connect a member function of an
     // object to this Signal.
     template <typename T>
-    SignalId ConnectMember(T *inst, void (T::*func)(Args...))
+    SignalId ConnectMember(T* inst, void (T::*func)(Args...))
     {
-        return Connect([=](Args... args) { 
-            (inst->*func)(args...); 
+        return Connect([=](Args... args) {
+            (inst->*func)(args...);
         });
     }
 
     // Convenience method to connect a const member function
     // of an object to this Signal.
     template <typename T>
-    SignalId ConnectMember(T *inst, void (T::*func)(Args...) const)
+    SignalId ConnectMember(T* inst, void (T::*func)(Args...) const)
     {
-        return Connect([=](Args... args) { 
-            (inst->*func)(args...); 
+        return Connect([=](Args... args) {
+            (inst->*func)(args...);
         });
     }
 
@@ -94,7 +95,7 @@ public:
     // Calls all connected functions.
     void Emit(Args... p)
     {
-        for (auto const &it : m_Slots)
+        for (auto const& it : m_Slots)
         {
             it.second(p...);
         }
@@ -102,7 +103,7 @@ public:
 
 private:
     mutable std::map<SignalId, std::function<void(Args...)>> m_Slots;
-    mutable SignalId m_CurrentId{0};
+    mutable SignalId m_CurrentId{ 0 };
 };
 
 } // namespace WingsOfSteel::Pandora
