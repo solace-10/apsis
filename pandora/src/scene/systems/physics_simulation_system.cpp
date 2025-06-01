@@ -1,5 +1,6 @@
 #include "scene/systems/physics_simulation_system.hpp"
 
+#include "physics/physics_visualization.hpp"
 #include "scene/components/rigid_body_component.hpp"
 #include "scene/scene.hpp"
 
@@ -21,15 +22,18 @@ PhysicsSimulationSystem::PhysicsSimulationSystem()
     // m_pWorld->setInternalTickCallback( &InternalTickCallback, &m_CollisionDataSet );
     m_pWorld->setGravity(btVector3(0, 0, 0));
 
-    // m_pDebugRender = new DebugRender();
-    // m_pWorld->setDebugDrawer( m_pDebugRender );
+    m_pPhysicsVisualization = std::make_unique<PhysicsVisualization>(m_pWorld.get());
+    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::Wireframe, true);
+    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::AABB, true);
+    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::Transforms, true);
+    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::RayTests, true);
+    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::ContactPoints, true);
 
     // m_pDebugWindow = new Window( this );
 }
 
 PhysicsSimulationSystem::~PhysicsSimulationSystem()
 {
-
     m_pScene->GetRegistry().on_construct<RigidBodyComponent>().disconnect<&PhysicsSimulationSystem::OnRigidBodyCreated>(this);
     m_pScene->GetRegistry().on_destroy<RigidBodyComponent>().disconnect<&PhysicsSimulationSystem::OnRigidBodyDestroyed>(this);
 }
@@ -44,6 +48,7 @@ void PhysicsSimulationSystem::Initialize(Scene* pScene)
 void PhysicsSimulationSystem::Update(float delta)
 {
     m_pWorld->stepSimulation(delta, 5);
+    m_pPhysicsVisualization->Update();
 }
 
 void PhysicsSimulationSystem::OnRigidBodyCreated(entt::registry& registry, entt::entity entity)

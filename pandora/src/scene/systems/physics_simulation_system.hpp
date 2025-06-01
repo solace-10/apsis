@@ -13,6 +13,9 @@ class btDiscreteDynamicsWorld;
 namespace WingsOfSteel::Pandora
 {
 
+DECLARE_SMART_PTR(PhysicsVisualization);
+
+DECLARE_SMART_PTR(PhysicsSimulationSystem);
 class PhysicsSimulationSystem : public System
 {
 public:
@@ -32,6 +35,7 @@ private:
     std::unique_ptr<btDbvtBroadphase> m_pBroadphase;
     std::unique_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
     std::unique_ptr<btDiscreteDynamicsWorld> m_pWorld;
+    PhysicsVisualizationUniquePtr m_pPhysicsVisualization;
 };
 
 } // namespace WingsOfSteel::Pandora
