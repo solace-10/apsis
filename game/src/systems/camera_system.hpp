@@ -14,7 +14,7 @@ public:
     CameraSystem();
     ~CameraSystem();
 
-    void Initialize() override;
+    void Initialize(Pandora::Scene* pScene) override;
     void Update(float delta) override;
 
 private:

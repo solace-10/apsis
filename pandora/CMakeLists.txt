@@ -22,7 +22,7 @@ set(SOURCE_FILES_IMGUI
     ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
 )
 
-if(NOT TARGET_PLATFORM_WEB)
+if(TARGET_PLATFORM_NATIVE)
     set(IMGUI_NODE_EDITOR_SOURCE_DIR ext/imgui-node-editor)
     set(SOURCE_FILES_IMGUI_NODE_EDITOR
         ${IMGUI_NODE_EDITOR_SOURCE_DIR}/crude_json.cpp
@@ -86,9 +86,10 @@ if(TARGET_PLATFORM_WINDOWS)
     target_compile_options(pandora PUBLIC $<$<CONFIG:Release>:/Ob2 /GL>)
     target_compile_options(pandora PUBLIC /Zi) # Debug information format: Program database.
     target_compile_options(pandora PUBLIC /MP) # Enable parallel compilation.
-    target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
-    target_link_libraries(pandora PUBLIC LinearMath Bullet3Common BulletDynamics BulletCollision)
-elseif(TARGET_PLATFORM_LINUX)
+endif()
+
+if (TARGET_PLATFORM_NATIVE)
+    target_include_directories(pandora PUBLIC ext/bullet3/src)
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
     target_link_libraries(pandora PUBLIC LinearMath Bullet3Common BulletDynamics BulletCollision)
 elseif(TARGET_PLATFORM_WEB)

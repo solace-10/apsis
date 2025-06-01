@@ -52,12 +52,6 @@ void Scene::RemoveEntity(EntitySharedPtr pEntity)
     pEntity->m_MarkedForRemoval = true;
 }
 
-void Scene::AddSystem(SystemUniquePtr pSystem)
-{
-    pSystem->Initialize();
-    m_Systems.push_back(std::move(pSystem));
-}
-
 void Scene::SetCamera(EntitySharedPtr pCamera)
 {
     if (!pCamera->HasComponent<CameraComponent>())
@@ -104,4 +98,4 @@ entt::registry& Scene::GetRegistry()
     return m_Registry;
 }
 
-} // namespace WingsOfSteel::Pandoraaa
+} // namespace WingsOfSteel::Pandora

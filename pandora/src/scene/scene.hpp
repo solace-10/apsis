@@ -26,7 +26,30 @@ public:
     EntitySharedPtr CreateEntity();
     void RemoveEntity(EntitySharedPtr pEntity);
 
-    void AddSystem(SystemUniquePtr pSystem);
+    template<typename T>
+    T* GetSystem() const
+    {
+        static_assert(std::is_base_of<System, T>::value, "T must inherit from System");
+        for (const auto& pSystem : m_Systems)
+        {
+            if (auto* pTypedSystem = dynamic_cast<T*>(pSystem.get()))
+            {
+                return pTypedSystem;
+            }
+        }
+        return nullptr;
+    }
+
+    template<typename T, typename... Args>
+    T* AddSystem(Args&&... args)
+    {
+        static_assert(std::is_base_of<System, T>::value, "T must inherit from System");
+        auto pSystem = std::make_unique<T>(std::forward<Args>(args)...);
+        T* pTypedSystem = pSystem.get();
+        pSystem->Initialize(this);
+        m_Systems.push_back(std::move(pSystem));
+        return pTypedSystem;
+    }
 
     void SetCamera(EntitySharedPtr pCamera);
     EntitySharedPtr GetCamera() const;

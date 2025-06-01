@@ -82,7 +82,7 @@ void Game::DrawImGuiMenuBar()
 {
     if (m_pSector)
     {
-        if (ImGui::BeginMenu("Sub-sector"))
+        if (ImGui::BeginMenu("Sector"))
         {
             static bool sShowCameraWindow = false;
             if (ImGui::MenuItem("Camera", nullptr, &sShowCameraWindow))

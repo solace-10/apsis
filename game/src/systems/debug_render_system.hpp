@@ -11,7 +11,7 @@ public:
     DebugRenderSystem() {};
     ~DebugRenderSystem() {};
 
-    void Initialize() override {};
+    void Initialize(Pandora::Scene* pScene) override {};
     void Update(float delta) override;
 };
 

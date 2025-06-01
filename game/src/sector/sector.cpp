@@ -1,12 +1,15 @@
 #include <imgui.h>
 
+#include <physics/collision_shape.hpp>
 #include <render/debug_render.hpp>
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_system.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/debug_render_component.hpp>
 #include <scene/components/model_component.hpp>
+#include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
+#include <scene/systems/physics_simulation_system.hpp>
 #include <pandora.hpp>
 
 #include "components/dice_component.hpp"
@@ -32,7 +35,6 @@ Sector::Sector()
 
 Sector::~Sector()
 {
-
 }
 
 void Sector::Initialize()
@@ -41,13 +43,14 @@ void Sector::Initialize()
 
     Scene::Initialize();
 
-    AddSystem(std::make_unique<PlayerControllerSystem>());
-    AddSystem(std::make_unique<ShipNavigationSystem>());
+    AddSystem<PhysicsSimulationSystem>();
+    AddSystem<PlayerControllerSystem>();
+    AddSystem<ShipNavigationSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
-    AddSystem(std::make_unique<CameraSystem>());
-    AddSystem(std::make_unique<DebugRenderSystem>());
+    AddSystem<CameraSystem>();
+    AddSystem<DebugRenderSystem>();
 
     m_pCamera = CreateEntity();
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
@@ -149,6 +152,14 @@ void Sector::SpawnPlayerFleet()
     m_pPlayerShip = SpawnShip("Everflame", "/models/flagship/light_carrier/standard_core.glb");
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
     m_pPlayerShip->AddComponent<DiceComponent>();
+
+
+    RigidBodyConstructionInfo rigidBodyConstructionInfo;
+    rigidBodyConstructionInfo.SetShape(std::make_shared<CollisionShapeBox>(100.0f, 100.0f, 100.0f));
+    rigidBodyConstructionInfo.SetMass(100);
+    rigidBodyConstructionInfo.SetMotionType(MotionType::Dynamic);
+    m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };

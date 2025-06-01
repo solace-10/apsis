@@ -13,7 +13,7 @@ public:
     ModelRenderSystem();
     ~ModelRenderSystem();
 
-    void Initialize() override {};
+    void Initialize(Scene* pScene) override {};
     void Update(float delta) override {};
 
     void Render(wgpu::RenderPassEncoder& renderPass);

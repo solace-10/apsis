@@ -29,7 +29,7 @@ CameraSystem::~CameraSystem()
     }
 }
 
-void CameraSystem::Initialize()
+void CameraSystem::Initialize(Pandora::Scene* pScene)
 {
     using namespace Pandora;
     m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this](){ m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);

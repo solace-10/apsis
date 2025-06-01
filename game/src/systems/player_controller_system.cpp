@@ -24,7 +24,7 @@ PlayerControllerSystem::~PlayerControllerSystem()
     }
 }
 
-void PlayerControllerSystem::Initialize()
+void PlayerControllerSystem::Initialize(Pandora::Scene* pScene)
 {
     using namespace Pandora;
     m_ForwardButtonPressedToken = GetInputSystem()->AddKeyboardCallback([this](){ this->m_Thrust = 1.0f; }, GLFW_KEY_W, KeyAction::Pressed );
