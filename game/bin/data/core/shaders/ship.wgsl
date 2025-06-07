@@ -22,7 +22,7 @@ struct GlobalUniforms
 
 struct LocalUniforms
 {
-    modelMatrix : mat4x4<f32>
+    modelMatrix: mat4x4<f32>
 };
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
@@ -37,9 +37,10 @@ struct LocalUniforms
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
-    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * uLocalUniforms.modelMatrix * vec4f(in.position, 1.0);
-    out.worldPosition = (uLocalUniforms.modelMatrix * vec4f(in.position, 1.0)).xyz;
-    out.worldNormal = (uLocalUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
+    let modelMatrix = uLocalUniforms.modelMatrix;
+    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * modelMatrix * vec4f(in.position, 1.0);
+    out.worldPosition = (modelMatrix * vec4f(in.position, 1.0)).xyz;
+    out.worldNormal = (modelMatrix * vec4f(in.normal, 0.0)).xyz;
     out.uv = in.uv;
     return out;
 }

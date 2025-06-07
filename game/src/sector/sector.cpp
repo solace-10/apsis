@@ -1,5 +1,6 @@
 #include <imgui.h>
 
+#include <pandora.hpp>
 #include <physics/collision_shape.hpp>
 #include <render/debug_render.hpp>
 #include <resources/resource_data_store.hpp>
@@ -10,27 +11,27 @@
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
-#include <pandora.hpp>
+
 
 #include "components/dice_component.hpp"
 #include "components/name_component.hpp"
 #include "components/player_controller_component.hpp"
-#include "components/ship_navigation_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "components/ship_navigation_component.hpp"
 #include "dice/dice_generator.hpp"
+#include "fleet.hpp"
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
-#include "fleet.hpp"
+
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
 Sector::Sector()
 {
-
 }
 
 Sector::~Sector()
@@ -59,7 +60,7 @@ void Sector::Initialize()
     sectorCameraComponent.position = glm::vec3(0.0f, 200.0f, -75.0f);
     sectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
     sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
-    SetCamera(m_pCamera); 
+    SetCamera(m_pCamera);
 
     SpawnDome();
     SpawnPlayerFleet();
@@ -73,14 +74,12 @@ void Sector::Update(float delta)
     Pandora::GetDebugRender()->Line(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1000.0f),
-        Pandora::Color::White
-    );
+        Pandora::Color::White);
 
     Pandora::GetDebugRender()->Line(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1000.0f, 0.0f),
-        Pandora::Color::Red
-    );
+        Pandora::Color::Red);
 
     Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
 
@@ -135,7 +134,7 @@ void Sector::SpawnDome()
     SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
 
     TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    //transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
+    // transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
 
     static float rotation = 90.0f;
     transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -149,10 +148,9 @@ void Sector::SpawnPlayerFleet()
 
     m_pPlayerFleet = std::make_shared<Fleet>();
 
-    m_pPlayerShip = SpawnShip("Everflame", "/models/flagship/light_carrier/standard_core.glb");
+    m_pPlayerShip = SpawnShip("Everflame", "/models/player/destroyer.glb");
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
     m_pPlayerShip->AddComponent<DiceComponent>();
-
 
     RigidBodyConstructionInfo rigidBodyConstructionInfo;
     rigidBodyConstructionInfo.SetShape(std::make_shared<CollisionShapeBox>(100.0f, 100.0f, 100.0f));
@@ -176,7 +174,7 @@ Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::s
     using namespace Pandora;
 
     Pandora::EntitySharedPtr pShip = CreateEntity();
-    
+
     TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -193,8 +191,7 @@ void Sector::GenerateDice()
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<DiceComponent>();
 
-    view.each([](const auto entity, DiceComponent& diceComponent)
-    {
+    view.each([](const auto entity, DiceComponent& diceComponent) {
         for (size_t categoryIdx = 0; categoryIdx < magic_enum::enum_count<DiceCategory>(); categoryIdx++)
         {
             DiceCategory category = static_cast<DiceCategory>(categoryIdx);

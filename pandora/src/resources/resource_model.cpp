@@ -2,6 +2,8 @@
 
 #include "core/log.hpp"
 #include "pandora.hpp"
+#include "physics/collision_shape.hpp"
+#include "render/debug_render.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
@@ -83,6 +85,7 @@ void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4&
     {
         if (node.IsRoot())
         {
+            // Do not break here: a GLTF scene can have more than one root node.
             RenderNode(renderPass, node, transform);
         }
     }
@@ -95,15 +98,16 @@ void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& 
         return;
     }
 
-    const uint32_t nodeId = node.GetMeshId().value();
+    const NodeIndex nodeIndex = node.GetIndex();
     const glm::mat4 transform = parentTransform * node.GetTransform();
+    LocalUniforms& localUniforms = m_PerNodeLocalUniforms[nodeIndex];
+    localUniforms.data.modelMatrix = transform;
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(localUniforms.buffer, 0, &localUniforms.data, sizeof(LocalUniformsData));
+    renderPass.SetBindGroup(1, localUniforms.bindGroup);
 
-    for (auto& primitiveRenderData : m_RenderData[nodeId])
+    const uint32_t meshId = node.GetMeshId().value();
+    for (auto& primitiveRenderData : m_RenderData[meshId])
     {
-        m_LocalUniforms.modelMatrix = transform;
-        GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LocalUniformsBuffer, 0, &m_LocalUniforms, sizeof(LocalUniforms));
-        renderPass.SetBindGroup(1, m_LocalUniformsBindGroup);
-
         if (primitiveRenderData.material.has_value())
         {
             renderPass.SetBindGroup(2, primitiveRenderData.material.value().GetBindGroup());
@@ -172,7 +176,7 @@ void ResourceModel::LoadInternal(FileReadResult result, FileSharedPtr pFile)
 
         if (loadResult)
         {
-            CreateLocalUniforms();
+            CreateLocalUniformsLayout();
             LoadDependentResources();
         }
         else
@@ -288,6 +292,7 @@ void ResourceModel::OnDependentResourcesLoaded()
     SetupMaterials();
     SetupNodes();
     SetupMeshes();
+    SetupCollisionShape();
 
     SetState(ResourceState::Loaded);
 
@@ -352,7 +357,8 @@ void ResourceModel::SetupNodes()
     }
 
     // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#transformations
-    for (size_t i = 0; i < m_pModel->nodes.size(); i++)
+    const size_t numNodes = m_pModel->nodes.size();
+    for (size_t i = 0; i < numNodes; i++)
     {
         const tinygltf::Node& node = m_pModel->nodes[i];
         glm::mat4 nodeTransform(1.0f);
@@ -382,13 +388,14 @@ void ResourceModel::SetupNodes()
             {
                 assert(node.rotation.size() == 4); // Rotation is a quaternion.
                 // glTF node data has quaternions in XYZW format, but glm::quat expects them in WXYZ.
-                nodeTransform = glm::toMat4(glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]));
+                glm::quat rotation(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+                nodeTransform = nodeTransform * glm::toMat4(rotation);
             }
 
             if (node.scale.size() > 0)
             {
                 assert(node.scale.size() == 3);
-                nodeTransform = glm::scale(nodeTransform, glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
+                nodeTransform = nodeTransform * glm::scale(glm::mat4(1.0f), glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
             }
         }
 
@@ -405,18 +412,21 @@ void ResourceModel::SetupNodes()
         }
 
         m_Nodes.emplace_back(
+            static_cast<NodeIndex>(i),
             node.name,
             nodeTransform,
             childNodes,
             rootNodeBitset[i],
             meshId);
     }
+
+    CreatePerNodeLocalUniforms();
 }
 
 // Note that this is called if a relevant shader is injected.
 void ResourceModel::SetupMeshes()
 {
-    size_t numMeshes = m_pModel->meshes.size();
+    const size_t numMeshes = m_pModel->meshes.size();
     m_RenderData.clear();
     m_RenderData.resize(numMeshes);
 
@@ -428,6 +438,29 @@ void ResourceModel::SetupMeshes()
             SetupPrimitive(meshId, &primitive);
         }
     }
+}
+
+void ResourceModel::SetupCollisionShape()
+{
+    /*
+    std::vector<CollisionShapeUniquePtr> collisionShapes;
+    const size_t numMeshes = m_pModel->meshes.size();
+    for (uint32_t meshId = 0; meshId < numMeshes; meshId++)
+    {
+        auto& mesh = m_pModel->meshes[meshId];
+        if (!mesh.name.ends_with("_NO_COLLISION"))
+        {
+            ConvexHullVertices convexHullVertices;
+
+            // CollisionShapeConvexHullUniquePtr pCollisionShape = std::make_unique<CollisionShapeConvexHull>();
+        }
+
+        // for (auto& primitive : mesh.primitives)
+        // {
+        //     SetupPrimitive(meshId, &primitive);
+        // }
+    }
+    */
 }
 
 void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive)
@@ -674,51 +707,61 @@ ResourceShader* ResourceModel::GetShaderForPrimitive(tinygltf::Primitive* pPrimi
     return (it == m_Shaders.end()) ? nullptr : it->second.get();
 }
 
-void ResourceModel::CreateLocalUniforms()
+void ResourceModel::CreateLocalUniformsLayout()
 {
     static_assert(sizeof(LocalUniforms) % 16 == 0);
 
     using namespace wgpu;
 
-    memset(&m_LocalUniforms, 0, sizeof(LocalUniforms));
-    m_LocalUniforms.modelMatrix = glm::mat4x4(1.0f);
-
-    BufferDescriptor bufferDescriptor{
-        .label = "Local uniforms buffer",
-        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
-        .size = sizeof(LocalUniforms)
-    };
-
-    m_LocalUniformsBuffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
-
     BindGroupLayoutEntry bindGroupLayoutEntry{
         .binding = 0,
         .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
         .buffer{
-            .type = wgpu::BufferBindingType::Uniform,
+            .type = BufferBindingType::Uniform,
             .minBindingSize = sizeof(LocalUniforms) }
     };
 
-    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+    BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
         .entryCount = 1,
         .entries = &bindGroupLayoutEntry
     };
     m_LocalUniformsBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+}
 
-    BindGroupEntry bindGroupEntry{
-        .binding = 0,
-        .buffer = m_LocalUniformsBuffer,
-        .offset = 0,
-        .size = sizeof(LocalUniforms)
-    };
+void ResourceModel::CreatePerNodeLocalUniforms()
+{
+    using namespace wgpu;
 
-    BindGroupDescriptor bindGroupDescriptor{
-        .layout = m_LocalUniformsBindGroupLayout,
-        .entryCount = bindGroupLayoutDescriptor.entryCount,
-        .entries = &bindGroupEntry
-    };
+    m_PerNodeLocalUniforms.reserve(m_Nodes.size());
+    for (auto& node : m_Nodes)
+    {
+        LocalUniforms localUniforms;
+        localUniforms.data.modelMatrix = glm::mat4(1.0f);
 
-    m_LocalUniformsBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
+        BufferDescriptor bufferDescriptor{
+            .label = "Local uniforms buffer",
+            .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
+            .size = sizeof(LocalUniforms) * m_pModel->nodes.size()
+        };
+
+        localUniforms.buffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
+
+        BindGroupEntry bindGroupEntry{
+            .binding = 0,
+            .buffer = localUniforms.buffer,
+            .offset = 0,
+            .size = sizeof(LocalUniforms)
+        };
+
+        BindGroupDescriptor bindGroupDescriptor{
+            .layout = m_LocalUniformsBindGroupLayout,
+            .entryCount = 1, // Must match bindGroupLayoutDescriptor.entryCount
+            .entries = &bindGroupEntry
+        };
+
+        localUniforms.bindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
+        m_PerNodeLocalUniforms.push_back(std::move(localUniforms));
+    }
 }
 
 void ResourceModel::HandleShaderInjection()

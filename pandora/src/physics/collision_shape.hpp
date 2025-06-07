@@ -3,20 +3,16 @@
 #include <utility>
 #include <vector>
 
+#include <btBulletCollisionCommon.h>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
 #include "core/smart_ptr.hpp"
 
-class btCollisionShape;
-class btBoxShape;
-class btSphereShape;
-
 namespace WingsOfSteel::Pandora
 {
 
 DECLARE_SMART_PTR(CollisionShape);
-DECLARE_SMART_PTR(CollisionShapeCompound);
 DECLARE_SMART_PTR(PhysicsSimulation);
 DECLARE_SMART_PTR(RigidBody);
 
@@ -26,6 +22,7 @@ using CollisionShapeContainer = std::vector<CollisionShapeSharedPtr>;
 // CollisionShape
 /////////////////////////////////////////////////////////////////////
 
+DECLARE_SMART_PTR(CollisionShape);
 class CollisionShape
 {
 public:
@@ -57,6 +54,7 @@ protected:
 // CollisionShapeBox
 /////////////////////////////////////////////////////////////////////
 
+DECLARE_SMART_PTR(CollisionShapeBox);
 class CollisionShapeBox : public CollisionShape
 {
 public:
@@ -69,6 +67,7 @@ public:
 // CollisionShapeCompound
 /////////////////////////////////////////////////////////////////////
 
+DECLARE_SMART_PTR(CollisionShapeCompound);
 class CollisionShapeCompound : public CollisionShape
 {
 public:
@@ -92,6 +91,7 @@ private:
 // CollisionShapeSphere
 /////////////////////////////////////////////////////////////////////
 
+DECLARE_SMART_PTR(CollisionShapeSphere);
 class CollisionShapeSphere : public CollisionShape
 {
 public:
@@ -106,6 +106,7 @@ public:
 
 using ConvexHullVertices = std::vector<glm::vec3>;
 
+DECLARE_SMART_PTR(CollisionShapeConvexHull);
 class CollisionShapeConvexHull : public CollisionShape
 {
 public:
@@ -118,6 +119,7 @@ public:
 // CollisionShapeCylinder
 /////////////////////////////////////////////////////////////////////
 
+DECLARE_SMART_PTR(CollisionShapeCylinder);
 class CollisionShapeCylinder : public CollisionShape
 {
 public:

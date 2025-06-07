@@ -25,6 +25,8 @@ class Primitive;
 namespace WingsOfSteel::Pandora
 {
 
+DECLARE_SMART_PTR(CollisionShape);
+
 class ResourceModel : public Resource
 {
 public:
@@ -36,12 +38,14 @@ public:
 
     void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
-    using NodeIndices = std::vector<uint32_t>;
+    using NodeIndex = uint32_t;
+    using NodeIndices = std::vector<NodeIndex>;
     class Node
     {
     public:
-        Node(const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, std::optional<uint32_t> meshId)
-            : m_Transform(transform)
+        Node(NodeIndex index, const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, std::optional<uint32_t> meshId)
+            : m_Index(index)
+            , m_Transform(transform)
             , m_Name(name)
             , m_Children(children)
             , m_IsRoot(isRoot)
@@ -51,6 +55,7 @@ public:
 
         ~Node() {}
 
+        inline NodeIndex GetIndex() const { return m_Index; }
         inline const glm::mat4 GetTransform() const { return m_Transform; }
         inline const std::string& GetName() const { return m_Name; }
         inline const NodeIndices& GetChildren() const { return m_Children; }
@@ -58,6 +63,7 @@ public:
         inline std::optional<uint32_t> GetMeshId() const { return m_MeshId; }
 
     private:
+        NodeIndex m_Index;
         glm::mat4 m_Transform;
         std::string m_Name;
         NodeIndices m_Children;
@@ -74,13 +80,15 @@ private:
     void SetupNodes();
     void SetupMeshes();
     void SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive);
+    void SetupCollisionShape();
     std::optional<int> GetShaderLocation(const std::string& attributeName) const;
     wgpu::IndexFormat GetIndexFormat(const tinygltf::Accessor* pAccessor) const;
     wgpu::VertexFormat GetVertexFormat(const tinygltf::Accessor* pAccessor) const;
     wgpu::PrimitiveTopology GetPrimitiveTopology(const tinygltf::Primitive* pPrimitive) const;
     int GetNumberOfComponentsForType(int type) const;
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
-    void CreateLocalUniforms();
+    void CreateLocalUniformsLayout();
+    void CreatePerNodeLocalUniforms();
     void CreateTextureUniforms();
     void HandleShaderInjection();
     void RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform);
@@ -123,14 +131,18 @@ private:
 
     bool m_IsIndexed;
 
-    struct LocalUniforms
+    struct LocalUniformsData
     {
         glm::mat4x4 modelMatrix;
     };
-    LocalUniforms m_LocalUniforms;
 
-    wgpu::Buffer m_LocalUniformsBuffer;
-    wgpu::BindGroup m_LocalUniformsBindGroup;
+    struct LocalUniforms
+    {
+        LocalUniformsData data;
+        wgpu::Buffer buffer;
+        wgpu::BindGroup bindGroup;
+    };
+    std::vector<LocalUniforms> m_PerNodeLocalUniforms;
     wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
 
     wgpu::BindGroup m_TextureUniformsBindGroup;
@@ -139,6 +151,8 @@ private:
     std::optional<SignalId> m_ShaderInjectionSignalId;
     std::vector<ResourceTexture2DUniquePtr> m_Textures;
     std::vector<Material> m_Materials;
+
+    CollisionShapeUniquePtr m_pCollisionShape;
 };
 
 } // namespace WingsOfSteel::Pandora
