@@ -10,7 +10,10 @@ namespace WingsOfSteel::Pandora
 class ModelComponent
 {
 public:
-    ModelComponent(const std::string& path);
+    ModelComponent(ResourceModelSharedPtr pModel)
+        : m_pResource(pModel)
+    {
+    }
     ~ModelComponent() {}
 
     ResourceModel* GetModel() const;

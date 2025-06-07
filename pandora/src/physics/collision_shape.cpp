@@ -123,8 +123,10 @@ CollisionShapeSphere::CollisionShapeSphere(float radius)
 
 CollisionShapeConvexHull::CollisionShapeConvexHull(const ConvexHullVertices& vertices)
 {
-    m_pShape = std::make_unique<btConvexHullShape>(reinterpret_cast<const btScalar*>(vertices.data()), static_cast<int>(vertices.size()), static_cast<int>(sizeof(glm::vec3)));
-    m_pShape->setUserPointer(this);
+    auto pConvexHullShape = std::make_unique<btConvexHullShape>(reinterpret_cast<const btScalar*>(vertices.data()), static_cast<int>(vertices.size()), static_cast<int>(sizeof(glm::vec3)));
+    pConvexHullShape->optimizeConvexHull();
+    pConvexHullShape->setUserPointer(this);
+    m_pShape = std::move(pConvexHullShape);
 }
 
 /////////////////////////////////////////////////////////////////////

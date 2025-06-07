@@ -47,16 +47,17 @@ struct LocalUniforms
 
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
 {
-	let lightPosition = vec3f(100.0, 100.0, 100.0);
-	let lightDir = normalize(lightPosition - in.worldPosition);
-	
-	let NdotL = dot(in.worldNormal, lightDir);
-	
-	var diffuseStrength = max(NdotL, 0.0);
-	let ambientStrength = vec3f(0.0);
-	
-	
-	let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
-	//return vec4f(in.worldNormal, 1.0);
-    return vec4f(objectColor * (ambientStrength + diffuseStrength), 1);
+    let lightPosition = vec3f(100.0, 100.0, 100.0);
+    let lightDir = normalize(lightPosition - in.worldPosition);
+
+    let NdotL = dot(in.worldNormal, lightDir);
+
+    var diffuseStrength = max(NdotL, 0.0);
+    let ambientLight = vec3f(0.12, 0.42, 0.42);
+    let ambientStrength = vec3f(0.1);
+
+
+    let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
+    //return vec4f(in.worldNormal, 1.0);
+    return vec4f(ambientLight * ambientStrength + objectColor * diffuseStrength, 1);
 }

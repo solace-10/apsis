@@ -38,17 +38,20 @@ public:
 
     void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
+    CollisionShapeSharedPtr GetCollisionShape() const { return m_pCollisionShape; }
+
     using NodeIndex = uint32_t;
     using NodeIndices = std::vector<NodeIndex>;
     class Node
     {
     public:
-        Node(NodeIndex index, const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, std::optional<uint32_t> meshId)
+        Node(NodeIndex index, const std::string& name, const glm::mat4& transform, const NodeIndices& children, bool isRoot, bool isCollision, std::optional<uint32_t> meshId)
             : m_Index(index)
             , m_Transform(transform)
             , m_Name(name)
             , m_Children(children)
             , m_IsRoot(isRoot)
+            , m_IsCollision(isCollision)
             , m_MeshId(meshId)
         {
         }
@@ -60,14 +63,16 @@ public:
         inline const std::string& GetName() const { return m_Name; }
         inline const NodeIndices& GetChildren() const { return m_Children; }
         inline bool IsRoot() const { return m_IsRoot; }
+        inline bool IsCollision() const { return m_IsCollision; }
         inline std::optional<uint32_t> GetMeshId() const { return m_MeshId; }
 
     private:
-        NodeIndex m_Index;
-        glm::mat4 m_Transform;
+        NodeIndex m_Index{ 0 };
+        glm::mat4 m_Transform{ 1.0f };
         std::string m_Name;
         NodeIndices m_Children;
-        bool m_IsRoot;
+        bool m_IsRoot{ false };
+        bool m_IsCollision{ false };
         std::optional<uint32_t> m_MeshId;
     };
 
@@ -152,7 +157,7 @@ private:
     std::vector<ResourceTexture2DUniquePtr> m_Textures;
     std::vector<Material> m_Materials;
 
-    CollisionShapeUniquePtr m_pCollisionShape;
+    CollisionShapeSharedPtr m_pCollisionShape;
 };
 
 } // namespace WingsOfSteel::Pandora

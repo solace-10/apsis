@@ -12,7 +12,6 @@
 #include <scene/components/transform_component.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
-
 #include "components/dice_component.hpp"
 #include "components/name_component.hpp"
 #include "components/player_controller_component.hpp"
@@ -25,7 +24,6 @@
 #include "systems/debug_render_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
-
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -139,7 +137,9 @@ void Sector::SpawnDome()
     static float rotation = 90.0f;
     transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    m_pDome->AddComponent<ModelComponent>("/models/dome/dome.glb");
+    GetResourceSystem()->RequestResource("/models/dome/dome.glb", [this](ResourceSharedPtr pResource) {
+        m_pDome->AddComponent<ModelComponent>(std::dynamic_pointer_cast<ResourceModel>(pResource));
+    });
 }
 
 void Sector::SpawnPlayerFleet()
@@ -148,15 +148,24 @@ void Sector::SpawnPlayerFleet()
 
     m_pPlayerFleet = std::make_shared<Fleet>();
 
-    m_pPlayerShip = SpawnShip("Everflame", "/models/player/destroyer.glb");
-    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
-    m_pPlayerShip->AddComponent<DiceComponent>();
+    m_pPlayerShip = CreateEntity();
 
-    RigidBodyConstructionInfo rigidBodyConstructionInfo;
-    rigidBodyConstructionInfo.SetShape(std::make_shared<CollisionShapeBox>(100.0f, 100.0f, 100.0f));
-    rigidBodyConstructionInfo.SetMass(100);
-    rigidBodyConstructionInfo.SetMotionType(MotionType::Dynamic);
-    m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+    GetResourceSystem()->RequestResource("/models/player/destroyer.glb", [this](ResourceSharedPtr pResource) {
+        ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
+        TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
+        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+        m_pPlayerShip->AddComponent<ModelComponent>(pResourceModel);
+        m_pPlayerShip->AddComponent<ShipNavigationComponent>();
+        m_pPlayerShip->AddComponent<NameComponent>("Everflame");
+        m_pPlayerShip->AddComponent<DiceComponent>();
+
+        RigidBodyConstructionInfo rigidBodyConstructionInfo;
+        rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
+        rigidBodyConstructionInfo.SetMass(100);
+        rigidBodyConstructionInfo.SetMotionType(MotionType::Dynamic);
+        m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+    });
 
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
@@ -178,7 +187,7 @@ Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::s
     TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
     transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-    pShip->AddComponent<ModelComponent>(modelPath);
+    // pShip->AddComponent<ModelComponent>(modelPath);
     pShip->AddComponent<ShipNavigationComponent>();
     pShip->AddComponent<NameComponent>(name);
 

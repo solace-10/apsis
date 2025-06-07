@@ -93,7 +93,7 @@ void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4&
 
 void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform)
 {
-    if (!node.GetMeshId().has_value())
+    if (!node.GetMeshId().has_value() || node.IsCollision())
     {
         return;
     }
@@ -411,12 +411,16 @@ void ResourceModel::SetupNodes()
             meshId = static_cast<uint32_t>(node.mesh);
         }
 
+        // Any node with the string "Collision" will be converted into a convex collision shape.
+        const bool isCollision = node.name.starts_with("Collision");
+
         m_Nodes.emplace_back(
             static_cast<NodeIndex>(i),
             node.name,
             nodeTransform,
             childNodes,
             rootNodeBitset[i],
+            isCollision,
             meshId);
     }
 
@@ -442,25 +446,47 @@ void ResourceModel::SetupMeshes()
 
 void ResourceModel::SetupCollisionShape()
 {
-    /*
-    std::vector<CollisionShapeUniquePtr> collisionShapes;
-    const size_t numMeshes = m_pModel->meshes.size();
-    for (uint32_t meshId = 0; meshId < numMeshes; meshId++)
+    std::vector<CollisionShapeConvexHullSharedPtr> collisionShapes;
+    for (auto& node : m_Nodes)
     {
-        auto& mesh = m_pModel->meshes[meshId];
-        if (!mesh.name.ends_with("_NO_COLLISION"))
+        if (node.IsCollision())
         {
-            ConvexHullVertices convexHullVertices;
+            auto meshId = node.GetMeshId();
+            if (meshId.has_value())
+            {
+                ConvexHullVertices convexHullVertices;
+                auto& mesh = m_pModel->meshes[meshId.value()];
+                for (auto& primitive : mesh.primitives)
+                {
+                    const int positionAttribute = primitive.attributes["POSITION"];
+                    const tinygltf::Accessor& accessor = m_pModel->accessors[positionAttribute];
+                    const tinygltf::BufferView& bufferView = m_pModel->bufferViews[accessor.bufferView];
+                    assert(accessor.type == TINYGLTF_TYPE_VEC3);
+                    const uint64_t arrayStride = 3 * sizeof(float);
+                    const tinygltf::Buffer& buffer = m_pModel->buffers[bufferView.buffer];
+                    const uint8_t* pPositionData = &buffer.data[bufferView.byteOffset];
+                    for (size_t i = 0; i < accessor.count; i++)
+                    {
+                        const float* pData = reinterpret_cast<const float*>(pPositionData);
+                        convexHullVertices.push_back(glm::vec3(pData[0], pData[1], pData[2]));
+                        pPositionData += arrayStride;
+                    }
+                }
 
-            // CollisionShapeConvexHullUniquePtr pCollisionShape = std::make_unique<CollisionShapeConvexHull>();
+                collisionShapes.push_back(std::make_shared<CollisionShapeConvexHull>(convexHullVertices));
+            }
         }
-
-        // for (auto& primitive : mesh.primitives)
-        // {
-        //     SetupPrimitive(meshId, &primitive);
-        // }
     }
-    */
+
+    const size_t numCollisionShapes = collisionShapes.size();
+    if (numCollisionShapes > 1)
+    {
+        assert(false); // Not implemented yet.
+    }
+    else if (numCollisionShapes == 1)
+    {
+        m_pCollisionShape = collisionShapes[0];
+    }
 }
 
 void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive)
