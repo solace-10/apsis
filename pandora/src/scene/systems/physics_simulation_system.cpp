@@ -23,13 +23,6 @@ PhysicsSimulationSystem::PhysicsSimulationSystem()
     m_pWorld->setGravity(btVector3(0, 0, 0));
 
     m_pPhysicsVisualization = std::make_unique<PhysicsVisualization>(m_pWorld.get());
-    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::Wireframe, true);
-    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::AABB, true);
-    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::Transforms, true);
-    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::RayTests, true);
-    m_pPhysicsVisualization->SetEnabled(PhysicsVisualization::Mode::ContactPoints, true);
-
-    // m_pDebugWindow = new Window( this );
 }
 
 PhysicsSimulationSystem::~PhysicsSimulationSystem()

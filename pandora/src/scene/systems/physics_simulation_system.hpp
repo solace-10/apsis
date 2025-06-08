@@ -4,6 +4,8 @@
 
 #include "scene/systems/system.hpp"
 
+#include "physics/physics_visualization.hpp"
+
 class btCollisionDispatcher;
 class btDefaultCollisionConfiguration;
 struct btDbvtBroadphase;
@@ -12,8 +14,6 @@ class btDiscreteDynamicsWorld;
 
 namespace WingsOfSteel::Pandora
 {
-
-DECLARE_SMART_PTR(PhysicsVisualization);
 
 DECLARE_SMART_PTR(PhysicsSimulationSystem);
 class PhysicsSimulationSystem : public System
@@ -27,6 +27,8 @@ public:
 
     void OnRigidBodyCreated(entt::registry& registry, entt::entity entity);
     void OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity);
+
+    PhysicsVisualization* GetVizualisation() { return m_pPhysicsVisualization.get(); }
 
 private:
     Scene* m_pScene{ nullptr };
