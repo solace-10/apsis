@@ -16,6 +16,7 @@
 #include "components/name_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "components/ship_engine_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "dice/dice_generator.hpp"
 #include "fleet.hpp"
@@ -158,7 +159,14 @@ void Sector::SpawnPlayerFleet()
         m_pPlayerShip->AddComponent<ModelComponent>(pResourceModel);
         m_pPlayerShip->AddComponent<ShipNavigationComponent>();
         m_pPlayerShip->AddComponent<NameComponent>("Everflame");
+        m_pPlayerShip->AddComponent<PlayerControllerComponent>();
         m_pPlayerShip->AddComponent<DiceComponent>();
+
+        ShipEngineComponent& engineComponent = m_pPlayerShip->AddComponent<ShipEngineComponent>();
+        engineComponent.linearForce = 1000.0f;
+        engineComponent.torque = 5000.0f;
+        engineComponent.maximumLinearVelocity = 30.0f;
+        engineComponent.maximumAngularVelocity = 0.5f;
 
         RigidBodyConstructionInfo rigidBodyConstructionInfo;
         rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());

@@ -25,8 +25,8 @@ private:
     Pandora::InputCallbackToken m_RightButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_RightButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
 
-    ShipSteerCommand m_SteerCommand{ ShipSteerCommand::None };
-    float m_Thrust{ 0.0f };
+    ShipSteer m_Steer{ ShipSteer::None };
+    ShipThrust m_Thrust{ ShipThrust::None };
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

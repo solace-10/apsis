@@ -91,13 +91,13 @@ public:
 
     void ApplyAngularForce(const glm::vec3& force);
     void ApplyLinearForce(const glm::vec3& force);
-    void ApplyAngularImpulse(const glm::vec3& impulse);
-    void ApplyLinearImpulse(const glm::vec3& impulse);
 
     void SetLinearFactor(const glm::vec3& linearFactor);
     const glm::vec3& GetLinearFactor() const;
     void SetAngularFactor(const glm::vec3& angularFactor);
     const glm::vec3& GetAngularFactor() const;
+
+    const glm::vec3 GetForwardVector() const;
 
 private:
     void CalculateInvInertiaTensorWorld();

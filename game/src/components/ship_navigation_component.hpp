@@ -3,7 +3,14 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-enum class ShipSteerCommand
+enum class ShipThrust
+{
+    None,
+    Forward,
+    Backward
+};
+
+enum class ShipSteer
 {
     None,
     Port,
@@ -16,34 +23,14 @@ public:
     ShipNavigationComponent() {}
     ~ShipNavigationComponent() {}
 
-    ShipSteerCommand GetSteerCommand() const;
-    void SetSteerCommand(ShipSteerCommand command);
-    float GetThrust() const;
-    void SetThrust(float value);
+    ShipThrust GetThrust() const { return m_Thrust; }
+    void SetThrust(ShipThrust value) { m_Thrust = value; }
+    ShipSteer GetSteer() const { return m_Steer; }
+    void SetSteer(ShipSteer value) { m_Steer = value; }
 
 private:
-    ShipSteerCommand m_SteerCommand = ShipSteerCommand::None;
-    float m_Thrust = 0.0f;
+    ShipThrust m_Thrust{ShipThrust::None};
+    ShipSteer m_Steer{ShipSteer::None};
 };
-
-inline ShipSteerCommand ShipNavigationComponent::GetSteerCommand() const
-{
-    return m_SteerCommand;
-}
-
-inline void ShipNavigationComponent::SetSteerCommand(ShipSteerCommand command)
-{
-    m_SteerCommand = command;
-}
-
-inline float ShipNavigationComponent::GetThrust() const
-{
-    return m_Thrust;
-}
-
-inline void ShipNavigationComponent::SetThrust(float value)
-{
-    m_Thrust = value;
-}
 
 } // namespace WingsOfSteel::TheBrightestStar

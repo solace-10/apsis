@@ -136,16 +136,6 @@ void RigidBodyComponent::ApplyLinearForce(const glm::vec3& force)
     m_pRigidBody->applyCentralForce(btVector3(force.x, force.y, force.z));
 }
 
-void RigidBodyComponent::ApplyAngularImpulse(const glm::vec3& impulse)
-{
-    m_pRigidBody->applyTorqueImpulse(btVector3(impulse.x, impulse.y, impulse.z));
-}
-
-void RigidBodyComponent::ApplyLinearImpulse(const glm::vec3& impulse)
-{
-    m_pRigidBody->applyCentralImpulse(btVector3(impulse.x, impulse.y, impulse.z));
-}
-
 void RigidBodyComponent::SetLinearFactor(const glm::vec3& linearFactor)
 {
     m_pRigidBody->setLinearFactor(btVector3(linearFactor.x, linearFactor.y, linearFactor.z));
@@ -154,6 +144,12 @@ void RigidBodyComponent::SetLinearFactor(const glm::vec3& linearFactor)
 void RigidBodyComponent::SetAngularFactor(const glm::vec3& angularFactor)
 {
     m_pRigidBody->setAngularFactor(btVector3(angularFactor.x, angularFactor.y, angularFactor.z));
+}
+
+const glm::vec3 RigidBodyComponent::GetForwardVector() const
+{
+    const btVector3 dir = m_pRigidBody->getWorldTransform().getBasis()[0];
+    return glm::vec3(dir[2], dir[1], dir[0]);
 }
 
 void RigidBodyComponent::CalculateInvInertiaTensorWorld()
