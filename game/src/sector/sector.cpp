@@ -163,15 +163,15 @@ void Sector::SpawnPlayerFleet()
         m_pPlayerShip->AddComponent<DiceComponent>();
 
         ShipEngineComponent& engineComponent = m_pPlayerShip->AddComponent<ShipEngineComponent>();
-        engineComponent.linearForce = 1000.0f;
-        engineComponent.torque = 5000.0f;
-        engineComponent.maximumLinearVelocity = 30.0f;
-        engineComponent.maximumAngularVelocity = 0.5f;
+        engineComponent.linearForce = 1300.0f;
+        engineComponent.torque = 7500.0f;
 
         RigidBodyConstructionInfo rigidBodyConstructionInfo;
         rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
         rigidBodyConstructionInfo.SetMass(100);
-        rigidBodyConstructionInfo.SetMotionType(MotionType::Dynamic);
+        rigidBodyConstructionInfo.SetLinearDamping(0.5f);
+        rigidBodyConstructionInfo.SetAngularDamping(0.5f);
+
         m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
     });
 
