@@ -1,7 +1,9 @@
 #include "scene/systems/physics_simulation_system.hpp"
 
+#include "pandora.hpp"
 #include "physics/physics_visualization.hpp"
 #include "scene/components/rigid_body_component.hpp"
+#include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 
 #include <btBulletCollisionCommon.h>
@@ -42,6 +44,13 @@ void PhysicsSimulationSystem::Update(float delta)
 {
     m_pWorld->stepSimulation(delta, 5);
     m_pPhysicsVisualization->Update();
+
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<const RigidBodyComponent, TransformComponent>();
+
+    view.each([](const auto entity, const RigidBodyComponent& rigidBodyComponent, TransformComponent& transformComponent) {
+        transformComponent.transform = rigidBodyComponent.GetWorldTransform();
+    });
 }
 
 void PhysicsSimulationSystem::OnRigidBodyCreated(entt::registry& registry, entt::entity entity)

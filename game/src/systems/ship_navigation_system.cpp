@@ -40,6 +40,7 @@ void ShipNavigationSystem::Update(float delta)
             rigidBodyComponent.ApplyAngularForce(glm::vec3(0.0f, torque, 0.0f));
         }
 
+        /*
         const glm::vec4 translation = rigidBodyComponent.GetWorldTransform()[3];
         const glm::vec3 pos(translation.x, translation.y, translation.z);
         Pandora::GetDebugRender()->Arrow(
@@ -52,6 +53,7 @@ void ShipNavigationSystem::Update(float delta)
         Pandora::Log::Info() << "lv: " << lv.x << " " << lv.y << " " << lv.z;
         glm::vec3 av = rigidBodyComponent.GetAngularVelocity();
         Pandora::Log::Info() << "av: " << av.x << " " << av.y << " " << av.z;
+        */
     });
 }
 

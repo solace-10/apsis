@@ -1,5 +1,5 @@
 #include "scene/systems/model_render_system.hpp"
-#include "core/log.hpp"
+
 #include "pandora.hpp"
 #include "scene/components/model_component.hpp"
 #include "scene/components/transform_component.hpp"
