@@ -2,6 +2,8 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace WingsOfSteel::Pandora
 {
@@ -30,6 +32,8 @@ enum class ResourceState
 // Called by the Resource System when a resource has been instantiated and loaded.
 // This is only called when the resource is fully available: failing to load a resource is a fatal error.
 using OnResourceAvailableCallback = std::function<void(ResourceSharedPtr)>;
+
+using OnResourcesAvailableCallback = std::function<void(std::unordered_map<std::string, ResourceSharedPtr>)>;
 
 enum class ResourceType
 {

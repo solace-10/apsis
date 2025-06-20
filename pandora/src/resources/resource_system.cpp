@@ -82,6 +82,31 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
             .onResourceAvailable = onResourceAvailable });
 }
 
+void ResourceSystem::RequestResources(const std::vector<std::string>& paths, OnResourcesAvailableCallback onResourcesLoaded)
+{
+    MultiPendingResourceHandle handle = m_NextMultiRequestHandle++;
+    m_MultiRequests[handle] = MultiPendingResource(paths.size(), onResourcesLoaded);
+
+    for (const auto& path : paths)
+    {
+        RequestResource(path, [this, handle, path](ResourceSharedPtr pResource) {
+            auto& multiRequest = m_MultiRequests[handle];
+            multiRequest.resources.push_back(pResource);
+
+            if (--multiRequest.pending == 0)
+            {
+                std::unordered_map<std::string, ResourceSharedPtr> resources;
+                for (const auto& resource : multiRequest.resources)
+                {
+                    resources[resource->GetPath()] = resource;
+                }
+                multiRequest.onResourcesAvailable(resources);
+                m_MultiRequests.erase(handle);
+            }
+        });
+    }
+}
+
 ShaderInjectedSignal& ResourceSystem::GetShaderInjectedSignal()
 {
     return m_ShaderInjectedSignal;
