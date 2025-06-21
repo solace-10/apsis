@@ -36,6 +36,7 @@
 
 #include <array>
 #include <bitset>
+#include <functional>
 #include <optional>
 #include <sstream>
 #include <unordered_map>
@@ -291,6 +292,7 @@ void ResourceModel::OnDependentResourcesLoaded()
 
     SetupMaterials();
     SetupNodes();
+    SetupAttachments();
     SetupMeshes();
     SetupCollisionShape();
 
@@ -425,6 +427,39 @@ void ResourceModel::SetupNodes()
     }
 
     CreatePerNodeLocalUniforms();
+}
+
+void ResourceModel::SetupAttachments()
+{
+    // Find attachment points.
+    m_AttachmentPoints.clear();
+    std::function<void(const Node&, const glm::mat4&)> findAttachmentPoints;
+    findAttachmentPoints =
+        [&](const Node& node, const glm::mat4& parentTransform) {
+        glm::mat4 modelTransform = parentTransform * node.GetTransform();
+
+        if (node.GetName().starts_with("Attachment"))
+        {
+            AttachmentPoint ap;
+            ap.m_Name = node.GetName();
+            ap.m_LocalTransform = node.GetTransform();
+            ap.m_ModelTransform = modelTransform;
+            m_AttachmentPoints.push_back(ap);
+        }
+
+        for (const auto& childIndex : node.GetChildren())
+        {
+            findAttachmentPoints(m_Nodes[childIndex], modelTransform);
+        }
+    };
+
+    for (const auto& node : m_Nodes)
+    {
+        if (node.IsRoot())
+        {
+            findAttachmentPoints(node, glm::mat4(1.0f));
+        }
+    }
 }
 
 // Note that this is called if a relevant shader is injected.

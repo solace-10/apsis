@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -30,6 +31,14 @@ DECLARE_SMART_PTR(CollisionShape);
 class ResourceModel : public Resource
 {
 public:
+    class AttachmentPoint
+    {
+    public:
+        std::string m_Name;
+        glm::mat4 m_LocalTransform;
+        glm::mat4 m_ModelTransform;
+    };
+
     ResourceModel();
     ~ResourceModel() override;
 
@@ -38,8 +47,13 @@ public:
 
     void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
+    const std::vector<AttachmentPoint>& GetAttachmentPoints() const { return m_AttachmentPoints; }
     CollisionShapeSharedPtr GetCollisionShape() const { return m_pCollisionShape; }
 
+    // std::optional<glm::mat4> GetNodeTransform(const std::string& nodeName) const;
+    // std::vector<std::string> GetNodeNames() const;
+
+private:
     using NodeIndex = uint32_t;
     using NodeIndices = std::vector<NodeIndex>;
     class Node
@@ -76,13 +90,13 @@ public:
         std::optional<uint32_t> m_MeshId;
     };
 
-private:
     void InitializeShaderLocationsMap();
     void LoadInternal(FileReadResult result, FileSharedPtr pFile);
     void LoadDependentResources();
     void OnDependentResourcesLoaded();
     void SetupMaterials();
     void SetupNodes();
+    void SetupAttachments();
     void SetupMeshes();
     void SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive);
     void SetupCollisionShape();
@@ -101,6 +115,7 @@ private:
     std::unique_ptr<tinygltf::Model> m_pModel;
     std::vector<wgpu::Buffer> m_Buffers;
     std::vector<Node> m_Nodes;
+    std::vector<AttachmentPoint> m_AttachmentPoints;
 
     std::unordered_map<std::string, ResourceShaderSharedPtr> m_Shaders;
     int m_DependentResourcesToLoad;
