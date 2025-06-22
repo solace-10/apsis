@@ -52,7 +52,9 @@ private:
         glm::mat4x4 viewMatrix;
         glm::vec4 cameraPosition;
         float time;
-        float _unused[3];
+        float windowWidth;
+        float windowHeight;
+        float _unused[1];
     };
     GlobalUniforms m_GlobalUniforms;
 

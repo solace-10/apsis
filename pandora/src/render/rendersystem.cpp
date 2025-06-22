@@ -251,6 +251,8 @@ void RenderSystem::CreateGlobalUniforms()
     m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.cameraPosition = glm::vec4(0.0f);
     m_GlobalUniforms.time = 0.0f;
+    m_GlobalUniforms.windowWidth = 0.0f;
+    m_GlobalUniforms.windowHeight = 0.0f;
 
     BufferDescriptor bufferDescriptor{
         .label = "Global uniforms buffer",
@@ -308,6 +310,8 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
     }
 
     m_GlobalUniforms.time = static_cast<float>(glfwGetTime());
+    m_GlobalUniforms.windowWidth = static_cast<float>(GetWindow()->GetWidth());
+    m_GlobalUniforms.windowHeight = static_cast<float>(GetWindow()->GetHeight());
 
     GetDevice().GetQueue().WriteBuffer(m_GlobalUniformsBuffer, 0, &m_GlobalUniforms, sizeof(GlobalUniforms));
     renderPass.SetBindGroup(0, m_GlobalUniformsBindGroup);

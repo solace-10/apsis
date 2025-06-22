@@ -9,7 +9,9 @@ struct GlobalUniforms
     projectionMatrix: mat4x4<f32>,
     viewMatrix: mat4x4<f32>,
     cameraPosition: vec4f,
-    time: f32
+    time: f32,
+    windowWidth: f32,
+    windowHeight: f32
 };
 )";
 

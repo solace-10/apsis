@@ -18,9 +18,8 @@ struct VertexOutput
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
-    let u_screenDimensions = vec2f(1440.0, 900.0);
-    let x = ((2.0 * (in.position.x - 0.5)) / u_screenDimensions.x) - 1.0;
-    let y = 1.0 - ((2.0 * (in.position.y - 0.5)) / u_screenDimensions.y);
+    let x = ((2.0 * (in.position.x - 0.5)) / uGlobalUniforms.windowWidth) - 1.0;
+    let y = 1.0 - ((2.0 * (in.position.y - 0.5)) / uGlobalUniforms.windowHeight);
 
     var out: VertexOutput;
     out.position = vec4f(x, y, 0.0f, 1.0);
