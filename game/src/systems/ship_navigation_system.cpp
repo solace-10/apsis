@@ -35,7 +35,7 @@ void ShipNavigationSystem::Update(float delta)
 
         if (shipNavigationComponent.GetSteer() != ShipSteer::None)
         {
-            const float dir = (shipNavigationComponent.GetSteer() == ShipSteer::Port) ? -1.0f : 1.0f;
+            const float dir = (shipNavigationComponent.GetSteer() == ShipSteer::Port) ? 1.0f : -1.0f;
             const float torque = shipEngineComponent.torque * dir;
             rigidBodyComponent.ApplyAngularForce(glm::vec3(0.0f, torque, 0.0f));
         }

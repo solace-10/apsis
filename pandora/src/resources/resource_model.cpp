@@ -438,10 +438,11 @@ void ResourceModel::SetupAttachments()
         [&](const Node& node, const glm::mat4& parentTransform) {
         glm::mat4 modelTransform = parentTransform * node.GetTransform();
 
-        if (node.GetName().starts_with("Attachment"))
+        const std::string attachmentPrefix = "Attachment";
+        if (node.GetName().starts_with(attachmentPrefix))
         {
             AttachmentPoint ap;
-            ap.m_Name = node.GetName();
+            ap.m_Name = node.GetName().substr(attachmentPrefix.size());
             ap.m_LocalTransform = node.GetTransform();
             ap.m_ModelTransform = modelTransform;
             m_AttachmentPoints.push_back(ap);

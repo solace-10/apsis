@@ -56,7 +56,7 @@ void Sector::Initialize()
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
 
     SectorCameraComponent& sectorCameraComponent = m_pCamera->AddComponent<SectorCameraComponent>();
-    sectorCameraComponent.position = glm::vec3(0.0f, 200.0f, -75.0f);
+    sectorCameraComponent.position = glm::vec3(0.0f, 200.0f, 75.0f);
     sectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
     sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
     SetCamera(m_pCamera);
@@ -70,15 +70,7 @@ void Sector::Update(float delta)
 {
     Pandora::Scene::Update(delta);
 
-    Pandora::GetDebugRender()->Line(
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1000.0f),
-        Pandora::Color::White);
-
-    Pandora::GetDebugRender()->Line(
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1000.0f, 0.0f),
-        Pandora::Color::Red);
+    Pandora::GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 100.0f);
 
     Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
 

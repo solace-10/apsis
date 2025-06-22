@@ -17,7 +17,7 @@ Camera::Camera(float fov, float nearPlane, float farPlane)
 
 void Camera::LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up)
 {
-    m_ViewMatrix = glm::lookAt(cameraPosition, targetPosition, up);
+    m_ViewMatrix = glm::lookAtRH(cameraPosition, targetPosition, up);
     m_CameraPosition = cameraPosition;
     m_CameraTarget = targetPosition;
 }
@@ -55,7 +55,7 @@ void Camera::CalculateProjectionMatrix()
     m_WindowWidth = GetWindow()->GetWidth();
     m_WindowHeight = GetWindow()->GetHeight();
     const float aspectRatio = static_cast<float>(m_WindowWidth) / static_cast<float>(m_WindowHeight);
-    m_ProjectionMatrix = glm::perspective(m_Fov, aspectRatio, m_NearPlane, m_FarPlane);
+    m_ProjectionMatrix = glm::perspectiveRH_ZO(m_Fov, aspectRatio, m_NearPlane, m_FarPlane);
 }
 
 } // namespace WingsOfSteel::Pandora

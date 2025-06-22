@@ -66,7 +66,7 @@ void CameraSystem::Update(float delta)
                 if (pAnchorEntity->HasComponent<ShipNavigationComponent>())
                 {
                     const ShipNavigationComponent& shipNavigationComponent = pAnchorEntity->GetComponent<ShipNavigationComponent>();
-                    glm::vec4 forward = anchorTransform[2];
+                    glm::vec4 forward = -anchorTransform[2];
                     // const float forwardMultiplier = glm::clamp(shipNavigationComponent.GetThrust(), -1.0f, 1.0f);
                     const float forwardMultiplier = 1.0f;
                     cameraWantedTarget = anchorPosition + glm::vec3(forward) * forwardMultiplier * 30.0f;

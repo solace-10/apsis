@@ -139,8 +139,8 @@ void DebugRenderDemo::DrawFrustum()
     DrawLabel(origin, "frustum + axes");
 
     // The frustum will depict a fake camera:
-    const glm::mat4x4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
-    const glm::mat4x4 view = glm::lookAt(glm::vec3(-8.0f, 0.5f, 14.0f), glm::vec3(-8.0f, 0.5f, -14.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4x4 proj = glm::perspectiveRH_ZO(glm::radians(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
+    const glm::mat4x4 view = glm::lookAtRH(glm::vec3(-8.0f, 0.5f, 14.0f), glm::vec3(-8.0f, 0.5f, -14.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::mat4x4 clip = glm::inverse(proj * view);
     GetDebugRender()->Frustum(clip, Color::LimeGreen);
 
