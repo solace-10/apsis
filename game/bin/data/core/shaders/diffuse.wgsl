@@ -8,13 +8,6 @@ struct VertexOutput
     @builtin(position) position: vec4f
 };
 
-struct GlobalUniforms
-{
-    projectionMatrix : mat4x4<f32>,
-    viewMatrix : mat4x4<f32>,
-    time : f32
-};
-
 struct LocalUniforms
 {
     modelMatrix : mat4x4<f32>

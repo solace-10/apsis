@@ -82,7 +82,6 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
                 ss << "Failed to compile shader '" << pFile->GetPath() << "':";
                 for (const ShaderCompilationError& error : pCompilationResult->GetErrors())
                 {
-                    uint32_t lineNumebr = error.GetLineNumber();
                     ss << std::endl
                        << "Error on line " << (error.GetLineNumber()) << ", char " << error.GetLinePosition() << ": " << error.GetMessage();
                 }

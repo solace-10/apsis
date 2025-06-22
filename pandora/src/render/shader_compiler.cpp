@@ -4,12 +4,14 @@
 #include "pandora.hpp"
 #include "render/rendersystem.hpp"
 #include "render/shader_compiler.hpp"
+#include "render/shader_preprocessor.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 ShaderCompiler::ShaderCompiler()
 {
+    ShaderPreprocessor::Initialize();
 }
 
 ShaderCompiler::~ShaderCompiler()
@@ -23,8 +25,9 @@ void ShaderCompiler::Compile(const std::string& label, const std::string& code, 
 
     wgpu::Device device = GetRenderSystem()->GetDevice();
 
+    std::string preprocessedCode = ShaderPreprocessor::Execute(code);
     wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-    wgslDesc.code = code.c_str();
+    wgslDesc.code = preprocessedCode.c_str();
 
     wgpu::ShaderModuleDescriptor shaderModuleDescriptor{
         .nextInChain = &wgslDesc,
@@ -50,8 +53,6 @@ void ShaderCompiler::Compile(const std::string& label, const std::string& code, 
                 {
                     pResult->m_State = ShaderCompilationResult::State::Error;
 
-                    // typedef void (*WGPUCompilationInfoCallback)(WGPUCompilationInfoRequestStatus status, struct WGPUCompilationInfo const * compilationInfo, void * userdata) WGPU_FUNCTION_ATTRIBUTE;
-
                     pResult->m_ShaderModule.GetCompilationInfo(
                         [](WGPUCompilationInfoRequestStatus status, struct WGPUCompilationInfo const* pCompilationInfo, void* pUserData) {
                             const uint32_t id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(pUserData));
@@ -66,7 +67,7 @@ void ShaderCompiler::Compile(const std::string& label, const std::string& code, 
                                         const WGPUCompilationMessage& message = pCompilationInfo->messages[i];
                                         pResult->m_Errors.emplace_back(
                                             message.message,
-                                            static_cast<uint32_t>(message.lineNum),
+                                            ShaderPreprocessor::ResolveLineNumber(static_cast<uint32_t>(message.lineNum)),
                                             static_cast<uint32_t>(message.linePos));
                                     }
                                 }

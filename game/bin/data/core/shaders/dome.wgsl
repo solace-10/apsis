@@ -15,14 +15,6 @@ struct VertexOutput
     @location(3) color: vec3f
 };
 
-struct GlobalUniforms
-{
-    projectionMatrix: mat4x4<f32>,
-    viewMatrix: mat4x4<f32>,
-    cameraPosition: vec4f,
-    time: f32
-};
-
 struct LocalUniforms
 {
     modelMatrix : mat4x4<f32>

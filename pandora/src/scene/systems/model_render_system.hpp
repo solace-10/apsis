@@ -7,6 +7,8 @@
 namespace WingsOfSteel::Pandora
 {
 
+DECLARE_SMART_PTR(ModelVisualization);
+
 class ModelRenderSystem : public System
 {
 public:
@@ -19,6 +21,7 @@ public:
     void Render(wgpu::RenderPassEncoder& renderPass);
 
 private:
+    ModelVisualizationUniquePtr m_pModelVisualization;
 };
 
 } // namespace WingsOfSteel::Pandora
