@@ -20,6 +20,8 @@ public:
 
     void Render(wgpu::RenderPassEncoder& renderPass);
 
+    ModelVisualization* GetVisualization() { return m_pModelVisualization.get(); }
+
 private:
     ModelVisualizationUniquePtr m_pModelVisualization;
 };

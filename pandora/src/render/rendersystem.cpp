@@ -77,7 +77,6 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
 void RenderSystem::InitializeInternal()
 {
     CreateGlobalUniforms();
-    m_pModelRenderSystem = std::make_unique<ModelRenderSystem>();
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderEditor = std::make_unique<ShaderEditor>();
 }
@@ -134,7 +133,15 @@ void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)
     wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
     UpdateGlobalUniforms(renderPass);
 
-    m_pModelRenderSystem->Render(renderPass);
+    Scene* pScene = GetActiveScene();
+    if (pScene)
+    {
+        ModelRenderSystem* pModelRenderSystem = pScene->GetSystem<ModelRenderSystem>();
+        if (pModelRenderSystem)
+        {
+            pModelRenderSystem->Render(renderPass);
+        }
+    }
 
     renderPass.End();
 }

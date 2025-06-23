@@ -12,7 +12,6 @@ namespace WingsOfSteel::Pandora
 {
 
 DECLARE_SMART_PTR(DebugRender);
-DECLARE_SMART_PTR(ModelRenderSystem);
 DECLARE_SMART_PTR(ShaderCompiler);
 DECLARE_SMART_PTR(ShaderEditor);
 
@@ -61,7 +60,6 @@ private:
     wgpu::Buffer m_GlobalUniformsBuffer;
     wgpu::BindGroup m_GlobalUniformsBindGroup;
     wgpu::BindGroupLayout m_GlobalUniformsBindGroupLayout;
-    ModelRenderSystemUniquePtr m_pModelRenderSystem;
 
     ShaderCompilerUniquePtr m_pShaderCompiler;
     ShaderEditorUniquePtr m_pShaderEditor;

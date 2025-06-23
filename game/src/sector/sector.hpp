@@ -19,6 +19,7 @@ public:
     void Update(float delta) override;
 
     void ShowCameraDebugUI(bool state);
+    void ShowGrid(bool state);
 
     Pandora::EntitySharedPtr GetPlayerShip() const;
     Fleet* GetPlayerFleet() const;
@@ -35,7 +36,8 @@ private:
     Pandora::EntitySharedPtr m_pCamera;
     FleetSharedPtr m_pPlayerFleet;
     Pandora::EntitySharedPtr m_pPlayerShip;
-    bool m_ShowCameraDebugUI{false};
+    bool m_ShowCameraDebugUI{ false };
+    bool m_ShowGrid{ true };
 };
 
 inline Pandora::EntitySharedPtr Sector::GetPlayerShip() const

@@ -10,6 +10,7 @@
 #include <scene/components/model_component.hpp>
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
+#include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/dice_component.hpp"
@@ -43,6 +44,7 @@ void Sector::Initialize()
 
     Scene::Initialize();
 
+    AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<ShipNavigationSystem>();
@@ -70,9 +72,11 @@ void Sector::Update(float delta)
 {
     Pandora::Scene::Update(delta);
 
-    Pandora::GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 100.0f);
-
-    Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, 0.0f, 100.0f, Pandora::Color::White);
+    if (m_ShowGrid)
+    {
+        Pandora::GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 50.0f);
+        Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Pandora::Color::White);
+    }
 
     using namespace Pandora;
     TransformComponent& transformComponent = m_pDome->GetComponent<TransformComponent>();
@@ -84,6 +88,11 @@ void Sector::Update(float delta)
 void Sector::ShowCameraDebugUI(bool state)
 {
     m_ShowCameraDebugUI = state;
+}
+
+void Sector::ShowGrid(bool state)
+{
+    m_ShowGrid = state;
 }
 
 void Sector::DrawCameraDebugUI()

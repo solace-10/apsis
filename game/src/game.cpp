@@ -1,9 +1,12 @@
+#include <debug_visualization/model_visualization.hpp>
 #include <imgui/imgui_system.hpp>
 #include <pandora.hpp>
 #include <scene/camera.hpp>
 #include <scene/entity.hpp>
 #include <scene/scene.hpp>
+#include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
+
 
 #include "game.hpp"
 #include "hyperscape/hyperscape.hpp"
@@ -52,18 +55,6 @@ void Game::Initialize()
 
     m_pSector = pSectorSignal->Spawn();
     Pandora::SetActiveScene(m_pSector);
-
-    // m_pCamera = std::make_shared<OrbitCamera>();
-    // m_pCamera->LookAt(
-    //     glm::vec3(0.0f, 0.0f, 10.0f),
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, 1.0f, 0.0f)
-    // );
-
-    // m_pMenuScene = std::make_shared<Pandora::Scene>();
-    //  m_pMenuScene->AddEntity(m_pCamera);
-    //  m_pMenuScene->SetCamera(m_pCamera);
-    // Pandora::SetActiveScene(m_pMenuScene);
 }
 
 void Game::Update(float delta)
@@ -89,48 +80,70 @@ void Game::DrawImGuiMenuBar()
             {
                 m_pSector->ShowCameraDebugUI(sShowCameraWindow);
             }
+            if (ImGui::BeginMenu("Models"))
+            {
+                ModelRenderSystem* pModelRenderSystem = m_pSector->GetSystem<ModelRenderSystem>();
+                if (pModelRenderSystem)
+                {
+                    ModelVisualization* pVisualization = pModelRenderSystem->GetVisualization();
+                    if (pVisualization)
+                    {
+                        ImGui::SeparatorText("Debug rendering");
+                        bool attachments = pVisualization->IsEnabled(ModelVisualization::Mode::AttachmentPoints);
+                        if (ImGui::MenuItem("Attachment points", nullptr, &attachments))
+                        {
+                            pVisualization->SetEnabled(ModelVisualization::Mode::AttachmentPoints, attachments);
+                        }
+                    }
+                }
+                ImGui::EndMenu();
+            }
             if (ImGui::BeginMenu("Physics"))
             {
                 PhysicsSimulationSystem* pPhysicsSystem = m_pSector->GetSystem<PhysicsSimulationSystem>();
                 if (pPhysicsSystem)
                 {
-                    PhysicsVisualization* pVizualisation = pPhysicsSystem->GetVizualisation();
-                    if (pVizualisation)
+                    PhysicsVisualization* pVisualization = pPhysicsSystem->GetVisualization();
+                    if (pVisualization)
                     {
                         ImGui::SeparatorText("Debug rendering");
-                        bool wireframe = pVizualisation->IsEnabled(PhysicsVisualization::Mode::Wireframe);
+                        bool wireframe = pVisualization->IsEnabled(PhysicsVisualization::Mode::Wireframe);
                         if (ImGui::MenuItem("Wireframe", nullptr, &wireframe))
                         {
-                            pVizualisation->SetEnabled(PhysicsVisualization::Mode::Wireframe, wireframe);
+                            pVisualization->SetEnabled(PhysicsVisualization::Mode::Wireframe, wireframe);
                         }
 
-                        bool aabb = pVizualisation->IsEnabled(PhysicsVisualization::Mode::AABB);
+                        bool aabb = pVisualization->IsEnabled(PhysicsVisualization::Mode::AABB);
                         if (ImGui::MenuItem("AABB", nullptr, &aabb))
                         {
-                            pVizualisation->SetEnabled(PhysicsVisualization::Mode::AABB, aabb);
+                            pVisualization->SetEnabled(PhysicsVisualization::Mode::AABB, aabb);
                         }
 
-                        bool transforms = pVizualisation->IsEnabled(PhysicsVisualization::Mode::Transforms);
+                        bool transforms = pVisualization->IsEnabled(PhysicsVisualization::Mode::Transforms);
                         if (ImGui::MenuItem("Transforms", nullptr, &transforms))
                         {
-                            pVizualisation->SetEnabled(PhysicsVisualization::Mode::Transforms, transforms);
+                            pVisualization->SetEnabled(PhysicsVisualization::Mode::Transforms, transforms);
                         }
 
-                        bool rayTests = pVizualisation->IsEnabled(PhysicsVisualization::Mode::RayTests);
+                        bool rayTests = pVisualization->IsEnabled(PhysicsVisualization::Mode::RayTests);
                         if (ImGui::MenuItem("Ray tests", nullptr, &rayTests))
                         {
-                            pVizualisation->SetEnabled(PhysicsVisualization::Mode::RayTests, rayTests);
+                            pVisualization->SetEnabled(PhysicsVisualization::Mode::RayTests, rayTests);
                         }
 
-                        bool contactPoints = pVizualisation->IsEnabled(PhysicsVisualization::Mode::ContactPoints);
+                        bool contactPoints = pVisualization->IsEnabled(PhysicsVisualization::Mode::ContactPoints);
                         if (ImGui::MenuItem("Contact points", nullptr, &contactPoints))
                         {
-                            pVizualisation->SetEnabled(PhysicsVisualization::Mode::ContactPoints, contactPoints);
+                            pVisualization->SetEnabled(PhysicsVisualization::Mode::ContactPoints, contactPoints);
                         }
                     }
                 }
-
                 ImGui::EndMenu();
+            }
+            static bool sShowGrid = true;
+            if (ImGui::MenuItem("Grid", nullptr, &sShowGrid))
+            {
+                m_pSector->ShowGrid(sShowGrid);
             }
             ImGui::EndMenu();
         }

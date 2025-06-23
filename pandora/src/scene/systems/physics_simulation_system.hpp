@@ -28,7 +28,7 @@ public:
     void OnRigidBodyCreated(entt::registry& registry, entt::entity entity);
     void OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity);
 
-    PhysicsVisualization* GetVizualisation() { return m_pPhysicsVisualization.get(); }
+    PhysicsVisualization* GetVisualization() { return m_pPhysicsVisualization.get(); }
 
 private:
     Scene* m_pScene{ nullptr };

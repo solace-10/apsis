@@ -17,24 +17,16 @@ ModelVisualization::~ModelVisualization()
 
 void ModelVisualization::Render(ResourceModel* pModel, const glm::mat4& transform)
 {
-    // TODO: Implement model visualization update logic
-
-    glm::vec4 translation = transform[3];
-    glm::vec3 position(translation.x, translation.y, translation.z);
-
-    // GetDebugRender()->Sphere(position, Color::Pink, 10.0f);
-
-    // GetDebugRender()->Circle(position, glm::vec3(0.0f, 1.0f, 0.0f), Color::Pink, 10.0f, 20.0f);
-
-    // GetDebugRender()->Label("Attachment", position, Color::Red, 0.5f);
-
-    for (auto& attachment : pModel->GetAttachmentPoints())
+    if (IsEnabled(Mode::AttachmentPoints))
     {
-        glm::mat4 worldTransform = transform * attachment.m_ModelTransform;
-        GetDebugRender()->AxisTriad(worldTransform, 1.0f, 10.0f);
+        for (auto& attachment : pModel->GetAttachmentPoints())
+        {
+            const glm::mat4 worldTransform = transform * attachment.m_ModelTransform;
+            GetDebugRender()->AxisTriad(worldTransform, 1.0f, 10.0f);
 
-        glm::vec3 labelPosition(worldTransform[3].x, worldTransform[3].y, worldTransform[3].z);
-        GetDebugRender()->Label(attachment.m_Name, labelPosition, Color::White, 0.75f);
+            const glm::vec3 labelPosition(worldTransform[3]);
+            GetDebugRender()->Label(attachment.m_Name, labelPosition, Color::White, 0.75f);
+        }
     }
 }
 
