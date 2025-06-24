@@ -20,7 +20,6 @@
 #include "components/sector_camera_component.hpp"
 #include "components/ship_engine_component.hpp"
 #include "components/ship_navigation_component.hpp"
-#include "dice/dice_generator.hpp"
 #include "fleet.hpp"
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
@@ -175,7 +174,7 @@ void Sector::SpawnPlayerFleet()
 
         m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
 
-        auto addHardpoint = [](EntitySharedPtr pShip, const std::string& attachmentPoint, float minArc, float maxArc) {
+        auto addHardpoint = [](EntitySharedPtr pShip, const std::string& attachmentPointName, float minArc, float maxArc) {
             // Ensure the ship has a HardpointComponent. We can only have one HardpointComponent, but will
             // likely call addHardpoint() multiple times.
             HardpointComponent* pHardpointComponent = nullptr;
@@ -196,15 +195,15 @@ void Sector::SpawnPlayerFleet()
                 return;
             }
 
-            std::optional<ResourceModel::AttachmentPoint> attachmentPoint = pModel->GetAttachmentPoint(attachmentPoint);
-            if (!attachmentPoint)
+            std::optional<ResourceModel::AttachmentPoint> pAttachmentPoint = pModel->GetAttachmentPoint(attachmentPointName);
+            if (!pAttachmentPoint)
             {
-                Log::Error() << "Attachment point not found: " << attachmentPoint;
+                Log::Error() << "Attachment point not found: " << attachmentPointName;
                 return;
             }
 
             Hardpoint hp;
-            hp.m_AttachmentPointTransform = attachmentPoint->m_ModelTransform;
+            hp.m_AttachmentPointTransform = pAttachmentPoint->m_ModelTransform;
             hp.m_ArcMinDegrees = minArc;
             hp.m_ArcMaxDegrees = maxArc;
             hp.m_pParent = pShip;
@@ -212,7 +211,7 @@ void Sector::SpawnPlayerFleet()
         };
 
         addHardpoint(m_pPlayerShip, "TurretPort", -120.0f, 0.0f);
-        addHardpoint(m_pPlayerShip, "TurretStartboard", 0.0f, 120.0f);
+        addHardpoint(m_pPlayerShip, "TurretStarboard", 0.0f, 120.0f);
     });
 
     m_pPlayerFleet->AddShip(m_pPlayerShip);
