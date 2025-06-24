@@ -1,5 +1,6 @@
 #include <imgui.h>
 
+#include <core/log.hpp>
 #include <pandora.hpp>
 #include <physics/collision_shape.hpp>
 #include <render/debug_render.hpp>
@@ -13,7 +14,7 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
-#include "components/dice_component.hpp"
+#include "components/hardpoint_component.hpp"
 #include "components/name_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
@@ -161,7 +162,6 @@ void Sector::SpawnPlayerFleet()
         m_pPlayerShip->AddComponent<ShipNavigationComponent>();
         m_pPlayerShip->AddComponent<NameComponent>("Everflame");
         m_pPlayerShip->AddComponent<PlayerControllerComponent>();
-        m_pPlayerShip->AddComponent<DiceComponent>();
 
         ShipEngineComponent& engineComponent = m_pPlayerShip->AddComponent<ShipEngineComponent>();
         engineComponent.linearForce = 1300.0f;
@@ -174,6 +174,45 @@ void Sector::SpawnPlayerFleet()
         rigidBodyConstructionInfo.SetAngularDamping(0.5f);
 
         m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+
+        auto addHardpoint = [](EntitySharedPtr pShip, const std::string& attachmentPoint, float minArc, float maxArc) {
+            // Ensure the ship has a HardpointComponent. We can only have one HardpointComponent, but will
+            // likely call addHardpoint() multiple times.
+            HardpointComponent* pHardpointComponent = nullptr;
+            if (pShip->HasComponent<HardpointComponent>())
+            {
+                pHardpointComponent = &pShip->GetComponent<HardpointComponent>();
+            }
+            else
+            {
+                pHardpointComponent = &pShip->AddComponent<HardpointComponent>();
+            }
+
+            ModelComponent& modelComponent = pShip->GetComponent<ModelComponent>();
+            ResourceModel* pModel = modelComponent.GetModel();
+            if (!pModel)
+            {
+                Log::Error() << "Attempting to add a hardpoint before the parent's model has been loaded.";
+                return;
+            }
+
+            std::optional<ResourceModel::AttachmentPoint> attachmentPoint = pModel->GetAttachmentPoint(attachmentPoint);
+            if (!attachmentPoint)
+            {
+                Log::Error() << "Attachment point not found: " << attachmentPoint;
+                return;
+            }
+
+            Hardpoint hp;
+            hp.m_AttachmentPointTransform = attachmentPoint->m_ModelTransform;
+            hp.m_ArcMinDegrees = minArc;
+            hp.m_ArcMaxDegrees = maxArc;
+            hp.m_pParent = pShip;
+            pHardpointComponent->hardpoints.push_back(hp);
+        };
+
+        addHardpoint(m_pPlayerShip, "TurretPort", -120.0f, 0.0f);
+        addHardpoint(m_pPlayerShip, "TurretStartboard", 0.0f, 120.0f);
     });
 
     m_pPlayerFleet->AddShip(m_pPlayerShip);
@@ -201,27 +240,6 @@ Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::s
     pShip->AddComponent<NameComponent>(name);
 
     return pShip;
-}
-
-void Sector::GenerateDice()
-{
-    using namespace Pandora;
-    entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<DiceComponent>();
-
-    view.each([](const auto entity, DiceComponent& diceComponent) {
-        for (size_t categoryIdx = 0; categoryIdx < magic_enum::enum_count<DiceCategory>(); categoryIdx++)
-        {
-            DiceCategory category = static_cast<DiceCategory>(categoryIdx);
-            DiceComponent::DiceContainer& diceContainer = diceComponent.GetDice(category);
-            std::vector<Dice> rolledDice = DiceGenerator::Generate(diceContainer.size());
-            assert(rolledDice.size() == diceContainer.size());
-            for (size_t i = 0; i < diceContainer.size(); i++)
-            {
-                diceContainer[i] = rolledDice[i];
-            }
-        }
-    });
 }
 
 Fleet* Sector::GetPlayerFleet() const

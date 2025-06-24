@@ -28,7 +28,6 @@ private:
     void DrawCameraDebugUI();
     void SpawnDome();
     void SpawnPlayerFleet();
-    void GenerateDice();
 
     Pandora::EntitySharedPtr SpawnShip(const std::string& name, const std::string& modelPath);
 

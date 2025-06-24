@@ -92,6 +92,19 @@ void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4&
     }
 }
 
+std::optional<ResourceModel::AttachmentPoint> ResourceModel::GetAttachmentPoint(const std::string& name) const
+{
+    for (auto& attachmentPoint : m_AttachmentPoints)
+    {
+        if (attachmentPoint.m_Name == name)
+        {
+            return attachmentPoint;
+        }
+    }
+
+    return std::nullopt;
+}
+
 void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform)
 {
     if (!node.GetMeshId().has_value() || node.IsCollision())

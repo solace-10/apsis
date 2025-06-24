@@ -48,10 +48,8 @@ public:
     void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
 
     const std::vector<AttachmentPoint>& GetAttachmentPoints() const { return m_AttachmentPoints; }
+    std::optional<AttachmentPoint> GetAttachmentPoint(const std::string& name) const;
     CollisionShapeSharedPtr GetCollisionShape() const { return m_pCollisionShape; }
-
-    // std::optional<glm::mat4> GetNodeTransform(const std::string& nodeName) const;
-    // std::vector<std::string> GetNodeNames() const;
 
 private:
     using NodeIndex = uint32_t;
