@@ -111,6 +111,7 @@
                 "core"
             ],
             "targets": [
+                "setup_compile_commands",
                 "game",
                 "dome",
                 "forge"
@@ -125,6 +126,7 @@
                 "core"
             ],
             "targets": [
+                "setup_compile_commands",
                 "game"
             ]
         },
@@ -137,6 +139,7 @@
                 "core"
             ],
             "targets": [
+                "setup_compile_commands",
                 "game"
             ]
         }

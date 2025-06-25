@@ -9,3 +9,4 @@ game/bin/log.txt
 forge/bin/forge*
 forge/bin/imgui.ini
 forge/bin/log.txt
+compile_commands.json
