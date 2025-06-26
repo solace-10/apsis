@@ -24,6 +24,7 @@
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/hardpoint_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
 
@@ -48,6 +49,7 @@ void Sector::Initialize()
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<ShipNavigationSystem>();
+    AddSystem<HardpointSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -210,8 +212,8 @@ void Sector::SpawnPlayerFleet()
             pHardpointComponent->hardpoints.push_back(hp);
         };
 
-        addHardpoint(m_pPlayerShip, "TurretPort", -120.0f, 0.0f);
-        addHardpoint(m_pPlayerShip, "TurretStarboard", 0.0f, 120.0f);
+        addHardpoint(m_pPlayerShip, "TurretPort", -5.0f, 120.0f);
+        addHardpoint(m_pPlayerShip, "TurretStarboard", -120.0f, 5.0f);
     });
 
     m_pPlayerFleet->AddShip(m_pPlayerShip);
