@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <glm/mat4x4.hpp>
+
 #include <core/result.hpp>
 #include <core/smart_ptr.hpp>
 #include <scene/entity.hpp>
@@ -15,7 +17,7 @@ DECLARE_SMART_PTR(ShipBuilder);
 class ShipBuilder
 {
 public:
-    static void Build(Pandora::EntitySharedPtr pShip);
+    static void Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform);
 
     enum EAddWeaponResult
     {

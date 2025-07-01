@@ -28,10 +28,12 @@ private:
     void DrawCameraDebugUI();
     void SpawnDome();
     void SpawnPlayerFleet();
+    void SpawnEnemyFleet();
 
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
     FleetSharedPtr m_pPlayerFleet;
+    FleetSharedPtr m_pEnemyFleet;
     Pandora::EntitySharedPtr m_pPlayerShip;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ true };

@@ -11,7 +11,6 @@
 
 #include "components/hardpoint_component.hpp"
 #include "components/name_component.hpp"
-#include "components/player_controller_component.hpp"
 #include "components/ship_engine_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/weapon_component.hpp"
@@ -21,25 +20,26 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-void ShipBuilder::Build(Pandora::EntitySharedPtr pShip)
+void ShipBuilder::Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform)
 {
     using namespace Pandora;
 
-    GetResourceSystem()->RequestResource("/models/player/destroyer.glb", [pShip](ResourceSharedPtr pResource) {
+    GetResourceSystem()->RequestResource("/models/player/destroyer.glb", [pShip, worldTransform](ResourceSharedPtr pResource) {
         ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
         TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        // transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        transformComponent.transform = worldTransform;
 
         pShip->AddComponent<ModelComponent>(pResourceModel);
         pShip->AddComponent<ShipNavigationComponent>();
         pShip->AddComponent<NameComponent>("Everflame");
-        pShip->AddComponent<PlayerControllerComponent>();
 
         ShipEngineComponent& engineComponent = pShip->AddComponent<ShipEngineComponent>();
         engineComponent.linearForce = 1300.0f;
         engineComponent.torque = 7500.0f;
 
         RigidBodyConstructionInfo rigidBodyConstructionInfo;
+        rigidBodyConstructionInfo.SetWorldTransform(worldTransform);
         rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
         rigidBodyConstructionInfo.SetMass(100);
         rigidBodyConstructionInfo.SetLinearDamping(0.5f);

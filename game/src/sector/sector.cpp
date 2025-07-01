@@ -14,6 +14,7 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "fleet.hpp"
 #include "sector/sector.hpp"
@@ -63,6 +64,7 @@ void Sector::Initialize()
 
     SpawnDome();
     SpawnPlayerFleet();
+    SpawnEnemyFleet();
     sectorCameraComponent.anchorEntity = m_pPlayerShip;
 }
 
@@ -144,12 +146,11 @@ void Sector::SpawnDome()
 
 void Sector::SpawnPlayerFleet()
 {
-    using namespace Pandora;
-
     m_pPlayerFleet = std::make_shared<Fleet>();
 
     m_pPlayerShip = CreateEntity();
-    ShipBuilder::Build(m_pPlayerShip);
+    ShipBuilder::Build(m_pPlayerShip, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
+    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
@@ -159,6 +160,19 @@ void Sector::SpawnPlayerFleet()
     //     pEscort->AddComponent<DiceComponent>();
     //     m_pPlayerFleet->AddShip(pEscort);
     // }
+}
+
+void Sector::SpawnEnemyFleet()
+{
+    m_pEnemyFleet = std::make_shared<Fleet>();
+
+    Pandora::EntitySharedPtr pShip = CreateEntity();
+    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)));
+    m_pEnemyFleet->AddShip(pShip);
+
+    pShip = CreateEntity();
+    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)));
+    m_pEnemyFleet->AddShip(pShip);
 }
 
 Fleet* Sector::GetPlayerFleet() const
