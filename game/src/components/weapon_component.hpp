@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include <glm/mat4x4.hpp>
 
 #include <core/smart_ptr.hpp>
@@ -11,22 +8,17 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-struct Hardpoint
+class WeaponComponent
 {
-    std::string m_Name;
+public:
+    WeaponComponent() = default;
+
     glm::mat4 m_AttachmentPointTransform{ 1.0f };
     float m_ArcMinDegrees{ 0.0f };
     float m_ArcMaxDegrees{ 0.0f };
     float m_AngleDegrees{ 0.0f };
-    Pandora::EntitySharedPtr m_pEntity;
+    float m_Range{ 100.0f };
     Pandora::EntityWeakPtr m_pParent;
-};
-
-class HardpointComponent
-{
-public:
-    HardpointComponent() {}
-    std::vector<Hardpoint> hardpoints;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

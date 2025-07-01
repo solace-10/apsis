@@ -14,19 +14,15 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
-#include "components/hardpoint_component.hpp"
-#include "components/name_component.hpp"
-#include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
-#include "components/ship_engine_component.hpp"
-#include "components/ship_navigation_component.hpp"
 #include "fleet.hpp"
 #include "sector/sector.hpp"
+#include "ship_builder/ship_builder.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
-#include "systems/hardpoint_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
+#include "systems/weapon_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -49,7 +45,7 @@ void Sector::Initialize()
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<ShipNavigationSystem>();
-    AddSystem<HardpointSystem>();
+    AddSystem<WeaponSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -153,69 +149,7 @@ void Sector::SpawnPlayerFleet()
     m_pPlayerFleet = std::make_shared<Fleet>();
 
     m_pPlayerShip = CreateEntity();
-
-    GetResourceSystem()->RequestResource("/models/player/destroyer.glb", [this](ResourceSharedPtr pResource) {
-        ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
-        TransformComponent& transformComponent = m_pPlayerShip->AddComponent<TransformComponent>();
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
-        m_pPlayerShip->AddComponent<ModelComponent>(pResourceModel);
-        m_pPlayerShip->AddComponent<ShipNavigationComponent>();
-        m_pPlayerShip->AddComponent<NameComponent>("Everflame");
-        m_pPlayerShip->AddComponent<PlayerControllerComponent>();
-
-        ShipEngineComponent& engineComponent = m_pPlayerShip->AddComponent<ShipEngineComponent>();
-        engineComponent.linearForce = 1300.0f;
-        engineComponent.torque = 7500.0f;
-
-        RigidBodyConstructionInfo rigidBodyConstructionInfo;
-        rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
-        rigidBodyConstructionInfo.SetMass(100);
-        rigidBodyConstructionInfo.SetLinearDamping(0.5f);
-        rigidBodyConstructionInfo.SetAngularDamping(0.5f);
-
-        m_pPlayerShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
-
-        auto addHardpoint = [](EntitySharedPtr pShip, const std::string& attachmentPointName, float minArc, float maxArc) {
-            // Ensure the ship has a HardpointComponent. We can only have one HardpointComponent, but will
-            // likely call addHardpoint() multiple times.
-            HardpointComponent* pHardpointComponent = nullptr;
-            if (pShip->HasComponent<HardpointComponent>())
-            {
-                pHardpointComponent = &pShip->GetComponent<HardpointComponent>();
-            }
-            else
-            {
-                pHardpointComponent = &pShip->AddComponent<HardpointComponent>();
-            }
-
-            ModelComponent& modelComponent = pShip->GetComponent<ModelComponent>();
-            ResourceModel* pModel = modelComponent.GetModel();
-            if (!pModel)
-            {
-                Log::Error() << "Attempting to add a hardpoint before the parent's model has been loaded.";
-                return;
-            }
-
-            std::optional<ResourceModel::AttachmentPoint> pAttachmentPoint = pModel->GetAttachmentPoint(attachmentPointName);
-            if (!pAttachmentPoint)
-            {
-                Log::Error() << "Attachment point not found: " << attachmentPointName;
-                return;
-            }
-
-            Hardpoint hp;
-            hp.m_AttachmentPointTransform = pAttachmentPoint->m_ModelTransform;
-            hp.m_ArcMinDegrees = minArc;
-            hp.m_ArcMaxDegrees = maxArc;
-            hp.m_pParent = pShip;
-            pHardpointComponent->hardpoints.push_back(hp);
-        };
-
-        addHardpoint(m_pPlayerShip, "TurretPort", -5.0f, 120.0f);
-        addHardpoint(m_pPlayerShip, "TurretStarboard", -120.0f, 5.0f);
-    });
-
+    ShipBuilder::Build(m_pPlayerShip);
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
@@ -225,22 +159,6 @@ void Sector::SpawnPlayerFleet()
     //     pEscort->AddComponent<DiceComponent>();
     //     m_pPlayerFleet->AddShip(pEscort);
     // }
-}
-
-Pandora::EntitySharedPtr Sector::SpawnShip(const std::string& name, const std::string& modelPath)
-{
-    using namespace Pandora;
-
-    Pandora::EntitySharedPtr pShip = CreateEntity();
-
-    TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
-    // pShip->AddComponent<ModelComponent>(modelPath);
-    pShip->AddComponent<ShipNavigationComponent>();
-    pShip->AddComponent<NameComponent>(name);
-
-    return pShip;
 }
 
 Fleet* Sector::GetPlayerFleet() const

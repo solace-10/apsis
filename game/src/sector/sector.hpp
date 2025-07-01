@@ -29,8 +29,6 @@ private:
     void SpawnDome();
     void SpawnPlayerFleet();
 
-    Pandora::EntitySharedPtr SpawnShip(const std::string& name, const std::string& modelPath);
-
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
     FleetSharedPtr m_pPlayerFleet;

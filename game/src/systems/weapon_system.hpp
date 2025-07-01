@@ -6,11 +6,11 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-class HardpointSystem : public Pandora::System
+class WeaponSystem : public Pandora::System
 {
 public:
-    HardpointSystem() = default;
-    ~HardpointSystem();
+    WeaponSystem() = default;
+    ~WeaponSystem() = default;
 
     void Initialize(Pandora::Scene* pScene) override;
     void Update(float delta) override;

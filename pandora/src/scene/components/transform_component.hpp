@@ -15,7 +15,7 @@ public:
     const glm::vec3 GetRight() const { return transform[0]; }
     const glm::vec3 GetUp() const { return transform[1]; }
 
-    glm::mat4 transform;
+    glm::mat4 transform{ 1.0f };
 };
 
 } // namespace WingsOfSteel::Pandora

@@ -13,40 +13,26 @@ DECLARE_SMART_PTR(ItemInfo)
 class ItemInfo
 {
 public:
-    ItemInfo(const std::string& name, const std::string& displayName, const std::string& type)
-    : m_Name(name)
-    , m_DisplayName(displayName)
-    , m_Type(type)
+    enum class Type
     {
-    }
+        Weapon
+    };
 
-    ~ItemInfo() {}
+    ~ItemInfo() = default;
 
-    const std::string& GetName() const;
-    const std::string& GetDisplayName() const;
-    const std::string& GetType() const;
+    static ItemInfoSharedPtr Create();
 
-    ItemSharedPtr Create(int quantity = 1) const;
+    virtual Type GetType() const = 0;
+
+    const std::string& GetName() const { return m_Name; }
+    const std::string& GetDisplayName() const { return m_DisplayName; }
+
+protected:
+    ItemInfo() = default;
 
 private:
     std::string m_Name;
     std::string m_DisplayName;
-    std::string m_Type;
 };
-
-inline const std::string& ItemInfo::GetName() const
-{
-    return m_Name;
-}
-
-inline const std::string& ItemInfo::GetDisplayName() const
-{
-    return m_DisplayName;
-}
-
-inline const std::string& ItemInfo::GetType() const
-{
-    return m_Type;
-}
 
 } // namespace WingsOfSteel::TheBrightestStar

@@ -10,18 +10,19 @@ namespace WingsOfSteel::TheBrightestStar
 
 DECLARE_SMART_PTR(ItemInfo);
 
-DECLARE_SMART_PTR(ItemManager);
-class ItemManager
+DECLARE_SMART_PTR(ItemInfoManager);
+class ItemInfoManager
 {
 public:
-    ItemManager();
-    ~ItemManager() {}
+    ItemInfoManager();
+    ~ItemInfoManager() = default;
 
-    const ItemInfo* Get(const std::string& itemName) const;
+    const ItemInfoSharedPtr& Get(const std::string& itemName) const;
+    ItemInfoSharedPtr Get(const std::string& itemName);
 
 private:
-    using ItemDatabase = std::unordered_map<std::string, ItemInfoUniquePtr>;
-    ItemDatabase m_Database;
+    using ItemInfoDatabase = std::unordered_map<std::string, ItemInfoSharedPtr>;
+    ItemInfoDatabase m_Database;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

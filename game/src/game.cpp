@@ -7,11 +7,9 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
-
 #include "game.hpp"
 #include "hyperscape/hyperscape.hpp"
 #include "items/item_info.hpp"
-#include "items/item_manager.hpp"
 #include "sector/sector.hpp"
 #include "sector/sector_signal.hpp"
 #include "ui/prefab_editor.hpp"
@@ -43,8 +41,8 @@ void Game::Initialize()
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
 
-    m_pItemManager = std::make_unique<ItemManager>();
-    // m_pSectorGenerator = std::make_unique<SectorGenerator>();
+    // m_pItemManager = std::make_unique<ItemManager>();
+    //  m_pSectorGenerator = std::make_unique<SectorGenerator>();
 
     m_pHyperscape = std::make_unique<Hyperscape>();
     m_pHyperscape->Initialize();
