@@ -52,7 +52,26 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     auto resourceIt = m_Resources.find(path);
     if (resourceIt != m_Resources.end())
     {
-        onResourceAvailable(resourceIt->second);
+        ResourceSharedPtr pResource = resourceIt->second;
+
+        if (pResource->GetState() == ResourceState::Loaded)
+        {
+            // If the resource has already completed loading, immediately trigger the callback.
+            onResourceAvailable(resourceIt->second);
+        }
+        else if (pResource->GetState() == ResourceState::Loading)
+        {
+            // If we are still loading, add this request to the list of pending requests.
+            // When the resource is loaded, all the callbacks will be triggered.
+            m_PendingResources.push_back(
+                PendingResource{
+                    .pResource = pResource,
+                    .onResourceAvailable = onResourceAvailable });
+        }
+        else
+        {
+            Log::Error() << "Invalid state for resource.";
+        }
         return;
     }
 
