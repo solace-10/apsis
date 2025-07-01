@@ -78,7 +78,7 @@ bool ShipBuilder::AddHardpoint(Pandora::EntitySharedPtr pShip, const std::string
     }
 
     ModelComponent& modelComponent = pShip->GetComponent<ModelComponent>();
-    ResourceModel* pModel = modelComponent.GetModel();
+    ResourceModelSharedPtr pModel = modelComponent.GetModel();
     if (!pModel)
     {
         Log::Error() << "Attempting to add a hardpoint before the parent's model has been loaded.";

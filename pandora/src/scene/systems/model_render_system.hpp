@@ -2,6 +2,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include "resources/resource_model.hpp"
 #include "scene/systems/system.hpp"
 
 namespace WingsOfSteel::Pandora
@@ -24,6 +25,14 @@ public:
 
 private:
     ModelVisualizationUniquePtr m_pModelVisualization;
+
+    struct InstanceData
+    {
+        ResourceModelWeakPtr pModel;
+        ResourceModel::InstanceTransforms transforms;
+    };
+
+    std::vector<InstanceData> m_InstanceData;
 };
 
 } // namespace WingsOfSteel::Pandora

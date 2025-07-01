@@ -39,17 +39,22 @@ public:
         glm::mat4 m_ModelTransform;
     };
 
+    using Id = uint32_t;
+    using InstanceTransforms = std::vector<glm::mat4>;
+
     ResourceModel();
     ~ResourceModel() override;
 
     void Load(const std::string& path) override;
     ResourceType GetResourceType() const override;
 
-    void Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform);
+    void Render(wgpu::RenderPassEncoder& renderPass, const InstanceTransforms& instanceTransforms);
 
     const std::vector<AttachmentPoint>& GetAttachmentPoints() const { return m_AttachmentPoints; }
     std::optional<AttachmentPoint> GetAttachmentPoint(const std::string& name) const;
     CollisionShapeSharedPtr GetCollisionShape() const { return m_pCollisionShape; }
+
+    Id GetId() const { return m_Id; }
 
 private:
     using NodeIndex = uint32_t;
@@ -171,6 +176,7 @@ private:
     std::vector<Material> m_Materials;
 
     CollisionShapeSharedPtr m_pCollisionShape;
+    Id m_Id{ 0 };
 };
 
 } // namespace WingsOfSteel::Pandora

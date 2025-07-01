@@ -47,11 +47,13 @@ namespace WingsOfSteel::Pandora
 
 static bool sShaderLocationsMapInitialized = false;
 static std::unordered_map<std::string, int> sShaderLocationsMap;
+static ResourceModel::Id sId = 0;
 
 ResourceModel::ResourceModel()
     : m_DependentResourcesToLoad(0)
     , m_DependentResourcesLoaded(0)
     , m_IsIndexed(false)
+    , m_Id(sId++)
 {
 }
 
@@ -80,14 +82,14 @@ ResourceType ResourceModel::GetResourceType() const
     return ResourceType::Model;
 }
 
-void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform)
+void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const std::vector<glm::mat4>& instanceTransforms)
 {
     for (auto& node : m_Nodes)
     {
         if (node.IsRoot())
         {
             // Do not break here: a GLTF scene can have more than one root node.
-            RenderNode(renderPass, node, transform);
+            RenderNode(renderPass, node, glm::mat4(1.0f));
         }
     }
 }
@@ -449,23 +451,23 @@ void ResourceModel::SetupAttachments()
     std::function<void(const Node&, const glm::mat4&)> findAttachmentPoints;
     findAttachmentPoints =
         [&](const Node& node, const glm::mat4& parentTransform) {
-        glm::mat4 modelTransform = parentTransform * node.GetTransform();
+            glm::mat4 modelTransform = parentTransform * node.GetTransform();
 
-        const std::string attachmentPrefix = "Attachment";
-        if (node.GetName().starts_with(attachmentPrefix))
-        {
-            AttachmentPoint ap;
-            ap.m_Name = node.GetName().substr(attachmentPrefix.size());
-            ap.m_LocalTransform = node.GetTransform();
-            ap.m_ModelTransform = modelTransform;
-            m_AttachmentPoints.push_back(ap);
-        }
+            const std::string attachmentPrefix = "Attachment";
+            if (node.GetName().starts_with(attachmentPrefix))
+            {
+                AttachmentPoint ap;
+                ap.m_Name = node.GetName().substr(attachmentPrefix.size());
+                ap.m_LocalTransform = node.GetTransform();
+                ap.m_ModelTransform = modelTransform;
+                m_AttachmentPoints.push_back(ap);
+            }
 
-        for (const auto& childIndex : node.GetChildren())
-        {
-            findAttachmentPoints(m_Nodes[childIndex], modelTransform);
-        }
-    };
+            for (const auto& childIndex : node.GetChildren())
+            {
+                findAttachmentPoints(m_Nodes[childIndex], modelTransform);
+            }
+        };
 
     for (const auto& node : m_Nodes)
     {

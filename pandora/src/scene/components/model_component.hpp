@@ -16,15 +16,10 @@ public:
     }
     ~ModelComponent() {}
 
-    ResourceModel* GetModel() const;
+    ResourceModelSharedPtr GetModel() const { return m_pResource; }
 
 private:
     ResourceModelSharedPtr m_pResource;
 };
-
-inline ResourceModel* ModelComponent::GetModel() const
-{
-    return m_pResource.get();
-}
 
 } // namespace WingsOfSteel::Pandora
