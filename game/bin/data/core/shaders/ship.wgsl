@@ -1,5 +1,6 @@
 struct VertexInput
 {
+    @builtin(instance_index) instanceIdx: u32,
     @location(0) position: vec3f,
     @location(1) normal: vec3f,
     @location(2) uv: vec2f
@@ -18,19 +19,26 @@ struct LocalUniforms
     modelMatrix: mat4x4<f32>
 };
 
+struct InstanceUniforms
+{
+    transform: array<mat4x4<f32>, 256>
+};
+
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
-@group(2) @binding(0) var defaultSampler: sampler;
-@group(2) @binding(1) var baseTexture: texture_2d<f32>;
-//@group(2) @binding(2) var metallicRoughnessTexture: texture_2d<f32>;
-//@group(2) @binding(3) var normalTexture: texture_2d<f32>;
-//@group(2) @binding(4) var occlusionTexture: texture_2d<f32>;
-//@group(2) @binding(5) var emissiveTexture: texture_2d<f32>;
+@group(2) @binding(0) var<uniform> uInstanceUniforms: InstanceUniforms;
+@group(3) @binding(0) var defaultSampler: sampler;
+@group(3) @binding(1) var baseTexture: texture_2d<f32>;
+//@group(3) @binding(2) var metallicRoughnessTexture: texture_2d<f32>;
+//@group(3) @binding(3) var normalTexture: texture_2d<f32>;
+//@group(3) @binding(4) var occlusionTexture: texture_2d<f32>;
+//@group(3) @binding(5) var emissiveTexture: texture_2d<f32>;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
-    let modelMatrix = uLocalUniforms.modelMatrix;
+    let instancePos = vec3f(25.0 * f32(in.instanceIdx), 0.0, 0.0);
+    let modelMatrix = uInstanceUniforms.transform[in.instanceIdx] * uLocalUniforms.modelMatrix;
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * modelMatrix * vec4f(in.position, 1.0);
     out.worldPosition = (modelMatrix * vec4f(in.position, 1.0)).xyz;
     out.worldNormal = (modelMatrix * vec4f(in.normal, 0.0)).xyz;

@@ -3,7 +3,7 @@
 #include "resources/resource.fwd.hpp"
 #include "resources/resource.hpp"
 
-#include <atomic>
+#include <array>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -55,6 +55,7 @@ public:
     CollisionShapeSharedPtr GetCollisionShape() const { return m_pCollisionShape; }
 
     Id GetId() const { return m_Id; }
+    static constexpr size_t MaxInstanceCount = 256;
 
 private:
     using NodeIndex = uint32_t;
@@ -111,6 +112,7 @@ private:
     ResourceShader* GetShaderForPrimitive(tinygltf::Primitive* pPrimitive) const;
     void CreateLocalUniformsLayout();
     void CreatePerNodeLocalUniforms();
+    void CreateInstanceUniforms();
     void CreateTextureUniforms();
     void HandleShaderInjection();
     void RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform);
@@ -167,6 +169,22 @@ private:
     };
     std::vector<LocalUniforms> m_PerNodeLocalUniforms;
     wgpu::BindGroupLayout m_LocalUniformsBindGroupLayout;
+
+    struct InstanceUniformsData
+    {
+        std::array<glm::mat4, ResourceModel::MaxInstanceCount> instanceTransforms;
+    };
+
+    struct InstanceUniforms
+    {
+        uint32_t numInstances{ 0 };
+        InstanceUniformsData data;
+        wgpu::Buffer buffer;
+        wgpu::BindGroup bindGroup;
+    };
+    InstanceUniforms m_InstanceUniforms;
+    wgpu::BindGroupLayout m_InstanceUniformsBindGroupLayout;
+    uint32_t m_InstanceCount{ 0 };
 
     wgpu::BindGroup m_TextureUniformsBindGroup;
     wgpu::BindGroupLayout m_TextureUniformsBindGroupLayout;

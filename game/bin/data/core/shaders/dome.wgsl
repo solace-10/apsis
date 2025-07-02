@@ -1,5 +1,6 @@
 struct VertexInput
 {
+    @builtin(instance_index) instanceIdx: u32,
     @location(0) position: vec3f,
     //@location(1) normal: vec3f,
     //@location(2) uv: vec2f
@@ -20,8 +21,14 @@ struct LocalUniforms
     modelMatrix : mat4x4<f32>
 };
 
+struct InstanceUniforms
+{
+    transform: array<mat4x4<f32>, 256>
+};
+
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
+@group(2) @binding(0) var<uniform> uInstanceUniforms: InstanceUniforms;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -37,7 +44,8 @@ struct LocalUniforms
     
     //uGlobalUniforms.viewMatrix[3];
 
-    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * cameraOffset * uLocalUniforms.modelMatrix * vec4f(in.position, 1.0);
+    let modelMatrix = uInstanceUniforms.transform[in.instanceIdx] * uLocalUniforms.modelMatrix;
+    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * cameraOffset * modelMatrix * vec4f(in.position, 1.0);
     out.worldPosition = (cameraOffset * uLocalUniforms.modelMatrix * vec4f(in.position, 1.0)).xyz;
     out.worldNormal = vec3f(0.0, 0.0, 1.0);
     out.uv = vec2f(0.0);

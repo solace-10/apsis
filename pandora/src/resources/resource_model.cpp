@@ -34,6 +34,7 @@
 #endif
 // clang-format on
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <functional>
@@ -84,6 +85,13 @@ ResourceType ResourceModel::GetResourceType() const
 
 void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const std::vector<glm::mat4>& instanceTransforms)
 {
+    m_InstanceCount = std::min(instanceTransforms.size(), MaxInstanceCount);
+    std::copy_n(instanceTransforms.begin(), m_InstanceCount, m_InstanceUniforms.data.instanceTransforms.begin());
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_InstanceUniforms.buffer, 0, &m_InstanceUniforms.data, sizeof(InstanceUniformsData));
+
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_InstanceUniforms.buffer, 0, m_InstanceUniforms.data.instanceTransforms.data(), sizeof(InstanceUniformsData));
+    renderPass.SetBindGroup(2, m_InstanceUniforms.bindGroup);
+
     for (auto& node : m_Nodes)
     {
         if (node.IsRoot())
@@ -126,7 +134,7 @@ void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& 
     {
         if (primitiveRenderData.material.has_value())
         {
-            renderPass.SetBindGroup(2, primitiveRenderData.material.value().GetBindGroup());
+            renderPass.SetBindGroup(3, primitiveRenderData.material.value().GetBindGroup());
         }
 
         renderPass.SetPipeline(primitiveRenderData.pipeline);
@@ -138,11 +146,11 @@ void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& 
         if (primitiveRenderData.indexData.has_value())
         {
             renderPass.SetIndexBuffer(m_Buffers[primitiveRenderData.indexData->bufferIndex], primitiveRenderData.indexData->format, primitiveRenderData.indexData->offset);
-            renderPass.DrawIndexed(primitiveRenderData.indexData->count);
+            renderPass.DrawIndexed(primitiveRenderData.indexData->count, m_InstanceCount);
         }
         else
         {
-            renderPass.Draw(primitiveRenderData.vertexData[0].count);
+            renderPass.Draw(primitiveRenderData.vertexData[0].count, m_InstanceCount);
         }
     }
 
@@ -442,6 +450,7 @@ void ResourceModel::SetupNodes()
     }
 
     CreatePerNodeLocalUniforms();
+    CreateInstanceUniforms();
 }
 
 void ResourceModel::SetupAttachments()
@@ -652,7 +661,8 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
 
     std::vector<wgpu::BindGroupLayout> bindGroupLayouts = {
         GetRenderSystem()->GetGlobalUniformsLayout(),
-        m_LocalUniformsBindGroupLayout
+        m_LocalUniformsBindGroupLayout,
+        m_InstanceUniformsBindGroupLayout
     };
 
     if (renderData.material.has_value())
@@ -661,6 +671,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     }
 
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
+        .label = GetName().c_str(),
         .bindGroupLayoutCount = bindGroupLayouts.size(),
         .bindGroupLayouts = bindGroupLayouts.data()
     };
@@ -786,7 +797,7 @@ ResourceShader* ResourceModel::GetShaderForPrimitive(tinygltf::Primitive* pPrimi
 
 void ResourceModel::CreateLocalUniformsLayout()
 {
-    static_assert(sizeof(LocalUniforms) % 16 == 0);
+    static_assert(sizeof(LocalUniformsData) % 16 == 0);
 
     using namespace wgpu;
 
@@ -795,7 +806,7 @@ void ResourceModel::CreateLocalUniformsLayout()
         .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
         .buffer{
             .type = BufferBindingType::Uniform,
-            .minBindingSize = sizeof(LocalUniforms) }
+            .minBindingSize = sizeof(LocalUniformsData) }
     };
 
     BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
@@ -818,7 +829,7 @@ void ResourceModel::CreatePerNodeLocalUniforms()
         BufferDescriptor bufferDescriptor{
             .label = "Local uniforms buffer",
             .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
-            .size = sizeof(LocalUniforms) * m_pModel->nodes.size()
+            .size = sizeof(LocalUniformsData) * m_pModel->nodes.size()
         };
 
         localUniforms.buffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
@@ -827,7 +838,7 @@ void ResourceModel::CreatePerNodeLocalUniforms()
             .binding = 0,
             .buffer = localUniforms.buffer,
             .offset = 0,
-            .size = sizeof(LocalUniforms)
+            .size = sizeof(LocalUniformsData)
         };
 
         BindGroupDescriptor bindGroupDescriptor{
@@ -839,6 +850,51 @@ void ResourceModel::CreatePerNodeLocalUniforms()
         localUniforms.bindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
         m_PerNodeLocalUniforms.push_back(std::move(localUniforms));
     }
+}
+
+void ResourceModel::CreateInstanceUniforms()
+{
+    using namespace wgpu;
+
+    static_assert(sizeof(InstanceUniformsData) % 16 == 0);
+
+    BindGroupLayoutEntry bindGroupLayoutEntry{
+        .binding = 0,
+        .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
+        .buffer{
+            .type = BufferBindingType::Uniform,
+            .minBindingSize = sizeof(InstanceUniformsData) }
+    };
+
+    BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+        .label = "Instance uniforms layout",
+        .entryCount = 1,
+        .entries = &bindGroupLayoutEntry
+    };
+    m_InstanceUniformsBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+
+    BufferDescriptor bufferDescriptor{
+        .label = "Instance uniforms buffer",
+        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
+        .size = sizeof(InstanceUniformsData)
+    };
+
+    m_InstanceUniforms.buffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
+
+    BindGroupEntry bindGroupEntry{
+        .binding = 0,
+        .buffer = m_InstanceUniforms.buffer,
+        .offset = 0,
+        .size = sizeof(InstanceUniformsData)
+    };
+
+    BindGroupDescriptor bindGroupDescriptor{
+        .layout = m_InstanceUniformsBindGroupLayout,
+        .entryCount = 1,
+        .entries = &bindGroupEntry
+    };
+
+    m_InstanceUniforms.bindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
 void ResourceModel::HandleShaderInjection()
