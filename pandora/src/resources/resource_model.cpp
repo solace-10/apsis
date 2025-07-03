@@ -551,6 +551,12 @@ void ResourceModel::SetupCollisionShape()
 
 void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive)
 {
+    // We only render primitives which have materials associated with them.
+    if (pPrimitive->material == -1)
+    {
+        return;
+    }
+
     PrimitiveRenderData renderData;
 
     std::vector<wgpu::VertexAttribute> vertexAttributes;
@@ -639,11 +645,8 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .format = Pandora::GetWindow()->GetTextureFormat()
     };
 
-    if (pPrimitive->material != -1)
-    {
-        renderData.material = m_Materials.at(pPrimitive->material);
-        colorTargetState.blend = &renderData.material.value().GetBlendState();
-    }
+    renderData.material = m_Materials.at(pPrimitive->material);
+    colorTargetState.blend = &renderData.material.value().GetBlendState();
 
     wgpu::ShaderModule shaderModule = GetShaderForPrimitive(pPrimitive)->GetShaderModule();
 
