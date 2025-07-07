@@ -1,6 +1,9 @@
+#include <numeric>
+
 #include <core/log.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
+#include <render/window.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/orbit_camera_component.hpp>
 #include <scene/components/transform_component.hpp>
@@ -143,6 +146,54 @@ void CameraSystem::DampSpring(glm::vec3& v0, const glm::vec3& target, glm::vec3&
     const glm::vec3 force = diff - 2.0f * velocity;
     v0 += velocity * c0;
     velocity += force * c0;
+}
+
+glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
+{
+    using namespace Pandora;
+    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    if (pCamera == nullptr || !pCamera->HasComponent<CameraComponent>())
+    {
+        return glm::vec3(0.0f);
+    }
+
+    const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+    const Camera& camera = cameraComponent.camera;
+
+    // Get camera position and create ray direction
+    const glm::vec3 cameraPos = camera.GetPosition();
+
+    // Convert mouse to world coordinates at two different depths to create a ray
+    const glm::vec3 nearPoint = camera.ScreenToWorld(mousePos, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 0.0f);
+    const glm::vec3 farPoint = camera.ScreenToWorld(mousePos, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 1.0f);
+
+    // Calculate ray direction
+    const glm::vec3 rayDir = glm::normalize(farPoint - nearPoint);
+
+    // Define the XZ plane (Y = 0)
+    const glm::vec3 planeNormal(0.0f, 1.0f, 0.0f); // Up vector
+    const glm::vec3 planePoint(0.0f, 0.0f, 0.0f); // Origin point on the plane
+
+    // Perform ray-plane intersection
+    const float denom = glm::dot(rayDir, planeNormal);
+
+    // Check if ray is parallel to plane
+    if (std::abs(denom) < std::numeric_limits<float>::epsilon())
+    {
+        return glm::vec3(0.0f); // No intersection
+    }
+
+    // Calculate intersection parameter
+    const float t = glm::dot(planePoint - nearPoint, planeNormal) / denom;
+
+    // Check if intersection is behind the camera
+    if (t < 0.0f)
+    {
+        return glm::vec3(0.0f); // Intersection behind camera
+    }
+
+    // Calculate intersection point
+    return nearPoint + rayDir * t;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
