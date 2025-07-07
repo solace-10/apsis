@@ -1,18 +1,17 @@
 #pragma once
 
 #include <string>
-
 #include <webgpu/webgpu_cpp.h>
 
 namespace WingsOfSteel::Pandora
 {
 
-class DepthTexture
+class ColorTexture
 {
 public:
-    DepthTexture() = default;
-    DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height, const std::string& label);
-    ~DepthTexture() = default;
+    ColorTexture() = default;
+    ColorTexture(wgpu::Device& device, uint32_t width, uint32_t height, wgpu::TextureFormat format, uint32_t sampleCount, const std::string& label);
+    ~ColorTexture() = default;
 
     inline wgpu::Texture& GetTexture() { return m_Texture; }
     inline wgpu::TextureView& GetTextureView() { return m_TextureView; }

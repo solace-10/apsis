@@ -35,6 +35,8 @@ public:
     ShaderCompiler* GetShaderCompiler() const;
     ShaderEditor* GetShaderEditor() const;
 
+    static constexpr size_t MsaaSampleCount = 4;
+
 private:
     void AcquireDevice(void (*callback)(wgpu::Device));
     void InitializeInternal();

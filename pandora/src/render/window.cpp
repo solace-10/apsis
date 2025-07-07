@@ -90,6 +90,7 @@ void Window::ConfigureSurface()
     m_Surface.Configure(&config);
 
     m_DepthTexture = DepthTexture(GetRenderSystem()->GetDevice(), m_Width, m_Height, std::string("Window depth buffer"));
+    m_MsaaColorTexture = ColorTexture(GetRenderSystem()->GetDevice(), m_Width, m_Height, m_Format, RenderSystem::MsaaSampleCount, std::string("Window MSAA color buffer"));
 }
 
 } // namespace WingsOfSteel::Pandora

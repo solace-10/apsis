@@ -2,6 +2,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include "render/color_texture.hpp"
 #include "render/depth_texture.hpp"
 #include "render/window_settings.hpp"
 
@@ -23,6 +24,7 @@ public:
     DepthTexture& GetDepthTexture();
     uint32_t GetWidth() const;
     uint32_t GetHeight() const;
+    ColorTexture& GetMsaaColorTexture();
 
     void OnWindowResized(uint32_t width, uint32_t height);
 
@@ -35,6 +37,7 @@ private:
     uint32_t m_Width;
     uint32_t m_Height;
     DepthTexture m_DepthTexture;
+    ColorTexture m_MsaaColorTexture;
 };
 
 inline wgpu::Surface Window::GetSurface() const
@@ -71,5 +74,7 @@ inline uint32_t Window::GetHeight() const
 {
     return m_Height;
 }
+
+inline ColorTexture& Window::GetMsaaColorTexture() { return m_MsaaColorTexture; }
 
 } // namespace WingsOfSteel::Pandora

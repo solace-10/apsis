@@ -689,6 +689,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
             .buffers = bufferLayouts.data() },
         .primitive = { .topology = GetPrimitiveTopology(pPrimitive), .cullMode = wgpu::CullMode::None },
         .depthStencil = &depthState,
+        .multisample = { .count = RenderSystem::MsaaSampleCount },
         .fragment = &fragmentState
     };
 

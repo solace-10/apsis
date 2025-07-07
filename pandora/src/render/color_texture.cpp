@@ -1,11 +1,9 @@
-#include "render/depth_texture.hpp"
-
-#include "render/rendersystem.hpp"
+#include "render/color_texture.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
-DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height, const std::string& label)
+ColorTexture::ColorTexture(wgpu::Device& device, uint32_t width, uint32_t height, wgpu::TextureFormat format, uint32_t sampleCount, const std::string& label)
 {
     wgpu::TextureDescriptor textureDesc{
         .label = label.c_str(),
@@ -15,8 +13,8 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
             .width = width,
             .height = height,
             .depthOrArrayLayers = 1 },
-        .format = wgpu::TextureFormat::Depth32Float,
-        .sampleCount = RenderSystem::MsaaSampleCount
+        .format = format,
+        .sampleCount = sampleCount
     };
 
     m_Texture = device.CreateTexture(&textureDesc);
@@ -24,8 +22,7 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
 
     wgpu::SamplerDescriptor samplerDesc{
         .magFilter = wgpu::FilterMode::Linear,
-        .minFilter = wgpu::FilterMode::Linear,
-        .compare = wgpu::CompareFunction::LessEqual
+        .minFilter = wgpu::FilterMode::Linear
     };
     m_Sampler = device.CreateSampler(&samplerDesc);
 }
