@@ -92,7 +92,7 @@ endif()
 if (TARGET_PLATFORM_NATIVE)
     target_include_directories(pandora PUBLIC ext/bullet3/src)
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
-    target_link_libraries(pandora PUBLIC LinearMath Bullet3Common BulletDynamics BulletCollision)
+    target_link_libraries(pandora PUBLIC Bullet3Common BulletDynamics BulletCollision LinearMath)
 elseif(TARGET_PLATFORM_WEB)
     target_compile_options(pandora PUBLIC 
         "-O0"

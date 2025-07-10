@@ -39,9 +39,11 @@
         {
             "name": "linux",
             "hidden": true,
-            "generator": "Unix Makefiles",
+            "generator": "Ninja",
             "cacheVariables": {
-                "TARGET_PLATFORM_LINUX": "ON"
+                "TARGET_PLATFORM_LINUX": "ON",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
             },
             "condition": {
                 "type": "equals",

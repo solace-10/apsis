@@ -39,6 +39,8 @@ if(TARGET_PLATFORM_NATIVE)
     )
     FetchContent_MakeAvailable(clipp)
 
+    set(BUILD_EXTRAS OFF)
+    set(BUILD_UNIT_TESTS OFF)
     FetchContent_Declare(
         bullet3
         GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
