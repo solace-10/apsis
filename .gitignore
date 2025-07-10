@@ -2,7 +2,8 @@
 .vscode/settings.json
 build/
 pandora/ext/
-game/assets/
+game/assets/models/flagship/
+game/assets/wings_of_steel/
 game/bin/data/core/manifest.json
 game/bin/game*
 game/bin/imgui.ini
@@ -11,3 +12,4 @@ forge/bin/forge*
 forge/bin/imgui.ini
 forge/bin/log.txt
 compile_commands.json
+*.blend?
