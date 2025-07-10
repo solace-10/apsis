@@ -1,6 +1,9 @@
 #pragma once
 
+#include <optional>
+
 #include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
 #include <core/smart_ptr.hpp>
 #include <scene/entity.hpp>
@@ -18,6 +21,7 @@ public:
     float m_ArcMaxDegrees{ 0.0f };
     float m_AngleDegrees{ 0.0f };
     float m_Range{ 100.0f };
+    std::optional<glm::vec3> m_Target;
     Pandora::EntityWeakPtr m_pParent;
 };
 

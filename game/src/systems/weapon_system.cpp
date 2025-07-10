@@ -43,6 +43,11 @@ void WeaponSystem::Update(float delta)
             weaponComponent.m_Range);
 
         transformComponent.transform = hardpointWorldTransform;
+
+        if (weaponComponent.m_Target)
+        {
+            GetDebugRender()->Line(hardpointTranslation, weaponComponent.m_Target.value(), Color::Red);
+        }
     });
 }
 
