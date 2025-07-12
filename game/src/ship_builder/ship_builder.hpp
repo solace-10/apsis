@@ -17,7 +17,7 @@ DECLARE_SMART_PTR(ShipBuilder);
 class ShipBuilder
 {
 public:
-    static void Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform);
+    static void Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform, const std::string& shipPrefabResourcePath);
 
     enum EAddWeaponResult
     {

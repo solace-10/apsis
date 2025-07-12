@@ -16,48 +16,55 @@
 #include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
+#include "ship_builder/ship_prefab_manager.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
-void ShipBuilder::Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform)
+void ShipBuilder::Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform, const std::string& shipPrefabResourcePath)
 {
     using namespace Pandora;
 
-    GetResourceSystem()->RequestResource("/models/player/destroyer.glb", [pShip, worldTransform](ResourceSharedPtr pResource) {
-        ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
-        TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
-        // transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-        transformComponent.transform = worldTransform;
-
-        pShip->AddComponent<ModelComponent>(pResourceModel);
-        pShip->AddComponent<ShipNavigationComponent>();
-        pShip->AddComponent<NameComponent>("Everflame");
-
-        ShipEngineComponent& engineComponent = pShip->AddComponent<ShipEngineComponent>();
-        engineComponent.linearForce = 1300.0f;
-        engineComponent.torque = 7500.0f;
-
-        RigidBodyConstructionInfo rigidBodyConstructionInfo;
-        rigidBodyConstructionInfo.SetWorldTransform(worldTransform);
-        rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
-        rigidBodyConstructionInfo.SetMass(100);
-        rigidBodyConstructionInfo.SetLinearDamping(0.5f);
-        rigidBodyConstructionInfo.SetAngularDamping(0.5f);
-
-        pShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
-
-        const std::string turretPortName = "TurretPort";
-        if (AddHardpoint(pShip, turretPortName, -5.0f, 120.0f))
+    Game::Get()->GetShipPrefabManager()->GetShipPrefab(shipPrefabResourcePath, [pShip, worldTransform](const ShipPrefabManager::ShipPrefab* pShipPrefab) {
+        if (!pShipPrefab)
         {
-            AddWeapon(pShip, turretPortName, "Weapon1");
+            Log::Error() << "Failed to load ship prefab";
+            return;
         }
 
-        const std::string turretStarboardName = "TurretStarboard";
-        if (AddHardpoint(pShip, turretStarboardName, -120.0f, 5.0f))
-        {
-            AddWeapon(pShip, turretStarboardName, "Weapon1");
-        }
+        GetResourceSystem()->RequestResource(pShipPrefab->model, [pShip, worldTransform, pShipPrefab](ResourceSharedPtr pResource) {
+            ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
+            TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
+            transformComponent.transform = worldTransform;
+
+            pShip->AddComponent<ModelComponent>(pResourceModel);
+            pShip->AddComponent<ShipNavigationComponent>();
+            pShip->AddComponent<NameComponent>(pShipPrefab->name);
+
+            ShipEngineComponent& engineComponent = pShip->AddComponent<ShipEngineComponent>();
+            engineComponent.linearForce = pShipPrefab->engineForce;
+            engineComponent.torque = pShipPrefab->engineTorque;
+
+            RigidBodyConstructionInfo rigidBodyConstructionInfo;
+            rigidBodyConstructionInfo.SetWorldTransform(worldTransform);
+            rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
+            rigidBodyConstructionInfo.SetMass(pShipPrefab->mass);
+            rigidBodyConstructionInfo.SetLinearDamping(0.5f);
+            rigidBodyConstructionInfo.SetAngularDamping(0.5f);
+
+            pShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+
+            for (const auto& hardpoint : pShipPrefab->hardpoints)
+            {
+                if (AddHardpoint(pShip, hardpoint.name, hardpoint.minArc, hardpoint.maxArc))
+                {
+                    if (!hardpoint.weapon.empty())
+                    {
+                        AddWeapon(pShip, hardpoint.name, hardpoint.weapon);
+                    }
+                }
+            }
+        });
     });
 }
 

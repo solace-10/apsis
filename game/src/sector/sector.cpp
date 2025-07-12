@@ -153,7 +153,7 @@ void Sector::SpawnPlayerFleet()
     m_pPlayerFleet = std::make_shared<Fleet>();
 
     m_pPlayerShip = CreateEntity();
-    ShipBuilder::Build(m_pPlayerShip, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
+    ShipBuilder::Build(m_pPlayerShip, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), "/ship_prefabs/player/destroyer.json");
     m_pPlayerShip->AddComponent<PlayerControllerComponent>();
     m_pPlayerFleet->AddShip(m_pPlayerShip);
 
@@ -171,11 +171,11 @@ void Sector::SpawnEnemyFleet()
     m_pEnemyFleet = std::make_shared<Fleet>();
 
     Pandora::EntitySharedPtr pShip = CreateEntity();
-    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)));
+    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/ship_prefabs/raiders/gunship_corvette.json");
     m_pEnemyFleet->AddShip(pShip);
 
     pShip = CreateEntity();
-    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)));
+    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/ship_prefabs/raiders/gunship_corvette.json");
     m_pEnemyFleet->AddShip(pShip);
 }
 
