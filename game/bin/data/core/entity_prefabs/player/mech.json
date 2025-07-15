@@ -1,10 +1,11 @@
 {
-    "name": "gunship_corvette",
-    "model": "/models/raiders/gunship_corvette.glb",
+    "name": "mech",
+    "type": "Mech",
+    "model": "/models/player/mech.glb",
     "hull": 100,
-    "mass": 100,
-    "engine_force": 1300.0,
-    "engine_torque": 7500.0,
+    "mass": 10,
+    "engine_force": 500.0,
+    "engine_torque": 7000.0,
     "hardpoints": [
         {
             "name": "FixedMount",

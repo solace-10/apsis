@@ -21,7 +21,7 @@ public:
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
 
-    Pandora::EntitySharedPtr GetPlayerShip() const;
+    Pandora::EntitySharedPtr GetPlayerMech() const;
     Fleet* GetPlayerFleet() const;
 
 private:
@@ -34,14 +34,14 @@ private:
     Pandora::EntitySharedPtr m_pCamera;
     FleetSharedPtr m_pPlayerFleet;
     FleetSharedPtr m_pEnemyFleet;
-    Pandora::EntitySharedPtr m_pPlayerShip;
+    Pandora::EntitySharedPtr m_pPlayerMech;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ true };
 };
 
-inline Pandora::EntitySharedPtr Sector::GetPlayerShip() const
+inline Pandora::EntitySharedPtr Sector::GetPlayerMech() const
 {
-    return m_pPlayerShip;
+    return m_pPlayerMech;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

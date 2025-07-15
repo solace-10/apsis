@@ -1,11 +1,14 @@
 #pragma once
 
+#include <array>
+#include <optional>
+
 #include <glm/vec2.hpp>
 
 #include <input/input_system.hpp>
 #include <scene/systems/system.hpp>
 
-#include "components/ship_navigation_component.hpp"
+#include "components/mech_navigation_component.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -20,16 +23,28 @@ public:
     void Update(float delta) override;
 
 private:
+    enum class MovementDirection
+    {
+        Up = 0,
+        Down,
+        Left,
+        Right
+    };
+    void SetMovementDirection(MovementDirection direction, bool state);
+    std::optional<glm::vec2> GetMovementDirection() const;
+
     Pandora::InputCallbackToken m_ForwardButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_ForwardButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_LeftButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_LeftButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_RightButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_RightButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
+    Pandora::InputCallbackToken m_DownButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
+    Pandora::InputCallbackToken m_DownButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_MousePositionToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
 
-    ShipSteer m_Steer{ ShipSteer::None };
-    ShipThrust m_Thrust{ ShipThrust::None };
+    std::array<bool, 4> m_MovementDirections{ false, false, false, false };
+
     glm::vec2 m_MousePosition{ 0.0f };
 };
 

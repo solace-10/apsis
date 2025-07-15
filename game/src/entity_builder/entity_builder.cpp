@@ -1,4 +1,4 @@
-#include "ship_builder/ship_builder.hpp"
+#include "entity_builder/entity_builder.hpp"
 
 #include <core/log.hpp>
 #include <pandora.hpp>
@@ -10,57 +10,71 @@
 #include <scene/scene.hpp>
 
 #include "components/hardpoint_component.hpp"
+#include "components/mech_engine_component.hpp"
+#include "components/mech_navigation_component.hpp"
 #include "components/name_component.hpp"
 #include "components/ship_engine_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
-#include "ship_builder/ship_prefab_manager.hpp"
+#include "entity_builder/entity_prefab_manager.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
-void ShipBuilder::Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform, const std::string& shipPrefabResourcePath)
+void EntityBuilder::Build(Pandora::EntitySharedPtr pEntity, const glm::mat4& worldTransform, const std::string& prefabResourcePath)
 {
     using namespace Pandora;
 
-    Game::Get()->GetShipPrefabManager()->GetShipPrefab(shipPrefabResourcePath, [pShip, worldTransform](const ShipPrefabManager::ShipPrefab* pShipPrefab) {
-        if (!pShipPrefab)
+    Game::Get()->GetEntityPrefabManager()->GetEntityPrefab(prefabResourcePath, [pEntity, worldTransform](const EntityPrefabManager::EntityPrefab* pEntityPrefab) {
+        if (!pEntityPrefab)
         {
-            Log::Error() << "Failed to load ship prefab";
+            Log::Error() << "Failed to load entity prefab";
             return;
         }
 
-        GetResourceSystem()->RequestResource(pShipPrefab->model, [pShip, worldTransform, pShipPrefab](ResourceSharedPtr pResource) {
+        GetResourceSystem()->RequestResource(pEntityPrefab->model, [pEntity, worldTransform, pEntityPrefab](ResourceSharedPtr pResource) {
             ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
-            TransformComponent& transformComponent = pShip->AddComponent<TransformComponent>();
+            TransformComponent& transformComponent = pEntity->AddComponent<TransformComponent>();
             transformComponent.transform = worldTransform;
 
-            pShip->AddComponent<ModelComponent>(pResourceModel);
-            pShip->AddComponent<ShipNavigationComponent>();
-            pShip->AddComponent<NameComponent>(pShipPrefab->name);
-
-            ShipEngineComponent& engineComponent = pShip->AddComponent<ShipEngineComponent>();
-            engineComponent.linearForce = pShipPrefab->engineForce;
-            engineComponent.torque = pShipPrefab->engineTorque;
+            pEntity->AddComponent<ModelComponent>(pResourceModel);
+            pEntity->AddComponent<NameComponent>(pEntityPrefab->name);
 
             RigidBodyConstructionInfo rigidBodyConstructionInfo;
             rigidBodyConstructionInfo.SetWorldTransform(worldTransform);
             rigidBodyConstructionInfo.SetShape(pResourceModel->GetCollisionShape());
-            rigidBodyConstructionInfo.SetMass(pShipPrefab->mass);
+            rigidBodyConstructionInfo.SetMass(pEntityPrefab->mass);
             rigidBodyConstructionInfo.SetLinearDamping(0.5f);
             rigidBodyConstructionInfo.SetAngularDamping(0.5f);
 
-            pShip->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+            pEntity->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
 
-            for (const auto& hardpoint : pShipPrefab->hardpoints)
+            if (pEntityPrefab->type == EntityPrefabManager::EntityType::Ship)
             {
-                if (AddHardpoint(pShip, hardpoint.name, hardpoint.minArc, hardpoint.maxArc))
+                ShipEngineComponent& engineComponent = pEntity->AddComponent<ShipEngineComponent>();
+                engineComponent.linearForce = pEntityPrefab->engineForce;
+                engineComponent.torque = pEntityPrefab->engineTorque;
+
+                pEntity->AddComponent<ShipNavigationComponent>();
+            }
+            else if (pEntityPrefab->type == EntityPrefabManager::EntityType::Mech)
+            {
+                MechEngineComponent& engineComponent = pEntity->AddComponent<MechEngineComponent>();
+                engineComponent.linearForce = pEntityPrefab->engineForce;
+                engineComponent.torque = pEntityPrefab->engineTorque;
+
+                pEntity->AddComponent<MechNavigationComponent>();
+            }
+
+            for (const auto& hardpoint : pEntityPrefab->hardpoints)
+            {
+                if (AddHardpoint(pEntity, hardpoint.name, hardpoint.minArc, hardpoint.maxArc))
                 {
                     if (!hardpoint.weapon.empty())
                     {
-                        AddWeapon(pShip, hardpoint.name, hardpoint.weapon);
+                        AddWeapon(pEntity, hardpoint.name, hardpoint.weapon);
                     }
                 }
             }
@@ -68,23 +82,23 @@ void ShipBuilder::Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTr
     });
 }
 
-bool ShipBuilder::AddHardpoint(Pandora::EntitySharedPtr pShip, const std::string& attachmentPointName, float minArc, float maxArc)
+bool EntityBuilder::AddHardpoint(Pandora::EntitySharedPtr pEntity, const std::string& attachmentPointName, float minArc, float maxArc)
 {
     using namespace Pandora;
 
     // Ensure the ship has a HardpointComponent. We can only have one HardpointComponent, but will
     // likely call addHardpoint() multiple times.
     HardpointComponent* pHardpointComponent = nullptr;
-    if (pShip->HasComponent<HardpointComponent>())
+    if (pEntity->HasComponent<HardpointComponent>())
     {
-        pHardpointComponent = &pShip->GetComponent<HardpointComponent>();
+        pHardpointComponent = &pEntity->GetComponent<HardpointComponent>();
     }
     else
     {
-        pHardpointComponent = &pShip->AddComponent<HardpointComponent>();
+        pHardpointComponent = &pEntity->AddComponent<HardpointComponent>();
     }
 
-    ModelComponent& modelComponent = pShip->GetComponent<ModelComponent>();
+    ModelComponent& modelComponent = pEntity->GetComponent<ModelComponent>();
     ResourceModelSharedPtr pModel = modelComponent.GetModel();
     if (!pModel)
     {
@@ -104,12 +118,12 @@ bool ShipBuilder::AddHardpoint(Pandora::EntitySharedPtr pShip, const std::string
     hp.m_AttachmentPointTransform = pAttachmentPoint->m_ModelTransform;
     hp.m_ArcMinDegrees = minArc;
     hp.m_ArcMaxDegrees = maxArc;
-    hp.m_pParent = pShip;
+    hp.m_pParent = pEntity;
     pHardpointComponent->hardpoints.push_back(hp);
     return true;
 }
 
-Pandora::Result<ShipBuilder::EAddWeaponResult> ShipBuilder::AddWeapon(Pandora::EntitySharedPtr pShip, const std::string& hardpointName, const std::string& weaponName)
+Pandora::Result<EntityBuilder::EAddWeaponResult> EntityBuilder::AddWeapon(Pandora::EntitySharedPtr pEntity, const std::string& hardpointName, const std::string& weaponName)
 {
     using namespace Pandora;
 
@@ -120,7 +134,7 @@ Pandora::Result<ShipBuilder::EAddWeaponResult> ShipBuilder::AddWeapon(Pandora::E
     }
 
     Hardpoint hardpoint;
-    if (!FindHardpoint(pShip, hardpointName, hardpoint))
+    if (!FindHardpoint(pEntity, hardpointName, hardpoint))
     {
         return Result<EAddWeaponResult>(EAddWeaponResult::InvalidHardpoint);
     }
@@ -128,7 +142,7 @@ Pandora::Result<ShipBuilder::EAddWeaponResult> ShipBuilder::AddWeapon(Pandora::E
     EntitySharedPtr pWeaponEntity = pSector->CreateEntity();
     TransformComponent& transformComponent = pWeaponEntity->AddComponent<TransformComponent>();
     WeaponComponent& weaponComponent = pWeaponEntity->AddComponent<WeaponComponent>();
-    weaponComponent.m_pParent = pShip;
+    weaponComponent.m_pParent = pEntity;
     weaponComponent.m_ArcMinDegrees = hardpoint.m_ArcMinDegrees;
     weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
     weaponComponent.m_Range = 100.0f;
@@ -145,16 +159,16 @@ Pandora::Result<ShipBuilder::EAddWeaponResult> ShipBuilder::AddWeapon(Pandora::E
     return Pandora::Result<EAddWeaponResult>(EAddWeaponResult::Ok);
 }
 
-bool ShipBuilder::FindHardpoint(Pandora::EntitySharedPtr pShip, const std::string& hardpointName, Hardpoint& outHardpoint)
+bool EntityBuilder::FindHardpoint(Pandora::EntitySharedPtr pEntity, const std::string& hardpointName, Hardpoint& outHardpoint)
 {
     using namespace Pandora;
-    if (!pShip->HasComponent<HardpointComponent>())
+    if (!pEntity->HasComponent<HardpointComponent>())
     {
         Log::Error() << "Attempting to find a hardpoint on a ship without a hardpoint component.";
         return false;
     }
 
-    HardpointComponent& hardpointComponent = pShip->GetComponent<HardpointComponent>();
+    HardpointComponent& hardpointComponent = pEntity->GetComponent<HardpointComponent>();
     for (const Hardpoint& hardpoint : hardpointComponent.hardpoints)
     {
         if (hardpoint.m_Name == hardpointName)

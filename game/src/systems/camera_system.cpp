@@ -10,7 +10,7 @@
 #include <scene/entity.hpp>
 
 #include "components/sector_camera_component.hpp"
-#include "components/ship_navigation_component.hpp"
+#include "components/mech_navigation_component.hpp"
 #include "systems/camera_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -66,9 +66,9 @@ void CameraSystem::Update(float delta)
                 const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
                 anchorPosition = glm::vec3(anchorTransform[3]);
 
-                if (pAnchorEntity->HasComponent<ShipNavigationComponent>())
+                if (pAnchorEntity->HasComponent<MechNavigationComponent>())
                 {
-                    const ShipNavigationComponent& shipNavigationComponent = pAnchorEntity->GetComponent<ShipNavigationComponent>();
+                    const MechNavigationComponent& mechNavigationComponent = pAnchorEntity->GetComponent<MechNavigationComponent>();
                     glm::vec4 forward = -anchorTransform[2];
                     // const float forwardMultiplier = glm::clamp(shipNavigationComponent.GetThrust(), -1.0f, 1.0f);
                     const float forwardMultiplier = 1.0f;

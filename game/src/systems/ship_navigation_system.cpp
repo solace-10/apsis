@@ -19,7 +19,6 @@ void ShipNavigationSystem::Update(float delta)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const ShipNavigationComponent, const ShipEngineComponent, RigidBodyComponent>();
 
-    // TEMP: Modify the transform directly until we Bullet3 and rigid bodies available.
     view.each([delta](const auto entity, const ShipNavigationComponent& shipNavigationComponent, const ShipEngineComponent& shipEngineComponent, RigidBodyComponent& rigidBodyComponent) {
         if (shipNavigationComponent.GetThrust() != ShipThrust::None)
         {

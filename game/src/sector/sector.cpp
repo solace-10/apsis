@@ -18,9 +18,10 @@
 #include "components/sector_camera_component.hpp"
 #include "fleet.hpp"
 #include "sector/sector.hpp"
-#include "ship_builder/ship_builder.hpp"
+#include "entity_builder/entity_builder.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/mech_navigation_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
 #include "systems/weapon_system.hpp"
@@ -45,6 +46,7 @@ void Sector::Initialize()
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlayerControllerSystem>();
+    AddSystem<MechNavigationSystem>();
     AddSystem<ShipNavigationSystem>();
     AddSystem<WeaponSystem>();
 
@@ -65,7 +67,7 @@ void Sector::Initialize()
     SpawnDome();
     SpawnPlayerFleet();
     SpawnEnemyFleet();
-    sectorCameraComponent.anchorEntity = m_pPlayerShip;
+    sectorCameraComponent.anchorEntity = m_pPlayerMech;
 }
 
 void Sector::Update(float delta)
@@ -152,10 +154,14 @@ void Sector::SpawnPlayerFleet()
 {
     m_pPlayerFleet = std::make_shared<Fleet>();
 
-    m_pPlayerShip = CreateEntity();
-    ShipBuilder::Build(m_pPlayerShip, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), "/ship_prefabs/player/destroyer.json");
-    m_pPlayerShip->AddComponent<PlayerControllerComponent>();
-    m_pPlayerFleet->AddShip(m_pPlayerShip);
+    Pandora::EntitySharedPtr pCarrier = CreateEntity();
+    EntityBuilder::Build(pCarrier, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), "/entity_prefabs/player/destroyer.json");
+    m_pPlayerFleet->AddShip(pCarrier);
+
+    m_pPlayerMech = CreateEntity();
+    EntityBuilder::Build(m_pPlayerMech, glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 0.0f, 0.0f)), "/entity_prefabs/player/mech.json");
+    m_pPlayerMech->AddComponent<PlayerControllerComponent>();
+    m_pPlayerFleet->AddShip(m_pPlayerMech);
 
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
     // for (const std::string& name : escortNames)
@@ -171,11 +177,11 @@ void Sector::SpawnEnemyFleet()
     m_pEnemyFleet = std::make_shared<Fleet>();
 
     Pandora::EntitySharedPtr pShip = CreateEntity();
-    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/ship_prefabs/raiders/gunship_corvette.json");
+    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/entity_prefabs/raiders/gunship_corvette.json");
     m_pEnemyFleet->AddShip(pShip);
 
     pShip = CreateEntity();
-    ShipBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/ship_prefabs/raiders/gunship_corvette.json");
+    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/entity_prefabs/raiders/gunship_corvette.json");
     m_pEnemyFleet->AddShip(pShip);
 }
 

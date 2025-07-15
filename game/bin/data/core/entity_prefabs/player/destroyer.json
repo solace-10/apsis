@@ -1,5 +1,6 @@
 {
     "name": "destroyer",
+    "type": "Ship",
     "model": "/models/player/destroyer.glb",
     "hull": 100,
     "mass": 100,

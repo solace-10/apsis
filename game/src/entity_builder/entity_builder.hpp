@@ -13,8 +13,8 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(ShipBuilder);
-class ShipBuilder
+DECLARE_SMART_PTR(EntityBuilder);
+class EntityBuilder
 {
 public:
     static void Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform, const std::string& shipPrefabResourcePath);

@@ -11,12 +11,12 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(ShipPrefabManager);
-class ShipPrefabManager
+DECLARE_SMART_PTR(EntityPrefabManager);
+class EntityPrefabManager
 {
 public:
-    ShipPrefabManager() = default;
-    ~ShipPrefabManager() = default;
+    EntityPrefabManager() = default;
+    ~EntityPrefabManager() = default;
 
     class HardpointPrefab
     {
@@ -30,13 +30,20 @@ public:
         std::string weapon;
     };
 
-    DECLARE_SMART_PTR(ShipPrefab);
-    class ShipPrefab
+    enum class EntityType
+    {
+        Ship,
+        Mech
+    };
+
+    DECLARE_SMART_PTR(EntityPrefab);
+    class EntityPrefab
     {
     public:
-        ShipPrefab() = default;
-        ~ShipPrefab() = default;
+        EntityPrefab() = default;
+        ~EntityPrefab() = default;
 
+        EntityType type;
         std::string name;
         std::string model;
         float hull {100.0f};
@@ -46,11 +53,11 @@ public:
         std::vector<HardpointPrefab> hardpoints;
     };
 
-    using OnShipPrefabLoadedCallback = std::function<void(const ShipPrefab*)>;
-    void GetShipPrefab(const std::string& resourcePath, OnShipPrefabLoadedCallback onShipPrefabLoaded);
+    using OnEntityPrefabLoadedCallback = std::function<void(const EntityPrefab*)>;
+    void GetEntityPrefab(const std::string& resourcePath, OnEntityPrefabLoadedCallback onEntityPrefabLoaded);
 
 private:
-    std::unordered_map<std::string, ShipPrefabUniquePtr> m_ShipPrefabs;
+    std::unordered_map<std::string, EntityPrefabUniquePtr> m_EntityPrefabs;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar
