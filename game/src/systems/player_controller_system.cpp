@@ -54,12 +54,16 @@ void PlayerControllerSystem::Update(float delta)
     using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
+    const glm::vec3 targetWorldPos = Game::Get()->GetSector()->GetSystem<CameraSystem>()->MouseToWorld(m_MousePosition);
+
     auto navigationView = registry.view<MechNavigationComponent, const PlayerControllerComponent>();
-    navigationView.each([this](const auto entity, MechNavigationComponent& mechNavigationComponent, const PlayerControllerComponent& playerControllerComponent) {
-        mechNavigationComponent.SetThrust(GetMovementDirection().value_or(glm::vec2(0.0f, 0.0f)));
+    navigationView.each([this, targetWorldPos](const auto entity, MechNavigationComponent& mechNavigationComponent, const PlayerControllerComponent& playerControllerComponent) {
+        const glm::vec2 movementDirection = GetMovementDirection().value_or(glm::vec2(0.0f, 0.0f));
+        const glm::vec3 thrustDirection(movementDirection.x, 0.0f, -movementDirection.y);
+        mechNavigationComponent.SetThrust(thrustDirection);
+        mechNavigationComponent.SetAim(targetWorldPos);
     });
 
-    const glm::vec3 targetWorldPos = Game::Get()->GetSector()->GetSystem<CameraSystem>()->MouseToWorld(m_MousePosition);
     auto weaponsView = registry.view<WeaponComponent>();
     weaponsView.each([targetWorldPos](const auto entity, WeaponComponent& weaponComponent) {
         EntitySharedPtr pParentShip = weaponComponent.m_pParent.lock();

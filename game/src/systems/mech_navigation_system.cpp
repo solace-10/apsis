@@ -21,9 +21,8 @@ void MechNavigationSystem::Update(float delta)
 
     view.each([delta](const auto entity, const MechNavigationComponent& mechNavigationComponent, const MechEngineComponent& mechEngineComponent, RigidBodyComponent& rigidBodyComponent) {
 
-        const glm::vec2& thrustDirection = mechNavigationComponent.GetThrust();
-        const glm::vec3 thrustDirectionXZ(thrustDirection.x, 0.0f, -thrustDirection.y);
-        rigidBodyComponent.ApplyLinearForce(thrustDirectionXZ * mechEngineComponent.linearForce);
+        const glm::vec3& thrustDirection = mechNavigationComponent.GetThrust();
+        rigidBodyComponent.ApplyLinearForce(thrustDirection * mechEngineComponent.linearForce);
     });
 }
 
