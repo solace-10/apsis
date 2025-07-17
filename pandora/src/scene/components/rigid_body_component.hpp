@@ -98,6 +98,8 @@ public:
     const glm::vec3& GetAngularFactor() const;
 
     const glm::vec3 GetForwardVector() const;
+    const glm::vec3 GetUpVector() const;
+    const glm::vec3 GetRightVector() const;
 
 private:
     void CalculateInvInertiaTensorWorld();

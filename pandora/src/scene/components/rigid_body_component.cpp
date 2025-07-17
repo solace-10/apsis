@@ -152,6 +152,18 @@ const glm::vec3 RigidBodyComponent::GetForwardVector() const
     return -glm::vec3(dir[2], dir[1], dir[0]);
 }
 
+const glm::vec3 RigidBodyComponent::GetUpVector() const
+{
+    const btVector3 dir = m_pRigidBody->getWorldTransform().getBasis()[1];
+    return glm::vec3(dir[2], dir[1], dir[0]);
+}
+
+const glm::vec3 RigidBodyComponent::GetRightVector() const
+{
+    const btVector3 dir = m_pRigidBody->getWorldTransform().getBasis()[2];
+    return glm::vec3(dir[2], dir[1], dir[0]);
+}
+
 void RigidBodyComponent::CalculateInvInertiaTensorWorld()
 {
     // We need to transpose Bullet's matrix as bullet uses row major matrices while OpenGL uses
