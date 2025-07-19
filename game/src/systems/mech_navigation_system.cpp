@@ -33,7 +33,7 @@ void MechNavigationSystem::Update(float delta)
             const glm::vec3 forward = rigidBodyComponent.GetForwardVector();
             const glm::vec3 rightVector = rigidBodyComponent.GetRightVector();
 
-            const float angleError = glm::acos(glm::clamp(glm::dot(aimDirection, forward), -1.0f, 1.0f));
+            float angleError = glm::acos(glm::clamp(glm::dot(aimDirection, forward), -1.0f, 1.0f));
             const float dotProduct = glm::dot(aimDirection, rightVector);
             if (dotProduct > 0.0f)
             {
