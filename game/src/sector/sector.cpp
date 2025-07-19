@@ -59,7 +59,7 @@ void Sector::Initialize()
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
 
     SectorCameraComponent& sectorCameraComponent = m_pCamera->AddComponent<SectorCameraComponent>();
-    sectorCameraComponent.position = glm::vec3(0.0f, 120.0f, 75.0f);
+    sectorCameraComponent.position = glm::vec3(0.0f, 45.0f, 30.0f);
     sectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
     sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
     SetCamera(m_pCamera);
@@ -177,11 +177,11 @@ void Sector::SpawnEnemyFleet()
     m_pEnemyFleet = std::make_shared<Fleet>();
 
     Pandora::EntitySharedPtr pShip = CreateEntity();
-    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/entity_prefabs/raiders/gunship_corvette.json");
+    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/entity_prefabs/raiders/interceptor.json");
     m_pEnemyFleet->AddShip(pShip);
 
     pShip = CreateEntity();
-    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/entity_prefabs/raiders/gunship_corvette.json");
+    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/entity_prefabs/raiders/interceptor.json");
     m_pEnemyFleet->AddShip(pShip);
 }
 
