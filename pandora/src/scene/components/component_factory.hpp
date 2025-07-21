@@ -6,6 +6,14 @@
 #include <string>
 #include "icomponent.hpp"
 
+// Forward declarations to avoid circular dependencies
+#include <nlohmann/json_fwd.hpp>
+
+namespace WingsOfSteel::Pandora
+{
+    class Entity;
+}
+
 namespace WingsOfSteel::Pandora
 {
 
@@ -13,7 +21,10 @@ class ComponentFactory
 {
 private:
     using CreateFunc = std::function<std::unique_ptr<IComponent>()>;
+    using EntityAdderFunc = std::function<void(Entity*, const nlohmann::json&)>;
+    
     static std::unordered_map<std::string, CreateFunc>* s_creators;
+    static std::unordered_map<std::string, EntityAdderFunc>* s_entityAdders;
 
 public:
     template<typename T>
@@ -30,6 +41,9 @@ public:
         (*s_creators)[typeName] = []() { return std::make_unique<T>(); };
     }
     
+    template<typename T>
+    static void RegisterEntityAdder(const std::string& typeName);
+    
     static std::unique_ptr<IComponent> Create(const std::string& typeName)
     {
         auto it = s_creators->find(typeName);
@@ -40,9 +54,25 @@ public:
         return nullptr;
     }
     
+    static bool CreateAndAddToEntity(Entity* pEntity, const std::string& typeName, const nlohmann::json& jsonData)
+    {
+        if (!s_entityAdders)
+        {
+            return false;
+        }
+        
+        auto it = s_entityAdders->find(typeName);
+        if (it != s_entityAdders->end())
+        {
+            it->second(pEntity, jsonData);
+            return true;
+        }
+        return false;
+    }
+    
     static bool IsRegistered(const std::string& typeName)
     {
-        return s_creators->find(typeName) != s_creators->end();
+        return s_creators && s_creators->find(typeName) != s_creators->end();
     }
     
     static std::vector<std::string> GetRegisteredTypes()
@@ -55,6 +85,7 @@ public:
         }
         return types;
     }
+
 };
 
 template<typename ComponentType>

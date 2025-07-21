@@ -5,23 +5,16 @@
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_model.hpp>
 #include <resources/resource_system.hpp>
+#include <scene/components/component_factory.hpp>
 #include <scene/components/model_component.hpp>
-#include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 
 #include "components/hardpoint_component.hpp"
-#include "components/mech_engine_component.hpp"
-#include "components/mech_navigation_component.hpp"
-#include "components/name_component.hpp"
-#include "components/ship_engine_component.hpp"
-#include "components/ship_navigation_component.hpp"
 #include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_prefab_manager.hpp"
-
-#include <scene/components/model_component.hpp>
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -52,14 +45,9 @@ void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& 
                 {
                     const std::string typeName(*typeIt);
 
-                    if (typeName == "model")
+                    if (!ComponentFactory::CreateAndAddToEntity(pEntity.get(), typeName, componentData))
                     {
-                        ModelComponent& component = pEntity->AddComponent<ModelComponent>();
-                        component.Deserialize(componentData);
-                    }
-                    else
-                    {
-                        Log::Error() << "Don't know how to create component type '" << typeName << "' in '" << prefabResourcePath << ".";
+                        Log::Error() << "Don't know how to create component type '" << typeName << "' in '" << prefabResourcePath << "'.";
                     }
                 }
                 else
