@@ -2,81 +2,119 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "pandora.hpp"
 #include "physics/collision_shape.hpp"
+#include "resources/resource_system.hpp"
 #include "scene/components/rigid_body_component.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
-RigidBodyComponent::RigidBodyComponent(const RigidBodyConstructionInfo& ci)
+void RigidBodyComponent::Deserialize(const nlohmann::json& json)
 {
-    assert((ci.GetMass() > 0 && ci.GetMotionType() == MotionType::Dynamic) || (ci.GetMass() == 0 && ci.GetMotionType() == MotionType::Static));
-    assert(ci.GetShape() != nullptr);
+    m_MotionType = DeserializeEnum<MotionType>(json, "motionType", MotionType::Dynamic);
+    m_Mass = DeserializeRequired<int32_t>(json, "mass");
+    m_LinearDamping = DeserializeRequired<float>(json, "linearDamping");
+    m_AngularDamping = DeserializeRequired<float>(json, "angularDamping");
+    m_CentreOfMass = DeserializeVec3(json, "centreOfMass");
+    m_LinearFactor = DeserializeVec3(json, "linearFactor");
+    m_AngularFactor = DeserializeVec3(json, "angularFactor");
+    
 
-    m_Mass = ci.GetMass();
-    m_CentreOfMass = ci.GetCentreOfMass();
-    m_MotionType = ci.GetMotionType();
+    assert((m_Mass > 0 && m_MotionType == MotionType::Dynamic) || (m_Mass == 0 && m_MotionType == MotionType::Static));
 
-    btTransform worldTransform;
-    worldTransform.setFromOpenGLMatrix(glm::value_ptr(ci.GetWorldTransform()));
-    m_pMotionState = std::make_unique<btDefaultMotionState>(worldTransform);
+    m_ResourcePath = DeserializeRequired<std::string>(json, "resource");
+    GetResourceSystem()->RequestResource(m_ResourcePath, [this](ResourceSharedPtr pResource) {
+        m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
 
-    m_pShape = ci.GetShape();
-    btCollisionShape* pCollisionShape = ci.GetShape()->GetBulletShape();
-    btVector3 localInertia(0.0f, 0.0f, 0.0f);
-    if (m_MotionType == MotionType::Dynamic)
-    {
-        pCollisionShape->calculateLocalInertia(static_cast<btScalar>(m_Mass), localInertia);
-    }
+        btTransform worldTransform;
+        worldTransform.setIdentity();
+        //worldTransform.setFromOpenGLMatrix(glm::value_ptr(ci.GetWorldTransform()));
+        m_pMotionState = std::make_unique<btDefaultMotionState>(worldTransform);
 
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(
-        static_cast<btScalar>(ci.GetMass()),
-        m_pMotionState.get(),
-        ci.GetShape()->GetBulletShape(),
-        localInertia);
+        m_pShape = m_pResource->GetCollisionShape();
+        btCollisionShape* pCollisionShape = m_pShape->GetBulletShape();
+        btVector3 localInertia(0.0f, 0.0f, 0.0f);
+        if (m_MotionType == MotionType::Dynamic)
+        {
+            pCollisionShape->calculateLocalInertia(static_cast<btScalar>(m_Mass), localInertia);
+        }
 
-    m_LinearDamping = ci.GetLinearDamping();
-    m_AngularDamping = ci.GetAngularDamping();
-    rbInfo.m_linearDamping = ci.GetLinearDamping();
-    rbInfo.m_angularDamping = ci.GetAngularDamping();
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(
+            static_cast<btScalar>(m_Mass),
+            m_pMotionState.get(),
+            m_pShape->GetBulletShape(),
+            localInertia);
 
-    m_pRigidBody = std::make_unique<btRigidBody>(rbInfo);
-    m_pRigidBody->setActivationState(DISABLE_DEACTIVATION);
-    m_pRigidBody->setCollisionFlags(m_pRigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-    m_pRigidBody->setUserPointer(this);
+        rbInfo.m_linearDamping = m_LinearDamping;
+        rbInfo.m_angularDamping = m_AngularDamping;
 
-    CalculateInvInertiaTensorWorld();
+        m_pRigidBody = std::make_unique<btRigidBody>(rbInfo);
+        m_pRigidBody->setActivationState(DISABLE_DEACTIVATION);
+        m_pRigidBody->setCollisionFlags(m_pRigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        m_pRigidBody->setUserPointer(this);
+
+        CalculateInvInertiaTensorWorld();
+    });
 }
 
 glm::mat4x4 RigidBodyComponent::GetWorldTransform() const
 {
-    btTransform tr;
-    m_pMotionState->getWorldTransform(tr);
+    if (m_pMotionState)
+    {
+        btTransform tr;
+        m_pMotionState->getWorldTransform(tr);
 
-    float mat[16];
-    tr.getOpenGLMatrix(mat);
+        float mat[16];
+        tr.getOpenGLMatrix(mat);
 
-    return glm::make_mat4x4(mat);
+        return glm::make_mat4x4(mat);
+    }
+    else
+    {
+        return glm::mat4(1.0f);
+    }
 }
 
 glm::vec3 RigidBodyComponent::GetPosition() const
 {
-    btTransform tr;
-    m_pMotionState->getWorldTransform(tr);
-    const btVector3& position = tr.getOrigin();
-    return glm::vec3(position.x(), position.y(), position.z());
+    if (m_pMotionState)
+    {
+        btTransform tr;
+        m_pMotionState->getWorldTransform(tr);
+        const btVector3& position = tr.getOrigin();
+        return glm::vec3(position.x(), position.y(), position.z());
+    }
+    else
+    {
+        return glm::vec3(0.0f);
+    }
 }
 
 glm::vec3 RigidBodyComponent::GetLinearVelocity() const
 {
-    const btVector3& linearVelocity = m_pRigidBody->getLinearVelocity();
-    return glm::vec3(linearVelocity.x(), linearVelocity.y(), linearVelocity.z());
+    if (m_pRigidBody)
+    {
+        const btVector3& linearVelocity = m_pRigidBody->getLinearVelocity();
+        return glm::vec3(linearVelocity.x(), linearVelocity.y(), linearVelocity.z());
+    }
+    else
+    {
+        return glm::vec3(0.0f);
+    }
 }
 
 glm::vec3 RigidBodyComponent::GetAngularVelocity() const
 {
-    const btVector3& angularVelocity = m_pRigidBody->getAngularVelocity();
-    return glm::vec3(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+    if (m_pRigidBody)
+    {
+        const btVector3& angularVelocity = m_pRigidBody->getAngularVelocity();
+        return glm::vec3(angularVelocity.x(), angularVelocity.y(), angularVelocity.z());
+    }
+    else
+    {
+        return glm::vec3(0.0f);
+    }
 }
 
 void RigidBodyComponent::SetLinearDamping(float value)

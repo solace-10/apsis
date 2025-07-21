@@ -4,6 +4,7 @@
 #include <magic_enum.hpp>
 
 #include <pandora.hpp>
+#include <scene/components/component_factory.hpp>
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_system.hpp>
 
@@ -39,6 +40,35 @@ void EntityPrefabManager::GetEntityPrefab(const std::string& resourcePath, Entit
         
         auto pEntityPrefab = std::make_unique<EntityPrefab>();
         pEntityPrefab->name = jsonData.value("name", "");
+
+        auto componentsIt = jsonData.find("components");
+        if (componentsIt != jsonData.cend() && componentsIt->is_array())
+        {
+            for (auto componentData : *componentsIt)
+            {
+                auto typeIt = componentData.find("type");
+                if (typeIt != componentData.cend() && typeIt->is_string())
+                {
+                    const std::string typeName(*typeIt);
+                    IComponentUniquePtr pComponent = ComponentFactory::Create(typeName);
+                    if (pComponent == nullptr)
+                    {
+                        Log::Error() << "ComponentFactory couldn't create component type '" << typeName << "' in '" << resourcePath << ".";
+                        return;
+                    }
+                    else
+                    {
+                        pComponent->Deserialize(componentData);
+                        int a = 0;
+                    }
+                }
+                else
+                {
+                    Log::Error() << "Unable to deserialize component in component array for '" << resourcePath << "', as it has no 'type' attribute.";
+                    return;
+                }
+            }
+        }
         
         const std::string typeString = jsonData.value("type", "Ship");
         auto entityType = magic_enum::enum_cast<EntityType>(typeString);

@@ -2,6 +2,7 @@
 
 #include <core/log.hpp>
 #include <pandora.hpp>
+#include <resources/resource_data_store.hpp>
 #include <resources/resource_model.hpp>
 #include <resources/resource_system.hpp>
 #include <scene/components/model_component.hpp>
@@ -20,19 +21,73 @@
 #include "sector/sector.hpp"
 #include "entity_builder/entity_prefab_manager.hpp"
 
+#include <scene/components/model_component.hpp>
+
 namespace WingsOfSteel::TheBrightestStar
 {
 
-void EntityBuilder::Build(Pandora::EntitySharedPtr pEntity, const glm::mat4& worldTransform, const std::string& prefabResourcePath)
+void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& prefabResourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback)
 {
     using namespace Pandora;
 
+    GetResourceSystem()->RequestResource(prefabResourcePath, [pWeakScene, prefabResourcePath, worldTransform, onEntityReadyCallback](Pandora::ResourceSharedPtr pResource)
+    {
+        SceneSharedPtr pScene = pWeakScene.lock();
+        if (pScene == nullptr)
+        {
+            return;
+        }
+        EntitySharedPtr pEntity = pScene->CreateEntity();
+
+        ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        const nlohmann::json& jsonData = pDataStore->Data();
+        
+        auto componentsIt = jsonData.find("components");
+        if (componentsIt != jsonData.cend() && componentsIt->is_array())
+        {
+            for (auto componentData : *componentsIt)
+            {
+                auto typeIt = componentData.find("type");
+                if (typeIt != componentData.cend() && typeIt->is_string())
+                {
+                    const std::string typeName(*typeIt);
+
+                    if (typeName == "model")
+                    {
+                        ModelComponent& component = pEntity->AddComponent<ModelComponent>();
+                        component.Deserialize(componentData);
+                    }
+                    else
+                    {
+                        Log::Error() << "Don't know how to create component type '" << typeName << "' in '" << prefabResourcePath << ".";
+                    }
+                }
+                else
+                {
+                    Log::Error() << "Unable to deserialize component in component array for '" << prefabResourcePath << "', as it has no 'type' attribute.";
+                    return;
+                }
+            }
+        }
+
+        TransformComponent transformComponent = pEntity->AddComponent<TransformComponent>();
+        transformComponent.transform = worldTransform;
+
+        if (onEntityReadyCallback)
+        {
+            onEntityReadyCallback(pEntity);
+        }
+    });
+
+    /*
     Game::Get()->GetEntityPrefabManager()->GetEntityPrefab(prefabResourcePath, [pEntity, worldTransform](const EntityPrefabManager::EntityPrefab* pEntityPrefab) {
         if (!pEntityPrefab)
         {
             Log::Error() << "Failed to load entity prefab";
             return;
         }
+
+
 
         GetResourceSystem()->RequestResource(pEntityPrefab->model, [pEntity, worldTransform, pEntityPrefab](ResourceSharedPtr pResource) {
             ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
@@ -49,7 +104,8 @@ void EntityBuilder::Build(Pandora::EntitySharedPtr pEntity, const glm::mat4& wor
             rigidBodyConstructionInfo.SetLinearDamping(0.5f);
             rigidBodyConstructionInfo.SetAngularDamping(0.5f);
 
-            pEntity->AddComponent<RigidBodyComponent>(rigidBodyConstructionInfo);
+            auto& rbc = pEntity->AddComponent<RigidBodyComponent>();
+            rbc.Initialize(rigidBodyConstructionInfo);
 
             if (pEntityPrefab->type == EntityPrefabManager::EntityType::Ship)
             {
@@ -80,6 +136,7 @@ void EntityBuilder::Build(Pandora::EntitySharedPtr pEntity, const glm::mat4& wor
             }
         });
     });
+    */
 }
 
 bool EntityBuilder::AddHardpoint(Pandora::EntitySharedPtr pEntity, const std::string& attachmentPointName, float minArc, float maxArc)
@@ -152,7 +209,7 @@ Pandora::Result<EntityBuilder::EAddWeaponResult> EntityBuilder::AddWeapon(Pandor
         ResourceModelSharedPtr pResourceModel = std::dynamic_pointer_cast<ResourceModel>(pResource);
         if (auto pWeaponEntity = pWeaponEntityWeak.lock())
         {
-            pWeaponEntity->AddComponent<ModelComponent>(pResourceModel);
+            //pWeaponEntity->AddComponent<ModelComponent>(pResourceModel);
         }
     });
 

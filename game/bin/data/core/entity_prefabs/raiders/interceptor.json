@@ -13,5 +13,11 @@
             "max_arc": 10.0,
             "weapon": "heavy_mass_driver"
         }
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/raiders/interceptor.glb"
+        }
     ]
 }

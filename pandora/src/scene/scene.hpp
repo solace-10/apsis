@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -14,7 +15,7 @@ DECLARE_SMART_PTR(Entity);
 DECLARE_SMART_PTR(Scene);
 DECLARE_SMART_PTR(System);
 
-class Scene
+class Scene : public std::enable_shared_from_this<Scene>
 {
 public:
     Scene();

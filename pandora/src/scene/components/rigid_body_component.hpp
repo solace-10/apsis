@@ -9,6 +9,9 @@
 #include <glm/vec3.hpp>
 
 #include "core/smart_ptr.hpp"
+#include "icomponent.hpp"
+#include "component_factory.hpp"
+#include "resources/resource_model.hpp"
 
 class btRigidBody;
 class btMotionState;
@@ -64,10 +67,10 @@ private:
     glm::vec3 m_CentreOfMass{ 0.0f, 0.0f, 0.0f };
 };
 
-class RigidBodyComponent
+class RigidBodyComponent : public IComponent
 {
 public:
-    RigidBodyComponent(const RigidBodyConstructionInfo& ci);
+    RigidBodyComponent() = default;
 
     btRigidBody* GetBulletRigidBody() { return m_pRigidBody.get(); }
     const btRigidBody* GetBulletRigidBody() const { return m_pRigidBody.get(); }
@@ -101,6 +104,25 @@ public:
     const glm::vec3 GetUpVector() const;
     const glm::vec3 GetRightVector() const;
 
+    nlohmann::json Serialize() const override
+    {
+        nlohmann::json json;
+        json["motionType"] = static_cast<int>(m_MotionType);
+        json["mass"] = m_Mass;
+        json["linearDamping"] = m_LinearDamping;
+        json["angularDamping"] = m_AngularDamping;
+        json["centreOfMass"] = SerializeVec3(m_CentreOfMass);
+        json["linearFactor"] = SerializeVec3(m_LinearFactor);
+        json["angularFactor"] = SerializeVec3(m_AngularFactor);
+        json["worldTransform"] = SerializeMat4(GetWorldTransform());
+        json["linearVelocity"] = SerializeVec3(GetLinearVelocity());
+        json["angularVelocity"] = SerializeVec3(GetAngularVelocity());
+
+        return json;
+    }
+
+    void Deserialize(const nlohmann::json& json) override;
+
 private:
     void CalculateInvInertiaTensorWorld();
 
@@ -115,6 +137,10 @@ private:
     glm::vec3 m_LinearFactor{ 0.0f, 0.0f, 0.0f };
     glm::vec3 m_AngularFactor{ 0.0f, 0.0f, 0.0f };
     glm::mat3x3 m_InvInertiaTensorWorld{ 1.0f };
+    ResourceModelSharedPtr m_pResource;
+    std::string m_ResourcePath;
 };
+
+REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")
 
 } // namespace WingsOfSteel::Pandora

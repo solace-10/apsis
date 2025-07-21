@@ -1,11 +1,13 @@
 #pragma once
 
+#include <functional>
 #include <string>
 
 #include <glm/mat4x4.hpp>
 
 #include <core/result.hpp>
 #include <core/smart_ptr.hpp>
+#include <scene/scene.hpp>
 #include <scene/entity.hpp>
 
 #include "components/hardpoint_component.hpp"
@@ -13,11 +15,13 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+using OnEntityReady = std::function<void(Pandora::EntitySharedPtr pEntity)>;
+
 DECLARE_SMART_PTR(EntityBuilder);
 class EntityBuilder
 {
 public:
-    static void Build(Pandora::EntitySharedPtr pShip, const glm::mat4& worldTransform, const std::string& shipPrefabResourcePath);
+    static void Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& resourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback);
 
     enum EAddWeaponResult
     {

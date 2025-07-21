@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <core/smart_ptr.hpp>
+#include <scene/components/icomponent.hpp>
 
 
 namespace WingsOfSteel::TheBrightestStar
@@ -51,6 +52,7 @@ public:
         float engineForce {0.0f};
         float engineTorque {0.0f};
         std::vector<HardpointPrefab> hardpoints;
+        std::vector<Pandora::IComponentUniquePtr> components;
     };
 
     using OnEntityPrefabLoadedCallback = std::function<void(const EntityPrefab*)>;

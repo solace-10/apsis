@@ -1,5 +1,8 @@
 #pragma once
 
+#include <scene/components/icomponent.hpp>
+#include <scene/components/component_factory.hpp>
+
 namespace WingsOfSteel::TheBrightestStar
 {
 
@@ -17,7 +20,7 @@ enum class ShipSteer
     Starboard
 };
 
-class ShipNavigationComponent
+class ShipNavigationComponent : public Pandora::IComponent
 {
 public:
     ShipNavigationComponent() {}
@@ -28,9 +31,25 @@ public:
     ShipSteer GetSteer() const { return m_Steer; }
     void SetSteer(ShipSteer value) { m_Steer = value; }
 
+    nlohmann::json Serialize() const override
+    {
+        nlohmann::json json;
+        json["thrust"] = static_cast<int>(m_Thrust);
+        json["steer"] = static_cast<int>(m_Steer);
+        return json;
+    }
+
+    void Deserialize(const nlohmann::json& json) override
+    {
+        m_Thrust = DeserializeEnum<ShipThrust>(json, "thrust", ShipThrust::None);
+        m_Steer = DeserializeEnum<ShipSteer>(json, "steer", ShipSteer::None);
+    }
+
 private:
     ShipThrust m_Thrust{ShipThrust::None};
     ShipSteer m_Steer{ShipSteer::None};
 };
+
+PANDORA_REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
 
 } // namespace WingsOfSteel::TheBrightestStar

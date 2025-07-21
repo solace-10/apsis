@@ -145,23 +145,33 @@ void Sector::SpawnDome()
     static float rotation = 90.0f;
     transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    GetResourceSystem()->RequestResource("/models/dome/dome.glb", [this](ResourceSharedPtr pResource) {
-        m_pDome->AddComponent<ModelComponent>(std::dynamic_pointer_cast<ResourceModel>(pResource));
-    });
+    ModelComponent& modelComponent = m_pDome->AddComponent<ModelComponent>();
+    modelComponent.SetModel("/models/dome/dome.glb");
 }
 
 void Sector::SpawnPlayerFleet()
 {
+    using namespace Pandora;
     m_pPlayerFleet = std::make_shared<Fleet>();
 
-    Pandora::EntitySharedPtr pCarrier = CreateEntity();
-    EntityBuilder::Build(pCarrier, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), "/entity_prefabs/player/destroyer.json");
-    m_pPlayerFleet->AddShip(pCarrier);
+    SceneWeakPtr pWeakScene = weak_from_this();
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/destroyer.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
+        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
+        if (pScene)
+        {
+            pScene->m_pPlayerFleet->AddShip(pEntity);
+        }
+    });
 
-    m_pPlayerMech = CreateEntity();
-    EntityBuilder::Build(m_pPlayerMech, glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, 0.0f, 0.0f)), "/entity_prefabs/player/mech.json");
-    m_pPlayerMech->AddComponent<PlayerControllerComponent>();
-    m_pPlayerFleet->AddShip(m_pPlayerMech);
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
+        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
+        if (pScene)
+        {
+            pScene->m_pPlayerMech = pEntity;
+            pScene->m_pPlayerMech->AddComponent<PlayerControllerComponent>();
+            pScene->m_pPlayerFleet->AddShip(pEntity);
+        }
+    });
 
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
     // for (const std::string& name : escortNames)
@@ -176,13 +186,18 @@ void Sector::SpawnEnemyFleet()
 {
     m_pEnemyFleet = std::make_shared<Fleet>();
 
-    Pandora::EntitySharedPtr pShip = CreateEntity();
-    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(-120.0f, 0.0f, 0.0f)), "/entity_prefabs/raiders/interceptor.json");
-    m_pEnemyFleet->AddShip(pShip);
-
-    pShip = CreateEntity();
-    EntityBuilder::Build(pShip, glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 0.0f, 50.0f)), "/entity_prefabs/raiders/interceptor.json");
-    m_pEnemyFleet->AddShip(pShip);
+    for (int i = 0; i < 5; i++)
+    {
+        float positionX = 120.0f + 30.0f * static_cast<float>(i);
+        Pandora::SceneWeakPtr pWeakScene = weak_from_this();
+        EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/interceptor.json", glm::translate(glm::mat4(1.0f), glm::vec3(positionX, 0.0f, 0.0f)), [pWeakScene](Pandora::EntitySharedPtr pEntity){
+            SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
+            if (pScene)
+            {
+                pScene->m_pEnemyFleet->AddShip(pEntity);
+            }
+        });
+    }
 }
 
 Fleet* Sector::GetPlayerFleet() const
