@@ -32,6 +32,6 @@ public:
     }
 };
 
-REGISTER_COMPONENT(TransformComponent, "transform")
+REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(TransformComponent, "transform")
 
 } // namespace WingsOfSteel::Pandora

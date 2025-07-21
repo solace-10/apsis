@@ -12,7 +12,6 @@
 #include "items/item_info.hpp"
 #include "sector/sector.hpp"
 #include "sector/sector_signal.hpp"
-#include "entity_builder/entity_prefab_manager.hpp"
 #include "ui/prefab_editor.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -41,8 +40,6 @@ void Game::Initialize()
 
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
-
-    m_pEntityPrefabManager = std::make_unique<EntityPrefabManager>();
 
     // m_pItemManager = std::make_unique<ItemManager>();
     //  m_pSectorGenerator = std::make_unique<SectorGenerator>();

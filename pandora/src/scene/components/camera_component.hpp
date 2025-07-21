@@ -47,6 +47,6 @@ public:
     }
 };
 
-REGISTER_COMPONENT(CameraComponent, "camera")
+REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(CameraComponent, "camera")
 
 } // namespace WingsOfSteel::Pandora

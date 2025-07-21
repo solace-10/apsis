@@ -43,6 +43,6 @@ public:
     }
 };
 
-REGISTER_COMPONENT(OrbitCameraComponent, "orbit_camera")
+REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(OrbitCameraComponent, "orbit_camera")
 
 } // namespace WingsOfSteel::Pandora

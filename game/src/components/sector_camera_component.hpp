@@ -51,6 +51,6 @@ public:
     }
 };
 
-PANDORA_REGISTER_COMPONENT(SectorCameraComponent, "sector_camera")
+PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(SectorCameraComponent, "sector_camera")
 
 } // namespace WingsOfSteel::TheBrightestStar

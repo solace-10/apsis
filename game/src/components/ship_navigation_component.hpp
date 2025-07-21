@@ -50,6 +50,6 @@ private:
     ShipSteer m_Steer{ShipSteer::None};
 };
 
-PANDORA_REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
+PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(ShipNavigationComponent, "ship_navigation")
 
 } // namespace WingsOfSteel::TheBrightestStar

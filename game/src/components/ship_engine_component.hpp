@@ -27,6 +27,6 @@ public:
     }
 };
 
-PANDORA_REGISTER_COMPONENT(ShipEngineComponent, "ship_engine")
+PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(ShipEngineComponent, "ship_engine")
 
 } // namespace WingsOfSteel::TheBrightestStar
