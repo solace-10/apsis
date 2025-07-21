@@ -51,6 +51,6 @@ private:
     std::string m_ResourcePath;
 };
 
-REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(ModelComponent, "model")
+REGISTER_COMPONENT(ModelComponent, "model")
 
 } // namespace WingsOfSteel::Pandora

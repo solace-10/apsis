@@ -73,10 +73,7 @@ public:
 
 // Enhanced macro that registers both component creator and entity adder
 // This is safe to use in headers - actual entity registration happens when Entity.hpp is available
-#define REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(ComponentClass, TypeName) \
-    static WingsOfSteel::Pandora::ComponentWithEntityRegistrar<ComponentClass> g_##ComponentClass##_full_registrar(TypeName);
-
-#define PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(ComponentClass, TypeName) \
+#define REGISTER_COMPONENT(ComponentClass, TypeName) \
     static WingsOfSteel::Pandora::ComponentWithEntityRegistrar<ComponentClass> g_##ComponentClass##_full_registrar(TypeName);
 
 } // namespace WingsOfSteel::Pandora

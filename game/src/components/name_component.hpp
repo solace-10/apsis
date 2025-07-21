@@ -29,6 +29,6 @@ public:
     }
 };
 
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(NameComponent, "name")
+REGISTER_COMPONENT(NameComponent, "name")
 
 } // namespace WingsOfSteel::TheBrightestStar

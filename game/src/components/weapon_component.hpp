@@ -68,6 +68,6 @@ public:
     }
 };
 
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(WeaponComponent, "weapon")
+REGISTER_COMPONENT(WeaponComponent, "weapon")
 
 } // namespace WingsOfSteel::TheBrightestStar

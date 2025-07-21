@@ -29,6 +29,6 @@ private:
     int m_Placeholder{ 0 };
 };
 
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(PlayerControllerComponent, "player_controller")
+REGISTER_COMPONENT(PlayerControllerComponent, "player_controller")
 
 } // namespace WingsOfSteel::TheBrightestStar

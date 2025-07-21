@@ -38,6 +38,6 @@ private:
     glm::vec3 m_Aim{0.0f};
 };
 
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(MechNavigationComponent, "mech_navigation")
+REGISTER_COMPONENT(MechNavigationComponent, "mech_navigation")
 
 } // namespace WingsOfSteel::TheBrightestStar

@@ -27,6 +27,6 @@ public:
     }
 };
 
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(MechEngineComponent, "mech_engine")
+REGISTER_COMPONENT(MechEngineComponent, "mech_engine")
 
 } // namespace WingsOfSteel::TheBrightestStar

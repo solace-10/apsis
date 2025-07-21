@@ -141,6 +141,6 @@ private:
     std::string m_ResourcePath;
 };
 
-REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(RigidBodyComponent, "rigid_body")
+REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")
 
 } // namespace WingsOfSteel::Pandora

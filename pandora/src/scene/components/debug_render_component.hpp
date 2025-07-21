@@ -134,6 +134,6 @@ public:
     }
 };
 
-REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(DebugRenderComponent, "debug_render")
+REGISTER_COMPONENT(DebugRenderComponent, "debug_render")
 
 } // namespace WingsOfSteel::Pandora

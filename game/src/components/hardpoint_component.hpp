@@ -89,6 +89,6 @@ public:
         }
     }
 };
-PANDORA_REGISTER_COMPONENT_WITH_ENTITY_INTEGRATION(HardpointComponent, "hardpoint")
+REGISTER_COMPONENT(HardpointComponent, "hardpoint")
 
 } // namespace WingsOfSteel::TheBrightestStar
