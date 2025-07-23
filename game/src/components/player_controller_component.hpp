@@ -15,13 +15,11 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["placeholder"] = m_Placeholder;
         return json;
     }
 
     void Deserialize(const nlohmann::json& json) override
     {
-        m_Placeholder = DeserializeOptional<int>(json, "placeholder", 0);
     }
 
 private:

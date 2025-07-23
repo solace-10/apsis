@@ -72,31 +72,33 @@ void CameraSystem::Update(float delta)
                     const MechNavigationComponent& mechNavigationComponent = pAnchorEntity->GetComponent<MechNavigationComponent>();
                     const RigidBodyComponent& rigidBodyComponent = pAnchorEntity->GetComponent<RigidBodyComponent>();
                     glm::vec3 mechDirectionTarget(anchorPosition);
-                    glm::vec3 mechAimTarget(mechNavigationComponent.GetAim());
 
                     const float mechVelocity = glm::length(rigidBodyComponent.GetLinearVelocity());
                     if (mechVelocity > std::numeric_limits<float>::epsilon())
                     {
-                        glm::vec3 mechDirection = glm::normalize(rigidBodyComponent.GetLinearVelocity());
+                        const glm::vec3 mechDirection = glm::normalize(rigidBodyComponent.GetLinearVelocity());
                         mechDirectionTarget = anchorPosition + mechDirection * mechVelocity;
                         GetDebugRender()->Circle(mechDirectionTarget, glm::vec3(0.0f, 1.0f, 0.0f), Color::Orange, 4.0f, 10.0f);
                         cameraWantedTarget = mechDirectionTarget;
                     }
 
-                    const float mechAimTargetDistance = glm::length(mechAimTarget - anchorPosition);
-                    const float maxMechAimTargetDistance = 80.0f;
-                    if (mechAimTargetDistance > maxMechAimTargetDistance)
-                    {
-                        mechAimTarget = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
+                    const std::optional<glm::vec3>& mechAim = mechNavigationComponent.GetAim();
+                    if (mechAim.has_value())
+                    { 
+                        glm::vec3 mechAimTarget(mechAim.value());
+                        const float mechAimTargetDistance = glm::length(mechAimTarget - anchorPosition);
+                        const float maxMechAimTargetDistance = 80.0f;
+                        if (mechAimTargetDistance > maxMechAimTargetDistance)
+                        {
+                            mechAimTarget = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
+                        }
+
+                        cameraWantedTarget = (mechDirectionTarget + mechAimTarget) / 2.0f;
                     }
-
-                    cameraWantedTarget = (mechDirectionTarget + mechAimTarget) / 2.0f;
-
-                    //glm:;vec3 mechDirectionOffset = mechNavigationComponent.
-                    //glm::vec4 forward = -anchorTransform[2];
-                    // const float forwardMultiplier = glm::clamp(shipNavigationComponent.GetThrust(), -1.0f, 1.0f);
-                    //const float forwardMultiplier = 1.0f;
-                    //cameraWantedTarget = anchorPosition + glm::vec3(forward) * forwardMultiplier * 30.0f;
+                    else
+                    {
+                        cameraWantedTarget = mechDirectionTarget;
+                    }
                 }
             }
 

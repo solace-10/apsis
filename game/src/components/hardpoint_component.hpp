@@ -27,20 +27,20 @@ struct Hardpoint
     {
         nlohmann::json json;
         json["name"] = m_Name;
-        json["attachmentPointTransform"] = Pandora::IComponent::SerializeMat4(m_AttachmentPointTransform);
-        json["arcMinDegrees"] = m_ArcMinDegrees;
-        json["arcMaxDegrees"] = m_ArcMaxDegrees;
-        json["angleDegrees"] = m_AngleDegrees;
+        json["attachment_point_transform"] = Pandora::IComponent::SerializeMat4(m_AttachmentPointTransform);
+        json["arc_min_degrees"] = m_ArcMinDegrees;
+        json["arc_max_degrees"] = m_ArcMaxDegrees;
+        json["angle_degrees"] = m_AngleDegrees;
         return json;
     }
     
     void Deserialize(const nlohmann::json& json)
     {
         m_Name = Pandora::IComponent::DeserializeRequired<std::string>(json, "name");
-        m_AttachmentPointTransform = Pandora::IComponent::DeserializeMat4(json, "attachmentPointTransform");
-        m_ArcMinDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arcMinDegrees");
-        m_ArcMaxDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arcMaxDegrees");
-        m_AngleDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "angleDegrees");
+        m_AttachmentPointTransform = Pandora::IComponent::DeserializeMat4(json, "attachment_point_transform");
+        m_ArcMinDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
+        m_ArcMaxDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
+        m_AngleDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "angle_degrees");
     }
 };
 

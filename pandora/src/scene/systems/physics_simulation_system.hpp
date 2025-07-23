@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "scene/systems/system.hpp"
 
@@ -38,6 +39,16 @@ private:
     std::unique_ptr<btSequentialImpulseConstraintSolver> m_pSolver;
     std::unique_ptr<btDiscreteDynamicsWorld> m_pWorld;
     PhysicsVisualizationUniquePtr m_pPhysicsVisualization;
+
+    struct EntityToAdd
+    {
+        EntityToAdd(entt::entity _entity) : entity(_entity), added(false) {}
+
+        entt::entity entity;
+        bool added;
+    };
+
+    std::vector<EntityToAdd> m_EntitiesToAdd;
 };
 
 } // namespace WingsOfSteel::Pandora

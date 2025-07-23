@@ -8,6 +8,7 @@
 #include <scene/components/component_factory.hpp>
 #include <scene/components/model_component.hpp>
 #include <scene/components/transform_component.hpp>
+#include <scene/components/rigid_body_component.hpp>
 #include <scene/scene.hpp>
 
 #include "components/hardpoint_component.hpp"
@@ -45,9 +46,10 @@ void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& 
                 {
                     const std::string typeName(*typeIt);
 
-                    if (!ComponentFactory::CreateAndAddToEntity(pEntity.get(), typeName, componentData))
+                    if (!ComponentFactory::Create(pEntity.get(), typeName, componentData))
                     {
                         Log::Error() << "Don't know how to create component type '" << typeName << "' in '" << prefabResourcePath << "'.";
+                        return;
                     }
                 }
                 else
@@ -58,8 +60,19 @@ void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& 
             }
         }
 
-        TransformComponent transformComponent = pEntity->AddComponent<TransformComponent>();
-        transformComponent.transform = worldTransform;
+        if (pEntity->HasComponent<TransformComponent>())
+        {
+            pEntity->GetComponent<TransformComponent>().transform = worldTransform;
+        }
+        else
+        {
+            pEntity->AddComponent<TransformComponent>().transform = worldTransform;
+        }
+
+        if (pEntity->HasComponent<RigidBodyComponent>())
+        {
+            pEntity->GetComponent<RigidBodyComponent>().SetWorldTransform(worldTransform);
+        }
 
         if (onEntityReadyCallback)
         {

@@ -15,14 +15,14 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["linearForce"] = linearForce;
+        json["linear_force"] = linearForce;
         json["torque"] = torque;
         return json;
     }
 
     void Deserialize(const nlohmann::json& json) override
     {
-        linearForce = DeserializeOptional<float>(json, "linearForce", 0.0f);
+        linearForce = DeserializeOptional<float>(json, "linear_force", 0.0f);
         torque = DeserializeOptional<float>(json, "torque", 0.0f);
     }
 };

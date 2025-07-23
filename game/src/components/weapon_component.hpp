@@ -29,20 +29,20 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["attachmentPointTransform"] = SerializeMat4(m_AttachmentPointTransform);
-        json["arcMinDegrees"] = m_ArcMinDegrees;
-        json["arcMaxDegrees"] = m_ArcMaxDegrees;
-        json["angleDegrees"] = m_AngleDegrees;
+        json["attachment_point_transform"] = SerializeMat4(m_AttachmentPointTransform);
+        json["arc_min_degrees"] = m_ArcMinDegrees;
+        json["arc_max_degrees"] = m_ArcMaxDegrees;
+        json["angle_degrees"] = m_AngleDegrees;
         json["range"] = m_Range;
         
         if (m_Target.has_value())
         {
             json["target"] = SerializeVec3(m_Target.value());
-            json["hasTarget"] = true;
+            json["has_target"] = true;
         }
         else
         {
-            json["hasTarget"] = false;
+            json["has_target"] = false;
         }
         
         return json;
@@ -50,13 +50,13 @@ public:
 
     void Deserialize(const nlohmann::json& json) override
     {
-        m_AttachmentPointTransform = DeserializeMat4(json, "attachmentPointTransform");
-        m_ArcMinDegrees = DeserializeRequired<float>(json, "arcMinDegrees");
-        m_ArcMaxDegrees = DeserializeRequired<float>(json, "arcMaxDegrees");
-        m_AngleDegrees = DeserializeRequired<float>(json, "angleDegrees");
+        m_AttachmentPointTransform = DeserializeMat4(json, "attachment_point_transform");
+        m_ArcMinDegrees = DeserializeRequired<float>(json, "arc_min_degrees");
+        m_ArcMaxDegrees = DeserializeRequired<float>(json, "arc_max_degrees");
+        m_AngleDegrees = DeserializeRequired<float>(json, "angle_degrees");
         m_Range = DeserializeOptional<float>(json, "range", 100.0f);
         
-        bool hasTarget = DeserializeOptional<bool>(json, "hasTarget", false);
+        bool hasTarget = DeserializeOptional<bool>(json, "has_target", false);
         if (hasTarget)
         {
             m_Target = DeserializeVec3(json, "target");
