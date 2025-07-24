@@ -32,25 +32,25 @@ public:
     {
         nlohmann::json json;
         json["position"] = SerializeVec3(position);
-        json["maximumDrift"] = SerializeVec3(maximumDrift);
-        json["driftTimer"] = driftTimer;
+        json["maximum_drift"] = SerializeVec3(maximumDrift);
+        json["drift_timer"] = driftTimer;
         json["target"] = SerializeVec3(target);
         json["velocity"] = SerializeVec3(velocity);
-        json["debugDraw"] = debugDraw;
+        json["debug_draw"] = debugDraw;
         return json;
     }
 
     void Deserialize(const nlohmann::json& json) override
     {
         position = DeserializeVec3(json, "position");
-        maximumDrift = DeserializeVec3(json, "maximumDrift");
-        driftTimer = DeserializeRequired<float>(json, "driftTimer");
+        maximumDrift = DeserializeVec3(json, "maximum_drift");
+        driftTimer = DeserializeRequired<float>(json, "drift_timer");
         target = DeserializeVec3(json, "target");
         velocity = DeserializeVec3(json, "velocity");
-        debugDraw = DeserializeOptional<bool>(json, "debugDraw", false);
+        debugDraw = DeserializeOptional<bool>(json, "debug_draw", false);
     }
 };
 
-PANDORA_REGISTER_COMPONENT(SectorCameraComponent, "sector_camera")
+REGISTER_COMPONENT(SectorCameraComponent, "sector_camera")
 
 } // namespace WingsOfSteel::TheBrightestStar

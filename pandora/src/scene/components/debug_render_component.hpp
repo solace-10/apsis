@@ -36,41 +36,41 @@ public:
         if (radius.has_value())
         {
             json["radius"] = radius.value();
-            json["hasRadius"] = true;
+            json["has_radius"] = true;
         }
         else
         {
-            json["hasRadius"] = false;
+            json["has_radius"] = false;
         }
         
         if (width.has_value())
         {
             json["width"] = width.value();
-            json["hasWidth"] = true;
+            json["has_width"] = true;
         }
         else
         {
-            json["hasWidth"] = false;
+            json["has_width"] = false;
         }
         
         if (height.has_value())
         {
             json["height"] = height.value();
-            json["hasHeight"] = true;
+            json["has_height"] = true;
         }
         else
         {
-            json["hasHeight"] = false;
+            json["has_height"] = false;
         }
         
         if (length.has_value())
         {
             json["length"] = length.value();
-            json["hasLength"] = true;
+            json["has_length"] = true;
         }
         else
         {
-            json["hasLength"] = false;
+            json["has_length"] = false;
         }
         
         json["color"] = nlohmann::json::array({color.r, color.g, color.b});
@@ -81,7 +81,7 @@ public:
 
     void Deserialize(const nlohmann::json& json) override
     {
-        bool hasRadius = DeserializeOptional<bool>(json, "hasRadius", false);
+        bool hasRadius = DeserializeOptional<bool>(json, "has_radius", false);
         if (hasRadius)
         {
             radius = DeserializeRequired<float>(json, "radius");
@@ -91,7 +91,7 @@ public:
             radius.reset();
         }
         
-        bool hasWidth = DeserializeOptional<bool>(json, "hasWidth", false);
+        bool hasWidth = DeserializeOptional<bool>(json, "has_width", false);
         if (hasWidth)
         {
             width = DeserializeRequired<float>(json, "width");
@@ -101,7 +101,7 @@ public:
             width.reset();
         }
         
-        bool hasHeight = DeserializeOptional<bool>(json, "hasHeight", false);
+        bool hasHeight = DeserializeOptional<bool>(json, "has_height", false);
         if (hasHeight)
         {
             height = DeserializeRequired<float>(json, "height");
@@ -111,7 +111,7 @@ public:
             height.reset();
         }
         
-        bool hasLength = DeserializeOptional<bool>(json, "hasLength", false);
+        bool hasLength = DeserializeOptional<bool>(json, "has_length", false);
         if (hasLength)
         {
             length = DeserializeRequired<float>(json, "length");

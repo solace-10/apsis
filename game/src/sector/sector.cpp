@@ -67,7 +67,6 @@ void Sector::Initialize()
     SpawnDome();
     SpawnPlayerFleet();
     SpawnEnemyFleet();
-    sectorCameraComponent.anchorEntity = m_pPlayerMech;
 }
 
 void Sector::Update(float delta)
@@ -170,6 +169,7 @@ void Sector::SpawnPlayerFleet()
             pScene->m_pPlayerMech = pEntity;
             pScene->m_pPlayerMech->AddComponent<PlayerControllerComponent>();
             pScene->m_pPlayerFleet->AddShip(pEntity);
+            pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pEntity;
         }
     });
 

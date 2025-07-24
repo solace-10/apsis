@@ -12,14 +12,10 @@ namespace WingsOfSteel::Pandora
 
 void RigidBodyComponent::Deserialize(const nlohmann::json& json)
 {
-    m_MotionType = DeserializeEnum<MotionType>(json, "motionType", MotionType::Dynamic);
+    m_MotionType = DeserializeEnum<MotionType>(json, "motion_type", MotionType::Dynamic);
     m_Mass = DeserializeRequired<int32_t>(json, "mass");
-    m_LinearDamping = DeserializeRequired<float>(json, "linearDamping");
-    m_AngularDamping = DeserializeRequired<float>(json, "angularDamping");
-    m_CentreOfMass = DeserializeVec3(json, "centreOfMass");
-    m_LinearFactor = DeserializeVec3(json, "linearFactor");
-    m_AngularFactor = DeserializeVec3(json, "angularFactor");
-    
+    m_LinearDamping = DeserializeRequired<float>(json, "linear_damping");
+    m_AngularDamping = DeserializeRequired<float>(json, "angular_damping");
 
     assert((m_Mass > 0 && m_MotionType == MotionType::Dynamic) || (m_Mass == 0 && m_MotionType == MotionType::Static));
 
@@ -28,8 +24,7 @@ void RigidBodyComponent::Deserialize(const nlohmann::json& json)
         m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
 
         btTransform worldTransform;
-        worldTransform.setIdentity();
-        //worldTransform.setFromOpenGLMatrix(glm::value_ptr(ci.GetWorldTransform()));
+        worldTransform.setFromOpenGLMatrix(glm::value_ptr(GetWorldTransform()));
         m_pMotionState = std::make_unique<btDefaultMotionState>(worldTransform);
 
         m_pShape = m_pResource->GetCollisionShape();
@@ -56,24 +51,6 @@ void RigidBodyComponent::Deserialize(const nlohmann::json& json)
 
         CalculateInvInertiaTensorWorld();
     });
-}
-
-glm::mat4x4 RigidBodyComponent::GetWorldTransform() const
-{
-    if (m_pMotionState)
-    {
-        btTransform tr;
-        m_pMotionState->getWorldTransform(tr);
-
-        float mat[16];
-        tr.getOpenGLMatrix(mat);
-
-        return glm::make_mat4x4(mat);
-    }
-    else
-    {
-        return glm::mat4(1.0f);
-    }
 }
 
 glm::vec3 RigidBodyComponent::GetPosition() const
@@ -129,13 +106,41 @@ void RigidBodyComponent::SetAngularDamping(float value)
     m_pRigidBody->setDamping(m_LinearDamping, m_AngularDamping);
 }
 
+glm::mat4x4 RigidBodyComponent::GetWorldTransform() const
+{
+    // It is possible for a component not to have a rigid body between component creation and 
+    // loading of the ResourceModel which will be used to generate the convex hull.
+    // In that case, we return the transform the rigid body will have once it is created.
+    if (m_pRigidBody && m_pMotionState)
+    {
+        btTransform tr;
+        m_pMotionState->getWorldTransform(tr);
+
+        float mat[16];
+        tr.getOpenGLMatrix(mat);
+
+        return glm::make_mat4x4(mat);
+    }
+    else
+    {
+        return m_WorldTransform.value_or(glm::mat4(1.0f));
+    }
+}
+
 void RigidBodyComponent::SetWorldTransform(const glm::mat4x4& worldTransform)
 {
-    btTransform tr;
-    tr.setFromOpenGLMatrix(glm::value_ptr(worldTransform));
-    m_pRigidBody->setWorldTransform(tr);
-    m_pMotionState->setWorldTransform(tr);
-    m_pRigidBody->clearForces();
+    if (m_pRigidBody && m_pMotionState)
+    {
+        btTransform tr;
+        tr.setFromOpenGLMatrix(glm::value_ptr(worldTransform));
+        m_pRigidBody->setWorldTransform(tr);
+        m_pMotionState->setWorldTransform(tr);
+        m_pRigidBody->clearForces();
+    }
+    else
+    {
+        m_WorldTransform = worldTransform;
+    }
 }
 
 void RigidBodyComponent::SetLinearVelocity(const glm::vec3& linearVelocity)

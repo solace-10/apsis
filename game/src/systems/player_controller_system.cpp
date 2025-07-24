@@ -58,9 +58,18 @@ void PlayerControllerSystem::Update(float delta)
 
     auto navigationView = registry.view<MechNavigationComponent, const PlayerControllerComponent>();
     navigationView.each([this, targetWorldPos](const auto entity, MechNavigationComponent& mechNavigationComponent, const PlayerControllerComponent& playerControllerComponent) {
-        const glm::vec2 movementDirection = GetMovementDirection().value_or(glm::vec2(0.0f, 0.0f));
-        const glm::vec3 thrustDirection(movementDirection.x, 0.0f, -movementDirection.y);
-        mechNavigationComponent.SetThrust(thrustDirection);
+        const std::optional<glm::vec2> movementDirection = GetMovementDirection();
+        if (movementDirection.has_value())
+        {
+            const glm::vec2 md(movementDirection.value());
+            const glm::vec3 thrustDirection(md.x, 0.0f, -md.y);
+            mechNavigationComponent.SetThrust(thrustDirection);
+        }
+        else
+        {
+            mechNavigationComponent.ClearThrust();
+        }
+
         mechNavigationComponent.SetAim(targetWorldPos);
     });
 

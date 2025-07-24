@@ -26,20 +26,20 @@ public:
     {
         nlohmann::json json;
         json["distance"] = distance;
-        json["orbitAngle"] = orbitAngle;
+        json["orbit_angle"] = orbitAngle;
         json["pitch"] = pitch;
-        json["minimumPitch"] = minimumPitch;
-        json["maximumPitch"] = maximumPitch;
+        json["minimum_pitch"] = minimumPitch;
+        json["maximum_pitch"] = maximumPitch;
         return json;
     }
 
     void Deserialize(const nlohmann::json& json) override
     {
         distance = DeserializeOptional<float>(json, "distance", 10.0f);
-        orbitAngle = DeserializeOptional<float>(json, "orbitAngle", 0.0f);
+        orbitAngle = DeserializeOptional<float>(json, "orbit_angle", 0.0f);
         pitch = DeserializeOptional<float>(json, "pitch", 0.0f);
-        minimumPitch = DeserializeOptional<float>(json, "minimumPitch", 0.0f);
-        maximumPitch = DeserializeOptional<float>(json, "maximumPitch", 1.0f);
+        minimumPitch = DeserializeOptional<float>(json, "minimum_pitch", 0.0f);
+        maximumPitch = DeserializeOptional<float>(json, "maximum_pitch", 1.0f);
     }
 };
 

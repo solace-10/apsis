@@ -34,15 +34,11 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["thrust"] = static_cast<int>(m_Thrust);
-        json["steer"] = static_cast<int>(m_Steer);
         return json;
     }
 
     void Deserialize(const nlohmann::json& json) override
     {
-        m_Thrust = DeserializeEnum<ShipThrust>(json, "thrust", ShipThrust::None);
-        m_Steer = DeserializeEnum<ShipSteer>(json, "steer", ShipSteer::None);
     }
 
 private:
@@ -50,6 +46,6 @@ private:
     ShipSteer m_Steer{ShipSteer::None};
 };
 
-PANDORA_REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
+REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
 
 } // namespace WingsOfSteel::TheBrightestStar

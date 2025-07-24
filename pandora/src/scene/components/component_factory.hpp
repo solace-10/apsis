@@ -2,9 +2,12 @@
 
 #include <unordered_map>
 #include <functional>
-#include <memory>
 #include <string>
+
+#include <nlohmann/json_fwd.hpp>
+
 #include "icomponent.hpp"
+#include "scene/entity.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -12,48 +15,40 @@ namespace WingsOfSteel::Pandora
 class ComponentFactory
 {
 private:
-    using CreateFunc = std::function<std::unique_ptr<IComponent>()>;
-    static std::unordered_map<std::string, CreateFunc>* s_creators;
+    using EntityAdderFunc = std::function<void(Entity*, const nlohmann::json&)>;
+    
+    inline static std::unordered_map<std::string, EntityAdderFunc>* sRegistry = nullptr;
 
-public:
+public:    
     template<typename T>
     static void Register(const std::string& typeName)
     {
-        static_assert(std::is_base_of_v<IComponent, T>, "T must derive from IComponent");
-
-        // Initialize on first use, as the order of static initialization is undefined.
-        if (s_creators == nullptr)
+        if (sRegistry == nullptr)
         {
-            s_creators = new std::unordered_map<std::string, CreateFunc>();
+            sRegistry = new std::unordered_map<std::string, EntityAdderFunc>();
         }
 
-        (*s_creators)[typeName] = []() { return std::make_unique<T>(); };
+        (*sRegistry)[typeName] = [](Entity* pEntity, const nlohmann::json& jsonData) {
+            T& component = pEntity->AddComponent<T>();
+            component.Deserialize(jsonData);
+        };
     }
-    
-    static std::unique_ptr<IComponent> Create(const std::string& typeName)
+
+    static bool Create(Entity* pEntity, const std::string& typeName, const nlohmann::json& jsonData)
     {
-        auto it = s_creators->find(typeName);
-        if (it != s_creators->end())
+        if (!sRegistry)
         {
-            return it->second();
+            return false;
         }
-        return nullptr;
-    }
-    
-    static bool IsRegistered(const std::string& typeName)
-    {
-        return s_creators->find(typeName) != s_creators->end();
-    }
-    
-    static std::vector<std::string> GetRegisteredTypes()
-    {
-        std::vector<std::string> types;
-        types.reserve(s_creators->size());
-        for (const auto& pair : *s_creators)
+        
+        auto it = sRegistry->find(typeName);
+        if (it != sRegistry->cend())
         {
-            types.push_back(pair.first);
+            it->second(pEntity, jsonData);
+            return true;
         }
-        return types;
+
+        return false;
     }
 };
 
@@ -68,9 +63,7 @@ public:
 };
 
 #define REGISTER_COMPONENT(ComponentClass, TypeName) \
-    static ComponentRegistrar<ComponentClass> g_##ComponentClass##_registrar(TypeName);
-
-#define PANDORA_REGISTER_COMPONENT(ComponentClass, TypeName) \
+    class ComponentClass; \
     static WingsOfSteel::Pandora::ComponentRegistrar<ComponentClass> g_##ComponentClass##_registrar(TypeName);
 
 } // namespace WingsOfSteel::Pandora

@@ -18,6 +18,14 @@
         {
             "type": "model",
             "resource": "/models/raiders/interceptor.glb"
+        },
+        {
+            "type": "rigid_body",
+            "resource": "/models/raiders/interceptor.glb",
+            "motion_type": 1,
+            "mass": 10,
+            "linear_damping": 0.5,
+            "angular_damping": 0.5
         }
     ]
 }

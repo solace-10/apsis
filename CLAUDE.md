@@ -72,3 +72,6 @@ The project follows a modular architecture with four main components:
 - Cross-platform support (Windows, Linux, Web via Emscripten)
 - Uses Ninja generator for builds
 - Physics and rendering systems are decoupled from game logic
+
+## Code Modification Guidelines
+- After you modify a code file, always build the game to ensure everything compiles.

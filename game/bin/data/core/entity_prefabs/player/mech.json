@@ -1,17 +1,35 @@
 {
     "name": "mech",
     "type": "Mech",
-    "model": "/models/player/mech.glb",
     "hull": 100,
-    "mass": 10,
-    "engine_force": 500.0,
-    "engine_torque": 7000.0,
     "hardpoints": [
         {
             "name": "FixedMount",
             "min_arc": -10.0,
             "max_arc": 10.0,
             "weapon": "heavy_mass_driver"
+        }
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/player/mech.glb"
+        },
+        {
+            "type": "rigid_body",
+            "resource": "/models/player/mech.glb",
+            "motion_type": 1,
+            "mass": 10,
+            "linear_damping": 0.5,
+            "angular_damping": 0.5
+        },
+        {
+            "type": "mech_engine",
+            "linear_force": 500.0,
+            "torque": 7000.0
+        },
+        {
+            "type": "mech_navigation"
         }
     ]
 }

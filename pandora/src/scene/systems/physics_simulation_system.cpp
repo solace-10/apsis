@@ -6,6 +6,7 @@
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 
+#include <algorithm>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <glm/gtc/matrix_access.hpp>
@@ -42,6 +43,23 @@ void PhysicsSimulationSystem::Initialize(Scene* pScene)
 
 void PhysicsSimulationSystem::Update(float delta)
 {
+    if (!m_EntitiesToAdd.empty())
+    {
+        for (auto& entityToAdd : m_EntitiesToAdd)
+        {
+            RigidBodyComponent& rigidBodyComponent = m_pScene->GetRegistry().get<RigidBodyComponent>(entityToAdd.entity);
+            if (rigidBodyComponent.GetBulletRigidBody())
+            {
+                m_pWorld->addRigidBody(rigidBodyComponent.GetBulletRigidBody());
+                entityToAdd.added = true;
+            }
+        }
+
+        m_EntitiesToAdd.erase(std::remove_if(m_EntitiesToAdd.begin(), m_EntitiesToAdd.end(), 
+            [](const EntityToAdd& entityToAdd) { return entityToAdd.added; }), 
+            m_EntitiesToAdd.end());
+    }
+
     m_pWorld->stepSimulation(delta, 5);
     m_pPhysicsVisualization->Update();
 
@@ -55,14 +73,24 @@ void PhysicsSimulationSystem::Update(float delta)
 
 void PhysicsSimulationSystem::OnRigidBodyCreated(entt::registry& registry, entt::entity entity)
 {
-    RigidBodyComponent& rigidBodyComponent = registry.get<RigidBodyComponent>(entity);
-    m_pWorld->addRigidBody(rigidBodyComponent.GetBulletRigidBody());
+    RigidBodyComponent& rigidBodyComponent = m_pScene->GetRegistry().get<RigidBodyComponent>(entity);
+    if (rigidBodyComponent.GetBulletRigidBody())
+    {
+        m_pWorld->addRigidBody(rigidBodyComponent.GetBulletRigidBody());
+    }
+    else
+    {
+        m_EntitiesToAdd.emplace_back(entity);
+    }
 }
 
 void PhysicsSimulationSystem::OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity)
 {
     RigidBodyComponent& rigidBodyComponent = registry.get<RigidBodyComponent>(entity);
-    m_pWorld->removeRigidBody(rigidBodyComponent.GetBulletRigidBody());
+    if (rigidBodyComponent.GetBulletRigidBody())
+    {
+        m_pWorld->removeRigidBody(rigidBodyComponent.GetBulletRigidBody());
+    }
 }
 
 } // namespace WingsOfSteel::Pandora

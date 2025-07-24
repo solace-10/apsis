@@ -24,8 +24,8 @@ public:
     {
         nlohmann::json json;
         json["fov"] = camera.GetFieldOfView();
-        json["nearPlane"] = camera.GetNearPlane();
-        json["farPlane"] = camera.GetFarPlane();
+        json["near_plane"] = camera.GetNearPlane();
+        json["far_plane"] = camera.GetFarPlane();
         json["position"] = SerializeVec3(camera.GetPosition());
         json["target"] = SerializeVec3(camera.GetTarget());
         return json;
@@ -34,8 +34,8 @@ public:
     void Deserialize(const nlohmann::json& json) override
     {
         float fov = DeserializeOptional<float>(json, "fov", 45.0f);
-        float nearPlane = DeserializeOptional<float>(json, "nearPlane", 0.01f);
-        float farPlane = DeserializeOptional<float>(json, "farPlane", 100.0f);
+        float nearPlane = DeserializeOptional<float>(json, "near_plane", 0.01f);
+        float farPlane = DeserializeOptional<float>(json, "far_plane", 100.0f);
         
         camera.SetFieldOfView(fov);
         camera.SetNearPlane(nearPlane);

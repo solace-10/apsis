@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include <btBulletCollisionCommon.h>
@@ -27,46 +28,7 @@ enum class MotionType
     Dynamic
 };
 
-class RigidBodyConstructionInfo
-{
-public:
-    RigidBodyConstructionInfo() {}
-
-    void SetMass(int32_t value) { m_Mass = value; }
-    int32_t GetMass() const { return m_Mass; }
-
-    void SetMotionType(MotionType motionType) { m_MotionType = motionType; }
-    MotionType GetMotionType() const { return m_MotionType; }
-
-    void SetWorldTransform(const glm::mat4x4& worldTransform) { m_WorldTransform = worldTransform; }
-    const glm::mat4x4& GetWorldTransform() const { return m_WorldTransform; }
-
-    void SetShape(CollisionShapeSharedPtr pShape) { m_pShape = pShape; }
-    CollisionShapeSharedPtr GetShape() const { return m_pShape; }
-
-    void SetLinearDamping(float value) { m_LinearDamping = value; }
-    float GetLinearDamping() const { return m_LinearDamping; }
-
-    void SetAngularDamping(float value) { m_AngularDamping = value; }
-    float GetAngularDamping() const { return m_AngularDamping; }
-
-    void SetFriction(float value) { m_Friction = value; }
-    float GetFriction() const { return m_Friction; }
-
-    void SetCentreOfMass(const glm::vec3& centreOfMass) { m_CentreOfMass = centreOfMass; }
-    const glm::vec3& GetCentreOfMass() const { return m_CentreOfMass; }
-
-private:
-    int32_t m_Mass{ 1 };
-    MotionType m_MotionType{ MotionType::Dynamic };
-    glm::mat4x4 m_WorldTransform{ 1 };
-    CollisionShapeSharedPtr m_pShape;
-    float m_LinearDamping{ 0.0f };
-    float m_AngularDamping{ 0.0f };
-    float m_Friction{ 0.0f };
-    glm::vec3 m_CentreOfMass{ 0.0f, 0.0f, 0.0f };
-};
-
+REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")
 class RigidBodyComponent : public IComponent
 {
 public:
@@ -107,16 +69,12 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["motionType"] = static_cast<int>(m_MotionType);
+        json["motion_type"] = static_cast<int>(m_MotionType);
         json["mass"] = m_Mass;
-        json["linearDamping"] = m_LinearDamping;
-        json["angularDamping"] = m_AngularDamping;
-        json["centreOfMass"] = SerializeVec3(m_CentreOfMass);
-        json["linearFactor"] = SerializeVec3(m_LinearFactor);
-        json["angularFactor"] = SerializeVec3(m_AngularFactor);
-        json["worldTransform"] = SerializeMat4(GetWorldTransform());
-        json["linearVelocity"] = SerializeVec3(GetLinearVelocity());
-        json["angularVelocity"] = SerializeVec3(GetAngularVelocity());
+        json["linear_damping"] = m_LinearDamping;
+        json["angular_damping"] = m_AngularDamping;
+        json["linear_velocity"] = SerializeVec3(GetLinearVelocity());
+        json["angular_velocity"] = SerializeVec3(GetAngularVelocity());
 
         return json;
     }
@@ -139,8 +97,7 @@ private:
     glm::mat3x3 m_InvInertiaTensorWorld{ 1.0f };
     ResourceModelSharedPtr m_pResource;
     std::string m_ResourcePath;
+    std::optional<glm::mat4> m_WorldTransform;
 };
-
-REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")
 
 } // namespace WingsOfSteel::Pandora

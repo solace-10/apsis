@@ -7,7 +7,6 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
-DECLARE_SMART_PTR(EntityPrefabManager);
 DECLARE_SMART_PTR(PrefabEditor);
 DECLARE_SMART_PTR(Hyperscape);
 // DECLARE_SMART_PTR(ItemManager);
@@ -30,7 +29,6 @@ public:
 
     // const ItemManager* GetItemManager() const;
     UI::PrefabEditor* GetPrefabEditor();
-    EntityPrefabManager* GetEntityPrefabManager() { return m_pEntityPrefabManager.get(); }
     Sector* GetSector();
 
     static Game* Get();
@@ -44,7 +42,6 @@ private:
     HyperscapeUniquePtr m_pHyperscape;
     SectorSharedPtr m_pSector;
 
-    EntityPrefabManagerUniquePtr m_pEntityPrefabManager;
     UI::PrefabEditorUniquePtr m_pPrefabEditor;
 };
 

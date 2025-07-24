@@ -1,3 +1,5 @@
+/*
+
 #include "entity_builder/entity_prefab_manager.hpp"
 
 #include <nlohmann/json.hpp>
@@ -100,3 +102,5 @@ void EntityPrefabManager::GetEntityPrefab(const std::string& resourcePath, Entit
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
+
+*/
