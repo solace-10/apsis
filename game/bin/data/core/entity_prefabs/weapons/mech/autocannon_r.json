@@ -1,0 +1,14 @@
+{
+    "name": "mech",
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/weapons/mech/autocannon_r.glb"
+        },
+        {
+            "type": "weapon",
+            "range": 100,
+            "ammo": "autocannon_projectile"
+        }
+    ]
+}

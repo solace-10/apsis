@@ -15,7 +15,6 @@
 #include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
-#include "entity_builder/entity_prefab_manager.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {

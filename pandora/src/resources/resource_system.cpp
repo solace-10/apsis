@@ -136,7 +136,7 @@ std::optional<std::string> ResourceSystem::GetExtension(const std::string& path)
     size_t separator = path.find_last_of('.');
     if (separator == std::string::npos || separator == path.length())
     {
-        return nullptr;
+        return std::nullopt;
     }
     else
     {

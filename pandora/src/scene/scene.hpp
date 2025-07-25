@@ -21,6 +21,11 @@ public:
     Scene();
     ~Scene();
 
+    SceneWeakPtr GetWeakPtr()
+    {
+        return weak_from_this();
+    }
+
     virtual void Initialize();
     virtual void Update(float delta);
 

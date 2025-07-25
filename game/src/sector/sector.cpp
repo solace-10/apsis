@@ -170,6 +170,12 @@ void Sector::SpawnPlayerFleet()
             pScene->m_pPlayerMech->AddComponent<PlayerControllerComponent>();
             pScene->m_pPlayerFleet->AddShip(pEntity);
             pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pEntity;
+
+            pScene->GetSystem<WeaponSystem>()->AttachWeapon(
+                "/entity_prefabs/weapons/mech/autocannon_r.json",
+                pEntity,
+                "RightArm"
+            );
         }
     });
 

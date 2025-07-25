@@ -5,7 +5,11 @@
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 
+#include "components/hardpoint_component.hpp"
 #include "components/weapon_component.hpp"
+#include "entity_builder/entity_builder.hpp"
+#include "game.hpp"
+#include "sector/sector.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -49,6 +53,36 @@ void WeaponSystem::Update(float delta)
             GetDebugRender()->Line(hardpointTranslation, weaponComponent.m_Target.value(), Color::Red);
         }
     });
+}
+
+void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::EntitySharedPtr pParentEntity, const std::string& hardpointName)
+{
+    Pandora::SceneWeakPtr pWeakScene = Game::Get()->GetSector()->GetWeakPtr();
+
+    EntityBuilder::Build(
+        pWeakScene,
+        resourcePath,
+        glm::mat4(1.0f),
+        [pWeakScene, pParentEntity, hardpointName](Pandora::EntitySharedPtr pWeaponEntity)
+        {
+            WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
+            weaponComponent.m_pParent = pParentEntity;
+
+            HardpointComponent& hardpointComponent = pParentEntity->GetComponent<HardpointComponent>();
+            for (auto& hardpoint : hardpointComponent.hardpoints)
+            {
+                if (hardpoint.m_Name == hardpointName)
+                {
+                    hardpoint.m_pEntity = pWeaponEntity;
+                    weaponComponent.m_AttachmentPointTransform = hardpoint.m_AttachmentPointTransform;
+                    weaponComponent.m_ArcMinDegrees = hardpoint.m_ArcMinDegrees;
+                    weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
+                    weaponComponent.m_AngleDegrees = (hardpoint.m_ArcMaxDegrees - hardpoint.m_ArcMinDegrees) / 2.0f;
+                    break;
+                }
+            }
+        }
+    );
 }
 
 void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up, float arcMinDegrees, float arcMaxDegrees, float arcLength)

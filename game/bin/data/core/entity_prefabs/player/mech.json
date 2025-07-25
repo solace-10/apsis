@@ -1,15 +1,5 @@
 {
     "name": "mech",
-    "type": "Mech",
-    "hull": 100,
-    "hardpoints": [
-        {
-            "name": "FixedMount",
-            "min_arc": -10.0,
-            "max_arc": 10.0,
-            "weapon": "heavy_mass_driver"
-        }
-    ],
     "components": [
         {
             "type": "model",
@@ -30,6 +20,22 @@
         },
         {
             "type": "mech_navigation"
+        },
+        {
+            "type": "hardpoint",
+            "resource": "/models/player/mech.glb",
+            "hardpoints": [
+                {
+                    "name": "LeftArm",
+                    "arc_min_degrees": -10,
+                    "arc_max_degrees": 10
+                },
+                {
+                    "name": "RightArm",
+                    "arc_min_degrees": -10,
+                    "arc_max_degrees": 10
+                }
+            ]
         }
     ]
 }
