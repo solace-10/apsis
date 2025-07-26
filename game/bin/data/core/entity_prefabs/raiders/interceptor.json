@@ -1,18 +1,7 @@
 {
     "name": "interceptor",
-    "type": "Ship",
-    "model": "/models/raiders/interceptor.glb",
-    "hull": 100,
-    "mass": 100,
-    "engine_force": 1300.0,
-    "engine_torque": 7500.0,
-    "hardpoints": [
-        {
-            "name": "FixedMount",
-            "min_arc": -10.0,
-            "max_arc": 10.0,
-            "weapon": "heavy_mass_driver"
-        }
+    "resources": [
+        "/models/raiders/interceptor.glb"
     ],
     "components": [
         {

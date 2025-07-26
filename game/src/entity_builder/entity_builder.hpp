@@ -5,8 +5,8 @@
 
 #include <glm/mat4x4.hpp>
 
-#include <core/result.hpp>
 #include <core/smart_ptr.hpp>
+#include <resources/resource_data_store.hpp>
 #include <scene/scene.hpp>
 #include <scene/entity.hpp>
 
@@ -23,17 +23,8 @@ class EntityBuilder
 public:
     static void Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& resourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback);
 
-    enum EAddWeaponResult
-    {
-        Ok,
-        InvalidSector,
-        InvalidHardpoint
-    };
-
 private:
-    static bool AddHardpoint(Pandora::EntitySharedPtr pShip, const std::string& attachmentPointName, float minArc, float maxArc);
-    static Pandora::Result<EAddWeaponResult> AddWeapon(Pandora::EntitySharedPtr pShip, const std::string& hardpointName, const std::string& weaponName);
-    static bool FindHardpoint(Pandora::EntitySharedPtr pShip, const std::string& hardpointName, Hardpoint& outHardpoint);
+    static void InstantiateComponents(Pandora::EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath);
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

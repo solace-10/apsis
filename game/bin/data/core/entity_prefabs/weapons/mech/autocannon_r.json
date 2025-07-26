@@ -1,5 +1,8 @@
 {
     "name": "mech",
+    "resources": [
+        "/models/weapons/mech/autocannon_r.glb"
+    ],
     "components": [
         {
             "type": "model",

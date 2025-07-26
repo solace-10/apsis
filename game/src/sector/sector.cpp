@@ -154,14 +154,6 @@ void Sector::SpawnPlayerFleet()
     m_pPlayerFleet = std::make_shared<Fleet>();
 
     SceneWeakPtr pWeakScene = weak_from_this();
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/destroyer.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
-        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
-        if (pScene)
-        {
-            pScene->m_pPlayerFleet->AddShip(pEntity);
-        }
-    });
-
     EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
         if (pScene)
@@ -194,9 +186,9 @@ void Sector::SpawnEnemyFleet()
 
     for (int i = 0; i < 5; i++)
     {
-        float positionX = 120.0f + 30.0f * static_cast<float>(i);
+        float positionX = -60 + 30.0f * static_cast<float>(i);
         Pandora::SceneWeakPtr pWeakScene = weak_from_this();
-        EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/interceptor.json", glm::translate(glm::mat4(1.0f), glm::vec3(positionX, 0.0f, 0.0f)), [pWeakScene](Pandora::EntitySharedPtr pEntity){
+        EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/interceptor.json", glm::translate(glm::mat4(1.0f), glm::vec3(positionX, 0.0f, -60.0f)), [pWeakScene](Pandora::EntitySharedPtr pEntity){
             SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
             if (pScene)
             {

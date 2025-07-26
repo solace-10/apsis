@@ -1,5 +1,8 @@
 {
     "name": "mech",
+    "resources": [
+        "/models/player/mech.glb"
+    ],
     "components": [
         {
             "type": "model",
