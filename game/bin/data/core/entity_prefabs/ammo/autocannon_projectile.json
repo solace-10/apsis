@@ -1,0 +1,9 @@
+{
+    "components": [
+        {
+            "type": "ammo_raycast",
+            "raycast_length": 20.0,
+            "speed": 200
+        }
+    ]
+}

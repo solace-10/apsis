@@ -19,6 +19,7 @@
 #include "fleet.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_builder.hpp"
+#include "systems/ammo_system.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/mech_navigation_system.hpp"
@@ -49,6 +50,7 @@ void Sector::Initialize()
     AddSystem<MechNavigationSystem>();
     AddSystem<ShipNavigationSystem>();
     AddSystem<WeaponSystem>();
+    AddSystem<AmmoSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -84,10 +86,6 @@ void Sector::Update(float delta)
     transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     DrawCameraDebugUI();
-
-    const glm::vec2 mousePos = ImGui::GetIO().MousePos;
-    const glm::vec3 worldPos = GetSystem<CameraSystem>()->MouseToWorld(mousePos);
-    Pandora::GetDebugRender()->Circle(worldPos, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::BlueViolet, 1.0f, 16.0f);
 }
 
 void Sector::ShowCameraDebugUI(bool state)

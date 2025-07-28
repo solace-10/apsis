@@ -10,6 +10,7 @@
 #include "entity_builder/entity_builder.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
+#include "systems/ammo_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -23,20 +24,24 @@ void WeaponSystem::Update(float delta)
 {
     using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const WeaponComponent, TransformComponent>();
+    auto view = registry.view<WeaponComponent, TransformComponent>();
 
-    view.each([delta, this](const auto entity, const WeaponComponent& weaponComponent, TransformComponent& transformComponent) {
-        glm::mat4 shipWorldTransform{ 1.0f };
-        EntitySharedPtr pShip = weaponComponent.m_pParent.lock();
-        if (pShip)
+    view.each([delta, this](const auto entity, WeaponComponent& weaponComponent, TransformComponent& transformComponent) {
+        glm::mat4 rootWorldTransform{ 1.0f };
+        EntitySharedPtr pWeaponEntity = weaponComponent.GetOwner().lock();
+        if (pWeaponEntity)
         {
-            shipWorldTransform = pShip->GetComponent<TransformComponent>().transform;
+            EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
+            if (pParentEntity)
+            {
+                rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
+            }
         }
 
-        glm::mat4 hardpointWorldTransform = shipWorldTransform * weaponComponent.m_AttachmentPointTransform;
+        glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
         const glm::vec3 hardpointTranslation(hardpointWorldTransform[3]);
-        const glm::vec3 hardpointForward(-shipWorldTransform[2]); // We negate the forward vector because our ships are -Z facing.
-        const glm::vec3 hardpointUp(shipWorldTransform[1]);
+        const glm::vec3 hardpointForward(-rootWorldTransform[2]); // We negate the forward vector because our ships are -Z facing.
+        const glm::vec3 hardpointUp(rootWorldTransform[1]);
 
         DrawFiringArc(
             hardpointTranslation,
@@ -52,6 +57,14 @@ void WeaponSystem::Update(float delta)
         {
             GetDebugRender()->Line(hardpointTranslation, weaponComponent.m_Target.value(), Color::Red);
         }
+
+        //GetDebugRender()->Circle()
+
+        weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
+        if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
+        {
+            FireWeapon(pWeaponEntity, weaponComponent);
+        }
     });
 }
 
@@ -65,8 +78,10 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::Entity
         glm::mat4(1.0f),
         [pWeakScene, pParentEntity, hardpointName](Pandora::EntitySharedPtr pWeaponEntity)
         {
+            pWeaponEntity->SetParent(pParentEntity);
+
             WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
-            weaponComponent.m_pParent = pParentEntity;
+            weaponComponent.SetOwner(pWeaponEntity);
 
             HardpointComponent& hardpointComponent = pParentEntity->GetComponent<HardpointComponent>();
             for (auto& hardpoint : hardpointComponent.hardpoints)
@@ -83,6 +98,17 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::Entity
             }
         }
     );
+}
+
+void WeaponSystem::FireWeapon(Pandora::EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)
+{
+    weaponComponent.m_FireTimer = 1.0f / weaponComponent.m_RateOfFire;
+
+    AmmoSystem* pAmmoSystem = Pandora::GetActiveScene()->GetSystem<AmmoSystem>();
+    if (pAmmoSystem)
+    {
+        pAmmoSystem->Instantiate(pWeaponEntity, weaponComponent);
+    }
 }
 
 void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up, float arcMinDegrees, float arcMaxDegrees, float arcLength)

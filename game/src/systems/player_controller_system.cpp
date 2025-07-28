@@ -75,10 +75,15 @@ void PlayerControllerSystem::Update(float delta)
 
     auto weaponsView = registry.view<WeaponComponent>();
     weaponsView.each([targetWorldPos](const auto entity, WeaponComponent& weaponComponent) {
-        EntitySharedPtr pParentShip = weaponComponent.m_pParent.lock();
-        if (pParentShip && pParentShip->HasComponent<PlayerControllerComponent>())
+        EntitySharedPtr pParentShip;
+        EntitySharedPtr pOwnerEntity = weaponComponent.GetOwner().lock();
+        if (pOwnerEntity)
         {
-            weaponComponent.m_Target = targetWorldPos;
+            pParentShip = pOwnerEntity->GetParent().lock();
+            if (pParentShip && pParentShip->HasComponent<PlayerControllerComponent>())
+            {
+                weaponComponent.m_Target = targetWorldPos;
+            }
         }
     });
 }

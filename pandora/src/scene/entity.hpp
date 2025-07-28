@@ -35,15 +35,19 @@ public:
         return m_pScene->m_Registry.get<T>(m_EntityHandle);
     }
 
+    EntityWeakPtr GetParent() { return m_pParentEntity; }
+    void SetParent(EntityWeakPtr pParent) { m_pParentEntity = pParent; }
+
     virtual void OnAddedToScene();
     virtual void OnRemovedFromScene();
 
     friend Scene;
 
 private:
-    Scene* m_pScene = nullptr;
-    entt::entity m_EntityHandle = entt::null;
-    bool m_MarkedForRemoval;
+    Scene* m_pScene{ nullptr };
+    entt::entity m_EntityHandle{ entt::null };
+    EntityWeakPtr m_pParentEntity;
+    bool m_MarkedForRemoval{ false };
 };
 
 } // namespace WingsOfSteel::Pandora

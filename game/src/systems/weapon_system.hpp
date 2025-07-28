@@ -4,6 +4,8 @@
 #include <scene/systems/system.hpp>
 #include <scene/entity.hpp>
 
+#include "components/weapon_component.hpp"
+
 namespace WingsOfSteel::TheBrightestStar
 {
 
@@ -20,6 +22,7 @@ public:
 
 private:
     void DrawFiringArc(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up, float arcMinDegrees, float arcMaxDegrees, float arcLength);
+    void FireWeapon(Pandora::EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent);
 };
 
 } // namespace WingsOfSteel::TheBrightestStar
