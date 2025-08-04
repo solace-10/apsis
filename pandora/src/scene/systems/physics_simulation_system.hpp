@@ -1,7 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
+
+#include <glm/vec3.hpp>
 
 #include "scene/systems/system.hpp"
 
@@ -15,6 +18,8 @@ class btDiscreteDynamicsWorld;
 
 namespace WingsOfSteel::Pandora
 {
+
+DECLARE_SMART_PTR(Entity);
 
 DECLARE_SMART_PTR(PhysicsSimulationSystem);
 class PhysicsSimulationSystem : public System
@@ -30,6 +35,14 @@ public:
     void OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity);
 
     PhysicsVisualization* GetVisualization() { return m_pPhysicsVisualization.get(); }
+
+    struct RaycastResult
+    {
+        EntitySharedPtr pEntity;
+        glm::vec3 position;
+    };
+
+    std::optional<RaycastResult> Raycast(const glm::vec3& from, const glm::vec3& to);
 
 private:
     Scene* m_pScene{ nullptr };

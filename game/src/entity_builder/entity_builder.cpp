@@ -6,6 +6,7 @@
 #include <pandora.hpp>
 #include <resources/resource_system.hpp>
 #include <scene/components/component_factory.hpp>
+#include <scene/components/entity_reference_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/scene.hpp>
@@ -98,6 +99,11 @@ void EntityBuilder::InstantiateComponents(Pandora::EntitySharedPtr pEntity, cons
     if (pEntity->HasComponent<RigidBodyComponent>())
     {
         pEntity->GetComponent<RigidBodyComponent>().SetWorldTransform(worldTransform);
+    }
+
+    if (pEntity->HasComponent<EntityReferenceComponent>())
+    {
+        pEntity->GetComponent<EntityReferenceComponent>().SetOwner(pEntity);
     }
 
     if (onEntityReadyCallback)

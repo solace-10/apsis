@@ -93,4 +93,29 @@ void PhysicsSimulationSystem::OnRigidBodyDestroyed(entt::registry& registry, ent
     }
 }
 
+std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::Raycast(const glm::vec3& from, const glm::vec3& to)
+{
+    btVector3 btFrom(from.x, from.y, from.z);
+    btVector3 btTo(to.x, to.y, to.z);
+    
+    btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
+    m_pWorld->rayTest(btFrom, btTo, rayCallback);
+    
+    if (rayCallback.hasHit())
+    {
+        RaycastResult result;
+        result.position = glm::vec3(rayCallback.m_hitPointWorld.x(), rayCallback.m_hitPointWorld.y(), rayCallback.m_hitPointWorld.z());
+        
+        // Find the entity associated with the hit collision object
+        const btCollisionObject* pCollisionObject = rayCallback.m_collisionObject;
+        RigidBodyComponent* pRigidBodyComponent = reinterpret_cast<RigidBodyComponent*>(pCollisionObject->getUserPointer());
+        assert(pRigidBodyComponent);
+        result.pEntity = pRigidBodyComponent->GetOwner().lock();
+        
+        return result;
+    }
+    
+    return std::nullopt;
+}
+
 } // namespace WingsOfSteel::Pandora

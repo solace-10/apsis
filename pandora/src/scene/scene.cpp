@@ -2,6 +2,7 @@
 
 #include "core/log.hpp"
 #include "scene/components/camera_component.hpp"
+#include "scene/components/entity_reference_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/entity.hpp"
 #include "scene/systems/system.hpp"
@@ -39,6 +40,8 @@ EntitySharedPtr Scene::CreateEntity()
     m_EntitiesPendingAdd.push_back(pEntity);
 
     pEntity->m_EntityHandle = m_Registry.create();
+
+    pEntity->AddComponent<EntityReferenceComponent>(pEntity);
 
     return pEntity;
 }
@@ -83,6 +86,7 @@ void Scene::ProcessEntitiesToRemove()
         if (pEntity->m_MarkedForRemoval)
         {
             pEntity->OnRemovedFromScene();
+            m_Registry.destroy(pEntity->m_EntityHandle);
         }
     }
 

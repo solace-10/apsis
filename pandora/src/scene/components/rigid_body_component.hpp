@@ -12,6 +12,7 @@
 #include "core/smart_ptr.hpp"
 #include "icomponent.hpp"
 #include "component_factory.hpp"
+#include "scene/entity.hpp"
 #include "resources/resource_model.hpp"
 
 class btRigidBody;
@@ -81,6 +82,9 @@ public:
 
     void Deserialize(const nlohmann::json& json) override;
 
+    void SetOwner(EntityWeakPtr pOwner) { m_pOwner = pOwner; }
+    EntityWeakPtr GetOwner() { return m_pOwner; }
+
 private:
     void CalculateInvInertiaTensorWorld();
 
@@ -98,6 +102,7 @@ private:
     ResourceModelSharedPtr m_pResource;
     std::string m_ResourcePath;
     std::optional<glm::mat4> m_WorldTransform;
+    EntityWeakPtr m_pOwner;
 };
 
 } // namespace WingsOfSteel::Pandora
