@@ -7,6 +7,11 @@
         {
             "type": "ammo_movement",
             "speed": 400
+        },
+        {
+            "type": "ammo_impact",
+            "armor_penetration": 0,
+            "damage": 10
         }
     ]
 }

@@ -7,8 +7,10 @@
 #include <scene/scene.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/ammo_impact_component.hpp"
 #include "components/ammo_movement_component.hpp"
 #include "components/ammo_raycast_component.hpp"
+#include "components/hull_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
@@ -25,11 +27,16 @@ void AmmoSystem::Update(float delta)
 {
     using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const TransformComponent, const AmmoRaycastComponent>();
+    auto view = registry.view<const TransformComponent, AmmoImpactComponent, const AmmoRaycastComponent, EntityReferenceComponent>();
 
     PhysicsSimulationSystem* pPhysicsSystem = GetActiveScene()->GetSystem<PhysicsSimulationSystem>();
 
-    view.each([delta, this, pPhysicsSystem](const auto entity, const TransformComponent& transformComponent, const AmmoRaycastComponent& ammoRaycastComponent) {
+    view.each([delta, this, pPhysicsSystem](
+        const auto entity, 
+        const TransformComponent& transformComponent, 
+        AmmoImpactComponent& ammoImpactComponent,
+        const AmmoRaycastComponent& ammoRaycastComponent, 
+        EntityReferenceComponent& entityReferenceComponent) {
         
         glm::vec3 startPos = transformComponent.GetTranslation();
         glm::vec3 direction = -transformComponent.GetForward();
@@ -38,6 +45,7 @@ void AmmoSystem::Update(float delta)
         std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(startPos, endPos);
         if (raycastResult.has_value())
         {
+            const auto& result = raycastResult.value();
             GetDebugRender()->Line(
                 startPos,
                 endPos,
@@ -45,12 +53,27 @@ void AmmoSystem::Update(float delta)
             );
 
             GetDebugRender()->Circle(
-                raycastResult.value().position,
+                result.position,
                 glm::vec3(0.0f, 1.0f, 0.0f),
                 Color::Red,
                 0.2f,
                 8
             );
+
+            EntitySharedPtr pHitEntity = result.pEntity;
+            if (pHitEntity && pHitEntity->HasComponent<HullComponent>())
+            {
+                HullComponent& hullComponent = pHitEntity->GetComponent<HullComponent>();
+            }
+
+            if (ammoImpactComponent.ArmorPenetration <= 0)
+            {
+                EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
+                if (pAmmoEntity)
+                {
+                    Game::Get()->GetSector()->RemoveEntity(pAmmoEntity);
+                }
+            } 
         }
         else
         {
@@ -66,17 +89,17 @@ void AmmoSystem::Update(float delta)
     auto movementView = registry.view<TransformComponent, AmmoMovementComponent, EntityReferenceComponent>();
     movementView.each([delta, this, pPhysicsSystem](const auto entity, TransformComponent& transformComponent, AmmoMovementComponent& ammoMovementComponent, EntityReferenceComponent& entityReferenceComponent) {
         
-        glm::vec3 startPos = transformComponent.GetTranslation();
-        glm::vec3 direction = -transformComponent.GetForward();
+        const glm::vec3 startPos = transformComponent.GetTranslation();
+        const glm::vec3 direction = -transformComponent.GetForward();
 
         const float distance = delta * ammoMovementComponent.GetSpeed();
         const float rangeAfterAdvance = ammoMovementComponent.GetRange() - distance;
         if (rangeAfterAdvance < 0.0f)
         {
-            EntitySharedPtr pEntity = entityReferenceComponent.GetOwner();
-            if (pEntity)
+            EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
+            if (pAmmoEntity)
             {
-                Game::Get()->GetSector()->RemoveEntity(pEntity);
+                Game::Get()->GetSector()->RemoveEntity(pAmmoEntity);
             }
         }
         else

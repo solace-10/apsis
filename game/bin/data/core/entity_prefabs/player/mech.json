@@ -39,6 +39,10 @@
                     "arc_max_degrees": 10
                 }
             ]
+        },
+        {
+            "type": "hull",
+            "health": 2000
         }
     ]
 }

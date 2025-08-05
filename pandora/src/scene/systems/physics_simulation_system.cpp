@@ -22,7 +22,6 @@ PhysicsSimulationSystem::PhysicsSimulationSystem()
     m_pBroadphase = std::make_unique<btDbvtBroadphase>();
     m_pSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
     m_pWorld = std::make_unique<btDiscreteDynamicsWorld>(m_pDispatcher.get(), m_pBroadphase.get(), m_pSolver.get(), m_pCollisionConfiguration.get());
-    // m_pWorld->setInternalTickCallback( &InternalTickCallback, &m_CollisionDataSet );
     m_pWorld->setGravity(btVector3(0, 0, 0));
 
     m_pPhysicsVisualization = std::make_unique<PhysicsVisualization>(m_pWorld.get());

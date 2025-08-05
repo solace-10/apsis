@@ -98,6 +98,7 @@ void EntityBuilder::InstantiateComponents(Pandora::EntitySharedPtr pEntity, cons
 
     if (pEntity->HasComponent<RigidBodyComponent>())
     {
+        pEntity->GetComponent<RigidBodyComponent>().SetOwner(pEntity);
         pEntity->GetComponent<RigidBodyComponent>().SetWorldTransform(worldTransform);
     }
 
