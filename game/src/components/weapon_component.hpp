@@ -19,6 +19,7 @@ class WeaponComponent : public Pandora::IComponent
 public:
     WeaponComponent() = default;
 
+    std::string m_AttachmentPointName;
     glm::mat4 m_AttachmentPointTransform{ 1.0f };
     float m_ArcMinDegrees{ 0.0f };
     float m_ArcMaxDegrees{ 0.0f };
@@ -26,7 +27,7 @@ public:
     float m_Range{ 100.0f };
     float m_RateOfFire{ 1.0f }; // Ammo fired per second.
     float m_FireTimer{ 0.0f }; // Number in seconds until the weapon can be fired again.
-    bool m_WantsToFire{ true }; // A controller has requested this weapon to fire.
+    bool m_WantsToFire{ false }; // A controller has requested this weapon to fire.
 
     std::string m_Ammo;
 

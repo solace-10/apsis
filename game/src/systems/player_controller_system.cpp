@@ -22,14 +22,12 @@ PlayerControllerSystem::~PlayerControllerSystem()
     Pandora::InputSystem* pInputSystem = Pandora::GetInputSystem();
     if (pInputSystem)
     {
-        pInputSystem->RemoveKeyboardCallback(m_ForwardButtonPressedToken);
-        pInputSystem->RemoveKeyboardCallback(m_ForwardButtonReleasedToken);
-        pInputSystem->RemoveKeyboardCallback(m_LeftButtonPressedToken);
-        pInputSystem->RemoveKeyboardCallback(m_LeftButtonReleasedToken);
-        pInputSystem->RemoveKeyboardCallback(m_RightButtonPressedToken);
-        pInputSystem->RemoveKeyboardCallback(m_RightButtonReleasedToken);
-        pInputSystem->RemoveKeyboardCallback(m_DownButtonPressedToken);
-        pInputSystem->RemoveKeyboardCallback(m_DownButtonReleasedToken);
+        for (auto& inputAction : m_InputActions)
+        {
+            pInputSystem->RemoveKeyboardCallback(inputAction.pressed);
+            pInputSystem->RemoveKeyboardCallback(inputAction.released);
+        }
+
         pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
     }
 }
@@ -38,14 +36,25 @@ void PlayerControllerSystem::Initialize(Pandora::Scene* pScene)
 {
     using namespace Pandora;
     Pandora::InputSystem* pInputSystem = GetInputSystem();
-    m_ForwardButtonPressedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, true); }, GLFW_KEY_W, KeyAction::Pressed);
-    m_ForwardButtonReleasedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, false); }, GLFW_KEY_W, KeyAction::Released);
-    m_LeftButtonPressedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Left, true); }, GLFW_KEY_A, KeyAction::Pressed);
-    m_LeftButtonReleasedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Left, false); }, GLFW_KEY_A, KeyAction::Released);
-    m_RightButtonPressedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Right, true); }, GLFW_KEY_D, KeyAction::Pressed);
-    m_RightButtonReleasedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Right, false); }, GLFW_KEY_D, KeyAction::Released);
-    m_DownButtonPressedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, true); }, GLFW_KEY_S, KeyAction::Pressed);
-    m_DownButtonReleasedToken = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, false); }, GLFW_KEY_S, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::Up)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, true); },  GLFW_KEY_W, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::Up)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, false); }, GLFW_KEY_W, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::Left)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Left, true); },  GLFW_KEY_A, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::Left)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Left, false); }, GLFW_KEY_A, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::Right)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Right, true); },  GLFW_KEY_D, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::Right)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Right, false); }, GLFW_KEY_D, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::Down)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, true); },  GLFW_KEY_S, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::Down)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, false); }, GLFW_KEY_S, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::LeftMountedWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftArm", true); },  GLFW_KEY_Q, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::LeftMountedWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftArm", false); }, GLFW_KEY_Q, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::RightMountedWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightArm", true); },  GLFW_KEY_E, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::RightMountedWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightArm", false); }, GLFW_KEY_E, KeyAction::Released);
+
     m_MousePositionToken = pInputSystem->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) { m_MousePosition = mousePosition; });
 }
 
@@ -74,7 +83,7 @@ void PlayerControllerSystem::Update(float delta)
     });
 
     auto weaponsView = registry.view<WeaponComponent>();
-    weaponsView.each([targetWorldPos](const auto entity, WeaponComponent& weaponComponent) {
+    weaponsView.each([this, targetWorldPos](const auto entity, WeaponComponent& weaponComponent) {
         EntitySharedPtr pParentShip;
         EntitySharedPtr pOwnerEntity = weaponComponent.GetOwner().lock();
         if (pOwnerEntity)
@@ -83,6 +92,16 @@ void PlayerControllerSystem::Update(float delta)
             if (pParentShip && pParentShip->HasComponent<PlayerControllerComponent>())
             {
                 weaponComponent.m_Target = targetWorldPos;
+
+                auto it = m_WeaponActivations.find(weaponComponent.m_AttachmentPointName);
+                if (it == m_WeaponActivations.cend())
+                {
+                    weaponComponent.m_WantsToFire = false;
+                }
+                else
+                {
+                    weaponComponent.m_WantsToFire = it->second;
+                }
             }
         }
     });
@@ -111,6 +130,11 @@ std::optional<glm::vec2> PlayerControllerSystem::GetMovementDirection() const
         return std::nullopt;
     
     return glm::normalize(direction);
+}
+
+void PlayerControllerSystem::SetWeaponFire(const std::string& weaponAttachment, bool state)
+{
+    m_WeaponActivations[weaponAttachment] = state;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

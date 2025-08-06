@@ -89,6 +89,7 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::Entity
                 if (hardpoint.m_Name == hardpointName)
                 {
                     hardpoint.m_pEntity = pWeaponEntity;
+                    weaponComponent.m_AttachmentPointName = hardpoint.m_Name;
                     weaponComponent.m_AttachmentPointTransform = hardpoint.m_AttachmentPointTransform;
                     weaponComponent.m_ArcMinDegrees = hardpoint.m_ArcMinDegrees;
                     weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
