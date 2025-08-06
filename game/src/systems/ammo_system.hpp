@@ -18,6 +18,9 @@ public:
     void Update(float delta) override;
 
     void Instantiate(Pandora::EntitySharedPtr pWeaponEntity, const WeaponComponent& weaponComponent);
+
+private:
+    void ApplyHullDamage(Pandora::EntitySharedPtr pAmmoEntity, Pandora::EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const;
 };
 
 } // namespace WingsOfSteel::TheBrightestStar

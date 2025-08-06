@@ -60,20 +60,28 @@ void AmmoSystem::Update(float delta)
                 8
             );
 
-            EntitySharedPtr pHitEntity = result.pEntity;
-            if (pHitEntity && pHitEntity->HasComponent<HullComponent>())
+            EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
+            if (pAmmoEntity)
             {
-                HullComponent& hullComponent = pHitEntity->GetComponent<HullComponent>();
-            }
+                // TODO: Calculate penetration on hit.
+                EntitySharedPtr pHitEntity = result.pEntity;
+                if (pHitEntity)
+                {
+                    bool hitEntityStillAlive = true;
+                    ApplyHullDamage(pAmmoEntity, pHitEntity, hitEntityStillAlive);
 
-            if (ammoImpactComponent.ArmorPenetration <= 0)
-            {
-                EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
-                if (pAmmoEntity)
+                    if (!hitEntityStillAlive)
+                    {
+                        Game::Get()->GetSector()->RemoveEntity(pHitEntity);
+                    }
+                }
+
+                // TODO: Handle armor penetration.
+                if (ammoImpactComponent.ArmorPenetration <= 0)
                 {
                     Game::Get()->GetSector()->RemoveEntity(pAmmoEntity);
-                }
-            } 
+                } 
+            }
         }
         else
         {
@@ -150,6 +158,23 @@ void AmmoSystem::Instantiate(Pandora::EntitySharedPtr pWeaponEntity, const Weapo
             }
         }
     );
+}
+
+void AmmoSystem::ApplyHullDamage(Pandora::EntitySharedPtr pAmmoEntity, Pandora::EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const
+{
+    if (pAmmoEntity->HasComponent<AmmoImpactComponent>() && pHitEntity->HasComponent<HullComponent>())
+    {
+        AmmoImpactComponent& ammoImpactComponent = pAmmoEntity->GetComponent<AmmoImpactComponent>();
+        HullComponent& hullComponent = pHitEntity->GetComponent<HullComponent>();
+        
+        hullComponent.Health -= ammoImpactComponent.Damage;
+        ammoImpactComponent.ArmorPenetration -= hullComponent.Thickness;
+        hitEntityStillAlive = (hullComponent.Health > 0.0f);
+    }
+    else
+    {
+        hitEntityStillAlive = true;
+    }
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
