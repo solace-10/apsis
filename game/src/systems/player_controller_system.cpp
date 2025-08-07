@@ -49,11 +49,17 @@ void PlayerControllerSystem::Initialize(Pandora::Scene* pScene)
     m_InputActions[static_cast<size_t>(InputAction::Down)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, true); },  GLFW_KEY_S, KeyAction::Pressed);
     m_InputActions[static_cast<size_t>(InputAction::Down)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Down, false); }, GLFW_KEY_S, KeyAction::Released);
 
-    m_InputActions[static_cast<size_t>(InputAction::LeftMountedWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftArm", true); },  GLFW_KEY_Q, KeyAction::Pressed);
-    m_InputActions[static_cast<size_t>(InputAction::LeftMountedWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftArm", false); }, GLFW_KEY_Q, KeyAction::Released);
+    m_InputActions[static_cast<size_t>(InputAction::LeftArmWeapon)].pressed  = pInputSystem->AddMouseButtonCallback([this]() { SetWeaponFire("LeftArm", true); },  MouseButton::Left, MouseAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::LeftArmWeapon)].released = pInputSystem->AddMouseButtonCallback([this]() { SetWeaponFire("LeftArm", false); }, MouseButton::Left, MouseAction::Released);
 
-    m_InputActions[static_cast<size_t>(InputAction::RightMountedWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightArm", true); },  GLFW_KEY_E, KeyAction::Pressed);
-    m_InputActions[static_cast<size_t>(InputAction::RightMountedWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightArm", false); }, GLFW_KEY_E, KeyAction::Released);
+    m_InputActions[static_cast<size_t>(InputAction::RightArmWeapon)].pressed  = pInputSystem->AddMouseButtonCallback([this]() { SetWeaponFire("RightArm", true); },  MouseButton::Right, MouseAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::RightArmWeapon)].released = pInputSystem->AddMouseButtonCallback([this]() { SetWeaponFire("RightArm", false); }, MouseButton::Right, MouseAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::LeftShoulderWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftShoulder", true); },  GLFW_KEY_Q, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::LeftShoulderWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("LeftShoulder", false); }, GLFW_KEY_Q, KeyAction::Released);
+
+    m_InputActions[static_cast<size_t>(InputAction::RightShoulderWeapon)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightShoulder", true); },  GLFW_KEY_E, KeyAction::Pressed);
+    m_InputActions[static_cast<size_t>(InputAction::RightShoulderWeapon)].released = pInputSystem->AddKeyboardCallback([this]() { SetWeaponFire("RightShoulder", false); }, GLFW_KEY_E, KeyAction::Released);
 
     m_MousePositionToken = pInputSystem->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) { m_MousePosition = mousePosition; });
 }

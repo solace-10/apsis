@@ -20,8 +20,8 @@ enum class InputAction
     Down,
     Left,
     Right,
-    LeftMountedWeapon,
-    RightMountedWeapon,
+    LeftArmWeapon,
+    RightArmWeapon,
     LeftShoulderWeapon,
     RightShoulderWeapon,
 
