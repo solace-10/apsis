@@ -14,11 +14,13 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/ai_strikecraft_controller_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "fleet.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_builder.hpp"
+#include "systems/ai_strikecraft_controller_system.hpp"
 #include "systems/ammo_system.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
@@ -46,6 +48,7 @@ void Sector::Initialize()
 
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
+    AddSystem<AIStrikecraftControllerSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<MechNavigationSystem>();
     AddSystem<ShipNavigationSystem>();
@@ -190,6 +193,7 @@ void Sector::SpawnEnemyFleet()
             SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
             if (pScene)
             {
+                pEntity->AddComponent<AIStrikecraftControllerComponent>();
                 pScene->m_pEnemyFleet->AddShip(pEntity);
             }
         });

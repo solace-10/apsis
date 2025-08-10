@@ -1,11 +1,11 @@
 #pragma once
 
-#include <scene/systems/system.hpp>
+#include "systems/navigation_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
-class ShipNavigationSystem : public Pandora::System
+class ShipNavigationSystem : public NavigationSystem
 {
 public:
     ShipNavigationSystem() {};

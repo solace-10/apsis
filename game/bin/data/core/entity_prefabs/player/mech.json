@@ -14,7 +14,9 @@
             "motion_type": 1,
             "mass": 10,
             "linear_damping": 0.5,
-            "angular_damping": 0.5
+            "angular_damping": 0.5,
+            "linear_factor": [ 1.0, 0.0, 1.0 ],
+            "angular_factor": [ 0.0, 1.0, 0.0 ]
         },
         {
             "type": "mech_engine",

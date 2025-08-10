@@ -96,8 +96,8 @@ private:
     float m_LinearDamping{ 0.0f };
     float m_AngularDamping{ 0.0f };
     glm::vec3 m_CentreOfMass{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 m_LinearFactor{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 m_AngularFactor{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 m_LinearFactor{ 1.0f, 1.0f, 1.0f };
+    glm::vec3 m_AngularFactor{ 1.0f, 1.0f, 1.0f };
     glm::mat3x3 m_InvInertiaTensorWorld{ 1.0f };
     ResourceModelSharedPtr m_pResource;
     std::string m_ResourcePath;

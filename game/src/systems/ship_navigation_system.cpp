@@ -19,7 +19,7 @@ void ShipNavigationSystem::Update(float delta)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const ShipNavigationComponent, const ShipEngineComponent, RigidBodyComponent>();
 
-    view.each([delta](const auto entity, const ShipNavigationComponent& shipNavigationComponent, const ShipEngineComponent& shipEngineComponent, RigidBodyComponent& rigidBodyComponent) {
+    view.each([this, delta](const auto entity, const ShipNavigationComponent& shipNavigationComponent, const ShipEngineComponent& shipEngineComponent, RigidBodyComponent& rigidBodyComponent) {
         if (shipNavigationComponent.GetThrust() != ShipThrust::None)
         {
             glm::vec3 force = rigidBodyComponent.GetForwardVector() * shipEngineComponent.linearForce;
@@ -32,27 +32,11 @@ void ShipNavigationSystem::Update(float delta)
             rigidBodyComponent.ApplyLinearForce(force);
         }
 
-        if (shipNavigationComponent.GetSteer() != ShipSteer::None)
+        std::optional<glm::vec3> targetPosition = shipNavigationComponent.GetTarget();
+        if (targetPosition.has_value())
         {
-            const float dir = (shipNavigationComponent.GetSteer() == ShipSteer::Port) ? 1.0f : -1.0f;
-            const float torque = shipEngineComponent.torque * dir;
-            rigidBodyComponent.ApplyAngularForce(glm::vec3(0.0f, torque, 0.0f));
+            TurnTowards(targetPosition.value(), rigidBodyComponent, shipEngineComponent.torque);
         }
-
-        /*
-        const glm::vec4 translation = rigidBodyComponent.GetWorldTransform()[3];
-        const glm::vec3 pos(translation.x, translation.y, translation.z);
-        Pandora::GetDebugRender()->Arrow(
-            pos,
-            pos + rigidBodyComponent.GetForwardVector() * 100.0f,
-            Pandora::Color::Purple,
-            10.0f);
-
-        glm::vec3 lv = rigidBodyComponent.GetLinearVelocity();
-        Pandora::Log::Info() << "lv: " << lv.x << " " << lv.y << " " << lv.z;
-        glm::vec3 av = rigidBodyComponent.GetAngularVelocity();
-        Pandora::Log::Info() << "av: " << av.x << " " << av.y << " " << av.z;
-        */
     });
 }
 

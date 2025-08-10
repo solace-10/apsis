@@ -1,5 +1,9 @@
 #pragma once
 
+#include <optional>
+
+#include <glm/vec3.hpp>
+
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
@@ -13,13 +17,6 @@ enum class ShipThrust
     Backward
 };
 
-enum class ShipSteer
-{
-    None,
-    Port,
-    Starboard
-};
-
 class ShipNavigationComponent : public Pandora::IComponent
 {
 public:
@@ -28,8 +25,9 @@ public:
 
     ShipThrust GetThrust() const { return m_Thrust; }
     void SetThrust(ShipThrust value) { m_Thrust = value; }
-    ShipSteer GetSteer() const { return m_Steer; }
-    void SetSteer(ShipSteer value) { m_Steer = value; }
+    void SetTarget(const glm::vec3& position) { m_Target = position; }
+    void ClearTarget() { m_Target.reset(); }
+    const std::optional<glm::vec3>& GetTarget() const { return m_Target; }
 
     nlohmann::json Serialize() const override
     {
@@ -43,7 +41,7 @@ public:
 
 private:
     ShipThrust m_Thrust{ShipThrust::None};
-    ShipSteer m_Steer{ShipSteer::None};
+    std::optional<glm::vec3> m_Target;
 };
 
 REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")

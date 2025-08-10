@@ -16,6 +16,9 @@ void RigidBodyComponent::Deserialize(const nlohmann::json& json)
     m_Mass = DeserializeRequired<int32_t>(json, "mass");
     m_LinearDamping = DeserializeRequired<float>(json, "linear_damping");
     m_AngularDamping = DeserializeRequired<float>(json, "angular_damping");
+    m_LinearFactor = DeserializeVec3(json, "linear_factor");
+    m_AngularFactor = DeserializeVec3(json, "angular_factor");
+
 
     assert((m_Mass > 0 && m_MotionType == MotionType::Dynamic) || (m_Mass == 0 && m_MotionType == MotionType::Static));
 
@@ -47,6 +50,8 @@ void RigidBodyComponent::Deserialize(const nlohmann::json& json)
         m_pRigidBody = std::make_unique<btRigidBody>(rbInfo);
         m_pRigidBody->setActivationState(DISABLE_DEACTIVATION);
         m_pRigidBody->setCollisionFlags(m_pRigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        m_pRigidBody->setLinearFactor(btVector3(m_LinearFactor.x, m_LinearFactor.y, m_LinearFactor.z));
+        m_pRigidBody->setAngularFactor(btVector3(m_AngularFactor.x, m_AngularFactor.y, m_AngularFactor.z));
         m_pRigidBody->setUserPointer(this);
 
         CalculateInvInertiaTensorWorld();

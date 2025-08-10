@@ -14,11 +14,21 @@
             "motion_type": 1,
             "mass": 10,
             "linear_damping": 0.5,
-            "angular_damping": 0.5
+            "angular_damping": 0.5,
+            "linear_factor": [ 1.0, 0.0, 1.0 ],
+            "angular_factor": [ 0.0, 1.0, 0.0 ]
         },
         {
             "type": "hull",
             "health": 100
+        },
+        {
+            "type": "ship_engine",
+            "linear_force": 500.0,
+            "torque": 2000.0
+        },
+        {
+            "type": "ship_navigation"
         }
     ]
 }
