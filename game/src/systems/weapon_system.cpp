@@ -53,13 +53,6 @@ void WeaponSystem::Update(float delta)
 
         transformComponent.transform = hardpointWorldTransform;
 
-        if (weaponComponent.m_Target)
-        {
-            GetDebugRender()->Line(hardpointTranslation, weaponComponent.m_Target.value(), Color::Red);
-        }
-
-        //GetDebugRender()->Circle()
-
         weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
         if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
         {
