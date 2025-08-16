@@ -169,6 +169,12 @@ void Sector::SpawnPlayerFleet()
                 pEntity,
                 "RightArm"
             );
+
+            pScene->GetSystem<WeaponSystem>()->AttachWeapon(
+                "/entity_prefabs/weapons/mech/rotary_cannon_l.json",
+                pEntity,
+                "LeftArm"
+            );
         }
     });
 

@@ -1,0 +1,17 @@
+{
+    "components": [
+        {
+            "type": "ammo_raycast",
+            "raycast_length": 12.0
+        },
+        {
+            "type": "ammo_movement",
+            "speed": 300
+        },
+        {
+            "type": "ammo_impact",
+            "armor_penetration": 0,
+            "damage": 10
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "name": "mech",
+    "resources": [
+        "/models/weapons/mech/rotary_cannon_l.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/weapons/mech/rotary_cannon_l.glb"
+        },
+        {
+            "type": "weapon",
+            "range": 60,
+            "rate_of_fire": 8.0,
+            "ammo": "/entity_prefabs/ammo/rotary_cannon_projectile.json"
+        }
+    ]
+}

@@ -11,7 +11,7 @@
         {
             "type": "weapon",
             "range": 100,
-            "rate_of_fire": 1.0,
+            "rate_of_fire": 2.0,
             "ammo": "/entity_prefabs/ammo/autocannon_projectile.json"
         }
     ]
