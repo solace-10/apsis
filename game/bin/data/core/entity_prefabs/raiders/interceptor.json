@@ -25,7 +25,7 @@
         {
             "type": "ship_engine",
             "linear_force": 500.0,
-            "torque": 2000.0
+            "torque": 3000.0
         },
         {
             "type": "ship_navigation"
