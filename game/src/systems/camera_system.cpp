@@ -1,5 +1,6 @@
 #include <numeric>
 
+#include <core/interpolation.hpp>
 #include <core/log.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
@@ -61,59 +62,61 @@ void CameraSystem::Update(float delta)
 
             EntitySharedPtr pAnchorEntity = sectorCameraComponent.anchorEntity.lock();
             glm::vec3 anchorPosition(0.0f);
-            glm::vec3 cameraWantedTarget = anchorPosition;
+            glm::vec3 cameraWantedTarget(0.0f);
+            glm::vec3 cameraWantedPosition = sectorCameraComponent.position;
             if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
             {
                 const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
                 anchorPosition = glm::vec3(anchorTransform[3]);
+                cameraWantedPosition = sectorCameraComponent.position + anchorPosition;
+                cameraWantedTarget = anchorPosition;
 
                 if (pAnchorEntity->HasComponent<MechNavigationComponent>() && pAnchorEntity->HasComponent<RigidBodyComponent>())
                 {
                     const MechNavigationComponent& mechNavigationComponent = pAnchorEntity->GetComponent<MechNavigationComponent>();
                     const RigidBodyComponent& rigidBodyComponent = pAnchorEntity->GetComponent<RigidBodyComponent>();
-                    glm::vec3 mechDirectionTarget(anchorPosition);
-
-                    const float mechVelocity = glm::length(rigidBodyComponent.GetLinearVelocity());
-                    if (mechVelocity > std::numeric_limits<float>::epsilon())
-                    {
-                        const glm::vec3 mechDirection = glm::normalize(rigidBodyComponent.GetLinearVelocity());
-                        mechDirectionTarget = anchorPosition + mechDirection * mechVelocity;
-                        GetDebugRender()->Circle(mechDirectionTarget, glm::vec3(0.0f, 1.0f, 0.0f), Color::Orange, 4.0f, 10.0f);
-                        cameraWantedTarget = mechDirectionTarget;
-                    }
 
                     const std::optional<glm::vec3>& mechAim = mechNavigationComponent.GetAim();
                     if (mechAim.has_value())
-                    { 
+                    {
+                        // Slowly move the camera back when the player is aiming towards the bottom of the screen (towards positive Z).
                         glm::vec3 mechAimTarget(mechAim.value());
+                        glm::vec3 mechAimDirection = glm::normalize(mechAimTarget - anchorPosition);
+                        const float backOffFactorTarget = glm::max(0.0f, mechAimDirection.z);
+                        Pandora::DampSpring(sectorCameraComponent.backOffFactor, backOffFactorTarget, sectorCameraComponent.backOffFactorVelocity, 3.0f, delta);
+                        glm::vec3 cameraBackoffOffset(0.0f, 0.0f, 30.0f * sectorCameraComponent.backOffFactor);
+
+                        // Keep the camera target between the mech and where the player is aiming at.
+                        // The aiming point is kept close to the mech to avoid having the camera turn too much,
+                        // as that makes the mech difficult to control.
                         const float mechAimTargetDistance = glm::length(mechAimTarget - anchorPosition);
-                        const float maxMechAimTargetDistance = 80.0f;
+                        const float maxMechAimTargetDistance = 20.0f;
+                        glm::vec3 mechAimTargetRestricted(mechAimTarget);
                         if (mechAimTargetDistance > maxMechAimTargetDistance)
                         {
-                            mechAimTarget = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
+                            mechAimTargetRestricted = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
                         }
 
-                        cameraWantedTarget = (mechDirectionTarget + mechAimTarget) / 2.0f;
+                        const glm::vec3 wantedAimLocal = mechAimTargetRestricted - anchorPosition;
+                        Pandora::DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
+
+                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset;
+                        cameraWantedTarget = anchorPosition + sectorCameraComponent.aimLocal;
                     }
                     else
                     {
-                        cameraWantedTarget = mechDirectionTarget;
+                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset;
                     }
                 }
             }
 
-            glm::vec3 cameraPosition = sectorCameraComponent.position + anchorPosition;
+            Pandora::DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
 
-            DampSpring(sectorCameraComponent.target, cameraWantedTarget, sectorCameraComponent.velocity, 1.0f, delta);
+            sectorCameraComponent.position = sectorCameraComponent.position;
+            sectorCameraComponent.target = cameraWantedTarget;
 
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-            cameraComponent.camera.LookAt(cameraPosition, sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
-
-            if (sectorCameraComponent.debugDraw)
-            {
-                GetDebugRender()->Circle(sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Red, 2.0f, 10.0f);
-                GetDebugRender()->Circle(cameraWantedTarget, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Green, 2.0f, 10.0f);
-            }
+            cameraComponent.camera.LookAt(sectorCameraComponent.position, sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
         }
         else if (pCamera->HasComponent<OrbitCameraComponent>())
         {
@@ -154,25 +157,6 @@ void CameraSystem::Update(float delta)
     }
 }
 
-// Found in https://gamedev.net/forums/topic/329868-damped-spring-effects-for-camera/3149147/?page=1
-// Use a damped spring to move v0 towards target given a current velocity, time over which the spring would
-// cover 90% of the distance from rest and the delta time.
-void CameraSystem::DampSpring(glm::vec3& v0, const glm::vec3& target, glm::vec3& velocity, float time90, float delta) const
-{
-    const float c0 = delta * 3.75f / time90;
-    if (c0 >= 1.0f)
-    {
-        // If our distance to the target is too small, we go the whole way to prevent oscillation.
-        v0 = target;
-        velocity = glm::vec3(0.0f);
-        return;
-    }
-
-    const glm::vec3 diff = target - v0;
-    const glm::vec3 force = diff - 2.0f * velocity;
-    v0 += velocity * c0;
-    velocity += force * c0;
-}
 
 glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
 {

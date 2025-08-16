@@ -20,11 +20,17 @@ public:
     SectorCameraComponent() {}
     ~SectorCameraComponent() {}
 
+    glm::vec3 defaultOffset{0.0f, 60.0f, 45.0f};
     glm::vec3 position{0.0f};
     glm::vec3 maximumDrift{0.0f};
     float driftTimer{0.0f};
     glm::vec3 target{0.0f};
-    glm::vec3 velocity{0.0f};
+    glm::vec3 positionVelocity{0.0f};
+    glm::vec3 targetVelociy{0.0f};
+    float backOffFactor{0.0f};
+    float backOffFactorVelocity{0.0f};
+    glm::vec3 aimLocal{0.0f};
+    glm::vec3 aimLocalVelocity{0.0f};
     Pandora::EntityWeakPtr anchorEntity;
     bool debugDraw{false};
 
@@ -35,7 +41,8 @@ public:
         json["maximum_drift"] = SerializeVec3(maximumDrift);
         json["drift_timer"] = driftTimer;
         json["target"] = SerializeVec3(target);
-        json["velocity"] = SerializeVec3(velocity);
+        json["position_velocity"] = SerializeVec3(positionVelocity);
+        json["target_velocity"] = SerializeVec3(targetVelociy);
         json["debug_draw"] = debugDraw;
         return json;
     }
@@ -46,7 +53,8 @@ public:
         maximumDrift = DeserializeVec3(json, "maximum_drift");
         driftTimer = DeserializeRequired<float>(json, "drift_timer");
         target = DeserializeVec3(json, "target");
-        velocity = DeserializeVec3(json, "velocity");
+        positionVelocity = DeserializeVec3(json, "position_velocity");
+        targetVelociy = DeserializeVec3(json, "target_velocity");
         debugDraw = DeserializeOptional<bool>(json, "debug_draw", false);
     }
 };

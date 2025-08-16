@@ -23,7 +23,6 @@ public:
     glm::vec3 MouseToWorld(const glm::vec2& mousePos) const;
 
 private:
-    void DampSpring(glm::vec3& v0, const glm::vec3& target, glm::vec3& velocity, float time90, float delta) const;
 
     Pandora::InputCallbackToken m_RightMouseButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_RightMouseButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
