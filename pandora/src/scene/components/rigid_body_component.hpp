@@ -23,6 +23,14 @@ namespace WingsOfSteel::Pandora
 
 DECLARE_SMART_PTR(CollisionShape);
 
+// Safe wrapper for storing Entity weak_ptr in Bullet's void* user pointer
+struct EntityUserData
+{
+    EntityWeakPtr entity;
+    
+    EntityUserData(EntityWeakPtr pEntity) : entity(pEntity) {}
+};
+
 enum class MotionType
 {
     Static,
@@ -34,6 +42,7 @@ class RigidBodyComponent : public IComponent
 {
 public:
     RigidBodyComponent() = default;
+    ~RigidBodyComponent();
 
     btRigidBody* GetBulletRigidBody() { return m_pRigidBody.get(); }
     const btRigidBody* GetBulletRigidBody() const { return m_pRigidBody.get(); }
@@ -82,8 +91,11 @@ public:
 
     void Deserialize(const nlohmann::json& json) override;
 
-    void SetOwner(EntityWeakPtr pOwner) { m_pOwner = pOwner; }
+    void SetOwner(EntitySharedPtr pOwner);
     EntityWeakPtr GetOwner() { return m_pOwner; }
+    
+    // Static utility function to safely get Entity from rigid body user pointer
+    static EntitySharedPtr GetEntityFromRigidBody(const btRigidBody* pRigidBody);
 
 private:
     void CalculateInvInertiaTensorWorld();
@@ -103,6 +115,7 @@ private:
     std::string m_ResourcePath;
     std::optional<glm::mat4> m_WorldTransform;
     EntityWeakPtr m_pOwner;
+    std::unique_ptr<EntityUserData> m_pUserData;
 };
 
 } // namespace WingsOfSteel::Pandora

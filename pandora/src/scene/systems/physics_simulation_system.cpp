@@ -107,9 +107,8 @@ std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::R
         
         // Find the entity associated with the hit collision object
         const btCollisionObject* pCollisionObject = rayCallback.m_collisionObject;
-        RigidBodyComponent* pRigidBodyComponent = reinterpret_cast<RigidBodyComponent*>(pCollisionObject->getUserPointer());
-        assert(pRigidBodyComponent);
-        result.pEntity = pRigidBodyComponent->GetOwner().lock();
+        const btRigidBody* pRigidBody = reinterpret_cast<const btRigidBody*>(pCollisionObject);
+        result.pEntity = RigidBodyComponent::GetEntityFromRigidBody(pRigidBody);
         
         return result;
     }

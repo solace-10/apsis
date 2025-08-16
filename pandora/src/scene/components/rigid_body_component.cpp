@@ -10,6 +10,14 @@
 namespace WingsOfSteel::Pandora
 {
 
+RigidBodyComponent::~RigidBodyComponent()
+{
+    if (m_pRigidBody)
+    {
+        m_pRigidBody->setUserPointer(nullptr);
+    }
+}
+
 void RigidBodyComponent::Deserialize(const nlohmann::json& json)
 {
     m_MotionType = DeserializeEnum<MotionType>(json, "motion_type", MotionType::Dynamic);
@@ -210,6 +218,32 @@ const glm::vec3 RigidBodyComponent::GetRightVector() const
 {
     const btVector3 dir = m_pRigidBody->getWorldTransform().getBasis()[2];
     return glm::vec3(dir[2], dir[1], dir[0]);
+}
+
+void RigidBodyComponent::SetOwner(EntitySharedPtr pOwner)
+{
+    assert(m_pRigidBody != nullptr);
+    m_pOwner = pOwner;
+
+    // We cannot set the RigidBody's user pointer to `this`, as components can get moved!
+    m_pUserData = std::make_unique<EntityUserData>(pOwner);
+    m_pRigidBody->setUserPointer(m_pUserData.get());
+}
+
+EntitySharedPtr RigidBodyComponent::GetEntityFromRigidBody(const btRigidBody* pRigidBody)
+{
+    if (!pRigidBody)
+    {
+        return nullptr;
+    }
+    
+    EntityUserData* pUserData = static_cast<EntityUserData*>(pRigidBody->getUserPointer());
+    if (!pUserData)
+    {
+        return nullptr;
+    }
+    
+    return pUserData->entity.lock();
 }
 
 void RigidBodyComponent::CalculateInvInertiaTensorWorld()
