@@ -6,6 +6,8 @@
 
 #include <stb_image.h>
 
+#include <cstring>
+
 namespace WingsOfSteel::Dome
 {
 

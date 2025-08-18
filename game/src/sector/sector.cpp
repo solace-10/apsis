@@ -83,11 +83,7 @@ void Sector::Update(float delta)
         Pandora::GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 50.0f);
         Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Pandora::Color::White);
     }
-
-    using namespace Pandora;
-    TransformComponent& transformComponent = m_pDome->GetComponent<TransformComponent>();
-    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
+    
     DrawCameraDebugUI();
 }
 
@@ -140,10 +136,7 @@ void Sector::SpawnDome()
     SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
 
     TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    // transformComponent.transform = glm::scale(glm::translate(glm::mat4(1.0f), sectorCameraComponent.position + glm::vec3(0.0f, 0.0f, 100.0f)), glm::vec3(20.0f));
-
-    static float rotation = 90.0f;
-    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     ModelComponent& modelComponent = m_pDome->AddComponent<ModelComponent>();
     modelComponent.SetModel("/models/dome/dome.glb");

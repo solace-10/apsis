@@ -129,7 +129,8 @@
             ],
             "targets": [
                 "setup_compile_commands",
-                "game"
+                "game",
+                "dome"
             ]
         },
         {
