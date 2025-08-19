@@ -22,6 +22,7 @@ namespace WingsOfSteel::TheBrightestStar
 struct Hardpoint
 {
     std::string m_Name;
+    std::string m_Weapon; // Weapon to equip once this hardpoint is deserialised.
     glm::mat4 m_AttachmentPointTransform{ 1.0f };
     float m_ArcMinDegrees{ 0.0f };
     float m_ArcMaxDegrees{ 0.0f };
@@ -35,7 +36,8 @@ struct Hardpoint
 class HardpointComponent : public Pandora::IComponent
 {
 public:
-    HardpointComponent() {}
+    HardpointComponent() = default;
+    ~HardpointComponent() = default;
     std::vector<Hardpoint> hardpoints;
 
     nlohmann::json Serialize() const override;

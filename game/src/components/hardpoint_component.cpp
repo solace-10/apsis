@@ -5,11 +5,12 @@
 
 namespace WingsOfSteel::TheBrightestStar
 {
-    
+
 nlohmann::json Hardpoint::Serialize() const
 {
     nlohmann::json json;
     json["name"] = m_Name;
+    json["weapon"] = m_Weapon;
     json["arc_min_degrees"] = m_ArcMinDegrees;
     json["arc_max_degrees"] = m_ArcMaxDegrees;
     return json;
@@ -18,6 +19,7 @@ nlohmann::json Hardpoint::Serialize() const
 void Hardpoint::Deserialize(const nlohmann::json& json)
 {
     m_Name = Pandora::IComponent::DeserializeRequired<std::string>(json, "name");
+    m_Weapon = Pandora::IComponent::DeserializeOptional<std::string>(json, "weapon", "");
     m_ArcMinDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
     m_ArcMaxDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
 }

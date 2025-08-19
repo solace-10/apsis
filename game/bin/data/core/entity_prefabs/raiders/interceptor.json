@@ -29,6 +29,18 @@
         },
         {
             "type": "ship_navigation"
+        },
+        {
+            "type": "hardpoint",
+            "resource": "/models/raiders/interceptor.glb",
+            "hardpoints": [
+                {
+                    "name": "FixedMount",
+                    "arc_min_degrees": -5,
+                    "arc_max_degrees": 5,
+                    "weapon": "/entity_prefabs/weapons/raiders/interceptor_rotary_cannon.json"
+                }
+            ]
         }
     ]
 }

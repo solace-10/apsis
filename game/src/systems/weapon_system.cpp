@@ -15,9 +15,18 @@
 namespace WingsOfSteel::TheBrightestStar
 {
 
+WeaponSystem::~WeaponSystem()
+{
+    Pandora::Scene* pScene = Game::Get()->GetSector();
+    if (pScene)
+    {
+        pScene->GetRegistry().on_destroy<HardpointComponent>().disconnect<&WeaponSystem::OnHardpointsDestroyed>(this);
+    }
+}
+
 void WeaponSystem::Initialize(Pandora::Scene* pScene)
 {
-    // Initialization stub
+    pScene->GetRegistry().on_destroy<HardpointComponent>().connect<&WeaponSystem::OnHardpointsDestroyed>(this);
 }
 
 void WeaponSystem::Update(float delta)
@@ -31,10 +40,10 @@ void WeaponSystem::Update(float delta)
         EntitySharedPtr pWeaponEntity = weaponComponent.GetOwner().lock();
         if (pWeaponEntity)
         {
-            EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
+        EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
             if (pParentEntity)
             {
-                rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
+            rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
             }
         }
 
@@ -92,6 +101,25 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::Entity
             }
         }
     );
+}
+
+void WeaponSystem::OnHardpointsDestroyed(entt::registry& registry, entt::entity entity)
+{
+    Sector* pSector = Game::Get()->GetSector();
+    if (!pSector)
+    {
+        return;
+    }
+
+    HardpointComponent& hardpointComponent = registry.get<HardpointComponent>(entity);
+    for (auto& hardpoint : hardpointComponent.hardpoints)
+    {
+        if (hardpoint.m_pEntity)
+        {
+            pSector->RemoveEntity(hardpoint.m_pEntity);
+            hardpoint.m_pEntity.reset();
+        }
+    }
 }
 
 void WeaponSystem::FireWeapon(Pandora::EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)

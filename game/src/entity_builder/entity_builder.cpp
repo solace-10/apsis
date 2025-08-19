@@ -11,8 +11,10 @@
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/scene.hpp>
 
+#include "components/hardpoint_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
+#include "systems/weapon_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
@@ -105,6 +107,22 @@ void EntityBuilder::InstantiateComponents(Pandora::EntitySharedPtr pEntity, cons
     if (pEntity->HasComponent<EntityReferenceComponent>())
     {
         pEntity->GetComponent<EntityReferenceComponent>().SetOwner(pEntity);
+    }
+
+    if (pEntity->HasComponent<HardpointComponent>())
+    {
+        const auto& hardpointComponent = pEntity->GetComponent<HardpointComponent>();
+        for (const auto& hardpoint : hardpointComponent.hardpoints)
+        {
+            if (!hardpoint.m_Weapon.empty())
+            {
+                Game::Get()->GetSector()->GetSystem<WeaponSystem>()->AttachWeapon(
+                    hardpoint.m_Weapon,
+                    pEntity,
+                    hardpoint.m_Name
+                );
+            }
+        }
     }
 
     if (onEntityReadyCallback)
