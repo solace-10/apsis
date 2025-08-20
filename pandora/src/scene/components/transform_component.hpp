@@ -13,9 +13,9 @@ class TransformComponent : public IComponent
 public:
     TransformComponent() = default;
     const glm::vec3 GetTranslation() const { return transform[3]; }
-    const glm::vec3 GetForward() const { return transform[2]; }
-    const glm::vec3 GetRight() const { return transform[0]; }
-    const glm::vec3 GetUp() const { return transform[1]; }
+    const glm::vec3 GetForward() const { return glm::normalize(transform[2]); }
+    const glm::vec3 GetRight() const { return glm::normalize(transform[0]); }
+    const glm::vec3 GetUp() const { return glm::normalize(transform[1]); }
 
     glm::mat4 transform{ 1.0f };
 

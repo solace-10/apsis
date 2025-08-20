@@ -24,8 +24,8 @@
         },
         {
             "type": "ship_engine",
-            "linear_force": 500.0,
-            "torque": 3000.0
+            "linear_force": 400.0,
+            "torque": 1000.0
         },
         {
             "type": "ship_navigation"
@@ -41,6 +41,15 @@
                     "weapon": "/entity_prefabs/weapons/raiders/interceptor_rotary_cannon.json"
                 }
             ]
+        },
+        {
+            "type": "ai_strikecraft_controller",
+            "optimal_range": 50,
+            "min_range": 10,
+            "max_range": 60,
+            "firing_angle": 10,
+            "attack_duration": 3,
+            "break_duration": 3
         }
     ]
 }

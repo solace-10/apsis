@@ -192,7 +192,6 @@ void Sector::SpawnEnemyFleet()
             SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
             if (pScene)
             {
-                pEntity->AddComponent<AIStrikecraftControllerComponent>();
                 pScene->m_pEnemyFleet->AddShip(pEntity);
             }
         });
