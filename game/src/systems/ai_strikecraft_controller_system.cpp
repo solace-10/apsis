@@ -1,8 +1,8 @@
 #include <pandora.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
-#include <random>
 #include <render/debug_render.hpp>
+#include <core/random.hpp>
 
 #include "components/ai_strikecraft_controller_component.hpp"
 #include "components/hardpoint_component.hpp"
@@ -102,19 +102,17 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             
             if (controller.ShouldChangeState())
             {
-                static std::random_device rd;
-                static std::mt19937 gen(rd());
-                
-                glm::vec3 repositionOffset = glm::vec3(
-                    std::uniform_real_distribution<float>(-1.0f, 1.0f)(gen),
-                    0.0f,
-                    std::uniform_real_distribution<float>(-1.0f, 1.0f)(gen)
-                );
-                repositionOffset = glm::normalize(repositionOffset) * controller.GetOptimalRange();
-                
-                controller.SetRepositionTarget(targetPos + repositionOffset);
-
-                controller.SetState(AIStrikecraftState::REPOSITION);
+                if (Pandora::Random::Get(0.0f, 1.0f) < 0.8f)
+                {
+                    controller.SetState(AIStrikecraftState::APPROACH);
+                }
+                else
+                {
+                    const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Pandora::Random::Get(-1.0f, 1.0f), 0.0f, Pandora::Random::Get(-1.0f, 1.0f)));
+                    const glm::vec3 repositionOffset = repositionDirection * controller.GetOptimalRange();
+                    controller.SetRepositionTarget(targetPos + repositionOffset);
+                    controller.SetState(AIStrikecraftState::REPOSITION);
+                }
             }
             break;
         }
@@ -128,10 +126,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             UpdateWeaponSystems(entity, targetPos, false);
 
             const float repositionGoalRadius = 20.0f;
-            GetDebugRender()->Circle(repositionTarget, glm::vec3(0.0f, 1.0f, 0.0f), Color::Yellow, repositionGoalRadius, 16.0f);
-            GetDebugRender()->Line(myPos, repositionTarget, Color::Yellow);
-            
-            float distanceToReposition = glm::length(repositionTarget - myPos);
+            const float distanceToReposition = glm::length(repositionTarget - myPos);
             if (distanceToReposition < repositionGoalRadius)
             {
                 controller.SetState(AIStrikecraftState::APPROACH);
@@ -151,14 +146,12 @@ glm::vec3 AIStrikecraftControllerSystem::CalculateInterceptPoint(const glm::vec3
 
 glm::vec3 AIStrikecraftControllerSystem::GenerateBreakDirection(const glm::vec3& forward, const glm::vec3& toTarget) const
 {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
+    using namespace Pandora;
     
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));    
-    float rightComponent = std::uniform_real_distribution<float>(-1.0f, 1.0f)(gen);
-    float forwardComponent = std::uniform_real_distribution<float>(-0.5f, 0.5f)(gen);
-    
-    glm::vec3 breakDir = right * rightComponent + forward * forwardComponent;
+    const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));    
+    const float rightComponent = Random::Get(-1.0f, 1.0f);
+    const float forwardComponent = Random::Get(-0.5f, 0.5f);
+    const glm::vec3 breakDir = right * rightComponent + forward * forwardComponent;
     return glm::normalize(breakDir);
 }
 

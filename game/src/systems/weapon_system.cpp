@@ -38,12 +38,17 @@ void WeaponSystem::Update(float delta)
     view.each([delta, this](const auto entity, WeaponComponent& weaponComponent, TransformComponent& transformComponent) {
         glm::mat4 rootWorldTransform{ 1.0f };
         EntitySharedPtr pWeaponEntity = weaponComponent.GetOwner().lock();
+        bool shouldDrawFiringArc = false;
         if (pWeaponEntity)
         {
-        EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
+            EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
             if (pParentEntity)
             {
-            rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
+                rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
+                if (pParentEntity == Game::Get()->GetSector()->GetPlayerMech())
+                {
+                    shouldDrawFiringArc = true;
+                }
             }
         }
 
@@ -52,13 +57,16 @@ void WeaponSystem::Update(float delta)
         const glm::vec3 hardpointForward(-rootWorldTransform[2]); // We negate the forward vector because our ships are -Z facing.
         const glm::vec3 hardpointUp(rootWorldTransform[1]);
 
-        DrawFiringArc(
-            hardpointTranslation,
-            hardpointForward,
-            hardpointUp,
-            weaponComponent.m_ArcMinDegrees,
-            weaponComponent.m_ArcMaxDegrees,
-            weaponComponent.m_Range);
+        if (shouldDrawFiringArc)
+        {
+            DrawFiringArc(
+                hardpointTranslation,
+                hardpointForward,
+                hardpointUp,
+                weaponComponent.m_ArcMinDegrees,
+                weaponComponent.m_ArcMaxDegrees,
+                weaponComponent.m_Range);
+        }
 
         transformComponent.transform = hardpointWorldTransform;
 
@@ -141,24 +149,24 @@ void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& for
     // GetDebugRender()->Line(position, position + forward * arcLength, Color::Purple);
 
     // Draw arc min line
-    glm::mat4 rotationMin = glm::rotate(glm::mat4(1.0f), glm::radians(arcMinDegrees), up);
-    glm::vec3 rotatedForwardMin = glm::vec3(rotationMin * glm::vec4(forward, 0.0f));
-    GetDebugRender()->Line(position, position + rotatedForwardMin * arcLength, Color::Yellow);
+    const glm::mat4 rotationMin = glm::rotate(glm::mat4(1.0f), glm::radians(arcMinDegrees), up);
+    const glm::vec3 rotatedForwardMin = glm::vec3(rotationMin * glm::vec4(forward, 0.0f));
+    GetDebugRender()->Line(position, position + rotatedForwardMin * arcLength, Color::Gray);
 
     // Draw arc max line
-    glm::mat4 rotationMax = glm::rotate(glm::mat4(1.0f), glm::radians(arcMaxDegrees), up);
-    glm::vec3 rotatedForwardMax = glm::vec3(rotationMax * glm::vec4(forward, 0.0f));
-    GetDebugRender()->Line(position, position + rotatedForwardMax * arcLength, Color::Yellow);
+    const glm::mat4 rotationMax = glm::rotate(glm::mat4(1.0f), glm::radians(arcMaxDegrees), up);
+    const glm::vec3 rotatedForwardMax = glm::vec3(rotationMax * glm::vec4(forward, 0.0f));
+    GetDebugRender()->Line(position, position + rotatedForwardMax * arcLength, Color::Gray);
 
     // Draw the arc edge as connected line segments
     glm::vec3 prevPoint = position;
     for (float angle = arcMinDegrees; angle <= arcMaxDegrees; angle += 1.0f)
     {
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), up);
-        glm::vec3 rotatedForward = glm::vec3(rotation * glm::vec4(forward, 0.0f));
-        glm::vec3 currentPoint = position + rotatedForward * arcLength;
+        const glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), up);
+        const glm::vec3 rotatedForward = glm::vec3(rotation * glm::vec4(forward, 0.0f));
+        const glm::vec3 currentPoint = position + rotatedForward * arcLength;
 
-        GetDebugRender()->Line(prevPoint, currentPoint, Color::Yellow);
+        GetDebugRender()->Line(prevPoint, currentPoint, Color::Gray);
         prevPoint = currentPoint;
     }
 }

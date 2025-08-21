@@ -24,8 +24,8 @@
         },
         {
             "type": "ship_engine",
-            "linear_force": 400.0,
-            "torque": 1000.0
+            "linear_force": 300.0,
+            "torque": 500.0
         },
         {
             "type": "ship_navigation"
@@ -44,8 +44,8 @@
         },
         {
             "type": "ai_strikecraft_controller",
-            "optimal_range": 50,
-            "min_range": 10,
+            "optimal_range": 60,
+            "min_range": 20,
             "max_range": 60,
             "firing_angle": 10,
             "attack_duration": 3,
