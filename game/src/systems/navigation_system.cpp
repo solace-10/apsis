@@ -18,7 +18,7 @@ void NavigationSystem::TurnTowards(const glm::vec3& position, Pandora::RigidBody
 
         float angleError = glm::acos(glm::clamp(glm::dot(aimDirection, forward), -1.0f, 1.0f));
         const float dotProduct = glm::dot(aimDirection, rightVector);
-        if (dotProduct > 0.0f)
+        if (dotProduct < 0.0f)
         {
             angleError *= -1.0f;
         }

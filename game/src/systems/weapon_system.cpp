@@ -54,10 +54,10 @@ void WeaponSystem::Update(float delta)
 
         glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
         const glm::vec3 hardpointTranslation(hardpointWorldTransform[3]);
-        const glm::vec3 hardpointForward(-rootWorldTransform[2]); // We negate the forward vector because our ships are -Z facing.
+        const glm::vec3 hardpointForward(rootWorldTransform[2]);
         const glm::vec3 hardpointUp(rootWorldTransform[1]);
 
-        if (shouldDrawFiringArc)
+        if (shouldDrawFiringArc || true)
         {
             DrawFiringArc(
                 hardpointTranslation,

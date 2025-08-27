@@ -51,7 +51,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
     const glm::vec3 targetPos = target->GetComponent<TransformComponent>().GetTranslation();
     const glm::vec3 toTarget = targetPos - myPos;
     const float distanceToTarget = glm::length(toTarget);
-    const glm::vec3 forward = -transform.GetForward();
+    const glm::vec3 forward = transform.GetForward();
     const float angleToTarget = glm::degrees(glm::acos(glm::clamp(glm::dot(glm::normalize(toTarget), forward), -1.0f, 1.0f)));
     
     controller.SetLastTargetPosition(targetPos);

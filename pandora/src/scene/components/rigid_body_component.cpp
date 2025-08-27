@@ -205,7 +205,7 @@ void RigidBodyComponent::SetAngularFactor(const glm::vec3& angularFactor)
 const glm::vec3 RigidBodyComponent::GetForwardVector() const
 {
     const btVector3 dir = m_pRigidBody->getWorldTransform().getBasis()[0];
-    return -glm::vec3(dir[2], dir[1], dir[0]);
+    return glm::vec3(dir[2], dir[1], dir[0]);
 }
 
 const glm::vec3 RigidBodyComponent::GetUpVector() const
