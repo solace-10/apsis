@@ -173,6 +173,14 @@ void Sector::SpawnPlayerFleet()
         }
     });
 
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
+        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
+        if (pScene)
+        {
+            pScene->m_pCarrier = pEntity;
+        }
+    });
+
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
     // for (const std::string& name : escortNames)
     // {

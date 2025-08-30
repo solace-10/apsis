@@ -33,6 +33,7 @@ private:
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
     Pandora::EntityWeakPtr m_pPlayerMech;
+    Pandora::EntityWeakPtr m_pCarrier;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ true };
 };
