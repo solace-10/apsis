@@ -17,7 +17,7 @@
 #include "components/ai_strikecraft_controller_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
-#include "fleet.hpp"
+#include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
@@ -71,12 +71,16 @@ void Sector::Initialize()
 
     SpawnDome();
     SpawnPlayerFleet();
-    SpawnEnemyFleet();
+
+    m_pEncounter = std::make_unique<Encounter>();
+    m_pEncounter->Initialize(std::static_pointer_cast<Sector>(shared_from_this()));
 }
 
 void Sector::Update(float delta)
 {
     Pandora::Scene::Update(delta);
+
+    m_pEncounter->Update(delta);
 
     if (m_ShowGrid)
     {
@@ -145,7 +149,6 @@ void Sector::SpawnDome()
 void Sector::SpawnPlayerFleet()
 {
     using namespace Pandora;
-    m_pPlayerFleet = std::make_shared<Fleet>();
 
     SceneWeakPtr pWeakScene = weak_from_this();
     EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
@@ -153,8 +156,7 @@ void Sector::SpawnPlayerFleet()
         if (pScene)
         {
             pScene->m_pPlayerMech = pEntity;
-            pScene->m_pPlayerMech->AddComponent<PlayerControllerComponent>();
-            pScene->m_pPlayerFleet->AddShip(pEntity);
+            pEntity->AddComponent<PlayerControllerComponent>();
             pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pEntity;
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
@@ -178,29 +180,6 @@ void Sector::SpawnPlayerFleet()
     //     pEscort->AddComponent<DiceComponent>();
     //     m_pPlayerFleet->AddShip(pEscort);
     // }
-}
-
-void Sector::SpawnEnemyFleet()
-{
-    m_pEnemyFleet = std::make_shared<Fleet>();
-
-    for (int i = 0; i < 5; i++)
-    {
-        float positionX = -60 + 30.0f * static_cast<float>(i);
-        Pandora::SceneWeakPtr pWeakScene = weak_from_this();
-        EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/interceptor.json", glm::translate(glm::mat4(1.0f), glm::vec3(positionX, 0.0f, -60.0f)), [pWeakScene](Pandora::EntitySharedPtr pEntity){
-            SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
-            if (pScene)
-            {
-                pScene->m_pEnemyFleet->AddShip(pEntity);
-            }
-        });
-    }
-}
-
-Fleet* Sector::GetPlayerFleet() const
-{
-    return m_pPlayerFleet.get();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

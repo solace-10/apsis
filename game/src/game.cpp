@@ -8,10 +8,8 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "game.hpp"
-#include "hyperscape/hyperscape.hpp"
 #include "items/item_info.hpp"
 #include "sector/sector.hpp"
-#include "sector/sector_signal.hpp"
 #include "ui/prefab_editor.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -41,17 +39,9 @@ void Game::Initialize()
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
 
-    // m_pItemManager = std::make_unique<ItemManager>();
-    //  m_pSectorGenerator = std::make_unique<SectorGenerator>();
+    m_pSector = std::make_shared<Sector>();
+    m_pSector->Initialize();
 
-    m_pHyperscape = std::make_unique<Hyperscape>();
-    m_pHyperscape->Initialize();
-
-    auto sectorSignals = m_pHyperscape->GetSignals();
-    assert(sectorSignals.size() == 1);
-    SectorSignal* pSectorSignal = sectorSignals.back();
-
-    m_pSector = pSectorSignal->Spawn();
     Pandora::SetActiveScene(m_pSector);
 }
 

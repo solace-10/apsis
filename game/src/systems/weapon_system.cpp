@@ -57,7 +57,7 @@ void WeaponSystem::Update(float delta)
         const glm::vec3 hardpointForward(rootWorldTransform[2]);
         const glm::vec3 hardpointUp(rootWorldTransform[1]);
 
-        if (shouldDrawFiringArc || true)
+        if (shouldDrawFiringArc)
         {
             DrawFiringArc(
                 hardpointTranslation,
