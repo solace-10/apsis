@@ -2,7 +2,7 @@
 
 #include <imgui/imgui.hpp>
 
-namespace WingsOfSteel::TheBrightestStar::UI::Internal
+namespace WingsOfSteel::UI::Internal
 {
 
 class DefaultMarkdown
@@ -15,4 +15,4 @@ private:
     static void LinkCallback(ImGui::MarkdownLinkCallbackData data);
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI::Internal
+} // namespace WingsOfSteel::UI::Internal

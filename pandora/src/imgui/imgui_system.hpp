@@ -7,7 +7,7 @@
 #include <magic_enum.hpp>
 #include <webgpu/webgpu_cpp.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 using ImGuiGameMenuBarCallback = std::function<void()>;
@@ -54,4 +54,4 @@ inline ImFont* ImGuiSystem::GetFont(Font font) const
     return m_Fonts[static_cast<size_t>(font)];
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

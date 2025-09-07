@@ -4,7 +4,7 @@
 #include "pandora.hpp"
 #include "render/debug_render.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 void BulletDebugRender::SetEnabled(PhysicsVisualization::Mode mode, bool state)
@@ -42,7 +42,7 @@ int32_t BulletDebugRender::ToBulletFlag(PhysicsVisualization::Mode mode) const
 
 void BulletDebugRender::draw3dText(const btVector3& location, const char* pTextString)
 {
-    Pandora::GetDebugRender()->ScreenText(
+    GetDebugRender()->ScreenText(
         std::string(pTextString),
         glm::vec3(location.x(), location.y(), location.z()),
         Color::White);
@@ -50,7 +50,7 @@ void BulletDebugRender::draw3dText(const btVector3& location, const char* pTextS
 
 void BulletDebugRender::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
 {
-    Pandora::GetDebugRender()->Line(
+    GetDebugRender()->Line(
         glm::vec3(from.x(), from.y(), from.z()),
         glm::vec3(to.x(), to.y(), to.z()),
         Color(color.x(), color.y(), color.z()));
@@ -58,7 +58,7 @@ void BulletDebugRender::drawLine(const btVector3& from, const btVector3& to, con
 
 void BulletDebugRender::drawSphere(const btVector3& p, btScalar radius, const btVector3& color)
 {
-    Pandora::GetDebugRender()->Sphere(
+    GetDebugRender()->Sphere(
         glm::vec3(p.x(), p.y(), p.z()),
         Color(color.x(), color.y(), color.z()),
         radius);
@@ -83,4 +83,4 @@ int32_t BulletDebugRender::getDebugMode() const
     return m_BulletDebugMode;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

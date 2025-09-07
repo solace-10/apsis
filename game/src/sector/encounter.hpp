@@ -6,7 +6,7 @@
 #include <array>
 #include <vector>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Sector);
@@ -41,7 +41,7 @@ private:
 
     void RebuildTier(int tier);
     void InstantiateAction(const EncounterAction& action);
-    Pandora::EntityWeakPtr m_pCarrier;
+    EntityWeakPtr m_pCarrier;
     std::vector<WingUniquePtr> m_Wings;
 
     SectorWeakPtr m_pSector;
@@ -51,4 +51,4 @@ private:
 
 };
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

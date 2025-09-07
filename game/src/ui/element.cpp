@@ -4,7 +4,7 @@
 #include "imgui/imgui.hpp"
 #include "ui/element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 nlohmann::json Element::Serialize() const
@@ -93,4 +93,4 @@ bool Element::TryDeserialize(const nlohmann::json& data, const std::string& key,
     return false;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

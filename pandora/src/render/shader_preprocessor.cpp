@@ -1,6 +1,6 @@
 #include "render/shader_preprocessor.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 static std::string s_PreludeCode = R"(
@@ -44,4 +44,4 @@ uint32_t ShaderPreprocessor::ResolveLineNumber(uint32_t lineNumber)
     return lineNumber - s_PreludeLineCount;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

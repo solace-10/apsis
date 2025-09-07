@@ -2,7 +2,7 @@
 
 #include "vfs/private/web/manifest_entry.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 ManifestEntry::ManifestEntry(const std::string& path, const std::string& hash, uint64_t size)
@@ -27,6 +27,6 @@ const uint64_t ManifestEntry::GetSize() const
     return m_Size;
 }
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

@@ -4,7 +4,7 @@
 
 #include "resources/resource.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ResourceDataStore : public Resource
@@ -32,4 +32,4 @@ inline const nlohmann::json& ResourceDataStore::Data() const
     return m_Data;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

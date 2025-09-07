@@ -6,7 +6,7 @@
 
 class btCollisionWorld;
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class BulletDebugRender;
@@ -40,4 +40,4 @@ private:
     btCollisionWorld* m_pWorld{ nullptr };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

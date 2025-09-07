@@ -29,7 +29,7 @@
 #include "systems/ship_navigation_system.hpp"
 #include "systems/weapon_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 Sector::Sector()
@@ -42,8 +42,6 @@ Sector::~Sector()
 
 void Sector::Initialize()
 {
-    using namespace Pandora;
-
     Scene::Initialize();
 
     AddSystem<ModelRenderSystem>();
@@ -78,14 +76,14 @@ void Sector::Initialize()
 
 void Sector::Update(float delta)
 {
-    Pandora::Scene::Update(delta);
+    Scene::Update(delta);
 
     m_pEncounter->Update(delta);
 
     if (m_ShowGrid)
     {
-        Pandora::GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 50.0f);
-        Pandora::GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Pandora::Color::White);
+        GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 50.0f);
+        GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Color::White);
     }
     
     DrawCameraDebugUI();
@@ -133,8 +131,6 @@ void Sector::DrawCameraDebugUI()
 
 void Sector::SpawnDome()
 {
-    using namespace Pandora;
-
     m_pDome = CreateEntity();
 
     SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
@@ -148,8 +144,6 @@ void Sector::SpawnDome()
 
 void Sector::SpawnPlayerFleet()
 {
-    using namespace Pandora;
-
     SceneWeakPtr pWeakScene = weak_from_this();
     EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
@@ -184,10 +178,10 @@ void Sector::SpawnPlayerFleet()
     // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
     // for (const std::string& name : escortNames)
     // {
-    //     Pandora::EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
+    //     EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
     //     pEscort->AddComponent<DiceComponent>();
     //     m_pPlayerFleet->AddShip(pEscort);
     // }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

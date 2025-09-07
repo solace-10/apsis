@@ -8,7 +8,7 @@
 
 #include "vfs/private/vfs_impl.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 class VFSNative : public VFSImpl
@@ -30,6 +30,6 @@ private:
     std::unordered_map<std::string, std::filesystem::path> m_VFS;
 };
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_NATIVE

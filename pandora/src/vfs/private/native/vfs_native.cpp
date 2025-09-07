@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 VFSNative::VFSNative()
@@ -133,6 +133,6 @@ const std::vector<std::string> VFSNative::List(const std::string& path) const
     return files;
 }
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_NATIVE

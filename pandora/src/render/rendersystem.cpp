@@ -20,7 +20,7 @@
 #include "scene/scene.hpp"
 #include "scene/systems/model_render_system.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 wgpu::Instance g_Instance = nullptr;
@@ -340,4 +340,4 @@ ShaderEditor* RenderSystem::GetShaderEditor() const
     return m_pShaderEditor.get();
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

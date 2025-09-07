@@ -1,6 +1,6 @@
 #include "render/shader_compilation_result.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ShaderCompilationResult::ShaderCompilationResult(uint32_t id)
@@ -27,4 +27,4 @@ wgpu::ShaderModule ShaderCompilationResult::GetShaderModule() const
     return m_ShaderModule;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

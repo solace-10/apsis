@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ILogTarget;
@@ -148,4 +148,4 @@ public:
 };
 #endif
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

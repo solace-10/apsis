@@ -9,7 +9,7 @@
 
 #include "manifest_entry.hpp"
 
-namespace WingsOfSteel::Forge
+namespace WingsOfSteel
 {
 
 class Manifest
@@ -29,4 +29,4 @@ private:
     std::map<std::string, ManifestEntryUniquePtr> m_Entries;
 };
 
-} // namespace WingsOfSteel::Forge
+} // namespace WingsOfSteel

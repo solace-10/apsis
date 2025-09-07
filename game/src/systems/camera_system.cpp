@@ -15,7 +15,7 @@
 #include "components/mech_navigation_component.hpp"
 #include "systems/camera_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 CameraSystem::CameraSystem()
@@ -24,7 +24,7 @@ CameraSystem::CameraSystem()
 
 CameraSystem::~CameraSystem()
 {
-    Pandora::InputSystem* pInputSystem = Pandora::GetInputSystem();
+    InputSystem* pInputSystem = GetInputSystem();
     if (pInputSystem)
     {
         pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
@@ -33,9 +33,9 @@ CameraSystem::~CameraSystem()
     }
 }
 
-void CameraSystem::Initialize(Pandora::Scene* pScene)
+void CameraSystem::Initialize(Scene* pScene)
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
     m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
     m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
 
@@ -47,7 +47,7 @@ void CameraSystem::Initialize(Pandora::Scene* pScene)
 
 void CameraSystem::Update(float delta)
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera == nullptr)
     {
@@ -83,7 +83,7 @@ void CameraSystem::Update(float delta)
                         glm::vec3 mechAimTarget(mechAim.value());
                         glm::vec3 mechAimDirection = glm::normalize(mechAimTarget - anchorPosition);
                         const float backOffFactorTarget = glm::max(0.0f, mechAimDirection.z);
-                        Pandora::DampSpring(sectorCameraComponent.backOffFactor, backOffFactorTarget, sectorCameraComponent.backOffFactorVelocity, 3.0f, delta);
+                        DampSpring(sectorCameraComponent.backOffFactor, backOffFactorTarget, sectorCameraComponent.backOffFactorVelocity, 3.0f, delta);
                         glm::vec3 cameraBackoffOffset(0.0f, 0.0f, 30.0f * sectorCameraComponent.backOffFactor);
 
                         // Keep the camera target between the mech and where the player is aiming at.
@@ -98,7 +98,7 @@ void CameraSystem::Update(float delta)
                         }
 
                         const glm::vec3 wantedAimLocal = mechAimTargetRestricted - anchorPosition;
-                        Pandora::DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
+                        DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
 
                         cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset;
                         cameraWantedTarget = anchorPosition + sectorCameraComponent.aimLocal;
@@ -110,7 +110,7 @@ void CameraSystem::Update(float delta)
                 }
             }
 
-            Pandora::DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
+            DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
 
             sectorCameraComponent.position = sectorCameraComponent.position;
             sectorCameraComponent.target = cameraWantedTarget;
@@ -160,7 +160,7 @@ void CameraSystem::Update(float delta)
 
 glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera == nullptr || !pCamera->HasComponent<CameraComponent>())
     {
@@ -206,4 +206,4 @@ glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
     return nearPoint + rayDir * t;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

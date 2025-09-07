@@ -10,7 +10,7 @@
 #include "core/color.hpp"
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 namespace Private
@@ -110,4 +110,4 @@ private:
     std::unique_ptr<DebugRenderDemo> m_pDemo;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

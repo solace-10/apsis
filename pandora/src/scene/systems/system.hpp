@@ -4,7 +4,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Scene);
@@ -20,4 +20,4 @@ public:
     virtual void Update(float delta) = 0;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

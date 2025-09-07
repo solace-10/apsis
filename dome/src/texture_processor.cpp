@@ -6,7 +6,7 @@
 #include "buffered_texture_2d.hpp"
 #include <cassert>
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 std::vector<Point> TextureProcessor::GetEdgePoints(BufferedTexture2D* pSourceTexture, int threshold) const
@@ -251,4 +251,4 @@ std::vector<Vertex> TextureProcessor::GetColorizedVertices(const std::vector<Ver
     return colorizedVertices;
 }
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

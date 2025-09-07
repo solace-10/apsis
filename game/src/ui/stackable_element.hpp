@@ -4,7 +4,7 @@
 
 #include "ui/element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Stack);
@@ -44,4 +44,4 @@ inline void StackableElement::SetCell(int cell)
     m_Cell = cell;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

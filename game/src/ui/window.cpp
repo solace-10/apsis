@@ -15,7 +15,7 @@
 #include "ui/stack.hpp"
 #include "game.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 static const float sThemeWindowAccentHeight = 6.0f;
@@ -38,7 +38,6 @@ const std::string& Window::GetIcon() const
 
 void Window::Initialize(const std::string& prefabPath)
 {
-    using namespace Pandora;
     GetResourceSystem()->RequestResource(prefabPath, [this, prefabPath](ResourceSharedPtr pResource) {
         m_pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         Deserialize(m_pDataStore->Data());
@@ -224,4 +223,4 @@ ElementSharedPtr Window::FindElementHierarchyDescent(const std::vector<std::stri
     return nullptr;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

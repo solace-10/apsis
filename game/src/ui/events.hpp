@@ -2,9 +2,9 @@
 
 #include <functional>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 using OnClickedEvent = std::function<void()>;
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

@@ -17,7 +17,7 @@
 #include <stb_image.h>
 // clang-format on
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ResourceTexture2D::ResourceTexture2D(const std::string& label, const unsigned char* pData, size_t dataSize)
@@ -125,4 +125,4 @@ void ResourceTexture2D::LoadFromMemory(const std::string& label, const unsigned 
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

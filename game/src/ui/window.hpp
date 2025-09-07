@@ -11,7 +11,7 @@
 #include "ui/element.hpp"
 #include "ui/prefab_data.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Stack);
@@ -42,14 +42,14 @@ public:
     }
 
     StackSharedPtr GetStack() const;
-    Pandora::ResourceDataStore* GetDataStore() const;
+    ResourceDataStore* GetDataStore() const;
 
 private:
     void RenderBackground();
     ElementSharedPtr FindElementInternal(const std::string& path) const;
     ElementSharedPtr FindElementHierarchyDescent(const std::vector<std::string>& tokens, size_t currentElementIdx, StackSharedPtr pStackElement) const;
 
-    Pandora::ResourceDataStoreSharedPtr m_pDataStore;
+    ResourceDataStoreSharedPtr m_pDataStore;
     StackSharedPtr m_pStack;
 };
 
@@ -63,9 +63,9 @@ inline StackSharedPtr Window::GetStack() const
     return m_pStack;
 }
 
-inline Pandora::ResourceDataStore* Window::GetDataStore() const
+inline ResourceDataStore* Window::GetDataStore() const
 {
     return m_pDataStore.get();
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

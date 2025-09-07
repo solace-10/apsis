@@ -3,10 +3,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class AmmoMovementComponent : public Pandora::IComponent
+class AmmoMovementComponent : public IComponent
 {
 public:
     AmmoMovementComponent() = default;
@@ -37,4 +37,4 @@ private:
 
 REGISTER_COMPONENT(AmmoMovementComponent, "ammo_movement")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

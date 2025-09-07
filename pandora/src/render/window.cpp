@@ -15,7 +15,7 @@
 #include "pandora.hpp"
 #include "render/rendersystem.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 void OnWindowResizedCallback(GLFWwindow* pWindow, int width, int height)
@@ -111,4 +111,4 @@ bool Window::IsVSyncEnabled() const
     return m_VSyncEnabled;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

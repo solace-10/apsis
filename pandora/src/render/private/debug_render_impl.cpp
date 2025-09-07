@@ -10,7 +10,7 @@
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 DebugRenderImpl::DebugRenderImpl()
@@ -26,12 +26,12 @@ void DebugRenderImpl::Initialize()
 {
     dd::initialize(this);
 
-    Pandora::GetResourceSystem()->RequestResource("/shaders/debug_render_untextured.wgsl", [this](Pandora::ResourceSharedPtr pResource) {
-        m_pUntexturedShader = std::dynamic_pointer_cast<Pandora::ResourceShader>(pResource);
+    GetResourceSystem()->RequestResource("/shaders/debug_render_untextured.wgsl", [this](ResourceSharedPtr pResource) {
+        m_pUntexturedShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateLineRenderPipeline();
     });
 
-    wgpu::Device pDevice = Pandora::GetRenderSystem()->GetDevice();
+    wgpu::Device pDevice = GetRenderSystem()->GetDevice();
     wgpu::BufferDescriptor linesBufferDescriptor{
         .label = "Debug render vertex buffer (lines)",
         .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
@@ -40,8 +40,8 @@ void DebugRenderImpl::Initialize()
     m_LineVertexBuffer = pDevice.CreateBuffer(&linesBufferDescriptor);
     m_LineData.reserve(DEBUG_DRAW_VERTEX_BUFFER_SIZE);
 
-    Pandora::GetResourceSystem()->RequestResource("/shaders/debug_render_glyph.wgsl", [this](Pandora::ResourceSharedPtr pResource) {
-        m_pGlyphShader = std::dynamic_pointer_cast<Pandora::ResourceShader>(pResource);
+    GetResourceSystem()->RequestResource("/shaders/debug_render_glyph.wgsl", [this](ResourceSharedPtr pResource) {
+        m_pGlyphShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateGlyphRenderPipeline();
     });
 
@@ -317,4 +317,4 @@ void DebugRenderImpl::drawGlyphList(const dd::DrawVertex* glyphs, int count, dd:
     GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_GlyphVertexBuffer, 0, m_GlyphData.data(), m_GlyphData.size() * sizeof(GlyphData));
 }
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private

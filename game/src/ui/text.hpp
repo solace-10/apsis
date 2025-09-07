@@ -4,7 +4,7 @@
 
 #include "ui/stackable_element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Text);
@@ -65,4 +65,4 @@ inline bool Text::IsScrollable() const
     return m_IsScrollable;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

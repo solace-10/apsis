@@ -4,7 +4,7 @@
 #include <scene/components/component_factory.hpp>
 #include <glm/glm.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 enum class AIStrikecraftState
@@ -15,7 +15,7 @@ enum class AIStrikecraftState
     REPOSITION
 };
 
-class AIStrikecraftControllerComponent : public Pandora::IComponent
+class AIStrikecraftControllerComponent : public IComponent
 {
 public:
     AIStrikecraftControllerComponent() 
@@ -57,8 +57,8 @@ public:
         if (json.contains("break_duration")) m_BreakDuration = json["break_duration"];
     }
 
-    void SetTarget(Pandora::EntitySharedPtr pEntity) { m_pTarget = pEntity; }
-    Pandora::EntitySharedPtr GetTarget() const { return m_pTarget.lock(); }
+    void SetTarget(EntitySharedPtr pEntity) { m_pTarget = pEntity; }
+    EntitySharedPtr GetTarget() const { return m_pTarget.lock(); }
 
     AIStrikecraftState GetState() const { return m_State; }
     void SetState(AIStrikecraftState state) 
@@ -110,7 +110,7 @@ public:
     void SetRepositionTarget(const glm::vec3& pos) { m_RepositionTarget = pos; }
 
 private:
-    Pandora::EntityWeakPtr m_pTarget;
+    EntityWeakPtr m_pTarget;
     AIStrikecraftState m_State{ AIStrikecraftState::APPROACH };
     float m_StateTimer{ 0.0f };
     float m_AttackTimer{ 0.0f };
@@ -130,4 +130,4 @@ private:
 
 REGISTER_COMPONENT(AIStrikecraftControllerComponent, "ai_strikecraft_controller")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

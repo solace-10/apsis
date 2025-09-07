@@ -18,7 +18,7 @@
 #include "resources/resource_font.hpp"
 #include "resources/resource_system.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ImGuiSystem::ImGuiSystem()
@@ -203,4 +203,4 @@ void ImGuiSystem::ApplyStyle()
     pStyle->Colors[ImGuiCol_Separator] = ImColor(5, 250, 191, 255);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

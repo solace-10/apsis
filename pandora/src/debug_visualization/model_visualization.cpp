@@ -4,7 +4,7 @@
 #include "render/debug_render.hpp"
 #include "resources/resource_model.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ModelVisualization::ModelVisualization()
@@ -47,4 +47,4 @@ bool ModelVisualization::IsEnabled(Mode mode) const
     return (m_Mode & static_cast<uint32_t>(mode)) != 0;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -6,7 +6,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Element);
@@ -49,4 +49,4 @@ private:
     bool m_ElementPopup{false};
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

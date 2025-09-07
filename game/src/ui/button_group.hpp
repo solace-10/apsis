@@ -4,7 +4,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Button);
@@ -23,4 +23,4 @@ private:
     std::vector<ButtonWeakPtr> m_Buttons;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

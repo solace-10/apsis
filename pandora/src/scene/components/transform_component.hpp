@@ -5,7 +5,7 @@
 #include "icomponent.hpp"
 #include "component_factory.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class TransformComponent : public IComponent
@@ -34,4 +34,4 @@ public:
 
 REGISTER_COMPONENT(TransformComponent, "transform")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

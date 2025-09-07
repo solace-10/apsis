@@ -12,12 +12,11 @@
 #include "sector/sector.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 void AIStrikecraftControllerSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
     auto controllerView = registry.view<ShipNavigationComponent, AIStrikecraftControllerComponent, TransformComponent>();
@@ -43,10 +42,8 @@ void AIStrikecraftControllerSystem::Update(float delta)
 
 }
 
-void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, ShipNavigationComponent& navigation, AIStrikecraftControllerComponent& controller, const Pandora::TransformComponent& transform, Pandora::EntitySharedPtr target, float delta)
+void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, ShipNavigationComponent& navigation, AIStrikecraftControllerComponent& controller, const TransformComponent& transform, EntitySharedPtr target, float delta)
 {
-    using namespace Pandora;
-    
     const glm::vec3 myPos = transform.GetTranslation();
     const glm::vec3 targetPos = target->GetComponent<TransformComponent>().GetTranslation();
     const glm::vec3 toTarget = targetPos - myPos;
@@ -102,13 +99,13 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             
             if (controller.ShouldChangeState())
             {
-                if (Pandora::Random::Get(0.0f, 1.0f) < 0.8f)
+                if (Random::Get(0.0f, 1.0f) < 0.8f)
                 {
                     controller.SetState(AIStrikecraftState::APPROACH);
                 }
                 else
                 {
-                    const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Pandora::Random::Get(-1.0f, 1.0f), 0.0f, Pandora::Random::Get(-1.0f, 1.0f)));
+                    const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
                     const glm::vec3 repositionOffset = repositionDirection * controller.GetOptimalRange();
                     controller.SetRepositionTarget(targetPos + repositionOffset);
                     controller.SetState(AIStrikecraftState::REPOSITION);
@@ -146,8 +143,6 @@ glm::vec3 AIStrikecraftControllerSystem::CalculateInterceptPoint(const glm::vec3
 
 glm::vec3 AIStrikecraftControllerSystem::GenerateBreakDirection(const glm::vec3& forward, const glm::vec3& toTarget) const
 {
-    using namespace Pandora;
-    
     const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));    
     const float rightComponent = Random::Get(-1.0f, 1.0f);
     const float forwardComponent = Random::Get(-0.5f, 0.5f);
@@ -157,7 +152,6 @@ glm::vec3 AIStrikecraftControllerSystem::GenerateBreakDirection(const glm::vec3&
 
 void AIStrikecraftControllerSystem::UpdateWeaponSystems(entt::entity shipEntity, const glm::vec3& targetPos, bool shouldFire)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     
     auto hardpointView = registry.view<HardpointComponent>();
@@ -177,9 +171,9 @@ void AIStrikecraftControllerSystem::UpdateWeaponSystems(entt::entity shipEntity,
     });
 }
 
-Pandora::EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget() const
+EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget() const
 {
     return Game::Get()->GetSector()->GetPlayerMech();
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -9,7 +9,7 @@
 
 #include "manifest.hpp"
 
-namespace WingsOfSteel::Forge
+namespace WingsOfSteel
 {
 
 namespace fs = std::filesystem;
@@ -62,20 +62,20 @@ void Manifest::Save()
         {
             fs << manifest.dump(4);
             fs.close();
-            Pandora::Log::Info() << "Manifest file written out.";
+            Log::Info() << "Manifest file written out.";
         }
         else
         {
-            Pandora::Log::Error() << "Failed to write out manifest file.";
+            Log::Error() << "Failed to write out manifest file.";
         }
     } 
     catch (const fs::filesystem_error& e) 
     {
-        Pandora::Log::Error() << "Filesystem error: " << e.what();
+        Log::Error() << "Filesystem error: " << e.what();
     } 
     catch (const std::exception& e) 
     {
-        Pandora::Log::Error() << "General exception: " << e.what();
+        Log::Error() << "General exception: " << e.what();
     }
 }
 
@@ -107,16 +107,16 @@ void Manifest::BuildFromFilesystem()
         } 
         else 
         {
-            Pandora::Log::Error() << "Directory does not exist or is not a directory.";
+            Log::Error() << "Directory does not exist or is not a directory.";
         }
     } 
     catch (const fs::filesystem_error& e) 
     {
-        Pandora::Log::Error() << "Filesystem error: " << e.what();
+        Log::Error() << "Filesystem error: " << e.what();
     } 
     catch (const std::exception& e) 
     {
-        Pandora::Log::Error() << "General exception: " << e.what();
+        Log::Error() << "General exception: " << e.what();
     }
 }
     
@@ -127,7 +127,7 @@ void Manifest::OverrideFromPreviousManifest()
     std::ifstream manifestFile("../../game/bin/data/core/manifest.json");
     if (!manifestFile)
     {
-        Pandora::Log::Info() << "No previously existing manifest file to override from.";
+        Log::Info() << "No previously existing manifest file to override from.";
         return;
     }
 
@@ -184,4 +184,4 @@ std::string Manifest::GenerateHash(const fs::path& file)
     return std::string("");
 }
 
-} // namespace WingsOfSteel::Forge
+} // namespace WingsOfSteel

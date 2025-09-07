@@ -10,7 +10,7 @@
 #include "ui/text.hpp"
 #include "ui/ui.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 ElementSharedPtr CreateElement(const std::string& typeName)
@@ -45,9 +45,9 @@ ElementSharedPtr CreateElement(const std::string& typeName)
     }
     else
     {
-        Pandora::Log::Error() << "UI: don't know how to create element '" << typeName << "'.";
+        Log::Error() << "UI: don't know how to create element '" << typeName << "'.";
         return nullptr;
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class DebugRenderDemo
@@ -26,4 +26,4 @@ private:
     bool m_Show;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

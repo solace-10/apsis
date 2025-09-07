@@ -23,7 +23,7 @@ class Model;
 class Primitive;
 } // namespace tinygltf
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(CollisionShape);
@@ -197,4 +197,4 @@ private:
     Id m_Id{ 0 };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

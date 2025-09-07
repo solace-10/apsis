@@ -18,7 +18,7 @@
 class btRigidBody;
 class btMotionState;
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(CollisionShape);
@@ -118,4 +118,4 @@ private:
     std::unique_ptr<EntityUserData> m_pUserData;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

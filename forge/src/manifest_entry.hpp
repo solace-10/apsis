@@ -4,7 +4,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Forge
+namespace WingsOfSteel
 {
 
 enum class ManifestEntryMode
@@ -39,4 +39,4 @@ private:
     ManifestEntryMode m_Mode;
 };
 
-} // namespace WingsOfSteel::Forge
+} // namespace WingsOfSteel

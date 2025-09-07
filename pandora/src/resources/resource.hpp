@@ -6,7 +6,7 @@
 
 #include "vfs/vfs.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class Resource
@@ -31,4 +31,4 @@ private:
     ResourceState m_State;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

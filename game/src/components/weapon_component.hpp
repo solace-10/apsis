@@ -11,10 +11,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class WeaponComponent : public Pandora::IComponent
+class WeaponComponent : public IComponent
 {
 public:
     WeaponComponent() = default;
@@ -34,8 +34,8 @@ public:
     std::optional<glm::vec3> m_Target;
 
     // Owner: the Entity that has this component.
-    void SetOwner(Pandora::EntityWeakPtr pOwner) { m_pOwner = pOwner; }
-    Pandora::EntityWeakPtr GetOwner() { return m_pOwner; }
+    void SetOwner(EntityWeakPtr pOwner) { m_pOwner = pOwner; }
+    EntityWeakPtr GetOwner() { return m_pOwner; }
 
     nlohmann::json Serialize() const override
     {
@@ -54,9 +54,9 @@ public:
     }
 
 private:
-    Pandora::EntityWeakPtr m_pOwner;
+    EntityWeakPtr m_pOwner;
 };
 
 REGISTER_COMPONENT(WeaponComponent, "weapon")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -7,7 +7,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ResourceShader : public Resource
@@ -33,4 +33,4 @@ private:
     std::string m_ShaderCode;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

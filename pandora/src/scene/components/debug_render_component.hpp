@@ -6,7 +6,7 @@
 #include "icomponent.hpp"
 #include "component_factory.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 enum class DebugRenderShape
@@ -124,7 +124,7 @@ public:
         const auto& colorArray = json["color"];
         if (!colorArray.is_array() || colorArray.size() != 3)
         {
-            Pandora::Log::Error() << "Invalid color format";
+            Log::Error() << "Invalid color format";
             throw std::runtime_error("Invalid color format");
         }
         color = Color(colorArray[0].get<float>(), colorArray[1].get<float>(), 
@@ -136,4 +136,4 @@ public:
 
 REGISTER_COMPONENT(DebugRenderComponent, "debug_render")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

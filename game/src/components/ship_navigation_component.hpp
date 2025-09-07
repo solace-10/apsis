@@ -7,7 +7,7 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 enum class ShipThrust
@@ -17,7 +17,7 @@ enum class ShipThrust
     Backward
 };
 
-class ShipNavigationComponent : public Pandora::IComponent
+class ShipNavigationComponent : public IComponent
 {
 public:
     ShipNavigationComponent() {}
@@ -46,4 +46,4 @@ private:
 
 REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

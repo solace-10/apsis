@@ -2,7 +2,7 @@
 
 #include "resources/resource.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ResourceFont : public Resource
@@ -22,4 +22,4 @@ private:
     FileSharedPtr m_pUnderlyingFile;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

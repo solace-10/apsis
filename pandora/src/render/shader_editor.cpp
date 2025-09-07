@@ -7,7 +7,7 @@
 #include "resources/resource_system.hpp"
 #include "vfs/vfs.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ShaderEditor::ShaderEditor()
@@ -41,7 +41,7 @@ void ShaderEditor::Update()
             ShaderEditorData& data = m_Shaders[m_Selected];
             if (data.previouslyOpened)
             {
-                ImGui::PushFont(Pandora::GetImGuiSystem()->GetFont(Font::UBUNTU_MONO_18));
+                ImGui::PushFont(GetImGuiSystem()->GetFont(Font::UBUNTU_MONO_18));
                 data.editor.Render("Shader editor", ImVec2(), true);
                 ImGui::PopFont();
             }
@@ -208,4 +208,4 @@ void ShaderEditor::CompileSelectedShader()
     });
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

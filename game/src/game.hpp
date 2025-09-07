@@ -4,7 +4,7 @@
 #include "scene/entity.hpp"
 #include "scene/scene.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(PrefabEditor);
@@ -33,8 +33,7 @@ public:
 private:
     void DrawImGuiMenuBar();
 
-    Pandora::SceneSharedPtr m_pMenuScene;
-
+    SceneSharedPtr m_pMenuScene;
     SectorSharedPtr m_pSector;
 
     UI::PrefabEditorUniquePtr m_pPrefabEditor;
@@ -50,4 +49,4 @@ inline Sector* Game::GetSector()
     return m_pSector.get();
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -9,7 +9,7 @@
 #include "ui/ui.hpp"
 #include "game.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 PrefabEditor::PrefabEditor()
@@ -325,4 +325,4 @@ void PrefabEditor::SelectElement(ElementSharedPtr pElement)
     pElement->AddFlag(Element::Flags::SelectedInEditor);
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

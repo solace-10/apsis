@@ -1,6 +1,6 @@
 #pragma once
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 // Found in https://gamedev.net/forums/topic/329868-damped-spring-effects-for-camera/3149147/?page=1
@@ -24,4 +24,4 @@ void DampSpring(T& v0, const T& target, T& velocity, float time90, float delta)
     velocity += force * c0;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

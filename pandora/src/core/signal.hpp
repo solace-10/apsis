@@ -3,7 +3,7 @@
 #include <functional>
 #include <map>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 // A signal object may call multiple slots with the
@@ -106,4 +106,4 @@ private:
     mutable SignalId m_CurrentId{ 0 };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

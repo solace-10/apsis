@@ -7,7 +7,7 @@
 
 #include "vfs/file.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 namespace Private
@@ -53,4 +53,4 @@ private:
     std::unique_ptr<Private::VFSImpl> m_pImpl;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

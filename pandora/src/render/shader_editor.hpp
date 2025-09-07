@@ -7,7 +7,7 @@
 
 #include "imgui/text_editor/text_editor.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ResourceShader);
@@ -50,4 +50,4 @@ private:
     int m_ShadersToLoad{ 0 };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

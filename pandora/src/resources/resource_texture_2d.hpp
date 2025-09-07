@@ -4,7 +4,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ResourceTexture2D : public Resource
@@ -43,4 +43,4 @@ inline int ResourceTexture2D::GetHeight() const
     return m_Height;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

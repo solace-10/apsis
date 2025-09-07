@@ -4,7 +4,7 @@
 #include "ui/internal/default_markdown.hpp"
 #include "ui/text.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Text::Text()
@@ -123,4 +123,4 @@ void Text::SetText(const std::string& text)
     m_Text = text;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

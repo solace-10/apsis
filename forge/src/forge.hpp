@@ -2,7 +2,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Forge
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Manifest);
@@ -24,4 +24,4 @@ private:
     ManifestUniquePtr m_pManifest;
 };
 
-} // namespace WingsOfSteel::Forge
+} // namespace WingsOfSteel

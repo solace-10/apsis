@@ -2,7 +2,7 @@
 
 #include "render/rendersystem.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height, const std::string& label)
@@ -30,4 +30,4 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
     m_Sampler = device.CreateSampler(&samplerDesc);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

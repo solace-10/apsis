@@ -3,10 +3,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class PlayerControllerComponent : public Pandora::IComponent
+class PlayerControllerComponent : public IComponent
 {
 public:
     PlayerControllerComponent() {}
@@ -29,4 +29,4 @@ private:
 
 REGISTER_COMPONENT(PlayerControllerComponent, "player_controller")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

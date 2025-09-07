@@ -7,7 +7,7 @@
 #include "vfs/private/web/vfs_web.hpp"
 #endif
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 VFS::VFS()
@@ -53,4 +53,4 @@ const std::vector<std::string> VFS::List(const std::string& path) const
     return m_pImpl->List(path);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

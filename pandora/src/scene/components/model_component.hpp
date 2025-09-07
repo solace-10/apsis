@@ -8,7 +8,7 @@
 #include "component_factory.hpp"
 #include "pandora.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ModelComponent : public IComponent
@@ -53,4 +53,4 @@ private:
 
 REGISTER_COMPONENT(ModelComponent, "model")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

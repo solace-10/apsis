@@ -2,9 +2,9 @@
 
 #include "ui/element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 ElementSharedPtr CreateElement(const std::string& typeName);
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

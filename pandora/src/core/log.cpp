@@ -24,7 +24,7 @@
 #include "core/debug_trap.hpp"
 #include "core/log.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 //////////////////////////////////////////////////////////////////////////
@@ -166,4 +166,4 @@ void MessageBoxLogger::Log(const std::string& text, Log::Level type)
 }
 #endif
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

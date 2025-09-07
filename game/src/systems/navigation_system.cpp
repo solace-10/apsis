@@ -4,10 +4,10 @@
 
 #include "systems/navigation_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-void NavigationSystem::TurnTowards(const glm::vec3& position, Pandora::RigidBodyComponent& rigidBodyComponent, float torque)
+void NavigationSystem::TurnTowards(const glm::vec3& position, RigidBodyComponent& rigidBodyComponent, float torque)
 {
     const glm::vec3 aimVector = position - rigidBodyComponent.GetPosition();
     if (glm::length(aimVector) > std::numeric_limits<float>::epsilon())
@@ -31,4 +31,4 @@ void NavigationSystem::TurnTowards(const glm::vec3& position, Pandora::RigidBody
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

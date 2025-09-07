@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 class ManifestEntry
@@ -23,6 +23,6 @@ private:
     uint64_t m_Size;
 };
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

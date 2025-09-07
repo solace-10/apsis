@@ -14,7 +14,7 @@
 #include "ui/ui.fwd.hpp"
 #include "ui/property.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Element);
@@ -141,4 +141,4 @@ inline const glm::ivec2& Element::GetPosition() const
     return m_Position;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

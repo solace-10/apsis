@@ -8,7 +8,7 @@
 #include "scene/camera.hpp"
 #include "scene/scene.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DebugRenderDemo::DebugRenderDemo()
@@ -159,4 +159,4 @@ void DebugRenderDemo::DrawText()
     GetDebugRender()->ScreenText("Welcome to the Debug Draw demo.\n\n", textPos2D, Color::White);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

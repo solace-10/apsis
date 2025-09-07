@@ -11,7 +11,7 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 // Hardpoints represent where weapons can be attached to, as well as how
@@ -26,14 +26,14 @@ struct Hardpoint
     glm::mat4 m_AttachmentPointTransform{ 1.0f };
     float m_ArcMinDegrees{ 0.0f };
     float m_ArcMaxDegrees{ 0.0f };
-    Pandora::EntitySharedPtr m_pEntity;
-    Pandora::EntityWeakPtr m_pParent;
+    EntitySharedPtr m_pEntity;
+    EntityWeakPtr m_pParent;
     
     nlohmann::json Serialize() const;
     void Deserialize(const nlohmann::json& json);
 };
 
-class HardpointComponent : public Pandora::IComponent
+class HardpointComponent : public IComponent
 {
 public:
     HardpointComponent() = default;
@@ -44,9 +44,9 @@ public:
     void Deserialize(const nlohmann::json& json) override;
 
 private:
-    Pandora::ResourceModelSharedPtr m_pResource;
+    ResourceModelSharedPtr m_pResource;
     std::string m_ResourcePath;
 };
 REGISTER_COMPONENT(HardpointComponent, "hardpoint")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

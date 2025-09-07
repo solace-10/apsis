@@ -4,10 +4,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class HullComponent : public Pandora::IComponent
+class HullComponent : public IComponent
 {
 public:
     HullComponent() {}
@@ -37,4 +37,4 @@ public:
 
 REGISTER_COMPONENT(HullComponent, "hull")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -9,7 +9,7 @@
 
 #include "geometry_types.hpp"
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(GeometryProcessor);
@@ -29,4 +29,4 @@ private:
     std::vector<Vertex> TransformVertices(const glm::vec2& sourceTextureSize, const std::vector<Vertex>& vertices) const;
 };
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

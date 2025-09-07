@@ -2,7 +2,7 @@
 
 #include <imgui/imgui.hpp>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 class Theme
@@ -17,4 +17,4 @@ public:
     static constexpr ImColor DiePositiveColor     = ImColor(0.02f, 0.98f, 0.75f, 0.80f);
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

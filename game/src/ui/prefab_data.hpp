@@ -12,7 +12,7 @@
 #include <resources/resource_data_store.hpp>
 #include <pandora.hpp>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 using PrefabDataValue = std::variant<std::string, int, float, bool>;
@@ -48,7 +48,7 @@ public:
         auto it = m_Data.find(key);
         if (it == m_Data.end())
         {
-            Pandora::Log::Error() << "Key not found: " << key << " in prefab: " << m_Path;
+            Log::Error() << "Key not found: " << key << " in prefab: " << m_Path;
             return T{};
         }
         return std::get<T>(it->second);
@@ -78,7 +78,7 @@ private:
     OnValueSetCallbackFn m_OnValueSetCallback;
     std::string m_OriginalHash;
     std::string m_CurrentHash;
-    Pandora::ResourceDataStoreSharedPtr m_pDataStore;
+    ResourceDataStoreSharedPtr m_pDataStore;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

@@ -2,7 +2,7 @@
 
 #include "ui/panel.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Panel::Panel()
@@ -70,4 +70,4 @@ void Panel::Render()
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

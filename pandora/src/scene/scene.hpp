@@ -8,7 +8,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Entity);
@@ -76,4 +76,4 @@ private:
     std::vector<SystemUniquePtr> m_Systems;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

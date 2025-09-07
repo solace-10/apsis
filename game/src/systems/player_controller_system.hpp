@@ -11,7 +11,7 @@
 
 #include "components/mech_navigation_component.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 enum class InputAction
@@ -28,13 +28,13 @@ enum class InputAction
     InputActionCount
 };
 
-class PlayerControllerSystem : public Pandora::System
+class PlayerControllerSystem : public System
 {
 public:
     PlayerControllerSystem(){};
     ~PlayerControllerSystem();
 
-    void Initialize(Pandora::Scene* pScene) override;
+    void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
 private:
@@ -52,13 +52,13 @@ private:
 
     struct ActionPair
     {
-        Pandora::InputCallbackToken pressed{ Pandora::InputSystem::sInvalidInputCallbackToken };
-        Pandora::InputCallbackToken released{ Pandora::InputSystem::sInvalidInputCallbackToken };
+        InputCallbackToken pressed{ InputSystem::sInvalidInputCallbackToken };
+        InputCallbackToken released{ InputSystem::sInvalidInputCallbackToken };
     };
     std::array<ActionPair, static_cast<size_t>(InputAction::InputActionCount)> m_InputActions;
 
     // Mouse aim
-    Pandora::InputCallbackToken m_MousePositionToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
+    InputCallbackToken m_MousePositionToken{ InputSystem::sInvalidInputCallbackToken };
 
     std::array<bool, 4> m_MovementDirections{ false, false, false, false };
     std::unordered_map<std::string, bool> m_WeaponActivations;
@@ -66,4 +66,4 @@ private:
     glm::vec2 m_MousePosition{ 0.0f };
 };
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

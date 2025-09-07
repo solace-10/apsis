@@ -5,7 +5,7 @@
 
 #include "ui/image.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 ElementType Image::GetType() const
@@ -94,7 +94,6 @@ void Image::SetSource(const std::string& source)
     m_Source = source;
     m_pTexture.reset();
 
-    using namespace Pandora;
     if (GetVFS()->Exists(m_Source))
     {
         GetResourceSystem()->RequestResource(m_Source, [this](ResourceSharedPtr pResource)
@@ -121,4 +120,4 @@ void Image::SetSizeMode(SizeMode sizeMode)
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

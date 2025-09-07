@@ -4,7 +4,7 @@
 
 #include "ui/stackable_element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Divider);
@@ -20,4 +20,4 @@ public:
     void Render() override;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

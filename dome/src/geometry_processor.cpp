@@ -18,7 +18,7 @@
 
 #include "geometry_types.hpp"
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 std::vector<Vertex> GeometryProcessor::GetUniqueVertices(const std::vector<Vertex>& vertices, float threshold) const
@@ -235,11 +235,11 @@ void GeometryProcessor::Export(const glm::vec2& sourceImageSize, const std::vect
     std::string outputFileName = "dome.glb";
     if (gltf.WriteGltfSceneToFile(&model, outputFileName, false, true, true, true))
     {
-        Pandora::Log::Info() << "Export successful: " << outputFileName;
+        Log::Info() << "Export successful: " << outputFileName;
     }
     else
     {
-        Pandora::Log::Error() << "Failed to write GLTF: " << err;
+        Log::Error() << "Failed to write GLTF: " << err;
     }
 }
 
@@ -311,4 +311,4 @@ std::vector<Vertex> GeometryProcessor::TransformVertices(const glm::vec2& source
     return transformedVertices;
 }
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class File;
@@ -28,4 +28,4 @@ private:
     FileData m_Data;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

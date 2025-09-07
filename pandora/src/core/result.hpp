@@ -2,7 +2,7 @@
 
 #include <optional>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 template <typename T, typename V = void>
@@ -63,4 +63,4 @@ private:
     T error_;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

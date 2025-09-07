@@ -9,7 +9,7 @@
 #include "ui/heading.hpp"
 #include "ui/theme.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Heading::Heading()
@@ -75,7 +75,7 @@ void Heading::Render()
         if (!m_Text.empty())
         {
             ImGui::SetCursorScreenPos(cp0 + ImVec2(8, 4));
-            ImGui::PushFont(Pandora::GetImGuiSystem()->GetFont(Pandora::Font::EXO2_SEMIBOLD_32));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_32));
             ImGui::TextUnformatted(m_Text.c_str());
             ImGui::PopFont();
         }
@@ -84,7 +84,7 @@ void Heading::Render()
     {
         if (!m_Text.empty())
         {
-            ImGui::PushFont(Pandora::GetImGuiSystem()->GetFont(Pandora::Font::EXO2_SEMIBOLD_22));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_22));
             ImGui::TextUnformatted(m_Text.c_str());
             ImGui::PopFont();
         }
@@ -138,4 +138,4 @@ nlohmann::json Heading::Serialize() const
     return data;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

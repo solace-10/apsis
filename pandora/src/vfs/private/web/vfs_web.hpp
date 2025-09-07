@@ -8,7 +8,7 @@
 
 #include "vfs/private/vfs_impl.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 class Manifest;
@@ -38,6 +38,6 @@ private:
     std::optional<QueuedFile> m_InProgress;
 };
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

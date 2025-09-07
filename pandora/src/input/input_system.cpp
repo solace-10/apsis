@@ -6,7 +6,7 @@
 #include "pandora.hpp"
 #include "render/window.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 InputCallbackToken InputSystem::m_sToken = 1u;
@@ -187,4 +187,4 @@ void InputSystem::RemoveMousePositionCallback(InputCallbackToken token)
     m_MousePositionCallbacks.remove_if([token](const InputCallbackMousePositionInfo& callbackInfo) { return token == callbackInfo.token; });
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

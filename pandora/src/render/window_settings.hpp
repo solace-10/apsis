@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 enum class WindowMode
@@ -64,4 +64,4 @@ inline WindowMode WindowSettings::GetMode() const
     return m_Mode;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

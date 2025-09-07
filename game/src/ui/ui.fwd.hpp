@@ -1,6 +1,6 @@
 #pragma once
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 enum class ElementType
@@ -16,4 +16,4 @@ enum class ElementType
     Divider
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

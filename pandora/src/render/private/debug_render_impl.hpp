@@ -13,7 +13,7 @@ using ddVec3_Out = glm::vec3&;
 
 #include "resources/resource_shader.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 class DebugRenderImpl : public dd::RenderInterface
@@ -65,4 +65,4 @@ private:
     std::vector<GlyphData> m_GlyphData;
 };
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private

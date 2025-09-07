@@ -2,7 +2,7 @@
 
 #include <glm/vec3.hpp>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class Color
@@ -164,4 +164,4 @@ public:
     static const Color YellowGreen;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

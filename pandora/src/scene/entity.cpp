@@ -2,7 +2,7 @@
 
 #include "scene/entity.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 Entity::Entity(Scene* pScene)
@@ -25,4 +25,4 @@ void Entity::OnRemovedFromScene()
     m_pScene = nullptr;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

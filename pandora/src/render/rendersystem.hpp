@@ -8,7 +8,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(DebugRender);
@@ -67,4 +67,4 @@ private:
     ShaderEditorUniquePtr m_pShaderEditor;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

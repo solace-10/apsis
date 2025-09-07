@@ -11,7 +11,7 @@
 #include "geometry_processor.hpp"
 #include "texture_processor.hpp"
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 Dome::Dome()
@@ -26,7 +26,7 @@ Dome::~Dome()
 
 void Dome::Initialize()
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
 
     Log::Info() << "Initializing Dome...";
     GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar(); });
@@ -280,4 +280,4 @@ void Dome::BuildGeometry()
     m_ColorizedVertices = m_pTextureProcessor->GetColorizedVertices(m_EdgeVertices, m_pSourceTexture.get());
 }
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

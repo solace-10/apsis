@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ShaderPreprocessor
@@ -14,4 +14,4 @@ public:
     static uint32_t ResolveLineNumber(uint32_t lineNumber);
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

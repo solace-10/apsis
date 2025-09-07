@@ -6,15 +6,15 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
     DECLARE_SMART_PTR(Entity);
 }
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class SectorCameraComponent : public Pandora::IComponent
+class SectorCameraComponent : public IComponent
 {
 public:
     SectorCameraComponent() {}
@@ -31,7 +31,7 @@ public:
     float backOffFactorVelocity{0.0f};
     glm::vec3 aimLocal{0.0f};
     glm::vec3 aimLocalVelocity{0.0f};
-    Pandora::EntityWeakPtr anchorEntity;
+    EntityWeakPtr anchorEntity;
     bool debugDraw{false};
 
     nlohmann::json Serialize() const override
@@ -61,4 +61,4 @@ public:
 
 REGISTER_COMPONENT(SectorCameraComponent, "sector_camera")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -9,7 +9,7 @@
 #include "core/smart_ptr.hpp"
 #include "render/shader_compilation_error.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ResourceShader);
@@ -45,4 +45,4 @@ private:
     std::vector<ShaderCompilationError> m_Errors;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

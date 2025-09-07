@@ -3,14 +3,14 @@
 #include <core/smart_ptr.hpp>
 #include <scene/scene.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Encounter);
 DECLARE_SMART_PTR(Wing);
 
 DECLARE_SMART_PTR(Sector);
-class Sector : public Pandora::Scene
+class Sector : public Scene
 {
 public:
     Sector();
@@ -22,7 +22,7 @@ public:
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
 
-    Pandora::EntitySharedPtr GetPlayerMech() const;
+    EntitySharedPtr GetPlayerMech() const;
 
 private:
     void DrawCameraDebugUI();
@@ -30,17 +30,17 @@ private:
     void SpawnPlayerFleet();
 
     EncounterUniquePtr m_pEncounter;
-    Pandora::EntitySharedPtr m_pDome;
-    Pandora::EntitySharedPtr m_pCamera;
-    Pandora::EntityWeakPtr m_pPlayerMech;
-    Pandora::EntityWeakPtr m_pCarrier;
+    EntitySharedPtr m_pDome;
+    EntitySharedPtr m_pCamera;
+    EntityWeakPtr m_pPlayerMech;
+    EntityWeakPtr m_pCarrier;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ true };
 };
 
-inline Pandora::EntitySharedPtr Sector::GetPlayerMech() const
+inline EntitySharedPtr Sector::GetPlayerMech() const
 {
     return m_pPlayerMech.lock();
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

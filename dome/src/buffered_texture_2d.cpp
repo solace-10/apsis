@@ -8,7 +8,7 @@
 
 #include <cstring>
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 BufferedTexture2D::BufferedTexture2D(const std::string& label)
@@ -35,8 +35,6 @@ BufferedTexture2D::~BufferedTexture2D()
 
 bool BufferedTexture2D::Load(const std::filesystem::path& path)
 {
-    using namespace Pandora;
-
     if (!std::filesystem::exists(path)) 
     {
         return false;
@@ -96,8 +94,6 @@ wgpu::TextureView BufferedTexture2D::GetTextureView() const
 
 void BufferedTexture2D::Rebuild()
 {
-    using namespace Pandora;
-
     if (m_Texture)
     {
         m_Texture.Destroy();
@@ -137,4 +133,4 @@ void BufferedTexture2D::Rebuild()
     m_TextureView = m_Texture.CreateView(&textureViewDescriptor);
 }
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

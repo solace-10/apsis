@@ -5,7 +5,7 @@
 #include "core/smart_ptr.hpp"
 #include "physics/physics_visualization.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(BulletDebugRender);
@@ -32,4 +32,4 @@ private:
     int32_t m_DebugMode{ 0 };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

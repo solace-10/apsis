@@ -5,7 +5,7 @@
 #include "sector/sector.hpp"
 #include "sector/wing.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 Encounter::Encounter()
@@ -68,16 +68,16 @@ void Encounter::Update(float delta)
 
 void Encounter::InstantiateAction(const Encounter::EncounterAction& action)
 {
-    Pandora::SceneWeakPtr pWeakScene = std::static_pointer_cast<Pandora::Scene>(m_pSector.lock());
+    SceneWeakPtr pWeakScene = std::static_pointer_cast<Scene>(m_pSector.lock());
     for (const auto& wing : action.wings)
     {
         const size_t numShips = wing.entities.size();
         for (size_t i = 0; i < numShips; i++)
         {
             const float positionZ = -15.0f * (static_cast<float>(numShips) - 1.0f) + 30.0f * static_cast<float>(i);
-            EntityBuilder::Build(pWeakScene, wing.entities[i], glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, positionZ)), [](Pandora::EntitySharedPtr pEntity){});
+            EntityBuilder::Build(pWeakScene, wing.entities[i], glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, positionZ)), [](EntitySharedPtr pEntity){});
         }
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

@@ -10,7 +10,7 @@
 #include "render/shader_compiler.hpp"
 #include "resources/resource_system.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ResourceShader::ResourceShader()
@@ -109,4 +109,4 @@ void ResourceShader::Save()
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

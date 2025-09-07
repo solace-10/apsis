@@ -6,7 +6,7 @@
 
 #include "resources/resource.fwd.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 struct MaterialSpec
@@ -51,4 +51,4 @@ private:
     wgpu::BlendState m_BlendState;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

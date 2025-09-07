@@ -5,7 +5,7 @@
 
 #include "scene/entity.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class Camera
@@ -78,4 +78,4 @@ inline const glm::mat4& Camera::GetViewMatrix() const
     return m_ViewMatrix;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -3,7 +3,7 @@
 
 #include "core/random.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 std::default_random_engine Random::m_DefaultRandomEngine;
@@ -14,4 +14,4 @@ void Random::Initialize()
     m_DefaultRandomEngine = std::default_random_engine(seed);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

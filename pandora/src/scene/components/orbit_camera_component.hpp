@@ -4,7 +4,7 @@
 #include "icomponent.hpp"
 #include "component_factory.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Entity);
@@ -45,4 +45,4 @@ public:
 
 REGISTER_COMPONENT(OrbitCameraComponent, "orbit_camera")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

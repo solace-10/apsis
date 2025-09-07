@@ -5,12 +5,12 @@ int main()
 {
     using namespace WingsOfSteel;
 
-    Pandora::WindowSettings windowSettings;
+    WindowSettings windowSettings;
     windowSettings.SetSize(1440, 900);
     windowSettings.SetTitle("Crimson Sun II");
 
-    TheBrightestStar::Game game;
-    Pandora::Initialize(
+    Game game;
+    Initialize(
         windowSettings,
         [&game]() { game.Initialize(); },
         [&game](float delta) { game.Update(delta); },

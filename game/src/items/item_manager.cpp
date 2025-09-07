@@ -7,7 +7,7 @@
 #include "items/item_info.hpp"
 #include "items/item_manager.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 ItemManager::ItemManager()
@@ -42,6 +42,6 @@ const ItemInfo* ItemManager::Get(const std::string& itemName) const
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel
 
 */

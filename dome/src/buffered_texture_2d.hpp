@@ -8,7 +8,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 using TextureData = std::vector<unsigned char>;
@@ -67,4 +67,4 @@ inline const TextureData& BufferedTexture2D::GetTextureData() const
     return m_TextureData;
 }
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

@@ -9,7 +9,7 @@
 #include "icomponent.hpp"
 #include "scene/entity.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ComponentFactory
@@ -64,6 +64,6 @@ public:
 
 #define REGISTER_COMPONENT(ComponentClass, TypeName) \
     class ComponentClass; \
-    static WingsOfSteel::Pandora::ComponentRegistrar<ComponentClass> g_##ComponentClass##_registrar(TypeName);
+    static WingsOfSteel::ComponentRegistrar<ComponentClass> g_##ComponentClass##_registrar(TypeName);
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

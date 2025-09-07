@@ -5,12 +5,12 @@ int main()
 {
     using namespace WingsOfSteel;
 
-    Pandora::WindowSettings windowSettings;
+    WindowSettings windowSettings;
     windowSettings.SetSize(2080, 832);
     windowSettings.SetTitle("Dome");
 
-    Dome::Dome dome;
-    Pandora::Initialize(
+    Dome dome;
+    Initialize(
         windowSettings,
         [&dome](){ dome.Initialize(); },
         [&dome](float delta){ dome.Update(delta); },

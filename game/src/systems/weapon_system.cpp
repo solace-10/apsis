@@ -12,26 +12,25 @@
 #include "sector/sector.hpp"
 #include "systems/ammo_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 WeaponSystem::~WeaponSystem()
 {
-    Pandora::Scene* pScene = Game::Get()->GetSector();
+    Scene* pScene = Game::Get()->GetSector();
     if (pScene)
     {
         pScene->GetRegistry().on_destroy<HardpointComponent>().disconnect<&WeaponSystem::OnHardpointsDestroyed>(this);
     }
 }
 
-void WeaponSystem::Initialize(Pandora::Scene* pScene)
+void WeaponSystem::Initialize(Scene* pScene)
 {
     pScene->GetRegistry().on_destroy<HardpointComponent>().connect<&WeaponSystem::OnHardpointsDestroyed>(this);
 }
 
 void WeaponSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<WeaponComponent, TransformComponent>();
 
@@ -78,15 +77,15 @@ void WeaponSystem::Update(float delta)
     });
 }
 
-void WeaponSystem::AttachWeapon(const std::string& resourcePath, Pandora::EntitySharedPtr pParentEntity, const std::string& hardpointName)
+void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName)
 {
-    Pandora::SceneWeakPtr pWeakScene = Game::Get()->GetSector()->GetWeakPtr();
+    SceneWeakPtr pWeakScene = Game::Get()->GetSector()->GetWeakPtr();
 
     EntityBuilder::Build(
         pWeakScene,
         resourcePath,
         glm::mat4(1.0f),
-        [pWeakScene, pParentEntity, hardpointName](Pandora::EntitySharedPtr pWeaponEntity)
+        [pWeakScene, pParentEntity, hardpointName](EntitySharedPtr pWeaponEntity)
         {
             pWeaponEntity->SetParent(pParentEntity);
 
@@ -130,11 +129,11 @@ void WeaponSystem::OnHardpointsDestroyed(entt::registry& registry, entt::entity 
     }
 }
 
-void WeaponSystem::FireWeapon(Pandora::EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)
+void WeaponSystem::FireWeapon(EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)
 {
     weaponComponent.m_FireTimer = 1.0f / weaponComponent.m_RateOfFire;
 
-    AmmoSystem* pAmmoSystem = Pandora::GetActiveScene()->GetSystem<AmmoSystem>();
+    AmmoSystem* pAmmoSystem = GetActiveScene()->GetSystem<AmmoSystem>();
     if (pAmmoSystem)
     {
         pAmmoSystem->Instantiate(pWeaponEntity, weaponComponent);
@@ -143,8 +142,6 @@ void WeaponSystem::FireWeapon(Pandora::EntitySharedPtr pWeaponEntity, WeaponComp
 
 void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up, float arcMinDegrees, float arcMaxDegrees, float arcLength)
 {
-    using namespace Pandora;
-
     // Draw base forward line
     // GetDebugRender()->Line(position, position + forward * arcLength, Color::Purple);
 
@@ -171,4 +168,4 @@ void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& for
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

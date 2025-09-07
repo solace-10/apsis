@@ -3,7 +3,7 @@
 #include "ui/stackable_element.hpp"
 #include "ui/stack.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 StackableElement::StackableElement()
@@ -76,4 +76,4 @@ glm::vec2 StackableElement::GetCellSize() const
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

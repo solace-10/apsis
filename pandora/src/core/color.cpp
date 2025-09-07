@@ -1,6 +1,6 @@
 #include "core/color.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 // clang-format off
@@ -145,4 +145,4 @@ const Color Color::Yellow            = {1.000000f, 1.000000f, 0.000000f};
 const Color Color::YellowGreen       = {0.603922f, 0.803922f, 0.196078f};
 // clang-format on
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

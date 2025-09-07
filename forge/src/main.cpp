@@ -5,12 +5,12 @@ int main()
 {
     using namespace WingsOfSteel;
 
-    Pandora::WindowSettings windowSettings;
+    WindowSettings windowSettings;
     windowSettings.SetSize(900, 600);
     windowSettings.SetTitle("Forge");
 
-    Forge::Forge forge;
-    Pandora::Initialize(
+    Forge forge;
+    Initialize(
         windowSettings,
         [&forge](){ forge.Initialize(); },
         [&forge](float delta){ forge.Update(delta); },

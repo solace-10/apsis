@@ -14,12 +14,12 @@
 #include "systems/camera_system.hpp"
 #include "systems/player_controller_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 PlayerControllerSystem::~PlayerControllerSystem()
 {
-    Pandora::InputSystem* pInputSystem = Pandora::GetInputSystem();
+    InputSystem* pInputSystem = GetInputSystem();
     if (pInputSystem)
     {
         for (auto& inputAction : m_InputActions)
@@ -32,10 +32,9 @@ PlayerControllerSystem::~PlayerControllerSystem()
     }
 }
 
-void PlayerControllerSystem::Initialize(Pandora::Scene* pScene)
+void PlayerControllerSystem::Initialize(Scene* pScene)
 {
-    using namespace Pandora;
-    Pandora::InputSystem* pInputSystem = GetInputSystem();
+    InputSystem* pInputSystem = GetInputSystem();
 
     m_InputActions[static_cast<size_t>(InputAction::Up)].pressed  = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, true); },  GLFW_KEY_W, KeyAction::Pressed);
     m_InputActions[static_cast<size_t>(InputAction::Up)].released = pInputSystem->AddKeyboardCallback([this]() { SetMovementDirection(MovementDirection::Up, false); }, GLFW_KEY_W, KeyAction::Released);
@@ -66,7 +65,6 @@ void PlayerControllerSystem::Initialize(Pandora::Scene* pScene)
 
 void PlayerControllerSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
     const glm::vec3 targetWorldPos = Game::Get()->GetSector()->GetSystem<CameraSystem>()->MouseToWorld(m_MousePosition);
@@ -143,4 +141,4 @@ void PlayerControllerSystem::SetWeaponFire(const std::string& weaponAttachment, 
     m_WeaponActivations[weaponAttachment] = state;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

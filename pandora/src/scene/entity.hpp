@@ -5,7 +5,7 @@
 #include "core/smart_ptr.hpp"
 #include "scene/scene.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Scene);
@@ -50,4 +50,4 @@ private:
     bool m_MarkedForRemoval{ false };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

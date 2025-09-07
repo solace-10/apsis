@@ -6,7 +6,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ResourceModel);
@@ -35,4 +35,4 @@ private:
     uint32_t m_Mode{ 0 };
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

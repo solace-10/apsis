@@ -6,7 +6,7 @@
 
 #include "text_editor.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 #include "imgui.h" // for imGui::GetCurrentWindow()
@@ -3248,4 +3248,4 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
 	return langDef;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

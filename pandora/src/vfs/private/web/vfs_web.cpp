@@ -14,7 +14,7 @@
 #include "vfs/private/web/manifest.hpp"
 #include "vfs/private/web/manifest_entry.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 void downloadSucceeded(emscripten_fetch_t* fetch)
@@ -127,6 +127,6 @@ bool VFSWeb::FileWrite(const std::string& path, const std::vector<uint8_t>& byte
     return false;
 }
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

@@ -4,7 +4,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Item);
@@ -35,4 +35,4 @@ private:
     std::string m_DisplayName;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

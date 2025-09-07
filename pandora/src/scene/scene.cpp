@@ -7,7 +7,7 @@
 #include "scene/entity.hpp"
 #include "scene/systems/system.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 Scene::Scene()
@@ -98,4 +98,4 @@ entt::registry& Scene::GetRegistry()
     return m_Registry;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

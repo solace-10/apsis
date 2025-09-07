@@ -7,7 +7,7 @@
 #include "resources/resource_system.hpp"
 #include "scene/components/rigid_body_component.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 RigidBodyComponent::~RigidBodyComponent()
@@ -261,4 +261,4 @@ void RigidBodyComponent::CalculateInvInertiaTensorWorld()
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

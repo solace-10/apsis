@@ -1,6 +1,6 @@
 #include "render/color_texture.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ColorTexture::ColorTexture(wgpu::Device& device, uint32_t width, uint32_t height, wgpu::TextureFormat format, uint32_t sampleCount, const std::string& label)
@@ -27,4 +27,4 @@ ColorTexture::ColorTexture(wgpu::Device& device, uint32_t width, uint32_t height
     m_Sampler = device.CreateSampler(&samplerDesc);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

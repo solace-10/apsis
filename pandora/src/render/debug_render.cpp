@@ -9,7 +9,7 @@
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DebugRender::DebugRender()
@@ -135,4 +135,4 @@ void DebugRender::XZSquareGrid(float mins, float maxs, float y, float step, cons
     dd::xzSquareGrid(mins, maxs, y, step, color.AsVec3(), durationMillis);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

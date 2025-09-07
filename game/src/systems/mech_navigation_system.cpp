@@ -12,12 +12,11 @@
 #include "components/mech_navigation_component.hpp"
 #include "systems/mech_navigation_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 void MechNavigationSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const MechNavigationComponent, const MechEngineComponent, RigidBodyComponent>();
 
@@ -35,4 +34,4 @@ void MechNavigationSystem::Update(float delta)
     });
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

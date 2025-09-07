@@ -4,7 +4,7 @@
 #include <random>
 #include <stdint.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class Random
@@ -44,4 +44,4 @@ private:
     static std::default_random_engine m_DefaultRandomEngine;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -2,17 +2,17 @@
 
 #include <scene/systems/system.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class DebugRenderSystem : public Pandora::System
+class DebugRenderSystem : public System
 {
 public:
     DebugRenderSystem() {};
     ~DebugRenderSystem() {};
 
-    void Initialize(Pandora::Scene* pScene) override {};
+    void Initialize(Scene* pScene) override {};
     void Update(float delta) override;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

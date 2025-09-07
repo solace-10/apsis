@@ -5,7 +5,7 @@
 #include "render/rendersystem.hpp"
 #include "resources/resource_texture_2d.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 Material::Material(const MaterialSpec& materialSpec)
@@ -105,4 +105,4 @@ void Material::InitializeBlendState()
     };
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

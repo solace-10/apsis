@@ -16,14 +16,12 @@
 #include "sector/sector.hpp"
 #include "systems/weapon_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& prefabResourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback)
+void EntityBuilder::Build(SceneWeakPtr& pWeakScene, const std::string& prefabResourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback)
 {
-    using namespace Pandora;
-
-    GetResourceSystem()->RequestResource(prefabResourcePath, [pWeakScene, prefabResourcePath, worldTransform, onEntityReadyCallback](Pandora::ResourceSharedPtr pResource)
+    GetResourceSystem()->RequestResource(prefabResourcePath, [pWeakScene, prefabResourcePath, worldTransform, onEntityReadyCallback](ResourceSharedPtr pResource)
     {
         SceneSharedPtr pScene = pWeakScene.lock();
         if (pScene == nullptr)
@@ -62,9 +60,8 @@ void EntityBuilder::Build(Pandora::SceneWeakPtr& pWeakScene, const std::string& 
     });
 }
 
-void EntityBuilder::InstantiateComponents(Pandora::EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath)
+void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath)
 {
-    using namespace Pandora;
     auto componentsIt = jsonData.find("components");
     if (componentsIt != jsonData.cend() && componentsIt->is_array())
     {
@@ -131,4 +128,4 @@ void EntityBuilder::InstantiateComponents(Pandora::EntitySharedPtr pEntity, cons
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

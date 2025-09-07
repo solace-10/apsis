@@ -1,6 +1,6 @@
 #include "vfs/file.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 File::File(const std::string& path, const FileData& data)
@@ -34,4 +34,4 @@ const std::string& File::GetPath() const
     return m_Path;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

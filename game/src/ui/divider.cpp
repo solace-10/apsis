@@ -3,7 +3,7 @@
 #include "ui/divider.hpp"
 #include "ui/theme.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Divider::Divider()
@@ -41,4 +41,4 @@ void Divider::Render()
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

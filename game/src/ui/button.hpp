@@ -7,7 +7,7 @@
 #include "ui/events.hpp"
 #include "ui/stackable_element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Button);
@@ -41,7 +41,7 @@ private:
     Mode m_Mode{Mode::Standard};
     std::string m_Text;
     int m_Margin{0};
-    Pandora::ResourceTexture2DSharedPtr m_pIconTexture;
+    ResourceTexture2DSharedPtr m_pIconTexture;
     Property<std::string> m_IconSource;
     OnClickedEvent m_OnClickedEvent;
     float m_BackgroundAnimation{0.0f};
@@ -53,4 +53,4 @@ inline void Button::SetOnClickedEvent(const OnClickedEvent& event)
     m_OnClickedEvent = event;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

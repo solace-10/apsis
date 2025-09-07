@@ -6,10 +6,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class MechNavigationComponent : public Pandora::IComponent
+class MechNavigationComponent : public IComponent
 {
 public:
     MechNavigationComponent() = default;
@@ -40,4 +40,4 @@ private:
 
 REGISTER_COMPONENT(MechNavigationComponent, "mech_navigation")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

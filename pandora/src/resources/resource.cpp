@@ -1,6 +1,6 @@
 #include "resources/resource.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 Resource::Resource()
@@ -39,4 +39,4 @@ void Resource::SetState(ResourceState state)
     m_State = state;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

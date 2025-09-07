@@ -12,7 +12,7 @@
 #include "sector/sector.hpp"
 #include "ui/prefab_editor.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 Game* g_pGame = nullptr;
@@ -34,7 +34,7 @@ void Game::Initialize()
 {
     g_pGame = this;
 
-    Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
+    GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
@@ -42,7 +42,7 @@ void Game::Initialize()
     m_pSector = std::make_shared<Sector>();
     m_pSector->Initialize();
 
-    Pandora::SetActiveScene(m_pSector);
+    SetActiveScene(m_pSector);
 }
 
 void Game::Update(float delta)
@@ -57,7 +57,7 @@ void Game::Shutdown()
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.
 void Game::DrawImGuiMenuBar()
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
 
     if (m_pSector)
     {
@@ -148,4 +148,4 @@ void Game::DrawImGuiMenuBar()
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

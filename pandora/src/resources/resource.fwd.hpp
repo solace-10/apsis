@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 #define DECLARE_RESOURCE_TYPE(x)             \
@@ -45,4 +45,4 @@ enum class ResourceType
     Font
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

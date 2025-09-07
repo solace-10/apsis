@@ -12,7 +12,7 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 PhysicsSimulationSystem::PhysicsSimulationSystem()
@@ -116,4 +116,4 @@ std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::R
     return std::nullopt;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

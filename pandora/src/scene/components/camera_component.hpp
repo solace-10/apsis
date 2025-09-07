@@ -4,7 +4,7 @@
 #include "icomponent.hpp"
 #include "component_factory.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class CameraComponent : public IComponent
@@ -49,4 +49,4 @@ public:
 
 REGISTER_COMPONENT(CameraComponent, "camera")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

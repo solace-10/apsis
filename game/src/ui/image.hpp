@@ -7,7 +7,7 @@
 #include "ui/stackable_element.hpp"
 #include "ui/prefab_data.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Image);
@@ -35,9 +35,9 @@ public:
     void SetSizeMode(SizeMode sizeMode);
 
 private:
-    Pandora::ResourceTexture2DSharedPtr m_pTexture;
+    ResourceTexture2DSharedPtr m_pTexture;
     Property<std::string> m_Source;
     SizeMode m_SizeMode{SizeMode::Source};
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

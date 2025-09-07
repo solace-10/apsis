@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 class ManifestEntry;
@@ -33,6 +33,6 @@ private:
     ManifestData m_ManifestData;
 };
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

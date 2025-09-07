@@ -24,7 +24,7 @@
 #include "vfs/file.hpp"
 #include "vfs/vfs.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 std::unique_ptr<DebugRender> g_pDebugRender;
@@ -73,13 +73,13 @@ void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gam
             while (!glfwWindowShouldClose(GetWindow()->GetRawWindow()))
             {
                 glfwPollEvents();
-                Pandora::Update();
+                Update();
                 GetWindow()->GetSurface().Present();
                 GetRenderSystem()->GetInstance().ProcessEvents();
             }
             Shutdown();
 #elif defined(TARGET_PLATFORM_WEB)
-            emscripten_set_main_loop(Pandora::Update, 0, true);
+            emscripten_set_main_loop(Update, 0, true);
 #endif
         });
 }
@@ -179,4 +179,4 @@ void InitializeLogging()
     Log::Info() << "Logging initialized.";
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

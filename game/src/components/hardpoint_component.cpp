@@ -3,7 +3,7 @@
 
 #include "components/hardpoint_component.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 nlohmann::json Hardpoint::Serialize() const
@@ -18,10 +18,10 @@ nlohmann::json Hardpoint::Serialize() const
 
 void Hardpoint::Deserialize(const nlohmann::json& json)
 {
-    m_Name = Pandora::IComponent::DeserializeRequired<std::string>(json, "name");
-    m_Weapon = Pandora::IComponent::DeserializeOptional<std::string>(json, "weapon", "");
-    m_ArcMinDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
-    m_ArcMaxDegrees = Pandora::IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
+    m_Name = IComponent::DeserializeRequired<std::string>(json, "name");
+    m_Weapon = IComponent::DeserializeOptional<std::string>(json, "weapon", "");
+    m_ArcMinDegrees = IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
+    m_ArcMaxDegrees = IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
 }
 
 nlohmann::json HardpointComponent::Serialize() const
@@ -41,7 +41,7 @@ nlohmann::json HardpointComponent::Serialize() const
 
 void HardpointComponent::Deserialize(const nlohmann::json& json)
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
 
     hardpoints.clear();
     
@@ -84,4 +84,4 @@ void HardpointComponent::Deserialize(const nlohmann::json& json)
     });
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

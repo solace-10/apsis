@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 struct BaseProperty
@@ -59,4 +59,4 @@ private:
     std::unordered_map<std::string, BaseProperty*> m_Properties;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

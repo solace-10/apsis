@@ -3,10 +3,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class AmmoRaycastComponent : public Pandora::IComponent
+class AmmoRaycastComponent : public IComponent
 {
 public:
     AmmoRaycastComponent() = default;
@@ -33,4 +33,4 @@ private:
 
 REGISTER_COMPONENT(AmmoRaycastComponent, "ammo_raycast")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

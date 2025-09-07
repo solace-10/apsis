@@ -5,7 +5,7 @@
 #include "render/window.hpp"
 #include "scene/camera.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 Camera::Camera(float fov, float nearPlane, float farPlane)
@@ -84,4 +84,4 @@ glm::vec3 Camera::ScreenToWorld(const glm::vec2& mousePos, uint32_t windowWidth,
     return glm::vec3(worldCoords);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

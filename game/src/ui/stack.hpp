@@ -5,7 +5,7 @@
 
 #include "ui/stackable_element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Stack);
@@ -97,4 +97,4 @@ private:
     glm::ivec2 m_CursorScreenPosition{0};
 };
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

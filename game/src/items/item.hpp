@@ -2,7 +2,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ItemInfo)
@@ -36,4 +36,4 @@ inline int Item::GetQuantity() const
     return m_Quantity;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

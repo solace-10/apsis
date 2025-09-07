@@ -3,10 +3,10 @@
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-class ShipEngineComponent : public Pandora::IComponent
+class ShipEngineComponent : public IComponent
 {
 public:
     float linearForce{ 0.0f };
@@ -29,4 +29,4 @@ public:
 
 REGISTER_COMPONENT(ShipEngineComponent, "ship_engine")
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

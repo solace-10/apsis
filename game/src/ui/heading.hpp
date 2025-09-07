@@ -4,7 +4,7 @@
 
 #include "ui/stackable_element.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 DECLARE_SMART_PTR(Heading);
@@ -46,4 +46,4 @@ inline const std::string& Heading::GetText() const
     return m_Text;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

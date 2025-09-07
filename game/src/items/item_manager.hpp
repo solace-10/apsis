@@ -5,7 +5,7 @@
 
 #include <core/smart_ptr.hpp>
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ItemInfo);
@@ -25,4 +25,4 @@ private:
     ItemInfoDatabase m_Database;
 };
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

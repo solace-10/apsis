@@ -9,7 +9,7 @@
 
 #include "core/smart_ptr.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(CollisionShape);
@@ -135,4 +135,4 @@ public:
     virtual Type GetType() const override { return Type::Cylinder; }
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

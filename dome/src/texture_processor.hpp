@@ -7,7 +7,7 @@
 
 #include "geometry_types.hpp"
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(BufferedTexture2D);
@@ -28,4 +28,4 @@ public:
 private:
 };
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

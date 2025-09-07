@@ -15,17 +15,16 @@
 #include "game.hpp"
 #include "sector/sector.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
-void AmmoSystem::Initialize(Pandora::Scene* pScene)
+void AmmoSystem::Initialize(Scene* pScene)
 {
     // Initialization stub
 }
 
 void AmmoSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const TransformComponent, AmmoImpactComponent, const AmmoRaycastComponent, EntityReferenceComponent>();
 
@@ -119,10 +118,8 @@ void AmmoSystem::Update(float delta)
     });
 }
 
-void AmmoSystem::Instantiate(Pandora::EntitySharedPtr pWeaponEntity, const WeaponComponent& weaponComponent)
+void AmmoSystem::Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponent& weaponComponent)
 {
-    using namespace Pandora;
-
     Sector* pSector = Game::Get()->GetSector();
     if (!pSector)
     {
@@ -138,12 +135,12 @@ void AmmoSystem::Instantiate(Pandora::EntitySharedPtr pWeaponEntity, const Weapo
     const glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
     // TODO: This should include the muzzle transform.
 
-    Pandora::SceneWeakPtr pWeakScene = pSector->GetWeakPtr();
+    SceneWeakPtr pWeakScene = pSector->GetWeakPtr();
     EntityBuilder::Build(
         pWeakScene,
         weaponComponent.m_Ammo,
         hardpointWorldTransform,
-        [weaponComponent](Pandora::EntitySharedPtr pEntity)
+        [weaponComponent](EntitySharedPtr pEntity)
         {
             float range = weaponComponent.m_Range;
 
@@ -160,7 +157,7 @@ void AmmoSystem::Instantiate(Pandora::EntitySharedPtr pWeaponEntity, const Weapo
     );
 }
 
-void AmmoSystem::ApplyHullDamage(Pandora::EntitySharedPtr pAmmoEntity, Pandora::EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const
+void AmmoSystem::ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const
 {
     if (pAmmoEntity->HasComponent<AmmoImpactComponent>() && pHitEntity->HasComponent<HullComponent>())
     {
@@ -177,4 +174,4 @@ void AmmoSystem::ApplyHullDamage(Pandora::EntitySharedPtr pAmmoEntity, Pandora::
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

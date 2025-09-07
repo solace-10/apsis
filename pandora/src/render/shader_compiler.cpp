@@ -6,7 +6,7 @@
 #include "render/shader_compiler.hpp"
 #include "render/shader_preprocessor.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ShaderCompiler::ShaderCompiler()
@@ -107,4 +107,4 @@ ShaderCompilationResult* ShaderCompiler::GetShaderCompilationResult(uint32_t id)
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -8,7 +8,7 @@
 
 struct GLFWwindow;
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class Window
@@ -80,4 +80,4 @@ inline uint32_t Window::GetHeight() const
 
 inline ColorTexture& Window::GetMsaaColorTexture() { return m_MsaaColorTexture; }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -1,7 +1,7 @@
 #include "ui/button.hpp"
 #include "ui/button_group.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 void ButtonGroup::Add(const ButtonSharedPtr& pButton)
@@ -28,4 +28,4 @@ void ButtonGroup::Select(Button* pButton)
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

@@ -8,7 +8,7 @@
 #include "resources/resource_shader.hpp"
 #include "resources/resource_texture_2d.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ResourceSystem::ResourceSystem()
@@ -144,4 +144,4 @@ std::optional<std::string> ResourceSystem::GetExtension(const std::string& path)
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

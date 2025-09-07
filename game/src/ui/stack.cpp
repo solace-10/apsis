@@ -5,7 +5,7 @@
 #include "ui/stack.hpp"
 #include "ui/ui.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Stack::Stack()
@@ -352,4 +352,4 @@ void Stack::UpdateCells()
     m_CellsDirty = false;
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

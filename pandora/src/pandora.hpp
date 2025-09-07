@@ -5,7 +5,7 @@
 #include "core/smart_ptr.hpp"
 #include "render/window_settings.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(DebugRender);
@@ -35,4 +35,4 @@ void SetActiveScene(SceneSharedPtr pScene);
 VFS* GetVFS();
 Window* GetWindow();
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -4,7 +4,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class DepthTexture
@@ -24,4 +24,4 @@ private:
     wgpu::Sampler m_Sampler;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

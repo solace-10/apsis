@@ -10,7 +10,7 @@
 #include "ui/prefab_editor.hpp"
 #include "game.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 PrefabData::PrefabData(const std::string& path, OnValueSetCallbackFn callback)
@@ -22,7 +22,7 @@ PrefabData::PrefabData(const std::string& path, OnValueSetCallbackFn callback)
 
 void PrefabData::Initialize(OnLoadedCallbackFn onLoadedCallback)
 {
-    using namespace Pandora;
+    using namespace WingsOfSteel;
     GetResourceSystem()->RequestResource(m_Path, [this, onLoadedCallback](ResourceSharedPtr pResource) {
         m_pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         //BuildFromDataStore();
@@ -59,7 +59,7 @@ void PrefabData::BuildFromDataStore()
 {
     if (!m_pDataStore)
     {
-        Pandora::Log::Error() << "Data store not loaded for prefab: " << m_Path;
+        Log::Error() << "Data store not loaded for prefab: " << m_Path;
         return;
     }
 
@@ -86,7 +86,7 @@ void PrefabData::BuildFromDataStore()
         }
         else
         {
-            Pandora::Log::Error() << "Unknown type for key: " << key << " in prefab: " << m_Path;
+            Log::Error() << "Unknown type for key: " << key << " in prefab: " << m_Path;
         }
     }
 
@@ -126,4 +126,4 @@ std::string PrefabData::GetHash(const nlohmann::json& json) const
     return ss.str();
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

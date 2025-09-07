@@ -9,7 +9,7 @@
 #include "vfs/private/web/manifest.hpp"
 #include "vfs/private/web/manifest_entry.hpp"
 
-namespace WingsOfSteel::Pandora::Private
+namespace WingsOfSteel::Private
 {
 
 Manifest::Manifest()
@@ -139,6 +139,6 @@ void Manifest::OnDownloadFailed(const std::string& url, int statusCode)
     Log::Error() << "Failed to download manifest: " << statusCode;
 }
 
-} // namespace WingsOfSteel::Pandora::Private
+} // namespace WingsOfSteel::Private
 
 #endif // TARGET_PLATFORM_WEB

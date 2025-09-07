@@ -4,10 +4,10 @@
 #include "scene/components/icomponent.hpp"
 #include "scene/entity.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
-class EntityReferenceComponent : public Pandora::IComponent
+class EntityReferenceComponent : public IComponent
 {
 public:
     EntityReferenceComponent() = default;
@@ -36,4 +36,4 @@ private:
 
 REGISTER_COMPONENT(EntityReferenceComponent, "entity_reference")
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

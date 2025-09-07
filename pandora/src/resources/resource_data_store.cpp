@@ -3,7 +3,7 @@
 #include "core/log.hpp"
 #include "pandora.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ResourceDataStore::ResourceDataStore()
@@ -65,4 +65,4 @@ void ResourceDataStore::Save()
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

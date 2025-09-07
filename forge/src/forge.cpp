@@ -9,7 +9,7 @@
 #include "forge.hpp"
 #include "manifest.hpp"
 
-namespace WingsOfSteel::Forge
+namespace WingsOfSteel
 {
 
 Forge::Forge()
@@ -24,8 +24,8 @@ Forge::~Forge()
 
 void Forge::Initialize()
 {
-    Pandora::Log::Info() << "Initializing Forge...";
-    Pandora::GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar(); });
+    Log::Info() << "Initializing Forge...";
+    GetImGuiSystem()->SetGameMenuBarCallback([this](){ DrawImGuiMenuBar(); });
     m_pManifest = std::make_unique<Manifest>();
 }
 
@@ -131,4 +131,4 @@ void Forge::DrawManifestTab()
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

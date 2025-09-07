@@ -10,7 +10,7 @@
 #include <regex>
 #include "imgui.h"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class TextEditor
@@ -392,4 +392,4 @@ private:
 	float mLastClick;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

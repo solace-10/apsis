@@ -11,7 +11,7 @@
 #include "core/signal.hpp"
 #include "resources/resource.fwd.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 using ShaderInjectedSignal = Signal<ResourceShader*>;
@@ -98,4 +98,4 @@ private:
     ShaderInjectedSignal m_ShaderInjectedSignal;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

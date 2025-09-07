@@ -16,7 +16,7 @@ struct btDbvtBroadphase;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Entity);
@@ -64,4 +64,4 @@ private:
     std::vector<EntityToAdd> m_EntitiesToAdd;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

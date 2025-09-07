@@ -10,7 +10,7 @@
 #include "ui/button.hpp"
 #include "ui/theme.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI
+namespace WingsOfSteel::UI
 {
 
 Button::Button()
@@ -129,7 +129,7 @@ void Button::Render()
         }
         else
         {
-            ImGui::PushFont(Pandora::GetImGuiSystem()->GetFont(Pandora::Font::EXO2_SEMIBOLD_22));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_22));
             ImGui::TextUnformatted(m_Text.c_str());
             ImGui::PopFont();
         }
@@ -200,7 +200,7 @@ void Button::SetIconSource(const std::string& source)
     m_IconSource = source;
     m_pIconTexture.reset();
 
-    using namespace Pandora;
+    using namespace WingsOfSteel;
     if (GetVFS()->Exists(m_IconSource))
     {
         GetResourceSystem()->RequestResource(m_IconSource, [this](ResourceSharedPtr pResource)
@@ -213,4 +213,4 @@ void Button::SetIconSource(const std::string& source)
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI
+} // namespace WingsOfSteel::UI

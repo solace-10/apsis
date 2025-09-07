@@ -3,7 +3,7 @@
 #include "physics/internal/bullet_debug_render.hpp"
 #include "physics/physics_visualization.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 PhysicsVisualization::PhysicsVisualization(btCollisionWorld* pWorld)
@@ -33,4 +33,4 @@ bool PhysicsVisualization::IsEnabled(Mode mode) const
     return m_pDebugRender->IsEnabled(mode);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -3,7 +3,7 @@
 #include "core/log.hpp"
 #include "pandora.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ResourceFont::ResourceFont()
@@ -47,4 +47,4 @@ void ResourceFont::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

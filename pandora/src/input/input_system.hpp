@@ -7,7 +7,7 @@
 
 #include <glm/vec2.hpp>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 enum class MouseButton
 {
@@ -115,4 +115,4 @@ inline InputCallbackToken InputSystem::GenerateToken()
     return m_sToken++;
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

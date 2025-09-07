@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ShaderCompilationError
@@ -27,4 +27,4 @@ private:
     uint32_t m_LinePosition;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

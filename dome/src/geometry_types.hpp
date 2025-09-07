@@ -2,7 +2,7 @@
 
 #include <glm/vec3.hpp>
 
-namespace WingsOfSteel::Dome
+namespace WingsOfSteel
 {
 
 struct Point {
@@ -22,4 +22,4 @@ struct IndexedTriangle
     int v2{0};
 };
 
-} // namespace WingsOfSteel::Dome
+} // namespace WingsOfSteel

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 #define DECLARE_SMART_PTR(x)                 \
@@ -11,4 +11,4 @@ namespace WingsOfSteel::Pandora
     using x##WeakPtr = std::weak_ptr<x>;     \
     using x##UniquePtr = std::unique_ptr<x>;
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

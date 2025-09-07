@@ -43,7 +43,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 static bool sShaderLocationsMapInitialized = false;
@@ -235,7 +235,7 @@ void ResourceModel::LoadDependentResources()
         {
             const std::string& resourcePath = it.first;
             GetResourceSystem()->RequestResource(resourcePath, [this](ResourceSharedPtr pResource) {
-                m_Shaders[pResource->GetPath()] = std::dynamic_pointer_cast<Pandora::ResourceShader>(pResource);
+                m_Shaders[pResource->GetPath()] = std::dynamic_pointer_cast<ResourceShader>(pResource);
                 m_DependentResourcesLoaded++;
 
                 if (m_DependentResourcesToLoad == m_DependentResourcesLoaded)
@@ -642,7 +642,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     }
 
     wgpu::ColorTargetState colorTargetState{
-        .format = Pandora::GetWindow()->GetTextureFormat()
+        .format = GetWindow()->GetTextureFormat()
     };
 
     renderData.material = m_Materials.at(pPrimitive->material);
@@ -919,4 +919,4 @@ void ResourceModel::HandleShaderInjection()
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

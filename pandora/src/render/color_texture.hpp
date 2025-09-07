@@ -3,7 +3,7 @@
 #include <string>
 #include <webgpu/webgpu_cpp.h>
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 class ColorTexture
@@ -23,4 +23,4 @@ private:
     wgpu::Sampler m_Sampler;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

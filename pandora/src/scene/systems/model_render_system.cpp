@@ -7,7 +7,7 @@
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 ModelRenderSystem::ModelRenderSystem()
@@ -61,4 +61,4 @@ void ModelRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     }
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

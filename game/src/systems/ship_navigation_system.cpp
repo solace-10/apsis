@@ -10,12 +10,11 @@
 #include "components/ship_navigation_component.hpp"
 #include "systems/ship_navigation_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 void ShipNavigationSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const ShipNavigationComponent, const ShipEngineComponent, RigidBodyComponent>();
 
@@ -40,4 +39,4 @@ void ShipNavigationSystem::Update(float delta)
     });
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

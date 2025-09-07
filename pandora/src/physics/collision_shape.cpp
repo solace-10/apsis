@@ -4,7 +4,7 @@
 #include "core/log.hpp"
 #include "physics/collision_shape.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 /////////////////////////////////////////////////////////////////////
@@ -151,4 +151,4 @@ CollisionShapeCylinder::CollisionShapeCylinder(Axis axis, float width, float hei
     m_pShape->setUserPointer(this);
 }
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

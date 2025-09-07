@@ -5,7 +5,7 @@
 #include "resources/resource_model.hpp"
 #include "scene/systems/system.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ModelVisualization);
@@ -35,4 +35,4 @@ private:
     std::vector<InstanceData> m_InstanceData;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

@@ -7,12 +7,11 @@
 #include "components/name_component.hpp"
 #include "systems/debug_render_system.hpp"
 
-namespace WingsOfSteel::TheBrightestStar
+namespace WingsOfSteel
 {
 
 void DebugRenderSystem::Update(float delta)
 {
-    using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const DebugRenderComponent, const TransformComponent>();
 
@@ -75,4 +74,4 @@ void DebugRenderSystem::Update(float delta)
     });
 }
 
-} // namespace WingsOfSteel::TheBrightestStar
+} // namespace WingsOfSteel

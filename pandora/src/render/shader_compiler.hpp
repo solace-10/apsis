@@ -7,7 +7,7 @@
 #include "core/smart_ptr.hpp"
 #include "render/shader_compilation_result.hpp"
 
-namespace WingsOfSteel::Pandora
+namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(ResourceShader);
@@ -28,4 +28,4 @@ private:
     std::vector<ShaderCompilationResultUniquePtr> m_Results;
 };
 
-} // namespace WingsOfSteel::Pandora
+} // namespace WingsOfSteel

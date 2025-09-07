@@ -1,6 +1,6 @@
 #include "ui/internal/default_markdown.hpp"
 
-namespace WingsOfSteel::TheBrightestStar::UI::Internal
+namespace WingsOfSteel::UI::Internal
 {
 
 static bool sMarkdownConfigInitialized = false;
@@ -95,4 +95,4 @@ void DefaultMarkdown::LinkCallback(ImGui::MarkdownLinkCallbackData data)
     }
 }
 
-} // namespace WingsOfSteel::TheBrightestStar::UI::Internal
+} // namespace WingsOfSteel::UI::Internal
