@@ -1,7 +1,12 @@
+#include <pandora.hpp>
+#include <render/debug_render.hpp>
+#include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
-#include <pandora.hpp>
 
+#include <core/log.hpp>
+
+#include "components/ship_engine_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "systems/ship_navigation_system.hpp"
 
@@ -12,22 +17,25 @@ void ShipNavigationSystem::Update(float delta)
 {
     using namespace Pandora;
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const ShipNavigationComponent, TransformComponent>();
+    auto view = registry.view<const ShipNavigationComponent, const ShipEngineComponent, RigidBodyComponent>();
 
-    // TEMP: Modify the transform directly until we Bullet3 and rigid bodies available.
-    view.each([delta](const auto entity, const ShipNavigationComponent& shipNavigationComponent, TransformComponent& transformComponent)
-    {
-        if (shipNavigationComponent.GetThrust() > 0.0f)
+    view.each([this, delta](const auto entity, const ShipNavigationComponent& shipNavigationComponent, const ShipEngineComponent& shipEngineComponent, RigidBodyComponent& rigidBodyComponent) {
+        if (shipNavigationComponent.GetThrust() != ShipThrust::None)
         {
-            const float shipMaximumSpeed = 20.0f * shipNavigationComponent.GetThrust() * delta;
-            transformComponent.transform = glm::translate(transformComponent.transform, glm::vec3(0.0f, 0.0f, shipMaximumSpeed));
+            glm::vec3 force = rigidBodyComponent.GetForwardVector() * shipEngineComponent.linearForce;
+
+            if (shipNavigationComponent.GetThrust() == ShipThrust::Backward)
+            {
+                force *= -0.5f;
+            }
+
+            rigidBodyComponent.ApplyLinearForce(force);
         }
 
-        if (shipNavigationComponent.GetSteerCommand() != ShipSteerCommand::None)
+        std::optional<glm::vec3> targetPosition = shipNavigationComponent.GetTarget();
+        if (targetPosition.has_value())
         {
-            const float dir = (shipNavigationComponent.GetSteerCommand() == ShipSteerCommand::Port) ? -1.0f : 1.0f;
-            const float shipMaximumAngularSpeed = 1.0f * dir * delta;
-            transformComponent.transform = glm::rotate(transformComponent.transform, shipMaximumAngularSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
+            TurnTowards(targetPosition.value(), rigidBodyComponent, shipEngineComponent.torque);
         }
     });
 }

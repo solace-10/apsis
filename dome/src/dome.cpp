@@ -35,7 +35,7 @@ void Dome::Initialize()
     m_pGeometryProcessor = std::make_unique<GeometryProcessor>();
 
     m_pSourceTexture = std::make_unique<BufferedTexture2D>("Dome source texture");
-    if (!m_pSourceTexture->Load("data/core/source/nebula_1.png"))
+    if (!m_pSourceTexture->Load("data/core/source/background1.jpg"))
     {
         Log::Error() << "Failed to load texture.";
     }
@@ -171,6 +171,12 @@ void Dome::Update(float delta)
             ImVec2 c = ImGui::GetCursorScreenPos();
             ImGui::Image(textureId, textureSize, uvMin, uvMax);
 
+            float scale = 1.0f;
+            if (m_pSourceTexture)
+            {
+                scale = textureSize.x / static_cast<float>(m_pSourceTexture->GetWidth());
+            }
+
             ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
             if (m_ShowEdgePoints)
@@ -195,9 +201,9 @@ void Dome::Update(float delta)
                     const Vertex& v1 = m_ColorizedVertices[triangle.v1];
                     const Vertex& v2 = m_ColorizedVertices[triangle.v2];
 
-                    ImVec2 p1 = ImVec2(c.x + v0.position.x, c.y + v0.position.y);
-                    ImVec2 p2 = ImVec2(c.x + v1.position.x, c.y + v1.position.y);
-                    ImVec2 p3 = ImVec2(c.x + v2.position.x, c.y + v2.position.y);
+                    ImVec2 p1 = ImVec2(c.x + v0.position.x * scale, c.y + v0.position.y * scale);
+                    ImVec2 p2 = ImVec2(c.x + v1.position.x * scale, c.y + v1.position.y * scale);
+                    ImVec2 p3 = ImVec2(c.x + v2.position.x * scale, c.y + v2.position.y * scale);
                     
                     ImU32 c1 = ImGui::GetColorU32(ImVec4(v0.color.r, v0.color.g, v0.color.b, 1.0f));
                     ImU32 c2 = ImGui::GetColorU32(ImVec4(v1.color.r, v1.color.g, v1.color.b, 1.0f));
@@ -215,9 +221,9 @@ void Dome::Update(float delta)
                 const ImU32 triangleColor = ImGui::GetColorU32(IM_COL32(0, 0, 255, 255));
                 for (auto& triangle : m_IndexedTriangles)
                 {
-                    ImVec2 p1 = ImVec2(c.x + m_EdgeVertices[triangle.v0].position.x, c.y + m_EdgeVertices[triangle.v0].position.y);
-                    ImVec2 p2 = ImVec2(c.x + m_EdgeVertices[triangle.v1].position.x, c.y + m_EdgeVertices[triangle.v1].position.y);
-                    ImVec2 p3 = ImVec2(c.x + m_EdgeVertices[triangle.v2].position.x, c.y + m_EdgeVertices[triangle.v2].position.y);
+                    ImVec2 p1 = ImVec2(c.x + m_EdgeVertices[triangle.v0].position.x * scale, c.y + m_EdgeVertices[triangle.v0].position.y * scale);
+                    ImVec2 p2 = ImVec2(c.x + m_EdgeVertices[triangle.v1].position.x * scale, c.y + m_EdgeVertices[triangle.v1].position.y * scale);
+                    ImVec2 p3 = ImVec2(c.x + m_EdgeVertices[triangle.v2].position.x * scale, c.y + m_EdgeVertices[triangle.v2].position.y * scale);
                     pDrawList->AddTriangle(p1, p2, p3, triangleColor);
                 }
             }

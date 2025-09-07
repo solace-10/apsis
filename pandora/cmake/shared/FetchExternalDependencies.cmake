@@ -39,14 +39,16 @@ if(TARGET_PLATFORM_NATIVE)
     )
     FetchContent_MakeAvailable(clipp)
 
+    set(BUILD_EXTRAS OFF)
+    set(BUILD_UNIT_TESTS OFF)
     FetchContent_Declare(
-        imgui-node-editor
-        GIT_REPOSITORY https://github.com/thedmd/imgui-node-editor.git
-        GIT_TAG e78e447900909a051817a760efe13fe83e6e1afc # Head as of 14/03/2025; necessary for compatibility with latest imgui.
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/imgui-node-editor
+        bullet3
+        GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+        GIT_TAG ebe1916b90acae8b13cd8c6b637d8327cdc64e94 # 3.17
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/bullet3
         EXCLUDE_FROM_ALL
     )
-    FetchContent_MakeAvailable(imgui-node-editor)
+    FetchContent_MakeAvailable(bullet3)
 endif()
 
 FetchContent_Declare(

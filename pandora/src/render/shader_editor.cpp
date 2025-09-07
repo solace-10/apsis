@@ -2,10 +2,10 @@
 
 #include "imgui/fonts/icons_font_awesome.hpp"
 #include "imgui/imgui_system.hpp"
+#include "pandora.hpp"
 #include "resources/resource_shader.hpp"
 #include "resources/resource_system.hpp"
 #include "vfs/vfs.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -13,10 +13,9 @@ namespace WingsOfSteel::Pandora
 ShaderEditor::ShaderEditor()
 {
 }
-    
+
 ShaderEditor::~ShaderEditor()
 {
-
 }
 
 void ShaderEditor::Update()
@@ -61,28 +60,28 @@ void ShaderEditor::Initialize()
     m_Initialized = true;
 
     const static TextEditor::Palette palette = { {
-			IM_COL32(230, 230, 230, 255), // None
-			IM_COL32(  5, 250, 191, 255), // Keyword	
-			IM_COL32(255, 140,   0, 255), // Number
-			IM_COL32(230, 230, 230, 255), // String
-			IM_COL32(230, 230, 230, 255), // Char literal
-			IM_COL32(  5, 250, 191, 255), // Punctuation
-			IM_COL32(230, 230, 230, 255), // Preprocessor
-			IM_COL32(230, 230, 230, 255), // Identifier
-			IM_COL32(  0, 210, 170, 200), // Known identifier
-			IM_COL32(230, 230, 230, 255), // Preproc identifier
-			IM_COL32(160, 160, 160, 255), // Comment (single line)
-			IM_COL32(160, 160, 160, 255), // Comment (multi line)
-			IM_COL32( 46,  46,  46, 240), // Background
-            IM_COL32(  5, 250, 191, 255), // Cursor
-			IM_COL32(  5, 250, 191,  60), // Selection
-			IM_COL32(160,   0,  16, 255), // ErrorMarker
-			IM_COL32(160,   0,  16, 255), // Breakpoint
-			IM_COL32(140, 140, 140, 255), // Line number
-			IM_COL32(255, 255, 255,  20), // Current line fill
-			IM_COL32(255, 255, 255,  20), // Current line fill (inactive)
-			IM_COL32(  0,   0,   0,   0), // Current line edge
-		} };
+        IM_COL32(230, 230, 230, 255), // None
+        IM_COL32(5, 250, 191, 255), // Keyword
+        IM_COL32(255, 140, 0, 255), // Number
+        IM_COL32(230, 230, 230, 255), // String
+        IM_COL32(230, 230, 230, 255), // Char literal
+        IM_COL32(5, 250, 191, 255), // Punctuation
+        IM_COL32(230, 230, 230, 255), // Preprocessor
+        IM_COL32(230, 230, 230, 255), // Identifier
+        IM_COL32(0, 210, 170, 200), // Known identifier
+        IM_COL32(230, 230, 230, 255), // Preproc identifier
+        IM_COL32(160, 160, 160, 255), // Comment (single line)
+        IM_COL32(160, 160, 160, 255), // Comment (multi line)
+        IM_COL32(46, 46, 46, 240), // Background
+        IM_COL32(5, 250, 191, 255), // Cursor
+        IM_COL32(5, 250, 191, 60), // Selection
+        IM_COL32(160, 0, 16, 255), // ErrorMarker
+        IM_COL32(160, 0, 16, 255), // Breakpoint
+        IM_COL32(140, 140, 140, 255), // Line number
+        IM_COL32(255, 255, 255, 20), // Current line fill
+        IM_COL32(255, 255, 255, 20), // Current line fill (inactive)
+        IM_COL32(0, 0, 0, 0), // Current line edge
+    } };
 
     auto shadersList = GetVFS()->List("/shaders");
     m_ShadersToLoad = shadersList.size();
@@ -190,7 +189,7 @@ void ShaderEditor::CompileSelectedShader()
     ShaderEditorData& data = m_Shaders[m_Selected];
 
     const std::string& codeToCompile = data.editor.GetText();
-    data.pResource->Inject(codeToCompile, [this, &data, codeToCompile](ShaderCompilationResult* pResult){
+    data.pResource->Inject(codeToCompile, [this, &data, codeToCompile](ShaderCompilationResult* pResult) {
         TextEditor::ErrorMarkers errorMarkers;
         if (pResult->GetState() == ShaderCompilationResult::State::Error)
         {

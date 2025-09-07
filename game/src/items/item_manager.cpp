@@ -1,8 +1,9 @@
-#include <resources/resource_system.hpp>
-#include <resources/resource_data_store.hpp>
 #include <pandora.hpp>
+#include <resources/resource_data_store.hpp>
+#include <resources/resource_system.hpp>
 #include <vfs/vfs.hpp>
 
+/*
 #include "items/item_info.hpp"
 #include "items/item_manager.hpp"
 
@@ -27,7 +28,7 @@ ItemManager::ItemManager()
         });
     }
 }
-    
+
 const ItemInfo* ItemManager::Get(const std::string& itemName) const
 {
     auto it = m_Database.find(itemName);
@@ -42,3 +43,5 @@ const ItemInfo* ItemManager::Get(const std::string& itemName) const
 }
 
 } // namespace WingsOfSteel::TheBrightestStar
+
+*/

@@ -39,9 +39,11 @@
         {
             "name": "linux",
             "hidden": true,
-            "generator": "Unix Makefiles",
+            "generator": "Ninja",
             "cacheVariables": {
-                "TARGET_PLATFORM_LINUX": "ON"
+                "TARGET_PLATFORM_LINUX": "ON",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
             },
             "condition": {
                 "type": "equals",
@@ -111,6 +113,7 @@
                 "core"
             ],
             "targets": [
+                "setup_compile_commands",
                 "game",
                 "dome",
                 "forge"
@@ -125,7 +128,9 @@
                 "core"
             ],
             "targets": [
-                "game"
+                "setup_compile_commands",
+                "game",
+                "dome"
             ]
         },
         {
@@ -137,6 +142,7 @@
                 "core"
             ],
             "targets": [
+                "setup_compile_commands",
                 "game"
             ]
         }

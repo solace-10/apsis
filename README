@@ -10,3 +10,9 @@ You need Visual Studio Code.
 
 Ninja needs to be installed and in the PATH.
 Run `tools\scripts\setup_emscripten.bat` to install and activate the latest Emscripten SDK and make the cmake toolchain available.
+
+## Linux
+
+### Native
+
+sudo apt install clang clangd cmake libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglfw3-dev libx11-xcb-dev

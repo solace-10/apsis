@@ -15,14 +15,14 @@
 #include "core/random.hpp"
 #include "imgui/imgui_system.hpp"
 #include "input/input_system.hpp"
+#include "pandora.hpp"
 #include "render/debug_render.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
 #include "scene/scene.hpp"
-#include "vfs/vfs.hpp"
 #include "vfs/file.hpp"
-#include "pandora.hpp"
+#include "vfs/vfs.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -59,8 +59,7 @@ void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gam
 
     g_pRenderSystem = std::make_unique<RenderSystem>();
     g_pRenderSystem->Initialize(
-        [windowSettings]() -> void 
-        {
+        [windowSettings]() -> void {
             g_pResourceSystem = std::make_unique<ResourceSystem>();
             g_pWindow = std::make_unique<Window>(windowSettings);
             g_pInputSystem = std::make_unique<InputSystem>();
@@ -71,7 +70,7 @@ void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gam
             g_PreviousFrameStart = static_cast<float>(glfwGetTime());
 
 #if defined(TARGET_PLATFORM_NATIVE)
-            while (!glfwWindowShouldClose(GetWindow()->GetRawWindow())) 
+            while (!glfwWindowShouldClose(GetWindow()->GetRawWindow()))
             {
                 glfwPollEvents();
                 Pandora::Update();
@@ -82,8 +81,7 @@ void Initialize(const WindowSettings& windowSettings, GameInitializeCallback gam
 #elif defined(TARGET_PLATFORM_WEB)
             emscripten_set_main_loop(Pandora::Update, 0, true);
 #endif
-        }
-    );
+        });
 }
 
 void Update()
@@ -93,7 +91,7 @@ void Update()
     g_PreviousFrameStart = now;
 
     GetImGuiSystem()->OnFrameStart();
-    
+
     GetVFS()->Update();
     GetResourceSystem()->Update();
     GetDebugRender()->Update(delta);
@@ -172,10 +170,10 @@ Window* GetWindow()
 
 void InitializeLogging()
 {
-    Log::AddLogTarget( std::make_shared<StdOutLogger>() );
+    Log::AddLogTarget(std::make_shared<StdOutLogger>());
 
 #if defined(TARGET_PLATFORM_NATIVE)
-    Log::AddLogTarget( std::make_shared<FileLogger>( "log.txt" ) );
+    Log::AddLogTarget(std::make_shared<FileLogger>("log.txt"));
 #endif
 
     Log::Info() << "Logging initialized.";

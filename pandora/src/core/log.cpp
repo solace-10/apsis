@@ -24,8 +24,6 @@
 #include "core/debug_trap.hpp"
 #include "core/log.hpp"
 
-//#include <SDL.h>
-
 namespace WingsOfSteel::Pandora
 {
 
@@ -36,40 +34,40 @@ namespace WingsOfSteel::Pandora
 std::mutex Log::m_Mutex;
 Log::LogTargetList Log::m_Targets;
 
-void Log::AddLogTarget( LogTargetSharedPtr pLogTarget )
+void Log::AddLogTarget(LogTargetSharedPtr pLogTarget)
 {
-    std::lock_guard<std::mutex> lock( m_Mutex );
-    m_Targets.push_back( pLogTarget );
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Targets.push_back(pLogTarget);
 }
 
-void Log::RemoveLogTarget( LogTargetSharedPtr pLogTarget )
+void Log::RemoveLogTarget(LogTargetSharedPtr pLogTarget)
 {
-    std::lock_guard<std::mutex> lock( m_Mutex );
-    m_Targets.remove( pLogTarget );
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Targets.remove(pLogTarget);
 }
 
 Log::Stream Log::Info()
 {
-    return Log::Stream( Log::Level::Info );
+    return Log::Stream(Log::Level::Info);
 }
 
 Log::Stream Log::Warning()
 {
-    return Log::Stream( Log::Level::Warning );
+    return Log::Stream(Log::Level::Warning);
 }
 
 Log::Stream Log::Error()
 {
-    return Log::Stream( Log::Level::Error );
+    return Log::Stream(Log::Level::Error);
 }
 
 // Internal logging function. Should only be called by Log::Stream's destructor.
-void Log::LogInternal( const std::string& text, Log::Level level )
+void Log::LogInternal(const std::string& text, Log::Level level)
 {
-    std::lock_guard<std::mutex> lock( m_Mutex );
-    for ( auto& pTarget : m_Targets )
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    for (auto& pTarget : m_Targets)
     {
-        pTarget->Log( text, level );
+        pTarget->Log(text, level);
     }
 
     AbortOnError(level);
@@ -90,14 +88,14 @@ void Log::AbortOnError(Log::Level level)
 // Log::Stream
 //////////////////////////////////////////////////////////////////////////
 
-Log::Stream::Stream( Log::Level level )
+Log::Stream::Stream(Log::Level level)
 {
     m_Level = level;
 }
 
 Log::Stream::~Stream()
 {
-    Log::LogInternal( m_Collector.str(), m_Level );
+    Log::LogInternal(m_Collector.str(), m_Level);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -105,11 +103,11 @@ Log::Stream::~Stream()
 // Prints the message to the console.
 //////////////////////////////////////////////////////////////////////////
 
-const std::string& ILogTarget::GetPrefix( Log::Level level )
+const std::string& ILogTarget::GetPrefix(Log::Level level)
 {
-    static std::string prefixes[ static_cast<size_t>( Log::Level::Count ) ] = { "[INFO] ", "[WARNING] ", "[ERROR] " };
+    static std::string prefixes[static_cast<size_t>(Log::Level::Count)] = { "[INFO] ", "[WARNING] ", "[ERROR] " };
 
-    return prefixes[ static_cast<size_t>( level ) ];
+    return prefixes[static_cast<size_t>(level)];
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,9 +115,9 @@ const std::string& ILogTarget::GetPrefix( Log::Level level )
 // Prints the message to std::out.
 //////////////////////////////////////////////////////////////////////////
 
-void StdOutLogger::Log( const std::string& text, Log::Level type )
+void StdOutLogger::Log(const std::string& text, Log::Level type)
 {
-    std::cout << GetPrefix( type ) << text << std::endl;
+    std::cout << GetPrefix(type) << text << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -127,24 +125,24 @@ void StdOutLogger::Log( const std::string& text, Log::Level type )
 //////////////////////////////////////////////////////////////////////////
 
 #if defined(TARGET_PLATFORM_NATIVE)
-FileLogger::FileLogger( const std::filesystem::path& filePath )
+FileLogger::FileLogger(const std::filesystem::path& filePath)
 {
-    m_File.open( filePath, std::fstream::out | std::fstream::trunc );
+    m_File.open(filePath, std::fstream::out | std::fstream::trunc);
 }
 
 FileLogger::~FileLogger()
 {
-    if ( m_File.is_open() )
+    if (m_File.is_open())
     {
         m_File.close();
     }
 }
 
-void FileLogger::Log( const std::string& text, Log::Level type )
+void FileLogger::Log(const std::string& text, Log::Level type)
 {
-    if ( m_File.is_open() )
+    if (m_File.is_open())
     {
-        m_File << GetPrefix( type ) << text << std::endl;
+        m_File << GetPrefix(type) << text << std::endl;
         m_File.flush();
     }
 }
@@ -155,15 +153,15 @@ void FileLogger::Log( const std::string& text, Log::Level type )
 //////////////////////////////////////////////////////////////////////////
 
 #if defined(TARGET_PLATFORM_NATIVE)
-void MessageBoxLogger::Log( const std::string& text, Log::Level type )
+void MessageBoxLogger::Log(const std::string& text, Log::Level type)
 {
-    if ( type == Log::Level::Warning )
+    if (type == Log::Level::Warning)
     {
-        //SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_WARNING, "Warning", text.c_str(), nullptr );
+        // SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_WARNING, "Warning", text.c_str(), nullptr );
     }
-    else if ( type == Log::Level::Error )
+    else if (type == Log::Level::Error)
     {
-        //SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Error", text.c_str(), nullptr );
+        // SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Error", text.c_str(), nullptr );
     }
 }
 #endif

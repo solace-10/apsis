@@ -1,27 +1,25 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "core/color.hpp"
+#include "pandora.hpp"
 #include "render/debug_render.hpp"
 #include "render/debug_render_demo.hpp"
 #include "render/window.hpp"
 #include "scene/camera.hpp"
 #include "scene/scene.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 DebugRenderDemo::DebugRenderDemo()
-: m_Show(false)
+    : m_Show(false)
 {
-
 }
-    
+
 DebugRenderDemo::~DebugRenderDemo()
 {
-
 }
-    
+
 void DebugRenderDemo::Show(bool state)
 {
     m_Show = state;
@@ -83,12 +81,11 @@ void DebugRenderDemo::DrawMiscObjects()
 
     // Axis-aligned bounding box:
     const glm::vec3 bbMins(-1.0f, -0.9f, -1.0f);
-    const glm::vec3 bbMaxs(1.0f,  2.2f,  1.0f);
+    const glm::vec3 bbMaxs(1.0f, 2.2f, 1.0f);
     const glm::vec3 bbCenter(
         (bbMins[0] + bbMaxs[0]) * 0.5f,
         (bbMins[1] + bbMaxs[1]) * 0.5f,
-        (bbMins[2] + bbMaxs[2]) * 0.5f
-    );
+        (bbMins[2] + bbMaxs[2]) * 0.5f);
     DrawLabel(origin, "AABB");
     GetDebugRender()->Aabb(bbMins, bbMaxs, Color::Orange);
     GetDebugRender()->Point(bbCenter, Color::White, 15.0f);
@@ -142,8 +139,8 @@ void DebugRenderDemo::DrawFrustum()
     DrawLabel(origin, "frustum + axes");
 
     // The frustum will depict a fake camera:
-    const glm::mat4x4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
-    const glm::mat4x4 view = glm::lookAt(glm::vec3(-8.0f, 0.5f, 14.0f), glm::vec3(-8.0f, 0.5f, -14.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4x4 proj = glm::perspectiveRH_ZO(glm::radians(45.0f), 800.0f / 600.0f, 0.5f, 4.0f);
+    const glm::mat4x4 view = glm::lookAtRH(glm::vec3(-8.0f, 0.5f, 14.0f), glm::vec3(-8.0f, 0.5f, -14.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::mat4x4 clip = glm::inverse(proj * view);
     GetDebugRender()->Frustum(clip, Color::LimeGreen);
 

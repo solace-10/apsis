@@ -6,7 +6,7 @@ int main()
     using namespace WingsOfSteel;
 
     Pandora::WindowSettings windowSettings;
-    windowSettings.SetSize(1564, 1080);
+    windowSettings.SetSize(2080, 832);
     windowSettings.SetTitle("Dome");
 
     Dome::Dome dome;

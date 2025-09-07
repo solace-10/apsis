@@ -1,11 +1,13 @@
 #include "resources/resource_model.hpp"
 
 #include "core/log.hpp"
+#include "pandora.hpp"
+#include "physics/collision_shape.hpp"
+#include "render/debug_render.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
 #include "resources/resource_texture_2d.hpp"
-#include "pandora.hpp"
 
 // clang-format off
 #define TINYGLTF_IMPLEMENTATION
@@ -32,8 +34,10 @@
 #endif
 // clang-format on
 
+#include <algorithm>
 #include <array>
 #include <bitset>
+#include <functional>
 #include <optional>
 #include <sstream>
 #include <unordered_map>
@@ -44,11 +48,13 @@ namespace WingsOfSteel::Pandora
 
 static bool sShaderLocationsMapInitialized = false;
 static std::unordered_map<std::string, int> sShaderLocationsMap;
+static ResourceModel::Id sId = 0;
 
 ResourceModel::ResourceModel()
-: m_DependentResourcesToLoad(0)
-, m_DependentResourcesLoaded(0)
-, m_IsIndexed(false)
+    : m_DependentResourcesToLoad(0)
+    , m_DependentResourcesLoaded(0)
+    , m_IsIndexed(false)
+    , m_Id(sId++)
 {
 }
 
@@ -67,11 +73,9 @@ void ResourceModel::Load(const std::string& path)
     InitializeShaderLocationsMap();
 
     GetVFS()->FileRead(path,
-        [this](FileReadResult result, FileSharedPtr pFile)
-        {
+        [this](FileReadResult result, FileSharedPtr pFile) {
             this->LoadInternal(result, pFile);
-        }
-    );
+        });
 }
 
 ResourceType ResourceModel::GetResourceType() const
@@ -79,37 +83,58 @@ ResourceType ResourceModel::GetResourceType() const
     return ResourceType::Model;
 }
 
-void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const glm::mat4& transform)
+void ResourceModel::Render(wgpu::RenderPassEncoder& renderPass, const std::vector<glm::mat4>& instanceTransforms)
 {
+    m_InstanceCount = std::min(instanceTransforms.size(), MaxInstanceCount);
+    std::copy_n(instanceTransforms.begin(), m_InstanceCount, m_InstanceUniforms.data.instanceTransforms.begin());
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_InstanceUniforms.buffer, 0, &m_InstanceUniforms.data, sizeof(InstanceUniformsData));
+
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_InstanceUniforms.buffer, 0, m_InstanceUniforms.data.instanceTransforms.data(), sizeof(InstanceUniformsData));
+    renderPass.SetBindGroup(2, m_InstanceUniforms.bindGroup);
+
     for (auto& node : m_Nodes)
     {
         if (node.IsRoot())
         {
-            RenderNode(renderPass, node, transform);
+            // Do not break here: a GLTF scene can have more than one root node.
+            RenderNode(renderPass, node, glm::mat4(1.0f));
+        }
+    }
+}
+
+std::optional<ResourceModel::AttachmentPoint> ResourceModel::GetAttachmentPoint(const std::string& name) const
+{
+    for (auto& attachmentPoint : m_AttachmentPoints)
+    {
+        if (attachmentPoint.m_Name == name)
+        {
+            return attachmentPoint;
         }
     }
 
+    return std::nullopt;
 }
 
 void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& node, const glm::mat4& parentTransform)
 {
-    if (!node.GetMeshId().has_value())
+    if (!node.GetMeshId().has_value() || node.IsCollision())
     {
         return;
     }
 
-    const uint32_t nodeId = node.GetMeshId().value();
+    const NodeIndex nodeIndex = node.GetIndex();
     const glm::mat4 transform = parentTransform * node.GetTransform();
+    LocalUniforms& localUniforms = m_PerNodeLocalUniforms[nodeIndex];
+    localUniforms.data.modelMatrix = transform;
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(localUniforms.buffer, 0, &localUniforms.data, sizeof(LocalUniformsData));
+    renderPass.SetBindGroup(1, localUniforms.bindGroup);
 
-    for (auto& primitiveRenderData : m_RenderData[nodeId])
+    const uint32_t meshId = node.GetMeshId().value();
+    for (auto& primitiveRenderData : m_RenderData[meshId])
     {
-        m_LocalUniforms.modelMatrix = transform;
-        GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LocalUniformsBuffer, 0, &m_LocalUniforms, sizeof(LocalUniforms));
-        renderPass.SetBindGroup(1, m_LocalUniformsBindGroup);
-
         if (primitiveRenderData.material.has_value())
         {
-            renderPass.SetBindGroup(2, primitiveRenderData.material.value().GetBindGroup());
+            renderPass.SetBindGroup(3, primitiveRenderData.material.value().GetBindGroup());
         }
 
         renderPass.SetPipeline(primitiveRenderData.pipeline);
@@ -121,11 +146,11 @@ void ResourceModel::RenderNode(wgpu::RenderPassEncoder& renderPass, const Node& 
         if (primitiveRenderData.indexData.has_value())
         {
             renderPass.SetIndexBuffer(m_Buffers[primitiveRenderData.indexData->bufferIndex], primitiveRenderData.indexData->format, primitiveRenderData.indexData->offset);
-            renderPass.DrawIndexed(primitiveRenderData.indexData->count);
+            renderPass.DrawIndexed(primitiveRenderData.indexData->count, m_InstanceCount);
         }
         else
         {
-            renderPass.Draw(primitiveRenderData.vertexData[0].count);
+            renderPass.Draw(primitiveRenderData.vertexData[0].count, m_InstanceCount);
         }
     }
 
@@ -175,7 +200,7 @@ void ResourceModel::LoadInternal(FileReadResult result, FileSharedPtr pFile)
 
         if (loadResult)
         {
-            CreateLocalUniforms();
+            CreateLocalUniformsLayout();
             LoadDependentResources();
         }
         else
@@ -185,7 +210,7 @@ void ResourceModel::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
     else
     {
-        SetState(ResourceState::Error);   
+        SetState(ResourceState::Error);
     }
 }
 
@@ -232,7 +257,7 @@ void ResourceModel::LoadDependentResources()
             {
                 auto& bufferView = m_pModel->bufferViews[image.bufferView];
                 auto& buffer = m_pModel->buffers[bufferView.buffer];
-                const std::string label = GetPath() + "[" + image.name + "]"; 
+                const std::string label = GetPath() + "[" + image.name + "]";
                 m_Textures[i] = std::make_unique<ResourceTexture2D>(label, &buffer.data[bufferView.byteOffset], bufferView.byteLength);
                 m_DependentResourcesLoaded++;
             }
@@ -290,7 +315,9 @@ void ResourceModel::OnDependentResourcesLoaded()
 
     SetupMaterials();
     SetupNodes();
+    SetupAttachments();
     SetupMeshes();
+    SetupCollisionShape();
 
     SetState(ResourceState::Loaded);
 
@@ -299,11 +326,10 @@ void ResourceModel::OnDependentResourcesLoaded()
 
 void ResourceModel::SetupMaterials()
 {
-    auto GetTexture = [this](int index) -> ResourceTexture2D*
-    {
+    auto GetTexture = [this](int index) -> ResourceTexture2D* {
         if (index < 0 || index > static_cast<int>(m_Textures.size()))
         {
-            return nullptr;   
+            return nullptr;
         }
         else
         {
@@ -311,14 +337,12 @@ void ResourceModel::SetupMaterials()
         }
     };
 
-    auto ToVec3 = [](const std::vector<double>& data)
-    {
+    auto ToVec3 = [](const std::vector<double>& data) {
         assert(data.size() == 3);
         return glm::vec3(data[0], data[1], data[2]);
     };
 
-    auto ToVec4 = [](const std::vector<double>& data)
-    {
+    auto ToVec4 = [](const std::vector<double>& data) {
         assert(data.size() == 4);
         return glm::vec4(data[0], data[1], data[2], data[3]);
     };
@@ -358,9 +382,10 @@ void ResourceModel::SetupNodes()
     }
 
     // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#transformations
-    for (size_t i = 0; i < m_pModel->nodes.size(); i++)
+    const size_t numNodes = m_pModel->nodes.size();
+    for (size_t i = 0; i < numNodes; i++)
     {
-        const tinygltf::Node& node = m_pModel->nodes[i]; 
+        const tinygltf::Node& node = m_pModel->nodes[i];
         glm::mat4 nodeTransform(1.0f);
 
         if (node.matrix.size() > 0)
@@ -388,13 +413,14 @@ void ResourceModel::SetupNodes()
             {
                 assert(node.rotation.size() == 4); // Rotation is a quaternion.
                 // glTF node data has quaternions in XYZW format, but glm::quat expects them in WXYZ.
-                nodeTransform = glm::toMat4(glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]));
+                glm::quat rotation(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+                nodeTransform = nodeTransform * glm::toMat4(rotation);
             }
 
             if (node.scale.size() > 0)
             {
                 assert(node.scale.size() == 3);
-                nodeTransform = glm::scale(nodeTransform, glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
+                nodeTransform = nodeTransform * glm::scale(glm::mat4(1.0f), glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
             }
         }
 
@@ -410,23 +436,64 @@ void ResourceModel::SetupNodes()
             meshId = static_cast<uint32_t>(node.mesh);
         }
 
+        // Any node with the string "Collision" will be converted into a convex collision shape.
+        const bool isCollision = node.name.starts_with("Collision");
+
         m_Nodes.emplace_back(
+            static_cast<NodeIndex>(i),
             node.name,
             nodeTransform,
             childNodes,
             rootNodeBitset[i],
-            meshId
-        );
+            isCollision,
+            meshId);
+    }
+
+    CreatePerNodeLocalUniforms();
+    CreateInstanceUniforms();
+}
+
+void ResourceModel::SetupAttachments()
+{
+    // Find attachment points.
+    m_AttachmentPoints.clear();
+    std::function<void(const Node&, const glm::mat4&)> findAttachmentPoints;
+    findAttachmentPoints =
+        [&](const Node& node, const glm::mat4& parentTransform) {
+            glm::mat4 modelTransform = parentTransform * node.GetTransform();
+
+            const std::string attachmentPrefix = "Attachment";
+            if (node.GetName().starts_with(attachmentPrefix))
+            {
+                AttachmentPoint ap;
+                ap.m_Name = node.GetName().substr(attachmentPrefix.size());
+                ap.m_LocalTransform = node.GetTransform();
+                ap.m_ModelTransform = modelTransform;
+                m_AttachmentPoints.push_back(ap);
+            }
+
+            for (const auto& childIndex : node.GetChildren())
+            {
+                findAttachmentPoints(m_Nodes[childIndex], modelTransform);
+            }
+        };
+
+    for (const auto& node : m_Nodes)
+    {
+        if (node.IsRoot())
+        {
+            findAttachmentPoints(node, glm::mat4(1.0f));
+        }
     }
 }
 
 // Note that this is called if a relevant shader is injected.
 void ResourceModel::SetupMeshes()
 {
-    size_t numMeshes = m_pModel->meshes.size();
+    const size_t numMeshes = m_pModel->meshes.size();
     m_RenderData.clear();
     m_RenderData.resize(numMeshes);
-    
+
     for (uint32_t meshId = 0; meshId < numMeshes; meshId++)
     {
         auto& mesh = m_pModel->meshes[meshId];
@@ -437,8 +504,59 @@ void ResourceModel::SetupMeshes()
     }
 }
 
+void ResourceModel::SetupCollisionShape()
+{
+    std::vector<CollisionShapeConvexHullSharedPtr> collisionShapes;
+    for (auto& node : m_Nodes)
+    {
+        if (node.IsCollision())
+        {
+            auto meshId = node.GetMeshId();
+            if (meshId.has_value())
+            {
+                ConvexHullVertices convexHullVertices;
+                auto& mesh = m_pModel->meshes[meshId.value()];
+                for (auto& primitive : mesh.primitives)
+                {
+                    const int positionAttribute = primitive.attributes["POSITION"];
+                    const tinygltf::Accessor& accessor = m_pModel->accessors[positionAttribute];
+                    const tinygltf::BufferView& bufferView = m_pModel->bufferViews[accessor.bufferView];
+                    assert(accessor.type == TINYGLTF_TYPE_VEC3);
+                    const uint64_t arrayStride = 3 * sizeof(float);
+                    const tinygltf::Buffer& buffer = m_pModel->buffers[bufferView.buffer];
+                    const uint8_t* pPositionData = &buffer.data[bufferView.byteOffset];
+                    for (size_t i = 0; i < accessor.count; i++)
+                    {
+                        const float* pData = reinterpret_cast<const float*>(pPositionData);
+                        convexHullVertices.push_back(glm::vec3(pData[0], pData[1], pData[2]));
+                        pPositionData += arrayStride;
+                    }
+                }
+
+                collisionShapes.push_back(std::make_shared<CollisionShapeConvexHull>(convexHullVertices));
+            }
+        }
+    }
+
+    const size_t numCollisionShapes = collisionShapes.size();
+    if (numCollisionShapes > 1)
+    {
+        assert(false); // Not implemented yet.
+    }
+    else if (numCollisionShapes == 1)
+    {
+        m_pCollisionShape = collisionShapes[0];
+    }
+}
+
 void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimitive)
 {
+    // We only render primitives which have materials associated with them.
+    if (pPrimitive->material == -1)
+    {
+        return;
+    }
+
     PrimitiveRenderData renderData;
 
     std::vector<wgpu::VertexAttribute> vertexAttributes;
@@ -457,14 +575,14 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         if (!shaderLocation.has_value())
         {
             Log::Error() << "Unmapped shader attribute location: " << attributeName;
-            continue; 
+            continue;
         }
 
         wgpu::VertexAttribute& vertexAttribute = vertexAttributes[vertexAttributeIndex];
         vertexAttribute.format = GetVertexFormat(&accessor);
         vertexAttribute.offset = 0;
         vertexAttribute.shaderLocation = shaderLocation.value();
-        
+
         uint64_t arrayStride = bufferView.byteStride;
         if (arrayStride == 0)
         {
@@ -483,7 +601,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
             }
         }
 
-        wgpu::VertexBufferLayout bufferLayout{            
+        wgpu::VertexBufferLayout bufferLayout{
             .arrayStride = arrayStride,
             .stepMode = wgpu::VertexStepMode::Vertex,
             .attributeCount = 1,
@@ -515,7 +633,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         const tinygltf::BufferView& bufferView = m_pModel->bufferViews[accessor.bufferView];
         assert(bufferView.target == TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
 
-        renderData.indexData = PrimitiveRenderData::IndexData {
+        renderData.indexData = PrimitiveRenderData::IndexData{
             .bufferIndex = static_cast<uint32_t>(m_pModel->bufferViews[pPrimitive->indices].buffer),
             .count = accessor.count,
             .format = GetIndexFormat(&accessor),
@@ -527,11 +645,8 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .format = Pandora::GetWindow()->GetTextureFormat()
     };
 
-    if (pPrimitive->material != -1)
-    {
-        renderData.material = m_Materials.at(pPrimitive->material);
-        colorTargetState.blend = &renderData.material.value().GetBlendState();
-    }
+    renderData.material = m_Materials.at(pPrimitive->material);
+    colorTargetState.blend = &renderData.material.value().GetBlendState();
 
     wgpu::ShaderModule shaderModule = GetShaderForPrimitive(pPrimitive)->GetShaderModule();
 
@@ -547,10 +662,10 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .depthCompare = wgpu::CompareFunction::Less
     };
 
-    std::vector<wgpu::BindGroupLayout> bindGroupLayouts = 
-    {
+    std::vector<wgpu::BindGroupLayout> bindGroupLayouts = {
         GetRenderSystem()->GetGlobalUniformsLayout(),
-        m_LocalUniformsBindGroupLayout
+        m_LocalUniformsBindGroupLayout,
+        m_InstanceUniformsBindGroupLayout
     };
 
     if (renderData.material.has_value())
@@ -559,6 +674,7 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     }
 
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
+        .label = GetName().c_str(),
         .bindGroupLayoutCount = bindGroupLayouts.size(),
         .bindGroupLayouts = bindGroupLayouts.data()
     };
@@ -570,13 +686,10 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
         .vertex = {
             .module = shaderModule,
             .bufferCount = bufferLayouts.size(),
-            .buffers = bufferLayouts.data()
-        },
-        .primitive = {
-            .topology = GetPrimitiveTopology(pPrimitive),
-            .cullMode = wgpu::CullMode::None
-        },
+            .buffers = bufferLayouts.data() },
+        .primitive = { .topology = GetPrimitiveTopology(pPrimitive), .cullMode = wgpu::CullMode::None },
         .depthStencil = &depthState,
+        .multisample = { .count = RenderSystem::MsaaSampleCount },
         .fragment = &fragmentState
     };
 
@@ -611,10 +724,14 @@ wgpu::VertexFormat ResourceModel::GetVertexFormat(const tinygltf::Accessor* pAcc
     {
         switch (numberOfComponents)
         {
-            case 1: return wgpu::VertexFormat::Float32;
-            case 2: return wgpu::VertexFormat::Float32x2;
-            case 3: return wgpu::VertexFormat::Float32x3;
-            case 4: return wgpu::VertexFormat::Float32x4;
+        case 1:
+            return wgpu::VertexFormat::Float32;
+        case 2:
+            return wgpu::VertexFormat::Float32x2;
+        case 3:
+            return wgpu::VertexFormat::Float32x3;
+        case 4:
+            return wgpu::VertexFormat::Float32x4;
         };
     }
 
@@ -626,11 +743,13 @@ wgpu::IndexFormat ResourceModel::GetIndexFormat(const tinygltf::Accessor* pAcces
 {
     switch (pAccessor->componentType)
     {
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return wgpu::IndexFormat::Uint16;
-        case TINYGLTF_COMPONENT_TYPE_INT: return wgpu::IndexFormat::Uint32;
-        default: 
-            Log::Error() << "Unsupported index format: " << pAccessor->componentType;
-            return wgpu::IndexFormat::Undefined;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+        return wgpu::IndexFormat::Uint16;
+    case TINYGLTF_COMPONENT_TYPE_INT:
+        return wgpu::IndexFormat::Uint32;
+    default:
+        Log::Error() << "Unsupported index format: " << pAccessor->componentType;
+        return wgpu::IndexFormat::Undefined;
     };
 }
 
@@ -638,14 +757,19 @@ wgpu::PrimitiveTopology ResourceModel::GetPrimitiveTopology(const tinygltf::Prim
 {
     switch (pPrimitive->mode)
     {
-        case TINYGLTF_MODE_POINTS: return wgpu::PrimitiveTopology::PointList;
-        case TINYGLTF_MODE_LINE: return wgpu::PrimitiveTopology::LineList;
-        case TINYGLTF_MODE_LINE_STRIP: return wgpu::PrimitiveTopology::LineStrip;
-        case TINYGLTF_MODE_TRIANGLES: return wgpu::PrimitiveTopology::TriangleList;
-        case TINYGLTF_MODE_TRIANGLE_STRIP: return wgpu::PrimitiveTopology::TriangleStrip;
-        default:
-            Log::Error() << "Unsupported primitive topology: " << pPrimitive->mode;
-            return wgpu::PrimitiveTopology::Undefined;
+    case TINYGLTF_MODE_POINTS:
+        return wgpu::PrimitiveTopology::PointList;
+    case TINYGLTF_MODE_LINE:
+        return wgpu::PrimitiveTopology::LineList;
+    case TINYGLTF_MODE_LINE_STRIP:
+        return wgpu::PrimitiveTopology::LineStrip;
+    case TINYGLTF_MODE_TRIANGLES:
+        return wgpu::PrimitiveTopology::TriangleList;
+    case TINYGLTF_MODE_TRIANGLE_STRIP:
+        return wgpu::PrimitiveTopology::TriangleStrip;
+    default:
+        Log::Error() << "Unsupported primitive topology: " << pPrimitive->mode;
+        return wgpu::PrimitiveTopology::Undefined;
     };
 }
 
@@ -653,11 +777,16 @@ int ResourceModel::GetNumberOfComponentsForType(int type) const
 {
     switch (type)
     {
-        case TINYGLTF_TYPE_SCALAR: return 1;
-        case TINYGLTF_TYPE_VEC2: return 2;
-        case TINYGLTF_TYPE_VEC3: return 3;
-        case TINYGLTF_TYPE_VEC4: return 4;
-        default: return 0;
+    case TINYGLTF_TYPE_SCALAR:
+        return 1;
+    case TINYGLTF_TYPE_VEC2:
+        return 2;
+    case TINYGLTF_TYPE_VEC3:
+        return 3;
+    case TINYGLTF_TYPE_VEC4:
+        return 4;
+    default:
+        return 0;
     };
 }
 
@@ -670,52 +799,106 @@ ResourceShader* ResourceModel::GetShaderForPrimitive(tinygltf::Primitive* pPrimi
     return (it == m_Shaders.end()) ? nullptr : it->second.get();
 }
 
-void ResourceModel::CreateLocalUniforms()
+void ResourceModel::CreateLocalUniformsLayout()
 {
-    static_assert(sizeof(LocalUniforms) % 16 == 0);
+    static_assert(sizeof(LocalUniformsData) % 16 == 0);
 
     using namespace wgpu;
-
-    memset(&m_LocalUniforms, 0, sizeof(LocalUniforms));
-    m_LocalUniforms.modelMatrix = glm::mat4x4(1.0f);
-
-    BufferDescriptor bufferDescriptor{
-        .label = "Local uniforms buffer",
-        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
-        .size = sizeof(LocalUniforms)
-    };
-
-    m_LocalUniformsBuffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
 
     BindGroupLayoutEntry bindGroupLayoutEntry{
         .binding = 0,
         .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
-        .buffer {
-            .type = wgpu::BufferBindingType::Uniform,
-            .minBindingSize = sizeof(LocalUniforms)
-        }
+        .buffer{
+            .type = BufferBindingType::Uniform,
+            .minBindingSize = sizeof(LocalUniformsData) }
     };
 
-    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+    BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
         .entryCount = 1,
         .entries = &bindGroupLayoutEntry
     };
     m_LocalUniformsBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+}
+
+void ResourceModel::CreatePerNodeLocalUniforms()
+{
+    using namespace wgpu;
+
+    m_PerNodeLocalUniforms.reserve(m_Nodes.size());
+    for (auto& node : m_Nodes)
+    {
+        LocalUniforms localUniforms;
+        localUniforms.data.modelMatrix = glm::mat4(1.0f);
+
+        BufferDescriptor bufferDescriptor{
+            .label = "Local uniforms buffer",
+            .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
+            .size = sizeof(LocalUniformsData) * m_pModel->nodes.size()
+        };
+
+        localUniforms.buffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
+
+        BindGroupEntry bindGroupEntry{
+            .binding = 0,
+            .buffer = localUniforms.buffer,
+            .offset = 0,
+            .size = sizeof(LocalUniformsData)
+        };
+
+        BindGroupDescriptor bindGroupDescriptor{
+            .layout = m_LocalUniformsBindGroupLayout,
+            .entryCount = 1, // Must match bindGroupLayoutDescriptor.entryCount
+            .entries = &bindGroupEntry
+        };
+
+        localUniforms.bindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
+        m_PerNodeLocalUniforms.push_back(std::move(localUniforms));
+    }
+}
+
+void ResourceModel::CreateInstanceUniforms()
+{
+    using namespace wgpu;
+
+    static_assert(sizeof(InstanceUniformsData) % 16 == 0);
+
+    BindGroupLayoutEntry bindGroupLayoutEntry{
+        .binding = 0,
+        .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
+        .buffer{
+            .type = BufferBindingType::Uniform,
+            .minBindingSize = sizeof(InstanceUniformsData) }
+    };
+
+    BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
+        .label = "Instance uniforms layout",
+        .entryCount = 1,
+        .entries = &bindGroupLayoutEntry
+    };
+    m_InstanceUniformsBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
+
+    BufferDescriptor bufferDescriptor{
+        .label = "Instance uniforms buffer",
+        .usage = BufferUsage::CopyDst | BufferUsage::Uniform,
+        .size = sizeof(InstanceUniformsData)
+    };
+
+    m_InstanceUniforms.buffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
 
     BindGroupEntry bindGroupEntry{
         .binding = 0,
-        .buffer = m_LocalUniformsBuffer,
+        .buffer = m_InstanceUniforms.buffer,
         .offset = 0,
-        .size = sizeof(LocalUniforms)
+        .size = sizeof(InstanceUniformsData)
     };
 
     BindGroupDescriptor bindGroupDescriptor{
-        .layout = m_LocalUniformsBindGroupLayout,
-        .entryCount = bindGroupLayoutDescriptor.entryCount,
+        .layout = m_InstanceUniformsBindGroupLayout,
+        .entryCount = 1,
         .entries = &bindGroupEntry
     };
 
-    m_LocalUniformsBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
+    m_InstanceUniforms.bindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
 void ResourceModel::HandleShaderInjection()
@@ -723,8 +906,7 @@ void ResourceModel::HandleShaderInjection()
     if (!m_ShaderInjectionSignalId.has_value())
     {
         m_ShaderInjectionSignalId = GetResourceSystem()->GetShaderInjectedSignal().Connect(
-            [this](ResourceShader* pResourceShader)
-            {
+            [this](ResourceShader* pResourceShader) {
                 for (auto& shader : m_Shaders)
                 {
                     if (shader.second.get() == pResourceShader)
@@ -733,8 +915,7 @@ void ResourceModel::HandleShaderInjection()
                         return;
                     }
                 }
-            }
-        );
+            });
     }
 }
 

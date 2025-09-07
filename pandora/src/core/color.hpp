@@ -9,9 +9,9 @@ class Color
 {
 public:
     Color(float red, float green, float blue)
-    : r(red)
-    , g(green)
-    , b(blue)
+        : r(red)
+        , g(green)
+        , b(blue)
     {
     }
 

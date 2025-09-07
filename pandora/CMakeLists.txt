@@ -22,7 +22,7 @@ set(SOURCE_FILES_IMGUI
     ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
 )
 
-if(NOT TARGET_PLATFORM_WEB)
+if(TARGET_PLATFORM_NATIVE)
     set(IMGUI_NODE_EDITOR_SOURCE_DIR ext/imgui-node-editor)
     set(SOURCE_FILES_IMGUI_NODE_EDITOR
         ${IMGUI_NODE_EDITOR_SOURCE_DIR}/crude_json.cpp
@@ -66,6 +66,7 @@ set_target_properties(pandora PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY
 target_compile_definitions(pandora PUBLIC
     DEBUG_DRAW_CXX11_SUPPORTED
     DEBUG_DRAW_VEC3_TYPE_DEFINED
+    DEBUG_DRAW_VERTEX_BUFFER_SIZE=32768
     GLM_FORCE_DEPTH_ZERO_TO_ONE
     GLM_FORCE_LEFT_HANDED
     IMGUI_ENABLE_FREETYPE
@@ -86,9 +87,12 @@ if(TARGET_PLATFORM_WINDOWS)
     target_compile_options(pandora PUBLIC $<$<CONFIG:Release>:/Ob2 /GL>)
     target_compile_options(pandora PUBLIC /Zi) # Debug information format: Program database.
     target_compile_options(pandora PUBLIC /MP) # Enable parallel compilation.
+endif()
+
+if (TARGET_PLATFORM_NATIVE)
+    target_include_directories(pandora PUBLIC ext/bullet3/src)
     target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
-elseif(TARGET_PLATFORM_LINUX)
-    target_link_libraries(pandora PUBLIC webgpu_cpp webgpu_dawn glfw webgpu_glfw)
+    target_link_libraries(pandora PUBLIC Bullet3Common BulletDynamics BulletCollision LinearMath)
 elseif(TARGET_PLATFORM_WEB)
     target_compile_options(pandora PUBLIC 
         "-O0"
@@ -98,6 +102,7 @@ elseif(TARGET_PLATFORM_WEB)
     )
     target_link_options(pandora PUBLIC 
         "-sDEFAULT_TO_CXX"
+        "-sUSE_BULLET=1"
         "-sUSE_WEBGPU=1" 
         "-sUSE_GLFW=3" 
         "-sFETCH" 

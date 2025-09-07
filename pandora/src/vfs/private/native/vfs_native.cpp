@@ -3,8 +3,8 @@
 #include "vfs/private/native/vfs_native.hpp"
 
 #include <cassert>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <vector>
 
 #include "core/log.hpp"
@@ -23,19 +23,16 @@ VFSNative::VFSNative()
 
 VFSNative::~VFSNative()
 {
-
 }
 
 void VFSNative::Initialize()
 {
-
 }
 
 void VFSNative::Update()
 {
-
 }
-    
+
 void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCompleted)
 {
     assert(onFileReadCompleted);
@@ -48,7 +45,7 @@ void VFSNative::FileRead(const std::string& path, FileReadCallback onFileReadCom
     }
 
     // std::ios::ate = immediately seek to the end of the stream.
-    std::ifstream ifs(it->second, std::ios::in | std::ios::binary | std::ios::ate );
+    std::ifstream ifs(it->second, std::ios::in | std::ios::binary | std::ios::ate);
 
     if (ifs.good())
     {
@@ -104,10 +101,10 @@ void VFSNative::BuildVFS()
 {
     // TODO: This can be extended to support modding.
     const std::string directory("data/core");
-    if (fs::exists(directory) && fs::is_directory(directory)) 
+    if (fs::exists(directory) && fs::is_directory(directory))
     {
         const size_t prefixLength = directory.length();
-        for (const auto& entry : fs::recursive_directory_iterator(directory)) 
+        for (const auto& entry : fs::recursive_directory_iterator(directory))
         {
             if (entry.is_regular_file())
             {

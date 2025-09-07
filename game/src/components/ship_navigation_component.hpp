@@ -1,49 +1,49 @@
 #pragma once
 
+#include <optional>
+
+#include <glm/vec3.hpp>
+
+#include <scene/components/icomponent.hpp>
+#include <scene/components/component_factory.hpp>
+
 namespace WingsOfSteel::TheBrightestStar
 {
 
-enum class ShipSteerCommand
+enum class ShipThrust
 {
     None,
-    Port,
-    Starboard
+    Forward,
+    Backward
 };
 
-class ShipNavigationComponent
+class ShipNavigationComponent : public Pandora::IComponent
 {
 public:
     ShipNavigationComponent() {}
     ~ShipNavigationComponent() {}
 
-    ShipSteerCommand GetSteerCommand() const;
-    void SetSteerCommand(ShipSteerCommand command);
-    float GetThrust() const;
-    void SetThrust(float value);
+    ShipThrust GetThrust() const { return m_Thrust; }
+    void SetThrust(ShipThrust value) { m_Thrust = value; }
+    void SetTarget(const glm::vec3& position) { m_Target = position; }
+    void ClearTarget() { m_Target.reset(); }
+    const std::optional<glm::vec3>& GetTarget() const { return m_Target; }
+
+    nlohmann::json Serialize() const override
+    {
+        nlohmann::json json;
+        return json;
+    }
+
+    void Deserialize(const nlohmann::json& json) override
+    {
+    }
 
 private:
-    ShipSteerCommand m_SteerCommand = ShipSteerCommand::None;
-    float m_Thrust = 0.0f;
+    ShipThrust m_Thrust{ShipThrust::None};
+    std::optional<glm::vec3> m_Target;
 };
 
-inline ShipSteerCommand ShipNavigationComponent::GetSteerCommand() const
-{
-    return m_SteerCommand;
-}
-
-inline void ShipNavigationComponent::SetSteerCommand(ShipSteerCommand command)
-{
-    m_SteerCommand = command;
-}
-
-inline float ShipNavigationComponent::GetThrust() const
-{
-    return m_Thrust;
-}
-
-inline void ShipNavigationComponent::SetThrust(float value)
-{
-    m_Thrust = value;
-}
+REGISTER_COMPONENT(ShipNavigationComponent, "ship_navigation")
 
 } // namespace WingsOfSteel::TheBrightestStar

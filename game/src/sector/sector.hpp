@@ -7,8 +7,7 @@ namespace WingsOfSteel::TheBrightestStar
 {
 
 DECLARE_SMART_PTR(Encounter);
-DECLARE_SMART_PTR(EncounterWindow);
-DECLARE_SMART_PTR(Fleet);
+DECLARE_SMART_PTR(Wing);
 
 DECLARE_SMART_PTR(Sector);
 class Sector : public Pandora::Scene
@@ -21,39 +20,27 @@ public:
     void Update(float delta) override;
 
     void ShowCameraDebugUI(bool state);
+    void ShowGrid(bool state);
 
-    EncounterSharedPtr GetEncounter() const;
-    void ForceEncounter(EncounterSharedPtr pEncounter);
-
-    Pandora::EntitySharedPtr GetPlayerShip() const;
-    Fleet* GetPlayerFleet() const;
+    Pandora::EntitySharedPtr GetPlayerMech() const;
 
 private:
     void DrawCameraDebugUI();
-    void SpawnEncounter();
     void SpawnDome();
     void SpawnPlayerFleet();
-    void GenerateDice();
 
-    Pandora::EntitySharedPtr SpawnShip(const std::string& name, const std::string& modelPath);
-
+    EncounterUniquePtr m_pEncounter;
     Pandora::EntitySharedPtr m_pDome;
     Pandora::EntitySharedPtr m_pCamera;
-    FleetSharedPtr m_pPlayerFleet;
-    Pandora::EntitySharedPtr m_pPlayerShip;
-    bool m_ShowCameraDebugUI{false};
-    EncounterWindowSharedPtr m_pEncounterWindow;
-    EncounterSharedPtr m_pEncounter;
+    Pandora::EntityWeakPtr m_pPlayerMech;
+    Pandora::EntityWeakPtr m_pCarrier;
+    bool m_ShowCameraDebugUI{ false };
+    bool m_ShowGrid{ true };
 };
 
-inline EncounterSharedPtr Sector::GetEncounter() const
+inline Pandora::EntitySharedPtr Sector::GetPlayerMech() const
 {
-    return m_pEncounter;
-}
-
-inline Pandora::EntitySharedPtr Sector::GetPlayerShip() const
-{
-    return m_pPlayerShip;
+    return m_pPlayerMech.lock();
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

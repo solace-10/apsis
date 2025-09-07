@@ -6,11 +6,10 @@ namespace WingsOfSteel::Pandora::Private
 {
 
 ManifestEntry::ManifestEntry(const std::string& path, const std::string& hash, uint64_t size)
-: m_Path(path)
-, m_Hash(hash)
-, m_Size(size)
+    : m_Path(path)
+    , m_Hash(hash)
+    , m_Size(size)
 {
-
 }
 
 const std::string& ManifestEntry::GetPath() const

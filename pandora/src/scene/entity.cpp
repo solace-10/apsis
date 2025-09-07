@@ -6,15 +6,13 @@ namespace WingsOfSteel::Pandora
 {
 
 Entity::Entity(Scene* pScene)
-: m_pScene(pScene)
-, m_MarkedForRemoval(false)
+    : m_pScene(pScene)
+    , m_MarkedForRemoval(false)
 {
-
 }
-    
+
 Entity::~Entity()
 {
-
 }
 
 void Entity::OnAddedToScene()

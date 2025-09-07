@@ -5,19 +5,18 @@
 #define DEBUG_DRAW_IMPLEMENTATION
 #include <debug_draw.hpp>
 
+#include "pandora.hpp"
 #include "render/rendersystem.hpp"
 #include "render/window.hpp"
 #include "resources/resource_system.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora::Private
 {
 
 DebugRenderImpl::DebugRenderImpl()
 {
-
 }
-    
+
 DebugRenderImpl::~DebugRenderImpl()
 {
     dd::shutdown();
@@ -53,7 +52,6 @@ void DebugRenderImpl::Initialize()
     };
     m_GlyphVertexBuffer = pDevice.CreateBuffer(&glyphsBufferDescriptor);
     m_GlyphData.reserve(DEBUG_DRAW_VERTEX_BUFFER_SIZE);
-
 }
 
 void DebugRenderImpl::Render(wgpu::RenderPassEncoder& renderPass)
@@ -115,10 +113,9 @@ dd::GlyphTextureHandle DebugRenderImpl::createGlyphTexture(int width, int height
     wgpu::BindGroupLayoutEntry textureLayoutEntry{
         .binding = 0,
         .visibility = wgpu::ShaderStage::Fragment,
-        .texture{ 
+        .texture{
             .sampleType = wgpu::TextureSampleType::Float,
-            .viewDimension = wgpu::TextureViewDimension::e2D
-        }
+            .viewDimension = wgpu::TextureViewDimension::e2D }
     };
 
     wgpu::SamplerDescriptor samplerDesc{
@@ -133,12 +130,10 @@ dd::GlyphTextureHandle DebugRenderImpl::createGlyphTexture(int width, int height
         .binding = 1,
         .visibility = wgpu::ShaderStage::Fragment,
         .sampler{
-            .type = wgpu::SamplerBindingType::Filtering
-        }
+            .type = wgpu::SamplerBindingType::Filtering }
     };
 
-    wgpu::BindGroupLayoutEntry layoutEntries[] =
-    {
+    wgpu::BindGroupLayoutEntry layoutEntries[] = {
         textureLayoutEntry,
         samplerLayoutEntry
     };
@@ -149,16 +144,11 @@ dd::GlyphTextureHandle DebugRenderImpl::createGlyphTexture(int width, int height
     };
     m_GlyphBindGroupLayout = GetRenderSystem()->GetDevice().CreateBindGroupLayout(&bindGroupLayoutDescriptor);
 
-    wgpu::BindGroupEntry entries[] =
-    {
-        {
-            .binding = 0,
-            .textureView = m_GlyphTextureView
-        },
-        {
-            .binding = 1,
-            .sampler = sampler
-        }
+    wgpu::BindGroupEntry entries[] = {
+        { .binding = 0,
+            .textureView = m_GlyphTextureView },
+        { .binding = 1,
+            .sampler = sampler }
     };
 
     wgpu::BindGroupDescriptor bindGroupDescriptor{
@@ -195,13 +185,11 @@ void DebugRenderImpl::CreateLineRenderPipeline()
         { // Position
             .format = wgpu::VertexFormat::Float32x3,
             .offset = 0,
-            .shaderLocation = 0
-        },
+            .shaderLocation = 0 },
         { // Color
             .format = wgpu::VertexFormat::Float32x3,
             .offset = 3 * sizeof(float),
-            .shaderLocation = 1
-        }
+            .shaderLocation = 1 }
     };
 
     wgpu::VertexBufferLayout vertexBufferLayout{
@@ -223,11 +211,8 @@ void DebugRenderImpl::CreateLineRenderPipeline()
         .vertex = {
             .module = m_pUntexturedShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = &vertexBufferLayout
-        },
-        .primitive = {
-            .topology = wgpu::PrimitiveTopology::LineList
-        },
+            .buffers = &vertexBufferLayout },
+        .primitive = { .topology = wgpu::PrimitiveTopology::LineList },
         .fragment = &fragmentState
     };
     m_LineRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
@@ -238,12 +223,10 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
     wgpu::BlendState blendState{
         .color{
             .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::OneMinusSrc
-        },
+            .dstFactor = wgpu::BlendFactor::OneMinusSrc },
         .alpha{
             .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::OneMinusSrc
-        }
+            .dstFactor = wgpu::BlendFactor::OneMinusSrc }
     };
 
     wgpu::ColorTargetState colorTargetState{
@@ -262,18 +245,15 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
         { // Position
             .format = wgpu::VertexFormat::Float32x2,
             .offset = 0,
-            .shaderLocation = 0
-        },
+            .shaderLocation = 0 },
         { // Color
             .format = wgpu::VertexFormat::Float32x3,
             .offset = 2 * sizeof(float),
-            .shaderLocation = 1
-        },
+            .shaderLocation = 1 },
         { // UV
             .format = wgpu::VertexFormat::Float32x2,
             .offset = 5 * sizeof(float),
-            .shaderLocation = 2
-        }
+            .shaderLocation = 2 }
     };
 
     wgpu::VertexBufferLayout vertexBufferLayout{
@@ -283,8 +263,7 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
         .attributes = attributes
     };
 
-    wgpu::BindGroupLayout bindGroupLayouts[] = 
-    {
+    wgpu::BindGroupLayout bindGroupLayouts[] = {
         GetRenderSystem()->GetGlobalUniformsLayout(),
         m_GlyphBindGroupLayout
     };
@@ -301,11 +280,10 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
         .vertex = {
             .module = m_pGlyphShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = &vertexBufferLayout
-        },
+            .buffers = &vertexBufferLayout },
         .fragment = &fragmentState
     };
-    m_GlyphRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);   
+    m_GlyphRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
 void DebugRenderImpl::drawPointList(const dd::DrawVertex* points, int count, bool depthEnabled)
@@ -324,7 +302,7 @@ void DebugRenderImpl::drawLineList(const dd::DrawVertex* lines, int count, bool 
     }
     GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LineVertexBuffer, 0, m_LineData.data(), m_LineData.size() * sizeof(LineData));
 }
-    
+
 void DebugRenderImpl::drawGlyphList(const dd::DrawVertex* glyphs, int count, dd::GlyphTextureHandle glyphTex)
 {
     m_GlyphData.resize(count);

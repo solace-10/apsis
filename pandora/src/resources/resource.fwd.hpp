@@ -2,15 +2,17 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace WingsOfSteel::Pandora
 {
 
-#define DECLARE_RESOURCE_TYPE(x) \
-    class x; \
-    using x ## UniquePtr = std::unique_ptr<x>; \
-    using x ## SharedPtr = std::shared_ptr<x>; \
-    using x ## WeakPtr = std::weak_ptr<x>
+#define DECLARE_RESOURCE_TYPE(x)             \
+    class x;                                 \
+    using x##UniquePtr = std::unique_ptr<x>; \
+    using x##SharedPtr = std::shared_ptr<x>; \
+    using x##WeakPtr = std::weak_ptr<x>
 
 DECLARE_RESOURCE_TYPE(Resource);
 DECLARE_RESOURCE_TYPE(ResourceDataStore);
@@ -30,6 +32,8 @@ enum class ResourceState
 // Called by the Resource System when a resource has been instantiated and loaded.
 // This is only called when the resource is fully available: failing to load a resource is a fatal error.
 using OnResourceAvailableCallback = std::function<void(ResourceSharedPtr)>;
+
+using OnResourcesAvailableCallback = std::function<void(std::unordered_map<std::string, ResourceSharedPtr>)>;
 
 enum class ResourceType
 {

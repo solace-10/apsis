@@ -8,20 +8,19 @@ struct VertexOutput
     @builtin(position) position: vec4f
 };
 
-struct GlobalUniforms
-{
-    projectionMatrix : mat4x4<f32>,
-    viewMatrix : mat4x4<f32>,
-    time : f32
-};
-
 struct LocalUniforms
 {
     modelMatrix : mat4x4<f32>
 };
 
+struct InstanceUniforms
+{
+    transform: array<mat4x4<f32>, 256>
+};
+
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
+@group(2) @binding(0) var<uniform> uInstanceUniforms: InstanceUniforms;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {

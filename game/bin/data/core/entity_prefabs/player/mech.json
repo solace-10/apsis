@@ -1,0 +1,50 @@
+{
+    "name": "mech",
+    "resources": [
+        "/models/player/mech.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/player/mech.glb"
+        },
+        {
+            "type": "rigid_body",
+            "resource": "/models/player/mech.glb",
+            "motion_type": 1,
+            "mass": 10,
+            "linear_damping": 0.5,
+            "angular_damping": 0.5,
+            "linear_factor": [ 1.0, 0.0, 1.0 ],
+            "angular_factor": [ 0.0, 1.0, 0.0 ]
+        },
+        {
+            "type": "mech_engine",
+            "linear_force": 500.0,
+            "torque": 7000.0
+        },
+        {
+            "type": "mech_navigation"
+        },
+        {
+            "type": "hardpoint",
+            "resource": "/models/player/mech.glb",
+            "hardpoints": [
+                {
+                    "name": "LeftArm",
+                    "arc_min_degrees": -10,
+                    "arc_max_degrees": 10
+                },
+                {
+                    "name": "RightArm",
+                    "arc_min_degrees": -10,
+                    "arc_max_degrees": 10
+                }
+            ]
+        },
+        {
+            "type": "hull",
+            "health": 10000
+        }
+    ]
+}

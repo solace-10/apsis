@@ -15,18 +15,24 @@ public:
     ~Camera() {}
 
     void LookAt(const glm::vec3& cameraPosition, const glm::vec3& targetPosition, const glm::vec3& up);
-    
+
     void SetNearPlane(float distance);
     float GetNearPlane() const;
     void SetFarPlane(float distance);
     float GetFarPlane() const;
     void SetFieldOfView(float degrees);
     float GetFieldOfView() const;
-    
+
     const glm::vec3& GetPosition() const;
     const glm::vec3& GetTarget() const;
     const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix(); // Not constant as it can recalculate the projection matrix if the window size has changed.
+
+    // Convert mouse screen coordinates to world space coordinates
+    // mousePos: screen coordinates (0,0 at top-left, width/height at bottom-right)
+    // windowWidth/Height: current window dimensions
+    // Returns: world space position at the specified depth (default 0.0f for near plane)
+    glm::vec3 ScreenToWorld(const glm::vec2& mousePos, uint32_t windowWidth, uint32_t windowHeight, float depth = 0.0f) const;
 
 private:
     void CalculateProjectionMatrix();

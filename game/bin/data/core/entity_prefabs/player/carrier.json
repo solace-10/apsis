@@ -1,0 +1,26 @@
+{
+    "name": "carrier",
+    "resources": [
+        "/models/player/carrier.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/player/carrier.glb"
+        },
+        {
+            "type": "rigid_body",
+            "resource": "/models/player/carrier.glb",
+            "motion_type": 1,
+            "mass": 1000,
+            "linear_damping": 0.5,
+            "angular_damping": 0.5,
+            "linear_factor": [ 1.0, 0.0, 1.0 ],
+            "angular_factor": [ 0.0, 1.0, 0.0 ]
+        },
+        {
+            "type": "hull",
+            "health": 10000
+        }
+    ]
+}

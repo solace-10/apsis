@@ -12,8 +12,8 @@
 
 #include "core/log.hpp"
 #include "imgui_impl_wgpu.h"
-#include "render/rendersystem.hpp"
 #include "pandora.hpp"
+#include "render/rendersystem.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -24,7 +24,7 @@ void OnWindowResizedCallback(GLFWwindow* pWindow, int width, int height)
 }
 
 Window::Window(const WindowSettings& windowSettings)
-: m_pWindow(nullptr)
+    : m_pWindow(nullptr)
 {
     assert(windowSettings.GetMode() != WindowMode::Fullscreen); // Not implemented yet.
     windowSettings.GetSize(m_Width, m_Height);
@@ -67,7 +67,7 @@ void Window::ConfigureSurface()
         wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvasDesc{};
         canvasDesc.selector = "#canvas";
 
-        wgpu::SurfaceDescriptor surfaceDesc{.nextInChain = &canvasDesc};
+        wgpu::SurfaceDescriptor surfaceDesc{ .nextInChain = &canvasDesc };
 
         m_Surface = GetRenderSystem()->GetInstance().CreateSurface(&surfaceDesc);
 #endif
@@ -76,20 +76,39 @@ void Window::ConfigureSurface()
         m_Surface.GetCapabilities(GetRenderSystem()->GetAdapter(), &capabilities);
         m_Format = capabilities.formats[0];
 
-        Log::Info() << "Configuring swap chain: ";
+        Log::Info() << "Configuring surface: ";
         Log::Info() << "- Format: " << magic_enum::enum_name(m_Format);
         Log::Info() << "- Resolution: " << m_Width << "x" << m_Height;
+        Log::Info() << "- VSync: " << (m_VSyncEnabled ? "enabled" : "disabled");
     }
 
+    wgpu::PresentMode presentMode = m_VSyncEnabled ? wgpu::PresentMode::Fifo : wgpu::PresentMode::Immediate;
+    
     wgpu::SurfaceConfiguration config{
         .device = GetRenderSystem()->GetDevice(),
         .format = m_Format,
         .width = m_Width,
         .height = m_Height,
+        .presentMode = presentMode,
     };
     m_Surface.Configure(&config);
 
     m_DepthTexture = DepthTexture(GetRenderSystem()->GetDevice(), m_Width, m_Height, std::string("Window depth buffer"));
+    m_MsaaColorTexture = ColorTexture(GetRenderSystem()->GetDevice(), m_Width, m_Height, m_Format, RenderSystem::MsaaSampleCount, std::string("Window MSAA color buffer"));
+}
+
+void Window::SetVSyncEnabled(bool enabled)
+{
+    if (m_VSyncEnabled != enabled)
+    {
+        m_VSyncEnabled = enabled;
+        ConfigureSurface(); // Reconfigure surface with new present mode
+    }
+}
+
+bool Window::IsVSyncEnabled() const
+{
+    return m_VSyncEnabled;
 }
 
 } // namespace WingsOfSteel::Pandora

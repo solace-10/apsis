@@ -1,13 +1,18 @@
-#include <render/debug_render.hpp>
-#include <scene/components/camera_component.hpp>
-#include <scene/components/orbit_camera_component.hpp>
-#include <scene/components/transform_component.hpp>
-#include <scene/entity.hpp>
+#include <numeric>
+
+#include <core/interpolation.hpp>
 #include <core/log.hpp>
 #include <pandora.hpp>
+#include <render/debug_render.hpp>
+#include <render/window.hpp>
+#include <scene/components/camera_component.hpp>
+#include <scene/components/orbit_camera_component.hpp>
+#include <scene/components/rigid_body_component.hpp>
+#include <scene/components/transform_component.hpp>
+#include <scene/entity.hpp>
 
 #include "components/sector_camera_component.hpp"
-#include "components/ship_navigation_component.hpp"
+#include "components/mech_navigation_component.hpp"
 #include "systems/camera_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -15,9 +20,8 @@ namespace WingsOfSteel::TheBrightestStar
 
 CameraSystem::CameraSystem()
 {
-
 }
-    
+
 CameraSystem::~CameraSystem()
 {
     Pandora::InputSystem* pInputSystem = Pandora::GetInputSystem();
@@ -29,13 +33,13 @@ CameraSystem::~CameraSystem()
     }
 }
 
-void CameraSystem::Initialize()
+void CameraSystem::Initialize(Pandora::Scene* pScene)
 {
     using namespace Pandora;
-    m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this](){ m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
-    m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this](){ m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
+    m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
+    m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
 
-    m_MousePositionToken = GetInputSystem()->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta){ 
+    m_MousePositionToken = GetInputSystem()->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) {
         m_InputPending = true;
         m_MouseDelta = mouseDelta;
     });
@@ -44,7 +48,7 @@ void CameraSystem::Initialize()
 void CameraSystem::Update(float delta)
 {
     using namespace Pandora;
-    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera(): nullptr;
+    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera == nullptr)
     {
         return;
@@ -58,33 +62,61 @@ void CameraSystem::Update(float delta)
 
             EntitySharedPtr pAnchorEntity = sectorCameraComponent.anchorEntity.lock();
             glm::vec3 anchorPosition(0.0f);
-            glm::vec3 cameraWantedTarget = anchorPosition;
+            glm::vec3 cameraWantedTarget(0.0f);
+            glm::vec3 cameraWantedPosition = sectorCameraComponent.position;
             if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
             {
                 const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
                 anchorPosition = glm::vec3(anchorTransform[3]);
+                cameraWantedPosition = sectorCameraComponent.position + anchorPosition;
+                cameraWantedTarget = anchorPosition;
 
-                if (pAnchorEntity->HasComponent<ShipNavigationComponent>())
+                if (pAnchorEntity->HasComponent<MechNavigationComponent>() && pAnchorEntity->HasComponent<RigidBodyComponent>())
                 {
-                    const ShipNavigationComponent& shipNavigationComponent = pAnchorEntity->GetComponent<ShipNavigationComponent>();
-                    glm::vec4 forward = anchorTransform[2];
-                    const float forwardMultiplier = glm::clamp(shipNavigationComponent.GetThrust(), -1.0f, 1.0f);
-                    cameraWantedTarget = anchorPosition + glm::vec3(forward) * forwardMultiplier * 30.0f;
+                    const MechNavigationComponent& mechNavigationComponent = pAnchorEntity->GetComponent<MechNavigationComponent>();
+                    const RigidBodyComponent& rigidBodyComponent = pAnchorEntity->GetComponent<RigidBodyComponent>();
+
+                    const std::optional<glm::vec3>& mechAim = mechNavigationComponent.GetAim();
+                    if (mechAim.has_value())
+                    {
+                        // Slowly move the camera back when the player is aiming towards the bottom of the screen (towards positive Z).
+                        glm::vec3 mechAimTarget(mechAim.value());
+                        glm::vec3 mechAimDirection = glm::normalize(mechAimTarget - anchorPosition);
+                        const float backOffFactorTarget = glm::max(0.0f, mechAimDirection.z);
+                        Pandora::DampSpring(sectorCameraComponent.backOffFactor, backOffFactorTarget, sectorCameraComponent.backOffFactorVelocity, 3.0f, delta);
+                        glm::vec3 cameraBackoffOffset(0.0f, 0.0f, 30.0f * sectorCameraComponent.backOffFactor);
+
+                        // Keep the camera target between the mech and where the player is aiming at.
+                        // The aiming point is kept close to the mech to avoid having the camera turn too much,
+                        // as that makes the mech difficult to control.
+                        const float mechAimTargetDistance = glm::length(mechAimTarget - anchorPosition);
+                        const float maxMechAimTargetDistance = 20.0f;
+                        glm::vec3 mechAimTargetRestricted(mechAimTarget);
+                        if (mechAimTargetDistance > maxMechAimTargetDistance)
+                        {
+                            mechAimTargetRestricted = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
+                        }
+
+                        const glm::vec3 wantedAimLocal = mechAimTargetRestricted - anchorPosition;
+                        Pandora::DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
+
+                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset;
+                        cameraWantedTarget = anchorPosition + sectorCameraComponent.aimLocal;
+                    }
+                    else
+                    {
+                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset;
+                    }
                 }
             }
 
-            glm::vec3 cameraPosition = sectorCameraComponent.position + anchorPosition;
+            Pandora::DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
 
-            DampSpring(sectorCameraComponent.target, cameraWantedTarget, sectorCameraComponent.velocity, 1.0f, delta);
+            sectorCameraComponent.position = sectorCameraComponent.position;
+            sectorCameraComponent.target = cameraWantedTarget;
 
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-            cameraComponent.camera.LookAt(cameraPosition, sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
-
-            if (sectorCameraComponent.debugDraw)
-            {
-                GetDebugRender()->Circle(sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Red, 2.0f, 10.0f);
-                GetDebugRender()->Circle(cameraWantedTarget, glm::vec3(0.0f, 1.0f, 0.0f), Pandora::Color::Green, 2.0f, 10.0f);
-            }
+            cameraComponent.camera.LookAt(sectorCameraComponent.position, sectorCameraComponent.target, glm::vec3(0.0f, 1.0f, 0.0f));
         }
         else if (pCamera->HasComponent<OrbitCameraComponent>())
         {
@@ -109,8 +141,7 @@ void CameraSystem::Update(float delta)
             glm::vec3 position(
                 glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
                 glm::sin(orbitCameraComponent.pitch),
-                glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch)
-            );
+                glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch));
 
             EntitySharedPtr pAnchorEntity = orbitCameraComponent.anchorEntity.lock();
             glm::vec3 anchorPosition(0.0f);
@@ -126,24 +157,53 @@ void CameraSystem::Update(float delta)
     }
 }
 
-// Found in https://gamedev.net/forums/topic/329868-damped-spring-effects-for-camera/3149147/?page=1
-// Use a damped spring to move v0 towards target given a current velocity, time over which the spring would 
-// cover 90% of the distance from rest and the delta time.
-void CameraSystem::DampSpring(glm::vec3& v0, const glm::vec3& target, glm::vec3& velocity, float time90, float delta) const
+
+glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
 {
-    const float c0 = delta * 3.75f / time90;	
-    if (c0 >= 1.0f)	
-    {		
-        // If our distance to the target is too small, we go the whole way to prevent oscillation.		
-        v0 = target;		
-        velocity = glm::vec3(0.0f);		
-        return;	
-    }	
-    
-    const glm::vec3 diff = target - v0;	
-    const glm::vec3 force = diff - 2.0f * velocity;	
-    v0 += velocity * c0;
-    velocity += force * c0;   
+    using namespace Pandora;
+    EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
+    if (pCamera == nullptr || !pCamera->HasComponent<CameraComponent>())
+    {
+        return glm::vec3(0.0f);
+    }
+
+    const CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
+    const Camera& camera = cameraComponent.camera;
+
+    // Get camera position and create ray direction
+    const glm::vec3 cameraPos = camera.GetPosition();
+
+    // Convert mouse to world coordinates at two different depths to create a ray
+    const glm::vec3 nearPoint = camera.ScreenToWorld(mousePos, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 0.0f);
+    const glm::vec3 farPoint = camera.ScreenToWorld(mousePos, GetWindow()->GetWidth(), GetWindow()->GetHeight(), 1.0f);
+
+    // Calculate ray direction
+    const glm::vec3 rayDir = glm::normalize(farPoint - nearPoint);
+
+    // Define the XZ plane (Y = 0)
+    const glm::vec3 planeNormal(0.0f, 1.0f, 0.0f); // Up vector
+    const glm::vec3 planePoint(0.0f, 0.0f, 0.0f); // Origin point on the plane
+
+    // Perform ray-plane intersection
+    const float denom = glm::dot(rayDir, planeNormal);
+
+    // Check if ray is parallel to plane
+    if (std::abs(denom) < std::numeric_limits<float>::epsilon())
+    {
+        return glm::vec3(0.0f); // No intersection
+    }
+
+    // Calculate intersection parameter
+    const float t = glm::dot(planePoint - nearPoint, planeNormal) / denom;
+
+    // Check if intersection is behind the camera
+    if (t < 0.0f)
+    {
+        return glm::vec3(0.0f); // Intersection behind camera
+    }
+
+    // Calculate intersection point
+    return nearPoint + rayDir * t;
 }
 
 } // namespace WingsOfSteel::TheBrightestStar

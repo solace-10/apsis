@@ -14,11 +14,15 @@ public:
     CameraSystem();
     ~CameraSystem();
 
-    void Initialize() override;
+    void Initialize(Pandora::Scene* pScene) override;
     void Update(float delta) override;
 
+    // Convert mouse screen coordinates to world space coordinates on the XZ plane (Y = 0)
+    // mousePos: screen coordinates (0,0 at top-left, width/height at bottom-right)
+    // Returns: world space position on the XZ plane, or (0,0,0) if no active camera or no intersection
+    glm::vec3 MouseToWorld(const glm::vec2& mousePos) const;
+
 private:
-    void DampSpring(glm::vec3& v0, const glm::vec3& target, glm::vec3& velocity, float time90, float delta) const;
 
     Pandora::InputCallbackToken m_RightMouseButtonPressedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };
     Pandora::InputCallbackToken m_RightMouseButtonReleasedToken{ Pandora::InputSystem::sInvalidInputCallbackToken };

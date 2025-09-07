@@ -2,6 +2,7 @@
 
 #include "core/log.hpp"
 #include "scene/components/camera_component.hpp"
+#include "scene/components/entity_reference_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/entity.hpp"
 #include "scene/systems/system.hpp"
@@ -11,17 +12,14 @@ namespace WingsOfSteel::Pandora
 
 Scene::Scene()
 {
-
 }
 
 Scene::~Scene()
 {
-
 }
 
 void Scene::Initialize()
 {
-    
 }
 
 void Scene::Update(float delta)
@@ -43,19 +41,14 @@ EntitySharedPtr Scene::CreateEntity()
 
     pEntity->m_EntityHandle = m_Registry.create();
 
+    pEntity->AddComponent<EntityReferenceComponent>(pEntity);
+
     return pEntity;
 }
-
 
 void Scene::RemoveEntity(EntitySharedPtr pEntity)
 {
     pEntity->m_MarkedForRemoval = true;
-}
-
-void Scene::AddSystem(SystemUniquePtr pSystem)
-{
-    pSystem->Initialize();
-    m_Systems.push_back(std::move(pSystem));
 }
 
 void Scene::SetCamera(EntitySharedPtr pCamera)
@@ -93,6 +86,7 @@ void Scene::ProcessEntitiesToRemove()
         if (pEntity->m_MarkedForRemoval)
         {
             pEntity->OnRemovedFromScene();
+            m_Registry.destroy(pEntity->m_EntityHandle);
         }
     }
 
@@ -104,4 +98,4 @@ entt::registry& Scene::GetRegistry()
     return m_Registry;
 }
 
-} // namespace WingsOfSteel::Pandoraaa
+} // namespace WingsOfSteel::Pandora

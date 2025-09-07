@@ -1,0 +1,55 @@
+{
+    "name": "interceptor",
+    "resources": [
+        "/models/raiders/interceptor.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/raiders/interceptor.glb"
+        },
+        {
+            "type": "rigid_body",
+            "resource": "/models/raiders/interceptor.glb",
+            "motion_type": 1,
+            "mass": 10,
+            "linear_damping": 0.5,
+            "angular_damping": 0.5,
+            "linear_factor": [ 1.0, 0.0, 1.0 ],
+            "angular_factor": [ 0.0, 1.0, 0.0 ]
+        },
+        {
+            "type": "hull",
+            "health": 100
+        },
+        {
+            "type": "ship_engine",
+            "linear_force": 300.0,
+            "torque": 500.0
+        },
+        {
+            "type": "ship_navigation"
+        },
+        {
+            "type": "hardpoint",
+            "resource": "/models/raiders/interceptor.glb",
+            "hardpoints": [
+                {
+                    "name": "FixedMount",
+                    "arc_min_degrees": -5,
+                    "arc_max_degrees": 5,
+                    "weapon": "/entity_prefabs/weapons/raiders/interceptor_rotary_cannon.json"
+                }
+            ]
+        },
+        {
+            "type": "ai_strikecraft_controller",
+            "optimal_range": 60,
+            "min_range": 20,
+            "max_range": 60,
+            "firing_angle": 10,
+            "attack_duration": 3,
+            "break_duration": 3
+        }
+    ]
+}

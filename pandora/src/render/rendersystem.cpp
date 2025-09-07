@@ -1,23 +1,24 @@
 #include "render/rendersystem.hpp"
 
 #include <cassert>
-#include <magic_enum.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+
 #include <GLFW/glfw3.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <magic_enum.hpp>
 
 #include "core/log.hpp"
 #include "imgui/imgui_system.hpp"
+#include "pandora.hpp"
 #include "render/debug_render.hpp"
 #include "render/shader_compiler.hpp"
 #include "render/shader_editor.hpp"
 #include "render/window.hpp"
+#include "scene/camera.hpp"
 #include "scene/components/camera_component.hpp"
 #include "scene/components/model_component.hpp"
 #include "scene/components/transform_component.hpp"
-#include "scene/systems/model_render_system.hpp"
-#include "scene/camera.hpp"
 #include "scene/scene.hpp"
-#include "pandora.hpp"
+#include "scene/systems/model_render_system.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -32,7 +33,7 @@ void OnRenderSystemInitializedWrapper()
     g_OnRenderSystemInitializedCallback();
 }
 
-RenderSystem::RenderSystem() 
+RenderSystem::RenderSystem()
 {
 }
 
@@ -46,7 +47,7 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
     g_OnRenderSystemInitializedCallback = onInitializedCallback;
 
     g_Instance = wgpu::CreateInstance();
-    if ( g_Instance )
+    if (g_Instance)
     {
         Log::Info() << "Initialized WebGPU.";
     }
@@ -60,7 +61,7 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
         g_Device = device;
         Log::Info() << "WebGPU device acquired.";
 
-        if (!glfwInit()) 
+        if (!glfwInit())
         {
             Log::Error() << "Failed to initialize GLFW.";
             exit(-1);
@@ -76,7 +77,6 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
 void RenderSystem::InitializeInternal()
 {
     CreateGlobalUniforms();
-    m_pModelRenderSystem = std::make_unique<ModelRenderSystem>();
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderEditor = std::make_unique<ShaderEditor>();
 }
@@ -111,7 +111,8 @@ void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
 
     wgpu::RenderPassColorAttachment colorAttachment{
-        .view = surfaceTexture.texture.CreateView(),
+        .view = GetWindow()->GetMsaaColorTexture().GetTextureView(),
+        .resolveTarget = surfaceTexture.texture.CreateView(),
         .loadOp = wgpu::LoadOp::Clear,
         .storeOp = wgpu::StoreOp::Store,
         .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
@@ -132,8 +133,16 @@ void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)
 
     wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
     UpdateGlobalUniforms(renderPass);
-    
-    m_pModelRenderSystem->Render(renderPass);
+
+    Scene* pScene = GetActiveScene();
+    if (pScene)
+    {
+        ModelRenderSystem* pModelRenderSystem = pScene->GetSystem<ModelRenderSystem>();
+        if (pModelRenderSystem)
+        {
+            pModelRenderSystem->Render(renderPass);
+        }
+    }
 
     renderPass.End();
 }
@@ -191,7 +200,7 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
         // TODO(https://bugs.chromium.org/p/dawn/issues/detail?id=1892): Use
         // wgpu::RequestAdapterStatus, wgpu::Adapter, and wgpu::Device.
         [](WGPURequestAdapterStatus status, WGPUAdapter adapter, const char* message, void* userdata) {
-            if (status != WGPURequestAdapterStatus_Success) 
+            if (status != WGPURequestAdapterStatus_Success)
             {
                 Log::Error() << "Failed to request adapter, error code " << status;
                 exit(-1);
@@ -204,7 +213,7 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
             g_Adapter.GetProperties(&properties);
 
             Log::Info() << "Adapter properties:";
-            if (properties.vendorName) 
+            if (properties.vendorName)
             {
                 Log::Info() << " - Vendor name: " << properties.vendorName;
             }
@@ -227,16 +236,14 @@ void RenderSystem::AcquireDevice(void (*callback)(wgpu::Device))
                 [](WGPURequestDeviceStatus status, WGPUDevice cDevice, const char* message, void* userdata) {
                     wgpu::Device device = wgpu::Device::Acquire(cDevice);
                     device.SetUncapturedErrorCallback(
-                            [](WGPUErrorType type, const char* message, void* userdata) {
-                                Log::Error() << "Uncaptured device error: " << type << " - message: " << message;
-                                exit(-1);
-                            },
-                            nullptr
-                    );
+                        [](WGPUErrorType type, const char* message, void* userdata) {
+                            Log::Error() << "Uncaptured device error: " << type << " - message: " << message;
+                            exit(-1);
+                        },
+                        nullptr);
                     reinterpret_cast<void (*)(wgpu::Device)>(userdata)(device);
                 },
-                userdata
-            );
+                userdata);
         },
         reinterpret_cast<void*>(callback));
 }
@@ -252,6 +259,8 @@ void RenderSystem::CreateGlobalUniforms()
     m_GlobalUniforms.viewMatrix = glm::mat4x4(1.0f);
     m_GlobalUniforms.cameraPosition = glm::vec4(0.0f);
     m_GlobalUniforms.time = 0.0f;
+    m_GlobalUniforms.windowWidth = 0.0f;
+    m_GlobalUniforms.windowHeight = 0.0f;
 
     BufferDescriptor bufferDescriptor{
         .label = "Global uniforms buffer",
@@ -264,10 +273,9 @@ void RenderSystem::CreateGlobalUniforms()
     BindGroupLayoutEntry bindGroupLayoutEntry{
         .binding = 0,
         .visibility = ShaderStage::Vertex | ShaderStage::Fragment,
-        .buffer {
+        .buffer{
             .type = wgpu::BufferBindingType::Uniform,
-            .minBindingSize = sizeof(GlobalUniforms)
-        }
+            .minBindingSize = sizeof(GlobalUniforms) }
     };
 
     wgpu::BindGroupLayoutDescriptor bindGroupLayoutDescriptor{
@@ -310,6 +318,8 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
     }
 
     m_GlobalUniforms.time = static_cast<float>(glfwGetTime());
+    m_GlobalUniforms.windowWidth = static_cast<float>(GetWindow()->GetWidth());
+    m_GlobalUniforms.windowHeight = static_cast<float>(GetWindow()->GetHeight());
 
     GetDevice().GetQueue().WriteBuffer(m_GlobalUniformsBuffer, 0, &m_GlobalUniforms, sizeof(GlobalUniforms));
     renderPass.SetBindGroup(0, m_GlobalUniformsBindGroup);

@@ -1,21 +1,23 @@
-#include "core/log.hpp"
 #include "scene/systems/model_render_system.hpp"
+
+#include "debug_visualization/model_visualization.hpp"
+#include "pandora.hpp"
+#include "resources/resource_model.hpp"
 #include "scene/components/model_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
 
 ModelRenderSystem::ModelRenderSystem()
 {
-
+    m_pModelVisualization = std::make_unique<ModelVisualization>();
+    m_InstanceData.resize(64);
 }
-    
+
 ModelRenderSystem::~ModelRenderSystem()
 {
-
 }
 
 void ModelRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
@@ -28,14 +30,35 @@ void ModelRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<ModelComponent, TransformComponent>();
 
-    view.each([&renderPass](const auto entity, ModelComponent& modelComponent, TransformComponent& transformComponent)
+    for (auto& instanceData : m_InstanceData)
     {
-        ResourceModel* pResourceModel = modelComponent.GetModel();
+        instanceData.transforms.clear();
+    }
+
+    view.each([this](const auto entity, ModelComponent& modelComponent, TransformComponent& transformComponent) {
+        ResourceModelSharedPtr pResourceModel = modelComponent.GetModel();
         if (pResourceModel)
         {
-            pResourceModel->Render(renderPass, transformComponent.transform);
+            // Grow the storage for instance data if required.
+            const size_t idx = static_cast<size_t>(pResourceModel->GetId());
+            if (idx >= m_InstanceData.size())
+            {
+                m_InstanceData.resize(idx + 32);
+            }
+
+            m_InstanceData[idx].pModel = pResourceModel;
+            m_InstanceData[idx].transforms.push_back(transformComponent.transform);
         }
     });
+
+    for (auto& instanceData : m_InstanceData)
+    {
+        ResourceModelSharedPtr pModel = instanceData.pModel.lock();
+        if (pModel && !instanceData.transforms.empty())
+        {
+            pModel->Render(renderPass, instanceData.transforms);
+        }
+    }
 }
 
 } // namespace WingsOfSteel::Pandora

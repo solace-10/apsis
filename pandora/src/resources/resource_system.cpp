@@ -24,7 +24,6 @@ ResourceSystem::ResourceSystem()
 
 ResourceSystem::~ResourceSystem()
 {
-
 }
 
 void ResourceSystem::Update()
@@ -43,7 +42,7 @@ void ResourceSystem::Update()
         }
     }
 
-    m_PendingResources.remove_if([](const PendingResource& pendingResource){
+    m_PendingResources.remove_if([](const PendingResource& pendingResource) {
         return pendingResource.pResource->GetState() == ResourceState::Loaded;
     });
 }
@@ -53,7 +52,26 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     auto resourceIt = m_Resources.find(path);
     if (resourceIt != m_Resources.end())
     {
-        onResourceAvailable(resourceIt->second);
+        ResourceSharedPtr pResource = resourceIt->second;
+
+        if (pResource->GetState() == ResourceState::Loaded)
+        {
+            // If the resource has already completed loading, immediately trigger the callback.
+            onResourceAvailable(resourceIt->second);
+        }
+        else if (pResource->GetState() == ResourceState::Loading)
+        {
+            // If we are still loading, add this request to the list of pending requests.
+            // When the resource is loaded, all the callbacks will be triggered.
+            m_PendingResources.push_back(
+                PendingResource{
+                    .pResource = pResource,
+                    .onResourceAvailable = onResourceAvailable });
+        }
+        else
+        {
+            Log::Error() << "Invalid state for resource.";
+        }
         return;
     }
 
@@ -68,10 +86,10 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     if (resourceCreatorIt == m_ResourceCreationFunctions.end())
     {
         Log::Error() << "ResourceSystem: don't know how to create resource for '" << path << "'.";
-        return; 
+        return;
     }
 
-    Log::Info() << "ResourceSystem: requesting load for '" << path << "'."; 
+    Log::Info() << "ResourceSystem: requesting load for '" << path << "'.";
 
     ResourceSharedPtr pResource = resourceCreatorIt->second();
     m_Resources[path] = pResource;
@@ -80,9 +98,32 @@ void ResourceSystem::RequestResource(const std::string& path, OnResourceAvailabl
     m_PendingResources.push_back(
         PendingResource{
             .pResource = pResource,
-            .onResourceAvailable = onResourceAvailable
-        }
-    );
+            .onResourceAvailable = onResourceAvailable });
+}
+
+void ResourceSystem::RequestResources(const std::vector<std::string>& paths, OnResourcesAvailableCallback onResourcesLoaded)
+{
+    MultiPendingResourceHandle handle = m_NextMultiRequestHandle++;
+    m_MultiRequests[handle] = MultiPendingResource(paths.size(), onResourcesLoaded);
+
+    for (const auto& path : paths)
+    {
+        RequestResource(path, [this, handle, path](ResourceSharedPtr pResource) {
+            auto& multiRequest = m_MultiRequests[handle];
+            multiRequest.resources.push_back(pResource);
+
+            if (--multiRequest.pending == 0)
+            {
+                std::unordered_map<std::string, ResourceSharedPtr> resources;
+                for (const auto& resource : multiRequest.resources)
+                {
+                    resources[resource->GetPath()] = resource;
+                }
+                multiRequest.onResourcesAvailable(resources);
+                m_MultiRequests.erase(handle);
+            }
+        });
+    }
 }
 
 ShaderInjectedSignal& ResourceSystem::GetShaderInjectedSignal()
@@ -95,7 +136,7 @@ std::optional<std::string> ResourceSystem::GetExtension(const std::string& path)
     size_t separator = path.find_last_of('.');
     if (separator == std::string::npos || separator == path.length())
     {
-        return nullptr;
+        return std::nullopt;
     }
     else
     {

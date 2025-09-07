@@ -1,17 +1,17 @@
 #pragma once
 
-#include <scene/systems/system.hpp>
+#include "systems/navigation_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
 {
 
-class ShipNavigationSystem : public Pandora::System
+class ShipNavigationSystem : public NavigationSystem
 {
 public:
     ShipNavigationSystem() {};
     ~ShipNavigationSystem() {};
 
-    void Initialize() override {};
+    void Initialize(Pandora::Scene* pScene) override {};
     void Update(float delta) override;
 };
 

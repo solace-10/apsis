@@ -4,11 +4,11 @@
 #include "resources/resource_shader.hpp"
 
 #include "core/log.hpp"
+#include "pandora.hpp"
 #include "render/rendersystem.hpp"
 #include "render/shader_compilation_result.hpp"
 #include "render/shader_compiler.hpp"
 #include "resources/resource_system.hpp"
-#include "pandora.hpp"
 
 namespace WingsOfSteel::Pandora
 {
@@ -26,11 +26,9 @@ void ResourceShader::Load(const std::string& path)
     Resource::Load(path);
 
     GetVFS()->FileRead(path,
-        [this](FileReadResult result, FileSharedPtr pFile)
-        {
+        [this](FileReadResult result, FileSharedPtr pFile) {
             this->LoadInternal(result, pFile);
-        }
-    );
+        });
 }
 
 ResourceType ResourceShader::GetResourceType() const
@@ -51,8 +49,7 @@ const std::string& ResourceShader::GetShaderCode() const
 void ResourceShader::Inject(const std::string& code, OnShaderCompiledCallback callback)
 {
     const std::string label(GetPath() + " (injected)");
-    GetRenderSystem()->GetShaderCompiler()->Compile(label, code, [this, code, callback](ShaderCompilationResult* pCompilationResult)
-    {
+    GetRenderSystem()->GetShaderCompiler()->Compile(label, code, [this, code, callback](ShaderCompilationResult* pCompilationResult) {
         if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
         {
             m_ShaderModule = pCompilationResult->GetShaderModule();
@@ -73,8 +70,7 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
         m_ShaderCode = std::string(pFile->GetData().data(), pFile->GetData().size());
 
         const std::string label(pFile->GetPath());
-        GetRenderSystem()->GetShaderCompiler()->Compile(label, m_ShaderCode, [this, pFile](ShaderCompilationResult* pCompilationResult)
-        {
+        GetRenderSystem()->GetShaderCompiler()->Compile(label, m_ShaderCode, [this, pFile](ShaderCompilationResult* pCompilationResult) {
             if (pCompilationResult->GetState() == ShaderCompilationResult::State::Success)
             {
                 m_ShaderModule = pCompilationResult->GetShaderModule();
@@ -86,8 +82,8 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
                 ss << "Failed to compile shader '" << pFile->GetPath() << "':";
                 for (const ShaderCompilationError& error : pCompilationResult->GetErrors())
                 {
-                    uint32_t lineNumebr = error.GetLineNumber();
-                    ss << std::endl << "Error on line " << (error.GetLineNumber()) << ", char " << error.GetLinePosition() << ": " << error.GetMessage();
+                    ss << std::endl
+                       << "Error on line " << (error.GetLineNumber()) << ", char " << error.GetLinePosition() << ": " << error.GetMessage();
                 }
                 Log::Error() << ss.str();
                 SetState(ResourceState::Error);
@@ -96,7 +92,7 @@ void ResourceShader::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
     else
     {
-        SetState(ResourceState::Error);   
+        SetState(ResourceState::Error);
     }
 }
 

@@ -1,12 +1,9 @@
 #include "render/depth_texture.hpp"
 
+#include "render/rendersystem.hpp"
+
 namespace WingsOfSteel::Pandora
 {
-
-DepthTexture::DepthTexture()
-{
-    
-}
 
 DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height, const std::string& label)
 {
@@ -17,9 +14,9 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
         .size{
             .width = width,
             .height = height,
-            .depthOrArrayLayers = 1
-        },
-        .format = wgpu::TextureFormat::Depth32Float
+            .depthOrArrayLayers = 1 },
+        .format = wgpu::TextureFormat::Depth32Float,
+        .sampleCount = RenderSystem::MsaaSampleCount
     };
 
     m_Texture = device.CreateTexture(&textureDesc);
@@ -31,11 +28,6 @@ DepthTexture::DepthTexture(wgpu::Device& device, uint32_t width, uint32_t height
         .compare = wgpu::CompareFunction::LessEqual
     };
     m_Sampler = device.CreateSampler(&samplerDesc);
-}
-
-DepthTexture::~DepthTexture()
-{
-
 }
 
 } // namespace WingsOfSteel::Pandora

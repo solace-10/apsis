@@ -1,10 +1,10 @@
 #include <render/debug_render.hpp>
 #include <scene/components/debug_render_component.hpp>
-#include <scene/components/tag_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 #include <pandora.hpp>
 
+#include "components/name_component.hpp"
 #include "systems/debug_render_system.hpp"
 
 namespace WingsOfSteel::TheBrightestStar
@@ -66,11 +66,11 @@ void DebugRenderSystem::Update(float delta)
             GetDebugRender()->Box(points, debugRenderComponent.color);
         }
 
-        TagComponent* pTagComponent = registry.try_get<TagComponent>(entity);
-        if (pTagComponent)
+        NameComponent* pNameComponent = registry.try_get<NameComponent>(entity);
+        if (pNameComponent)
         {
             const glm::vec3 position(transformComponent.transform[3]);
-            GetDebugRender()->Label(pTagComponent->Value(), position, Color::White);
+            GetDebugRender()->Label(pNameComponent->Value, position, Color::White);
         }
     });
 }
