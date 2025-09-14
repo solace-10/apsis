@@ -15,11 +15,13 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/ai_strikecraft_controller_component.hpp"
+#include "components/faction_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_builder.hpp"
+#include "systems/ai_strategic_system.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
 #include "systems/ammo_system.hpp"
 #include "systems/camera_system.hpp"
@@ -27,6 +29,7 @@
 #include "systems/mech_navigation_system.hpp"
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
+#include "systems/target_overlay_system.hpp"
 #include "systems/weapon_system.hpp"
 
 namespace WingsOfSteel
@@ -46,12 +49,14 @@ void Sector::Initialize()
 
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
+    AddSystem<AIStrategicSystem>();
     AddSystem<AIStrikecraftControllerSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<MechNavigationSystem>();
     AddSystem<ShipNavigationSystem>();
     AddSystem<WeaponSystem>();
     AddSystem<AmmoSystem>();
+    AddSystem<TargetOverlaySystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -82,7 +87,6 @@ void Sector::Update(float delta)
 
     if (m_ShowGrid)
     {
-        GetDebugRender()->AxisTriad(glm::mat4(1.0f), 10.0f, 50.0f);
         GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Color::White);
     }
     
@@ -145,7 +149,7 @@ void Sector::SpawnDome()
 void Sector::SpawnPlayerFleet()
 {
     SceneWeakPtr pWeakScene = weak_from_this();
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
         if (pScene)
         {
@@ -167,7 +171,7 @@ void Sector::SpawnPlayerFleet()
         }
     });
 
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-250.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
         if (pScene)
         {

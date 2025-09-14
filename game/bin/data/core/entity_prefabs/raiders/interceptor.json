@@ -50,6 +50,10 @@
             "firing_angle": 10,
             "attack_duration": 3,
             "break_duration": 3
+        },
+        {
+            "type": "name",
+            "value": "Interceptor"
         }
     ]
 }

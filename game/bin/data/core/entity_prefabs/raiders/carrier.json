@@ -23,10 +23,6 @@
             "health": 4000
         },
         {
-            "type": "faction",
-            "value": "Allied"
-        },
-        {
             "type": "carrier"
         }
     ]

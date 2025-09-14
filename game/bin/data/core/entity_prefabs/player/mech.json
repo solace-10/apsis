@@ -44,7 +44,19 @@
         },
         {
             "type": "hull",
-            "health": 10000
+            "health": 1000
+        },
+        {
+            "type": "faction",
+            "value": "Allied"
+        },
+        {
+            "type": "wing",
+            "value": 0
+        },
+        {
+            "type": "name",
+            "value": "Knight"
         }
     ]
 }

@@ -680,8 +680,12 @@ void ResourceModel::SetupPrimitive(uint32_t meshId, tinygltf::Primitive* pPrimit
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
+    std::stringstream descriptorLabel;
+    descriptorLabel << "ResourceModel" << GetPath();
+    renderData.pipelineLabel = std::make_unique<std::string>(descriptorLabel.str());
+
     wgpu::RenderPipelineDescriptor descriptor{
-        .label = "ResourceModel",
+        .label = renderData.pipelineLabel.get()->c_str(),
         .layout = pipelineLayout,
         .vertex = {
             .module = shaderModule,

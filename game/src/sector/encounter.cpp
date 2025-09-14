@@ -1,5 +1,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "components/faction_component.hpp"
+#include "components/wing_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
@@ -21,7 +23,24 @@ Encounter::~Encounter()
 void Encounter::Initialize(SectorSharedPtr pSector)
 {
     m_pSector = pSector;
-    RebuildTier(0);
+    SpawnCarrier();
+}
+
+void Encounter::SpawnCarrier()
+{
+    SceneWeakPtr pWeakScene = m_pSector;
+    SectorWeakPtr pWeakSector = m_pSector;
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, 0.0f)), [pWeakSector](EntitySharedPtr pEntity){
+        pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
+
+        SectorSharedPtr pSector = pWeakSector.lock();
+        if (pSector)
+        {
+            Encounter* pEncounter = pSector->GetEncounter();
+            pEncounter->m_pCarrier = pEntity;
+            pEncounter->RebuildTier(0);
+        }
+    });
 }
 
 void Encounter::RebuildTier(int tier)
@@ -43,6 +62,11 @@ void Encounter::RebuildTier(int tier)
 
 void Encounter::Update(float delta)
 {
+    if (m_pCarrier.expired())
+    {
+        return;
+    }
+
     m_TimeToNextAction -= delta;
     if (m_TimeToNextAction < 0.0)
     {
@@ -71,11 +95,18 @@ void Encounter::InstantiateAction(const Encounter::EncounterAction& action)
     SceneWeakPtr pWeakScene = std::static_pointer_cast<Scene>(m_pSector.lock());
     for (const auto& wing : action.wings)
     {
+        static WingID sWingID = 0;
+        sWingID++;
+        WingID currentWingID = sWingID; // So it can be captured in the lambda; temporary until this logic moves to the carrier system.
+
         const size_t numShips = wing.entities.size();
         for (size_t i = 0; i < numShips; i++)
         {
             const float positionZ = -15.0f * (static_cast<float>(numShips) - 1.0f) + 30.0f * static_cast<float>(i);
-            EntityBuilder::Build(pWeakScene, wing.entities[i], glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, positionZ)), [](EntitySharedPtr pEntity){});
+            EntityBuilder::Build(pWeakScene, wing.entities[i], glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, positionZ)), [currentWingID](EntitySharedPtr pEntity){
+                pEntity->AddComponent<WingComponent>().ID = currentWingID;
+                pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
+            });
         }
     }
 }

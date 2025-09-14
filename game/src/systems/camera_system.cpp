@@ -100,7 +100,7 @@ void CameraSystem::Update(float delta)
                         const glm::vec3 wantedAimLocal = mechAimTargetRestricted - anchorPosition;
                         DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
 
-                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset;
+                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset + sectorCameraComponent.aimLocal;
                         cameraWantedTarget = anchorPosition + sectorCameraComponent.aimLocal;
                     }
                     else
@@ -111,8 +111,6 @@ void CameraSystem::Update(float delta)
             }
 
             DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
-
-            sectorCameraComponent.position = sectorCameraComponent.position;
             sectorCameraComponent.target = cameraWantedTarget;
 
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();

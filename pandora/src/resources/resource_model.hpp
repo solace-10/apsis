@@ -149,6 +149,7 @@ private:
 
         std::optional<Material> material;
         wgpu::RenderPipeline pipeline;
+        std::unique_ptr<std::string> pipelineLabel;
     };
 
     using MeshRenderData = std::vector<PrimitiveRenderData>;

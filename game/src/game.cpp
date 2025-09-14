@@ -11,6 +11,7 @@
 #include "items/item_info.hpp"
 #include "sector/sector.hpp"
 #include "ui/prefab_editor.hpp"
+#include "systems/ai_strategic_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -63,6 +64,20 @@ void Game::DrawImGuiMenuBar()
     {
         if (ImGui::BeginMenu("Sector"))
         {
+            if (ImGui::BeginMenu("AI"))
+            {
+                AIStrategicSystem* pStrategicSystem = m_pSector->GetSystem<AIStrategicSystem>();
+                if (pStrategicSystem)
+                {
+                    bool showDebugUI = pStrategicSystem->IsDebugUIVisible();
+                    if (ImGui::MenuItem("Strategic layer", nullptr, &showDebugUI))
+                    {
+                        pStrategicSystem->ShowDebugUI(showDebugUI);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
             static bool sShowCameraWindow = false;
             if (ImGui::MenuItem("Camera", nullptr, &sShowCameraWindow))
             {

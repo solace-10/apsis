@@ -39,6 +39,7 @@ private:
         int currentAction{0};
     };
 
+    void SpawnCarrier();
     void RebuildTier(int tier);
     void InstantiateAction(const EncounterAction& action);
     EntityWeakPtr m_pCarrier;
@@ -48,7 +49,6 @@ private:
     std::array<EncounterTier, 3> m_EncounterTiers;
     int m_CurrentTier{0};
     float m_TimeToNextAction{ 0.0f };
-
 };
 
 } // namespace WingsOfSteel

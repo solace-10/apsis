@@ -22,6 +22,7 @@ public:
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
 
+    Encounter* GetEncounter();
     EntitySharedPtr GetPlayerMech() const;
 
 private:
@@ -37,6 +38,11 @@ private:
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ true };
 };
+
+inline Encounter* Sector::GetEncounter()
+{
+    return m_pEncounter.get();
+}
 
 inline EntitySharedPtr Sector::GetPlayerMech() const
 {
