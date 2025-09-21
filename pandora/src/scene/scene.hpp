@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -14,6 +15,8 @@ namespace WingsOfSteel
 DECLARE_SMART_PTR(Entity);
 DECLARE_SMART_PTR(Scene);
 DECLARE_SMART_PTR(System);
+
+using EntityHandle = entt::entity;
 
 class Scene : public std::enable_shared_from_this<Scene>
 {
@@ -31,6 +34,7 @@ public:
 
     EntitySharedPtr CreateEntity();
     void RemoveEntity(EntitySharedPtr pEntity);
+    EntitySharedPtr GetEntity(EntityHandle handle);
 
     template <typename T>
     T* GetSystem() const
@@ -69,7 +73,7 @@ private:
     void ProcessEntitiesToAdd();
     void ProcessEntitiesToRemove();
 
-    std::vector<EntitySharedPtr> m_Entities;
+    std::unordered_map<entt::entity, EntitySharedPtr> m_Entities;
     std::vector<EntitySharedPtr> m_EntitiesPendingAdd;
     EntityWeakPtr m_pCamera;
     entt::registry m_Registry;

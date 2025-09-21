@@ -25,6 +25,7 @@
 #include "systems/ai_strikecraft_controller_system.hpp"
 #include "systems/ammo_system.hpp"
 #include "systems/camera_system.hpp"
+#include "systems/carrier_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/mech_navigation_system.hpp"
 #include "systems/player_controller_system.hpp"
@@ -51,6 +52,7 @@ void Sector::Initialize()
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<AIStrategicSystem>();
     AddSystem<AIStrikecraftControllerSystem>();
+    AddSystem<CarrierSystem>();
     AddSystem<PlayerControllerSystem>();
     AddSystem<MechNavigationSystem>();
     AddSystem<ShipNavigationSystem>();

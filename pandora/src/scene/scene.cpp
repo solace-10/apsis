@@ -51,6 +51,19 @@ void Scene::RemoveEntity(EntitySharedPtr pEntity)
     pEntity->m_MarkedForRemoval = true;
 }
 
+EntitySharedPtr Scene::GetEntity(EntityHandle handle)
+{
+    auto it = m_Entities.find(handle);
+    if (it == m_Entities.end())
+    {
+        return nullptr;
+    }
+    else
+    {
+        return it->second;
+    }
+}
+
 void Scene::SetCamera(EntitySharedPtr pCamera)
 {
     if (!pCamera->HasComponent<CameraComponent>())
@@ -73,7 +86,7 @@ void Scene::ProcessEntitiesToAdd()
 {
     for (auto& pEntity : m_EntitiesPendingAdd)
     {
-        m_Entities.push_back(pEntity);
+        m_Entities[pEntity->m_EntityHandle] = pEntity;
         pEntity->OnAddedToScene();
     }
     m_EntitiesPendingAdd.clear();
@@ -81,16 +94,19 @@ void Scene::ProcessEntitiesToAdd()
 
 void Scene::ProcessEntitiesToRemove()
 {
-    for (auto& pEntity : m_Entities)
+    for (auto it = m_Entities.begin(); it != m_Entities.end();)
     {
-        if (pEntity->m_MarkedForRemoval)
+        if (it->second->m_MarkedForRemoval)
         {
-            pEntity->OnRemovedFromScene();
-            m_Registry.destroy(pEntity->m_EntityHandle);
+            it->second->OnRemovedFromScene();
+            m_Registry.destroy(it->first);
+            it = m_Entities.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
-
-    std::erase_if(m_Entities, [](EntitySharedPtr pEntity) { return pEntity->m_MarkedForRemoval; });
 }
 
 entt::registry& Scene::GetRegistry()

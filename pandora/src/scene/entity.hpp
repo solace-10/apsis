@@ -10,6 +10,8 @@ namespace WingsOfSteel
 
 DECLARE_SMART_PTR(Scene);
 
+using EntityHandle = entt::entity;
+
 DECLARE_SMART_PTR(Entity);
 class Entity
 {
@@ -45,7 +47,7 @@ public:
 
 private:
     Scene* m_pScene{ nullptr };
-    entt::entity m_EntityHandle{ entt::null };
+    EntityHandle m_EntityHandle{ entt::null };
     EntityWeakPtr m_pParentEntity;
     bool m_MarkedForRemoval{ false };
 };

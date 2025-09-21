@@ -6,6 +6,7 @@
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "sector/wing.hpp"
+#include "systems/carrier_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -92,22 +93,22 @@ void Encounter::Update(float delta)
 
 void Encounter::InstantiateAction(const Encounter::EncounterAction& action)
 {
-    SceneWeakPtr pWeakScene = std::static_pointer_cast<Scene>(m_pSector.lock());
+    SectorSharedPtr pSector = m_pSector.lock();
+    if (!pSector)
+    {
+        return;
+    }
+
+    CarrierSystem* pCarrierSystem = pSector->GetSystem<CarrierSystem>();
+    EntitySharedPtr pCarrier = m_pCarrier.lock();
+    if (!pCarrierSystem || !pCarrier)
+    {
+        return;
+    }
+
     for (const auto& wing : action.wings)
     {
-        static WingID sWingID = 0;
-        sWingID++;
-        WingID currentWingID = sWingID; // So it can be captured in the lambda; temporary until this logic moves to the carrier system.
-
-        const size_t numShips = wing.entities.size();
-        for (size_t i = 0; i < numShips; i++)
-        {
-            const float positionZ = -15.0f * (static_cast<float>(numShips) - 1.0f) + 30.0f * static_cast<float>(i);
-            EntityBuilder::Build(pWeakScene, wing.entities[i], glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, positionZ)), [currentWingID](EntitySharedPtr pEntity){
-                pEntity->AddComponent<WingComponent>().ID = currentWingID;
-                pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
-            });
-        }
+        pCarrierSystem->LaunchEscorts(pCarrier, wing.entities, WingRole::Defense);
     }
 }
 
