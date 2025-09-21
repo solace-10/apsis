@@ -1,3 +1,4 @@
+#include <core/log.hpp>
 #include <scene/components/transform_component.hpp>
 
 #include "components/carrier_component.hpp"
@@ -7,26 +8,24 @@
 #include "systems/carrier_system.hpp"
 #include "game.hpp"
 
-#include <core/log.hpp>
-
 namespace WingsOfSteel
 {
 
 void CarrierSystem::Update(float delta)
 {
-    entt::registry& registry = Game::Get()->GetSector()->GetRegistry();
+    Sector* pSector = Game::Get()->GetSector();
+    entt::registry& registry = pSector->GetRegistry();
     auto carrierView = registry.view<const TransformComponent, CarrierComponent>();
-    carrierView.each([delta, this](const auto entityHandle, const TransformComponent& transformComponent, CarrierComponent& carrierComponent) {
+    carrierView.each([delta, pSector](const auto entityHandle, const TransformComponent& transformComponent, CarrierComponent& carrierComponent) {
         carrierComponent.TimeToNextLaunch -= delta;
         if (carrierComponent.TimeToNextLaunch <= 0.0f && !carrierComponent.CurrentLaunch && !carrierComponent.QueuedLaunches.empty())
         {
             carrierComponent.CurrentLaunch = carrierComponent.QueuedLaunches.front();
             carrierComponent.QueuedLaunches.pop_front();
 
-            Sector* pSector = Game::Get()->GetSector();
-            SceneWeakPtr pWeakScene = pSector->GetWeakPtr();
+            const glm::mat4 spawnTransform = glm::translate(glm::mat4(1.0f), transformComponent.GetForward() * -50.0f) * transformComponent.transform;
             EntitySharedPtr pCarrierEntity = pSector->GetEntity(entityHandle);
-            EntityBuilder::Build(pWeakScene, carrierComponent.CurrentLaunch->GetResourcePath(), glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 0.0f, 0.0f)), [pCarrierEntity](EntitySharedPtr pEntity){
+            EntityBuilder::Build(carrierComponent.CurrentLaunch->GetResourcePath(), spawnTransform, [pCarrierEntity](EntitySharedPtr pEntity){
                 CarrierComponent& carrierComponent = pCarrierEntity->GetComponent<CarrierComponent>();
                 if (carrierComponent.CurrentLaunch)
                 {
@@ -34,9 +33,9 @@ void CarrierSystem::Update(float delta)
                     pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
                     carrierComponent.CurrentLaunch.reset();
                 }
-                carrierComponent.TimeToNextLaunch = 2.0f;
+                carrierComponent.TimeToNextLaunch = carrierComponent.TimeBetweenLaunches;
             });
-        }    
+        }
     });
 }
 

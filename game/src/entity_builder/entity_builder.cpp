@@ -60,6 +60,12 @@ void EntityBuilder::Build(SceneWeakPtr& pWeakScene, const std::string& prefabRes
     });
 }
 
+void EntityBuilder::Build(const std::string& prefabResourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback)
+{
+    SceneWeakPtr pScene = Game::Get()->GetSector()->GetWeakPtr();
+    Build(pScene, prefabResourcePath, worldTransform, onEntityReadyCallback);
+}
+
 void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath)
 {
     auto componentsIt = jsonData.find("components");

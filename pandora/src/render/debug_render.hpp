@@ -60,7 +60,7 @@ public:
     void Cross(const glm::vec3& center, float length, int durationMillis = 0);
 
     // Add a wireframe circle.
-    void Circle(const glm::vec3& center, const glm::vec3& planeNormal, const Color& color, float radius, float numSteps, int durationMillis = 0);
+    void Circle(const glm::vec3& center, const glm::vec3& planeNormal, const Color& color, float radius, int numSteps = 12, int durationMillis = 0);
 
     // Add a wireframe plane in 3D space.
     // If 'normalVecScale' is not zero, a line depicting the plane normal is also draw.

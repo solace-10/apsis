@@ -80,9 +80,9 @@ void DebugRender::Cross(const glm::vec3& center, float length, int durationMilli
     dd::cross(center, length, durationMillis);
 }
 
-void DebugRender::Circle(const glm::vec3& center, const glm::vec3& planeNormal, const Color& color, float radius, float numSteps, int durationMillis)
+void DebugRender::Circle(const glm::vec3& center, const glm::vec3& planeNormal, const Color& color, float radius, int numSteps, int durationMillis)
 {
-    dd::circle(center, planeNormal, color.AsVec3(), radius, numSteps, durationMillis);
+    dd::circle(center, planeNormal, color.AsVec3(), radius, static_cast<float>(numSteps), durationMillis);
 }
 
 void DebugRender::Plane(const glm::vec3& center, const glm::vec3& planeNormal, const Color& planeColor, const Color& normalVecColor, float planeScale, float normalVecScale, int durationMillis)

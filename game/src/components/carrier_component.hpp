@@ -60,6 +60,7 @@ public:
     std::deque<EscortToLaunch> QueuedLaunches;
     std::optional<EscortToLaunch> CurrentLaunch;
     float TimeToNextLaunch{0.0f};
+    float TimeBetweenLaunches{1.5f};
 };
 
 REGISTER_COMPONENT(CarrierComponent, "carrier")
