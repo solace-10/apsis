@@ -51,10 +51,10 @@ void WeaponSystem::Update(float delta)
             }
         }
 
-        glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
+        const glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
         const glm::vec3 hardpointTranslation(hardpointWorldTransform[3]);
-        const glm::vec3 hardpointForward(rootWorldTransform[2]);
-        const glm::vec3 hardpointUp(rootWorldTransform[1]);
+        const glm::vec3 hardpointForward(hardpointWorldTransform[2]);
+        const glm::vec3 hardpointUp(hardpointWorldTransform[1]);
 
         if (shouldDrawFiringArc)
         {

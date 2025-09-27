@@ -38,7 +38,7 @@ void AmmoSystem::Update(float delta)
         EntityReferenceComponent& entityReferenceComponent) {
         
         glm::vec3 startPos = transformComponent.GetTranslation();
-        glm::vec3 direction = -transformComponent.GetForward();
+        glm::vec3 direction = transformComponent.GetForward();
         glm::vec3 endPos = startPos + direction * ammoRaycastComponent.GetRaycastLength();
 
         std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(startPos, endPos);
@@ -97,7 +97,7 @@ void AmmoSystem::Update(float delta)
     movementView.each([delta, this, pPhysicsSystem](const auto entity, TransformComponent& transformComponent, AmmoMovementComponent& ammoMovementComponent, EntityReferenceComponent& entityReferenceComponent) {
         
         const glm::vec3 startPos = transformComponent.GetTranslation();
-        const glm::vec3 direction = -transformComponent.GetForward();
+        const glm::vec3 direction = transformComponent.GetForward();
 
         const float distance = delta * ammoMovementComponent.GetSpeed();
         const float rangeAfterAdvance = ammoMovementComponent.GetRange() - distance;
