@@ -28,6 +28,48 @@
         },
         {
             "type": "carrier"
+        },
+        {
+            "type": "hardpoint",
+            "resource": "/models/player/carrier.glb",
+            "hardpoints": [
+                {
+                    "name": "PDC1",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                },
+                {
+                    "name": "PDC2",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                },
+                {
+                    "name": "PDC3",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                },
+                {
+                    "name": "PDC4",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                },
+                {
+                    "name": "PDC5",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                },
+                {
+                    "name": "PDC6",
+                    "arc_min_degrees": -45,
+                    "arc_max_degrees": 45,
+                    "weapon": "/entity_prefabs/weapons/player/pdc.json"
+                }
+            ]
         }
     ]
 }
