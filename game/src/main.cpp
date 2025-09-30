@@ -7,7 +7,7 @@ int main()
 
     WindowSettings windowSettings;
     windowSettings.SetSize(1440, 900);
-    windowSettings.SetTitle("Crimson Sun II");
+    windowSettings.SetTitle("Knight-One");
 
     Game game;
     Initialize(
