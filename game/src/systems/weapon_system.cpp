@@ -1,3 +1,5 @@
+#include <glm/gtx/rotate_vector.hpp>
+
 #include "systems/weapon_system.hpp"
 
 #include <pandora.hpp>
@@ -65,7 +67,16 @@ void WeaponSystem::Update(float delta)
                 weaponComponent.m_ArcMinDegrees,
                 weaponComponent.m_ArcMaxDegrees,
                 weaponComponent.m_Range);
+
+            DrawFiringLine(
+                hardpointTranslation, 
+                hardpointForward, 
+                weaponComponent.m_AngleDegrees, 
+                weaponComponent.m_Range
+            );
         }
+
+        TurnTowardsTarget(delta, hardpointWorldTransform, weaponComponent, pWeaponEntity);
 
         transformComponent.transform = hardpointWorldTransform;
 
@@ -102,7 +113,7 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
                     weaponComponent.m_AttachmentPointTransform = hardpoint.m_AttachmentPointTransform;
                     weaponComponent.m_ArcMinDegrees = hardpoint.m_ArcMinDegrees;
                     weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
-                    weaponComponent.m_AngleDegrees = (hardpoint.m_ArcMaxDegrees - hardpoint.m_ArcMinDegrees) / 2.0f;
+                    weaponComponent.m_AngleDegrees = (hardpoint.m_ArcMinDegrees + hardpoint.m_ArcMaxDegrees) / 2.0f;
                     break;
                 }
             }
@@ -142,9 +153,6 @@ void WeaponSystem::FireWeapon(EntitySharedPtr pWeaponEntity, WeaponComponent& we
 
 void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up, float arcMinDegrees, float arcMaxDegrees, float arcLength)
 {
-    // Draw base forward line
-    // GetDebugRender()->Line(position, position + forward * arcLength, Color::Purple);
-
     // Draw arc min line
     const glm::mat4 rotationMin = glm::rotate(glm::mat4(1.0f), glm::radians(arcMinDegrees), up);
     const glm::vec3 rotatedForwardMin = glm::vec3(rotationMin * glm::vec4(forward, 0.0f));
@@ -166,6 +174,50 @@ void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& for
         GetDebugRender()->Line(prevPoint, currentPoint, Color::Gray);
         prevPoint = currentPoint;
     }
+}
+
+void WeaponSystem::DrawFiringLine(const glm::vec3& position, const glm::vec3& forward, float angle, float lineLength)
+{
+    const glm::mat4 localRotationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::vec3 aimForward = glm::vec3(localRotationTransform * glm::vec4(forward, 0.0f));
+    GetDebugRender()->Line(position, position + aimForward * lineLength, Color::Red);
+}
+
+void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, EntitySharedPtr pWeaponEntity)
+{
+    if (!weaponComponent.m_Target.has_value())
+    {
+        return;
+    }
+
+    // Don't bother doing the turning logic if this is a fixed weapon.
+    const float firingArc = glm::abs(weaponComponent.m_ArcMaxDegrees - weaponComponent.m_ArcMinDegrees);
+    if (firingArc <= std::numeric_limits<float>::epsilon())
+    {
+        return;
+    }
+
+    const glm::vec3 hardpointTranslation(hardpointWorldTransform[3]);
+    glm::vec3 hardpointForwardXZ(hardpointWorldTransform[2]);
+    hardpointForwardXZ = glm::normalize(glm::vec3(hardpointForwardXZ.x, 0.0f, hardpointForwardXZ.z));
+
+    const glm::vec3 target = weaponComponent.m_Target.value();
+    const glm::vec3 directionToTarget = glm::normalize(target - hardpointTranslation);
+    const glm::vec3 weaponForward = glm::rotate(hardpointForwardXZ, glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::vec3 weaponRight(-weaponForward.z, 0.0f, weaponForward.x); // Safe to do as weaponForward is known to be (x, 0, z).
+    const float turnDirection = -glm::sign(glm::dot(weaponRight, directionToTarget));
+    const float turnRate = 10.0f;
+    float turnSpeed = turnRate * delta;
+
+    // Slow down as the angle approaches the target.
+    float alignment = glm::dot(weaponForward, directionToTarget);
+    if (alignment > 0.9999f) turnSpeed *= (1.0f - alignment) * 10000.0f;
+
+    weaponComponent.m_AngleDegrees = glm::clamp(
+        weaponComponent.m_AngleDegrees + turnDirection * turnSpeed,
+        weaponComponent.m_ArcMinDegrees,
+        weaponComponent.m_ArcMaxDegrees
+    );
 }
 
 } // namespace WingsOfSteel
