@@ -163,7 +163,7 @@ void AIStrikecraftControllerSystem::UpdateWeaponSystems(entt::entity shipEntity,
                 if (hardpoint.m_pEntity && hardpoint.m_pEntity->HasComponent<WeaponComponent>())
                 {
                     WeaponComponent& weaponComponent = hardpoint.m_pEntity->GetComponent<WeaponComponent>();
-                    weaponComponent.m_Target = targetPos;
+                    weaponComponent.m_TargetPosition = targetPos;
                     weaponComponent.m_WantsToFire = shouldFire;
                 }
             }

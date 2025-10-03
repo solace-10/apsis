@@ -95,7 +95,7 @@ void PlayerControllerSystem::Update(float delta)
             pParentShip = pOwnerEntity->GetParent().lock();
             if (pParentShip && pParentShip->HasComponent<PlayerControllerComponent>())
             {
-                weaponComponent.m_Target = targetWorldPos;
+                weaponComponent.m_TargetPosition = targetWorldPos;
 
                 auto it = m_WeaponActivations.find(weaponComponent.m_AttachmentPointName);
                 if (it == m_WeaponActivations.cend())

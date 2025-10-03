@@ -122,7 +122,8 @@ void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohman
                 Game::Get()->GetSector()->GetSystem<WeaponSystem>()->AttachWeapon(
                     hardpoint.m_Weapon,
                     pEntity,
-                    hardpoint.m_Name
+                    hardpoint.m_Name,
+                    true
                 );
             }
         }

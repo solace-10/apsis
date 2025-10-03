@@ -28,10 +28,12 @@ public:
     float m_RateOfFire{ 1.0f }; // Ammo fired per second.
     float m_FireTimer{ 0.0f }; // Number in seconds until the weapon can be fired again.
     bool m_WantsToFire{ false }; // A controller has requested this weapon to fire.
+    bool m_AutomatedTargeting{ true }; // AI-controlled target acquisition.
 
     std::string m_Ammo;
 
-    std::optional<glm::vec3> m_Target;
+    std::optional<glm::vec3> m_TargetPosition;
+    std::optional<glm::vec3> m_TargetVelocity;
 
     // Owner: the Entity that has this component.
     void SetOwner(EntityWeakPtr pOwner) { m_pOwner = pOwner; }

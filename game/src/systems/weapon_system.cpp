@@ -4,9 +4,11 @@
 
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
+#include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 
+#include "components/faction_component.hpp"
 #include "components/hardpoint_component.hpp"
 #include "components/weapon_component.hpp"
 #include "entity_builder/entity_builder.hpp"
@@ -33,10 +35,11 @@ void WeaponSystem::Initialize(Scene* pScene)
 
 void WeaponSystem::Update(float delta)
 {
-    entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<WeaponComponent, TransformComponent>();
+    BuildPotentialTargetList();
 
-    view.each([delta, this](const auto entity, WeaponComponent& weaponComponent, TransformComponent& transformComponent) {
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<WeaponComponent, TransformComponent, const FactionComponent>();
+    view.each([delta, this](const auto entity, WeaponComponent& weaponComponent, TransformComponent& transformComponent, const FactionComponent& factionComponent) {
         glm::mat4 rootWorldTransform{ 1.0f };
         EntitySharedPtr pWeaponEntity = weaponComponent.GetOwner().lock();
         bool shouldDrawFiringArc = false;
@@ -58,7 +61,7 @@ void WeaponSystem::Update(float delta)
         const glm::vec3 hardpointForward(hardpointWorldTransform[2]);
         const glm::vec3 hardpointUp(hardpointWorldTransform[1]);
 
-        if (shouldDrawFiringArc)
+        if (shouldDrawFiringArc || true)
         {
             DrawFiringArc(
                 hardpointTranslation,
@@ -76,9 +79,9 @@ void WeaponSystem::Update(float delta)
             );
         }
 
-        TurnTowardsTarget(delta, hardpointWorldTransform, weaponComponent, pWeaponEntity);
-
-        transformComponent.transform = hardpointWorldTransform;
+        AcquireTarget(delta, hardpointWorldTransform, weaponComponent, factionComponent);
+        TurnTowardsTarget(delta, hardpointWorldTransform, weaponComponent, transformComponent);
+        UpdateTransform(hardpointWorldTransform, weaponComponent, transformComponent);
 
         weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
         if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
@@ -88,7 +91,7 @@ void WeaponSystem::Update(float delta)
     });
 }
 
-void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName)
+void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName, bool automatedTargeting)
 {
     SceneWeakPtr pWeakScene = Game::Get()->GetSector()->GetWeakPtr();
 
@@ -96,12 +99,17 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
         pWeakScene,
         resourcePath,
         glm::mat4(1.0f),
-        [pWeakScene, pParentEntity, hardpointName](EntitySharedPtr pWeaponEntity)
+        [pWeakScene, pParentEntity, hardpointName, automatedTargeting](EntitySharedPtr pWeaponEntity)
         {
             pWeaponEntity->SetParent(pParentEntity);
 
             WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
             weaponComponent.SetOwner(pWeaponEntity);
+
+            if (pParentEntity->HasComponent<FactionComponent>())
+            {
+                pWeaponEntity->AddComponent<FactionComponent>(pParentEntity->GetComponent<FactionComponent>().Value);
+            }
 
             HardpointComponent& hardpointComponent = pParentEntity->GetComponent<HardpointComponent>();
             for (auto& hardpoint : hardpointComponent.hardpoints)
@@ -114,6 +122,7 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
                     weaponComponent.m_ArcMinDegrees = hardpoint.m_ArcMinDegrees;
                     weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
                     weaponComponent.m_AngleDegrees = (hardpoint.m_ArcMinDegrees + hardpoint.m_ArcMaxDegrees) / 2.0f;
+                    weaponComponent.m_AutomatedTargeting = automatedTargeting;
                     break;
                 }
             }
@@ -183,9 +192,32 @@ void WeaponSystem::DrawFiringLine(const glm::vec3& position, const glm::vec3& fo
     GetDebugRender()->Line(position, position + aimForward * lineLength, Color::Red);
 }
 
-void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, EntitySharedPtr pWeaponEntity)
+void WeaponSystem::AcquireTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, const FactionComponent& factionComponent)
 {
-    if (!weaponComponent.m_Target.has_value())
+    if (!weaponComponent.m_AutomatedTargeting)
+    {
+        return;
+    }
+
+    const glm::vec3 hardpointPosition(hardpointWorldTransform[3]); 
+    weaponComponent.m_TargetPosition = std::nullopt;
+    weaponComponent.m_TargetVelocity = std::nullopt;
+    const std::vector<PotentialTarget>& potentialTargets = m_PotentialTargets[static_cast<size_t>(factionComponent.Value)];
+    for (const PotentialTarget& potentialTarget : potentialTargets)
+    {
+        const float distance = glm::distance(hardpointPosition, potentialTarget.position);
+        if (distance > weaponComponent.m_Range)
+        {
+            continue;
+        }
+
+        weaponComponent.m_TargetPosition = potentialTarget.position;
+    }
+}
+
+void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, TransformComponent& transformComponent)
+{
+    if (!weaponComponent.m_TargetPosition.has_value())
     {
         return;
     }
@@ -201,12 +233,12 @@ void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorl
     glm::vec3 hardpointForwardXZ(hardpointWorldTransform[2]);
     hardpointForwardXZ = glm::normalize(glm::vec3(hardpointForwardXZ.x, 0.0f, hardpointForwardXZ.z));
 
-    const glm::vec3 target = weaponComponent.m_Target.value();
+    const glm::vec3 target = weaponComponent.m_TargetPosition.value();
     const glm::vec3 directionToTarget = glm::normalize(target - hardpointTranslation);
     const glm::vec3 weaponForward = glm::rotate(hardpointForwardXZ, glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::vec3 weaponRight(-weaponForward.z, 0.0f, weaponForward.x); // Safe to do as weaponForward is known to be (x, 0, z).
     const float turnDirection = -glm::sign(glm::dot(weaponRight, directionToTarget));
-    const float turnRate = 10.0f;
+    const float turnRate = 45.0f;
     float turnSpeed = turnRate * delta;
 
     // Slow down as the angle approaches the target.
@@ -218,6 +250,41 @@ void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorl
         weaponComponent.m_ArcMinDegrees,
         weaponComponent.m_ArcMaxDegrees
     );
+
+    GetDebugRender()->Line(hardpointTranslation, target, Color::Cyan);
+}
+
+void WeaponSystem::UpdateTransform(const glm::mat4& hardpointWorldTransform, const WeaponComponent& weaponComponent, TransformComponent& transformComponent)
+{
+    const glm::mat4 weaponRotation = glm::rotate(glm::mat4(1.0f), glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
+    transformComponent.transform = hardpointWorldTransform * weaponRotation;
+}
+
+void WeaponSystem::BuildPotentialTargetList()
+{
+    for (auto& targetList : m_PotentialTargets)
+    {
+        targetList.clear();
+    }
+
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<const RigidBodyComponent, const FactionComponent>();
+
+    view.each([this](const auto entityHandle, const RigidBodyComponent& rigidBodyComponent, const FactionComponent& factionComponent) {
+        PotentialTarget potentialTarget{
+            .entityHandle = entityHandle,
+            .position = rigidBodyComponent.GetWorldTransform()[3],
+            .velocity = rigidBodyComponent.GetLinearVelocity()
+        };
+
+        Faction otherFaction = Faction::Allied;
+        if (factionComponent.Value == Faction::Allied)
+        {
+            otherFaction = Faction::Hostile;
+        }
+        
+        m_PotentialTargets[static_cast<size_t>(otherFaction)].push_back(potentialTarget);
+    });
 }
 
 } // namespace WingsOfSteel
