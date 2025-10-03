@@ -234,19 +234,42 @@ void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorl
     hardpointForwardXZ = glm::normalize(glm::vec3(hardpointForwardXZ.x, 0.0f, hardpointForwardXZ.z));
 
     const glm::vec3 target = weaponComponent.m_TargetPosition.value();
-    const glm::vec3 directionToTarget = glm::normalize(target - hardpointTranslation);
-    const glm::vec3 weaponForward = glm::rotate(hardpointForwardXZ, glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
-    const glm::vec3 weaponRight(-weaponForward.z, 0.0f, weaponForward.x); // Safe to do as weaponForward is known to be (x, 0, z).
-    const float turnDirection = -glm::sign(glm::dot(weaponRight, directionToTarget));
-    const float turnRate = 45.0f;
-    float turnSpeed = turnRate * delta;
+    glm::vec3 directionToTargetXZ = glm::normalize(target - hardpointTranslation);
+    directionToTargetXZ = glm::normalize(glm::vec3(directionToTargetXZ.x, 0.0f, directionToTargetXZ.z));
 
-    // Slow down as the angle approaches the target.
-    float alignment = glm::dot(weaponForward, directionToTarget);
-    if (alignment > 0.9999f) turnSpeed *= (1.0f - alignment) * 10000.0f;
+    // Calculate the angle between hardpoint forward and direction to target
+    float cosAngle = glm::dot(hardpointForwardXZ, directionToTargetXZ);
+    cosAngle = glm::clamp(cosAngle, -1.0f, 1.0f);
+    float angleToTarget = glm::degrees(glm::acos(cosAngle));
+
+    // Determine the sign of the angle using cross product
+    glm::vec3 cross = glm::cross(hardpointForwardXZ, directionToTargetXZ);
+    if (cross.y < 0.0f)
+    {
+        angleToTarget = -angleToTarget;
+    }
+
+    // Calculate the maximum turn amount for this frame
+    const float turnRate = 45.0f;
+    const float maxTurn = turnRate * delta;
+
+    // Calculate the angle difference from current weapon angle to target angle
+    const float targetAngle = angleToTarget;
+    const float angleDifference = targetAngle - weaponComponent.m_AngleDegrees;
+
+    // Apply turn, but don't overshoot
+    float newAngle;
+    if (glm::abs(angleDifference) <= maxTurn)
+    {
+        newAngle = targetAngle;
+    }
+    else
+    {
+        newAngle = weaponComponent.m_AngleDegrees + glm::sign(angleDifference) * maxTurn;
+    }
 
     weaponComponent.m_AngleDegrees = glm::clamp(
-        weaponComponent.m_AngleDegrees + turnDirection * turnSpeed,
+        newAngle,
         weaponComponent.m_ArcMinDegrees,
         weaponComponent.m_ArcMaxDegrees
     );
