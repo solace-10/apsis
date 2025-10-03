@@ -82,12 +82,7 @@ void WeaponSystem::Update(float delta)
         AcquireTarget(delta, hardpointWorldTransform, weaponComponent, factionComponent);
         TurnTowardsTarget(delta, hardpointWorldTransform, weaponComponent, transformComponent);
         UpdateTransform(hardpointWorldTransform, weaponComponent, transformComponent);
-
-        weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
-        if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
-        {
-            FireWeapon(pWeaponEntity, weaponComponent);
-        }
+        UpdateFiring(delta, hardpointWorldTransform, pWeaponEntity, weaponComponent);
     });
 }
 
@@ -211,7 +206,34 @@ void WeaponSystem::AcquireTarget(float delta, const glm::mat4& hardpointWorldTra
             continue;
         }
 
+        // Check if we are inside the firing arc.
+        const glm::vec3 hardpointForward(hardpointWorldTransform[2]);
+        const glm::vec3 hardpointUp(hardpointWorldTransform[1]);
+
+        // Project vectors to XZ plane for horizontal angle calculation.
+        const glm::vec3 hardpointForwardXZ = glm::normalize(glm::vec3(hardpointForward.x, 0.0f, hardpointForward.z));
+        glm::vec3 directionToTargetXZ = glm::normalize(potentialTarget.position - hardpointPosition);
+        directionToTargetXZ = glm::normalize(glm::vec3(directionToTargetXZ.x, 0.0f, directionToTargetXZ.z));
+
+        // Calculate angle to target.
+        float cosAngle = glm::dot(hardpointForwardXZ, directionToTargetXZ);
+        cosAngle = glm::clamp(cosAngle, -1.0f, 1.0f);
+        float angleToTarget = glm::degrees(glm::acos(cosAngle));
+
+        const glm::vec3 cross = glm::cross(hardpointForwardXZ, directionToTargetXZ);
+        if (cross.y < 0.0f)
+        {
+            angleToTarget = -angleToTarget;
+        }
+
+        // If we're not within the firing arc, skip this target.
+        if (angleToTarget < weaponComponent.m_ArcMinDegrees || angleToTarget > weaponComponent.m_ArcMaxDegrees)
+        {
+            continue;
+        }
+
         weaponComponent.m_TargetPosition = potentialTarget.position;
+        break;
     }
 }
 
@@ -281,6 +303,20 @@ void WeaponSystem::UpdateTransform(const glm::mat4& hardpointWorldTransform, con
 {
     const glm::mat4 weaponRotation = glm::rotate(glm::mat4(1.0f), glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
     transformComponent.transform = hardpointWorldTransform * weaponRotation;
+}
+
+void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)
+{
+    if (weaponComponent.m_AutomatedTargeting)
+    {
+        
+    }
+
+    weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
+    if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
+    {
+        FireWeapon(pWeaponEntity, weaponComponent);
+    }
 }
 
 void WeaponSystem::BuildPotentialTargetList()
