@@ -126,20 +126,12 @@ void AmmoSystem::Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponen
         return;
     }
 
-    glm::mat4 rootWorldTransform{ 1.0f };
-    EntitySharedPtr pParentEntity = pWeaponEntity->GetParent().lock();
-    if (pParentEntity)
-    {
-        rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
-    }
-    const glm::mat4 hardpointWorldTransform = rootWorldTransform * weaponComponent.m_AttachmentPointTransform;
-    // TODO: This should include the muzzle transform.
-
+    const glm::mat4 startPosition = pWeaponEntity->GetComponent<TransformComponent>().transform;
     SceneWeakPtr pWeakScene = pSector->GetWeakPtr();
     EntityBuilder::Build(
         pWeakScene,
         weaponComponent.m_Ammo,
-        hardpointWorldTransform,
+        startPosition,
         [weaponComponent](EntitySharedPtr pEntity)
         {
             float range = weaponComponent.m_Range;

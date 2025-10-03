@@ -61,7 +61,7 @@ void WeaponSystem::Update(float delta)
         const glm::vec3 hardpointForward(hardpointWorldTransform[2]);
         const glm::vec3 hardpointUp(hardpointWorldTransform[1]);
 
-        if (shouldDrawFiringArc || true)
+        if (shouldDrawFiringArc)
         {
             DrawFiringArc(
                 hardpointTranslation,
@@ -160,12 +160,12 @@ void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& for
     // Draw arc min line
     const glm::mat4 rotationMin = glm::rotate(glm::mat4(1.0f), glm::radians(arcMinDegrees), up);
     const glm::vec3 rotatedForwardMin = glm::vec3(rotationMin * glm::vec4(forward, 0.0f));
-    GetDebugRender()->Line(position, position + rotatedForwardMin * arcLength, Color::Gray);
+    GetDebugRender()->Line(position, position + rotatedForwardMin * arcLength, Color::DarkGray);
 
     // Draw arc max line
     const glm::mat4 rotationMax = glm::rotate(glm::mat4(1.0f), glm::radians(arcMaxDegrees), up);
     const glm::vec3 rotatedForwardMax = glm::vec3(rotationMax * glm::vec4(forward, 0.0f));
-    GetDebugRender()->Line(position, position + rotatedForwardMax * arcLength, Color::Gray);
+    GetDebugRender()->Line(position, position + rotatedForwardMax * arcLength, Color::DarkGray);
 
     // Draw the arc edge as connected line segments
     glm::vec3 prevPoint = position;
@@ -175,7 +175,7 @@ void WeaponSystem::DrawFiringArc(const glm::vec3& position, const glm::vec3& for
         const glm::vec3 rotatedForward = glm::vec3(rotation * glm::vec4(forward, 0.0f));
         const glm::vec3 currentPoint = position + rotatedForward * arcLength;
 
-        GetDebugRender()->Line(prevPoint, currentPoint, Color::Gray);
+        GetDebugRender()->Line(prevPoint, currentPoint, Color::DarkGray);
         prevPoint = currentPoint;
     }
 }
@@ -184,7 +184,7 @@ void WeaponSystem::DrawFiringLine(const glm::vec3& position, const glm::vec3& fo
 {
     const glm::mat4 localRotationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::vec3 aimForward = glm::vec3(localRotationTransform * glm::vec4(forward, 0.0f));
-    GetDebugRender()->Line(position, position + aimForward * lineLength, Color::Red);
+    GetDebugRender()->Line(position, position + aimForward * lineLength, Color::Gray);
 }
 
 void WeaponSystem::AcquireTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, const FactionComponent& factionComponent)
@@ -295,8 +295,6 @@ void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorl
         weaponComponent.m_ArcMinDegrees,
         weaponComponent.m_ArcMaxDegrees
     );
-
-    GetDebugRender()->Line(hardpointTranslation, target, Color::Cyan);
 }
 
 void WeaponSystem::UpdateTransform(const glm::mat4& hardpointWorldTransform, const WeaponComponent& weaponComponent, TransformComponent& transformComponent)
@@ -309,7 +307,14 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
 {
     if (weaponComponent.m_AutomatedTargeting)
     {
-        
+        if (weaponComponent.m_TargetPosition.has_value())
+        {
+            weaponComponent.m_WantsToFire = true;
+        }
+        else
+        {
+            weaponComponent.m_WantsToFire = false;
+        }
     }
 
     weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
