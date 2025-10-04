@@ -19,11 +19,16 @@ void TargetOverlaySystem::Update(float delta)
 
     view.each([&registry](const auto entity, const HullComponent& hullComponent, const TransformComponent& transformComponent)
     {
+        if (hullComponent.Health <= 0)
+        {
+            return;
+        }
+
         std::stringstream ss;
         ss << "Hull: " << hullComponent.Health;
 
-        glm::vec3 origin(transformComponent.transform[3]);
-        glm::vec3 offset(origin + glm::vec3(5.0f, 0.0f, 5.0f));
+        const glm::vec3 origin(transformComponent.transform[3]);
+        const glm::vec3 offset(origin + glm::vec3(5.0f, 0.0f, 5.0f));
         GetDebugRender()->Line(origin, offset, Color::Wheat);
         GetDebugRender()->Label(ss.str(), offset, Color::Wheat);
     });
