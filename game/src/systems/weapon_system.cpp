@@ -299,8 +299,7 @@ void WeaponSystem::TurnTowardsTarget(float delta, const glm::mat4& hardpointWorl
 
 void WeaponSystem::UpdateTransform(const glm::mat4& hardpointWorldTransform, const WeaponComponent& weaponComponent, TransformComponent& transformComponent)
 {
-    const glm::mat4 weaponRotation = glm::rotate(glm::mat4(1.0f), glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformComponent.transform = hardpointWorldTransform * weaponRotation;
+    transformComponent.transform = glm::rotate(hardpointWorldTransform, glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)

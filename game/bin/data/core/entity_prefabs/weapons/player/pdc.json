@@ -10,8 +10,9 @@
         {
             "type": "weapon",
             "range": 100,
-            "rate_of_fire": 4.0,
-            "ammo": "/entity_prefabs/ammo/autocannon_projectile.json"
+            "rate_of_fire": 12.0,
+            "ammo": "/entity_prefabs/ammo/pdc_projectile.json",
+            "accuracy": "high"
         }
     ]
 }

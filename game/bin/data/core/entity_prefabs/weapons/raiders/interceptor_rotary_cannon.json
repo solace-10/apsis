@@ -4,7 +4,8 @@
             "type": "weapon",
             "range": 60,
             "rate_of_fire": 8.0,
-            "ammo": "/entity_prefabs/ammo/rotary_cannon_projectile.json"
+            "ammo": "/entity_prefabs/ammo/rotary_cannon_projectile.json",
+            "accuracy": "very_high"
         }
     ]
 }

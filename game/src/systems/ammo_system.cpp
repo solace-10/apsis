@@ -1,5 +1,6 @@
 #include "systems/ammo_system.hpp"
 
+#include <core/random.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <scene/components/entity_reference_component.hpp>
@@ -126,12 +127,30 @@ void AmmoSystem::Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponen
         return;
     }
 
-    const glm::mat4 startPosition = pWeaponEntity->GetComponent<TransformComponent>().transform;
+    glm::mat4 ammoTransform = pWeaponEntity->GetComponent<TransformComponent>().transform;
+
+    // Accuracy changes the initial forward vector of the ammo being fired.
+    // Values are in degrees.
+    static const std::array<float, static_cast<size_t>(WeaponAccuracy::Count)> sAccuracyModifiers {
+        0.0f,  // Perfect
+        2.5f,  // Very high
+        5.0f, // High
+        10.0f, // Medium
+        15.0f, // Low
+    };
+
+    if (weaponComponent.m_Accuracy != WeaponAccuracy::Perfect)
+    {
+        const float halfModifier = sAccuracyModifiers[static_cast<size_t>(weaponComponent.m_Accuracy)] / 2.0f;
+        const float deviation = Random::Get(-halfModifier, halfModifier);
+        ammoTransform = glm::rotate(ammoTransform, glm::radians(deviation), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+
     SceneWeakPtr pWeakScene = pSector->GetWeakPtr();
     EntityBuilder::Build(
         pWeakScene,
         weaponComponent.m_Ammo,
-        startPosition,
+        ammoTransform,
         [weaponComponent](EntitySharedPtr pEntity)
         {
             float range = weaponComponent.m_Range;

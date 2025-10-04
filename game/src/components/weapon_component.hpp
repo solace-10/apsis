@@ -6,13 +6,26 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 
+#include <core/log.hpp>
 #include <core/smart_ptr.hpp>
 #include <scene/entity.hpp>
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
+#include <pandora.hpp>
 
 namespace WingsOfSteel
 {
+
+enum class WeaponAccuracy
+{
+    Perfect,
+    VeryHigh,
+    High,
+    Medium,
+    Low,
+
+    Count
+};
 
 class WeaponComponent : public IComponent
 {
@@ -29,6 +42,7 @@ public:
     float m_FireTimer{ 0.0f }; // Number in seconds until the weapon can be fired again.
     bool m_WantsToFire{ false }; // A controller has requested this weapon to fire.
     bool m_AutomatedTargeting{ true }; // AI-controlled target acquisition.
+    WeaponAccuracy m_Accuracy{ WeaponAccuracy::Perfect };
 
     std::string m_Ammo;
 
@@ -53,6 +67,33 @@ public:
         m_Range = DeserializeRequired<float>(json, "range");
         m_RateOfFire = DeserializeRequired<float>(json, "rate_of_fire");
         m_Ammo = DeserializeRequired<std::string>(json, "ammo");
+
+        const std::string accuracy = DeserializeRequired<std::string>(json, "accuracy");
+        if (accuracy == "perfect")
+        {
+            m_Accuracy = WeaponAccuracy::Perfect;
+        }
+        else if (accuracy == "very_high")
+        {
+            m_Accuracy = WeaponAccuracy::VeryHigh;
+        }
+        else if (accuracy == "high")
+        {
+            m_Accuracy = WeaponAccuracy::High;
+        }
+        else if (accuracy == "medium")
+        {
+            m_Accuracy = WeaponAccuracy::Medium;
+        }
+        else if (accuracy == "low")
+        {
+            m_Accuracy = WeaponAccuracy::Low;
+        }
+        else
+        {
+            Log::Error() << "Unable to deserialize WeaponComponent, invalid 'accuracy' value: '" << accuracy << "'. "
+                << "Value must be 'perfect', 'very_high', 'high', 'medium' or 'low'.";
+        }
     }
 
 private:
