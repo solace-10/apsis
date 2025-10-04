@@ -38,7 +38,8 @@
                     "name": "FixedMount",
                     "arc_min_degrees": -5,
                     "arc_max_degrees": 5,
-                    "weapon": "/entity_prefabs/weapons/raiders/interceptor_rotary_cannon.json"
+                    "weapon": "/entity_prefabs/weapons/raiders/interceptor_rotary_cannon.json",
+                    "automated_targeting": false
                 }
             ]
         },
@@ -54,6 +55,10 @@
         {
             "type": "name",
             "value": "Interceptor"
+        },
+        {
+            "type": "faction",
+            "value": "Hostile"
         }
     ]
 }

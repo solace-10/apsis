@@ -32,8 +32,6 @@ void Encounter::SpawnCarrier()
     SceneWeakPtr pWeakScene = m_pSector;
     SectorWeakPtr pWeakSector = m_pSector;
     EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, 0.0f)), [pWeakSector](EntitySharedPtr pEntity){
-        pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
-
         SectorSharedPtr pSector = pWeakSector.lock();
         if (pSector)
         {

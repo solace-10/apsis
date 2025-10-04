@@ -105,6 +105,10 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
             {
                 pWeaponEntity->AddComponent<FactionComponent>(pParentEntity->GetComponent<FactionComponent>().Value);
             }
+            else
+            {
+                Log::Error() << "Adding a WeaponComponent to an entity where the parent doesn't have a FactionComponent. This will break AI!";
+            }
 
             HardpointComponent& hardpointComponent = pParentEntity->GetComponent<HardpointComponent>();
             for (auto& hardpoint : hardpointComponent.hardpoints)

@@ -28,6 +28,7 @@ struct Hardpoint
     float m_ArcMaxDegrees{ 0.0f };
     EntitySharedPtr m_pEntity;
     EntityWeakPtr m_pParent;
+    bool m_AutomatedTargeting{ true };
     
     nlohmann::json Serialize() const;
     void Deserialize(const nlohmann::json& json);

@@ -30,7 +30,6 @@ void CarrierSystem::Update(float delta)
                 if (carrierComponent.CurrentLaunch)
                 {
                     pEntity->AddComponent<WingComponent>().ID = carrierComponent.CurrentLaunch->GetWingID();
-                    pEntity->AddComponent<FactionComponent>().Value = Faction::Hostile;
                     carrierComponent.CurrentLaunch.reset();
                 }
                 carrierComponent.TimeToNextLaunch = carrierComponent.TimeBetweenLaunches;

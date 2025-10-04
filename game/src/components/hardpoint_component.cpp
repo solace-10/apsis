@@ -22,6 +22,7 @@ void Hardpoint::Deserialize(const nlohmann::json& json)
     m_Weapon = IComponent::DeserializeOptional<std::string>(json, "weapon", "");
     m_ArcMinDegrees = IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
     m_ArcMaxDegrees = IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
+    m_AutomatedTargeting = IComponent::DeserializeOptional<bool>(json, "automated_targeting", true);
 }
 
 nlohmann::json HardpointComponent::Serialize() const

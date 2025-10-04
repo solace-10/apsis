@@ -123,7 +123,7 @@ void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohman
                     hardpoint.m_Weapon,
                     pEntity,
                     hardpoint.m_Name,
-                    true
+                    hardpoint.m_AutomatedTargeting
                 );
             }
         }

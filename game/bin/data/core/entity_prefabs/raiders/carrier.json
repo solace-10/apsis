@@ -24,6 +24,10 @@
         },
         {
             "type": "carrier"
+        },
+        {
+            "type": "faction",
+            "value": "Hostile"
         }
     ]
 }
