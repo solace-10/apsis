@@ -36,7 +36,7 @@ private:
     void AcquireTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, const FactionComponent& factionComponent);
     void TurnTowardsTarget(float delta, const glm::mat4& hardpointWorldTransform, WeaponComponent& weaponComponent, TransformComponent& TransformComponent);
     void UpdateTransform(const glm::mat4& hardpointWorldTransform, const WeaponComponent& weaponComponent, TransformComponent& transformComponent);
-    void UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent);
+    void UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent, const FactionComponent& factionComponent);
     void BuildPotentialTargetList();
 
     struct PotentialTarget

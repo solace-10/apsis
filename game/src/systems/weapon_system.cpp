@@ -7,6 +7,7 @@
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
+#include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/faction_component.hpp"
 #include "components/hardpoint_component.hpp"
@@ -82,7 +83,7 @@ void WeaponSystem::Update(float delta)
         AcquireTarget(delta, hardpointWorldTransform, weaponComponent, factionComponent);
         TurnTowardsTarget(delta, hardpointWorldTransform, weaponComponent, transformComponent);
         UpdateTransform(hardpointWorldTransform, weaponComponent, transformComponent);
-        UpdateFiring(delta, hardpointWorldTransform, pWeaponEntity, weaponComponent);
+        UpdateFiring(delta, hardpointWorldTransform, pWeaponEntity, weaponComponent, factionComponent);
     });
 }
 
@@ -306,7 +307,7 @@ void WeaponSystem::UpdateTransform(const glm::mat4& hardpointWorldTransform, con
     transformComponent.transform = glm::rotate(hardpointWorldTransform, glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent)
+void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTransform, EntitySharedPtr pWeaponEntity, WeaponComponent& weaponComponent, const FactionComponent& factionComponent)
 {
     if (weaponComponent.m_AutomatedTargeting)
     {
@@ -323,7 +324,33 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
     weaponComponent.m_FireTimer = glm::max(0.0f, weaponComponent.m_FireTimer - delta);
     if (weaponComponent.m_FireTimer <= 0.0f && weaponComponent.m_WantsToFire)
     {
-        FireWeapon(pWeaponEntity, weaponComponent);
+        // Do a raycast to check if we have an ally in the line of fire. If so, don't open fire.
+        bool isClearToFire = true;
+        if (weaponComponent.m_TargetPosition.has_value())
+        {
+            PhysicsSimulationSystem* pPhysicsSystem = GetActiveScene()->GetSystem<PhysicsSimulationSystem>();
+            if (pPhysicsSystem)
+            {
+                const glm::vec3 raycastStart(hardpointWorldTransform[3]);
+                const glm::mat4 localRotationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(weaponComponent.m_AngleDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
+                const glm::vec3 aimDirection = glm::normalize(glm::vec3(localRotationTransform * hardpointWorldTransform[2]));
+                const glm::vec3 raycastEnd = raycastStart + aimDirection * weaponComponent.m_Range;
+                std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(raycastStart, raycastEnd);
+                if (raycastResult.has_value() && raycastResult->pEntity && raycastResult->pEntity->HasComponent<FactionComponent>())
+                {
+                    const FactionComponent& otherFactionComponent = raycastResult->pEntity->GetComponent<FactionComponent>();
+                    if (factionComponent.Value == otherFactionComponent.Value)
+                    {
+                        isClearToFire = false;
+                    }
+                }
+            }
+        }
+
+        if (isClearToFire)
+        {
+            FireWeapon(pWeaponEntity, weaponComponent);
+        }
     }
 }
 
