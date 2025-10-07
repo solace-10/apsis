@@ -106,7 +106,7 @@
         },
         {
             "name": "debug-windows",
-            "description": "Build The Brightest Star in Debug",
+            "description": "Build Knight-One in Debug",
             "displayName": "Debug (Windows)",
             "configurePreset": "debug-windows",
             "inherits": [
@@ -121,7 +121,7 @@
         },
         {
             "name": "debug-linux",
-            "description": "Build The Brightest Star in Debug",
+            "description": "Build Knight-One in Debug",
             "displayName": "Debug (Linux)",
             "configurePreset": "debug-linux",
             "inherits": [
@@ -135,7 +135,7 @@
         },
         {
             "name": "debug-web",
-            "description": "Build The Brightest Star in Debug",
+            "description": "Build Knight-One in Debug",
             "displayName": "Debug (Web)",
             "configurePreset": "debug-web",
             "inherits": [

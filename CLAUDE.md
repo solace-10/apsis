@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build System
 
-This is a C++20 CMake project called "The Brightest Star" with multiple executable targets:
+This is a C++20 CMake project called "Knight-One" with multiple executable targets:
 
 ### Build Commands
 - **Configure**: `cmake --preset debug-linux` (or debug-windows/debug-web)
-- **Build**: `cmake --build build/debug-linux --target game` (primary executable)
-- **All targets**: `cmake --build build/debug-linux`
+- **Build Linux**: `cmake --build build/debug-linux --target setup_compile_commands game dome forge`
+- **Build Windows**: `cmake.exe --build build/debug-windows --target setup_compile_commands game dome forge --`
 
 ### Available Targets
 - `game` - Main game executable (primary target)
@@ -32,18 +32,20 @@ The project follows a modular architecture with four main components:
    - Physics system (Bullet3), input system, VFS
    - ECS-based scene management with Entity/Component system
 
-2. **Game** (`game/`) - Main game application (`WingsOfSteel::TheBrightestStar` namespace):
+2. **Game** (`game/`) - Main game application:
    - Space exploration game with sectors, ships, hyperscape navigation
    - Ship builder with prefab system and hardpoint management
    - Player controller, weapon systems, navigation systems
-   - Fleet management and encounter mechanics
+   - Fleet management and encounter mechanics with card-based AI system
+   - Dynamic encounter system: loads random encounters from `/encounters/difficulty<n>/` directories
+   - Encounter deck system: tier-based card mechanics defining enemy waves and behavior
 
-3. **Dome** (`dome/`) - Geometry processing tool (`WingsOfSteel::Dome` namespace):
+3. **Dome** (`dome/`) - Geometry processing tool:
    - Edge detection from textures, vertex simplification
    - Mesh generation with Delaunay triangulation
    - Texture processing pipeline (greyscale conversion, edge detection)
 
-4. **Forge** (`forge/`) - Asset management tool (`WingsOfSteel::Forge` namespace):
+4. **Forge** (`forge/`) - Asset management tool:
    - Asset manifest creation and management
    - Build pipeline integration for asset processing
 
@@ -56,7 +58,7 @@ The project follows a modular architecture with four main components:
 - **Reflection**: magic_enum for compile-time enum reflection
 
 ### Code Conventions
-- Namespace pattern: `WingsOfSteel::<ModuleName>`
+- Namespace: `WingsOfSteel`
 - Smart pointer macros: `DECLARE_SMART_PTR(ClassName)` generates typedefs
 - Modern C++20 features used throughout
 - Header-only libraries preferred where possible
@@ -65,6 +67,8 @@ The project follows a modular architecture with four main components:
 - `/src/` contains implementation files
 - `/assets/` contains game assets (models, textures, fonts, UI icons)
 - `/bin/` contains build outputs and data files
+- `/bin/data/core/encounters/difficulty<n>/` contains encounter definition JSON files
+- `/bin/data/core/entity_prefabs/` contains entity prefab definitions (ships, weapons, ammo)
 - Third-party dependencies in `pandora/ext/`
 
 ## Development Notes
