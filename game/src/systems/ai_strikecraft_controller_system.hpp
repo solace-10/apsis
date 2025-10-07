@@ -10,6 +10,7 @@ namespace WingsOfSteel
 
 class AIStrikecraftControllerComponent;
 class ShipNavigationComponent;
+class WingComponent;
 
 class AIStrikecraftControllerSystem : public System
 {
@@ -21,7 +22,7 @@ public:
     void Update(float delta) override;
 
 private:
-    EntitySharedPtr AcquireTarget() const;
+    EntitySharedPtr AcquireTarget(const WingComponent& wingComponent) const;
     void ProcessCombatState(entt::entity entity, ShipNavigationComponent& navigation, AIStrikecraftControllerComponent& controller, const TransformComponent& transform, EntitySharedPtr target, float delta);
     glm::vec3 CalculateInterceptPoint(const glm::vec3& shooterPos, const glm::vec3& targetPos, const glm::vec3& targetVel, float projectileSpeed) const;
     glm::vec3 GenerateBreakDirection(const glm::vec3& forward, const glm::vec3& toTarget) const;

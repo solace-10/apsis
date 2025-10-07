@@ -8,6 +8,7 @@
 #include "components/hardpoint_component.hpp"
 #include "components/ship_navigation_component.hpp"
 #include "components/weapon_component.hpp"
+#include "components/wing_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
@@ -18,20 +19,19 @@ namespace WingsOfSteel
 void AIStrikecraftControllerSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-
-    auto controllerView = registry.view<ShipNavigationComponent, AIStrikecraftControllerComponent, TransformComponent>();
-    controllerView.each([this, delta](const auto entity, ShipNavigationComponent& navigationComponent, AIStrikecraftControllerComponent& controllerComponent, const TransformComponent& transform) {
+    auto controllerView = registry.view<ShipNavigationComponent, AIStrikecraftControllerComponent, const TransformComponent, const WingComponent>();
+    controllerView.each([this, delta](const auto entityHandle, ShipNavigationComponent& navigationComponent, AIStrikecraftControllerComponent& controllerComponent, const TransformComponent& transform, const WingComponent& wingComponent) {
         EntitySharedPtr pTargetEntity = controllerComponent.GetTarget();
         if (!pTargetEntity)
         {
-            pTargetEntity = AcquireTarget();
+            pTargetEntity = AcquireTarget(wingComponent);
             controllerComponent.SetTarget(pTargetEntity);
         }
 
         if (pTargetEntity)
         {
             controllerComponent.UpdateTimers(delta);
-            ProcessCombatState(entity, navigationComponent, controllerComponent, transform, pTargetEntity, delta);
+            ProcessCombatState(entityHandle, navigationComponent, controllerComponent, transform, pTargetEntity, delta);
         }
         else
         {
@@ -171,9 +171,21 @@ void AIStrikecraftControllerSystem::UpdateWeaponSystems(entt::entity shipEntity,
     });
 }
 
-EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget() const
+EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget(const WingComponent& wingComponent) const
 {
-    return Game::Get()->GetSector()->GetPlayerMech();
+    const WingRole role = wingComponent.Role;
+    if (role == WingRole::Offense)
+    {
+        return Game::Get()->GetSector()->GetPlayerCarrier();
+    }
+    else if (role == WingRole::Interception || role == WingRole::Defense)
+    {
+        return Game::Get()->GetSector()->GetPlayerMech();
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 } // namespace WingsOfSteel
