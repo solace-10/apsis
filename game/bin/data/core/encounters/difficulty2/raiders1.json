@@ -1,0 +1,34 @@
+{
+    "deck": {
+        "tier1": [
+            {
+                "card": {
+                    "name": "Launch interceptors",
+                    "type": "deploy_escort",
+                    "escorts": [
+                        "/entity_prefabs/raiders/interceptor.json",
+                        "/entity_prefabs/raiders/interceptor.json",
+                        "/entity_prefabs/raiders/interceptor.json",
+                        "/entity_prefabs/raiders/interceptor.json",
+                        "/entity_prefabs/raiders/interceptor.json"
+                    ],
+                    "wing_role": "interception"
+                },
+                "count": 4
+            },
+            {
+                "card": {
+                    "name": "Launch bombers",
+                    "type": "deploy_escort",
+                    "escorts": [ 
+                        "/entity_prefabs/raiders/bomber.json",
+                        "/entity_prefabs/raiders/bomber.json",
+                        "/entity_prefabs/raiders/bomber.json"
+                    ],
+                    "wing_role": "offense"
+                },
+                "count": 4
+            }
+        ]
+    }
+}

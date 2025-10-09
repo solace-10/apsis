@@ -9,6 +9,7 @@
 
 #include "game.hpp"
 #include "items/item_info.hpp"
+#include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "ui/prefab_editor.hpp"
 #include "systems/ai_strategic_system.hpp"
@@ -75,6 +76,17 @@ void Game::DrawImGuiMenuBar()
                         pStrategicSystem->ShowDebugUI(showDebugUI);
                     }
                 }
+
+                Encounter* pEncounter = m_pSector->GetEncounter();
+                if (pEncounter)
+                {
+                    bool showDebugUI = pEncounter->IsDebugUIVisible();
+                    if (ImGui::MenuItem("Encounter", nullptr, &showDebugUI))
+                    {
+                        pEncounter->ShowDebugUI(showDebugUI);
+                    }
+                }
+
                 ImGui::EndMenu();
             }
 

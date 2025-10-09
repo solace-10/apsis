@@ -49,7 +49,7 @@ void ResourceDataStore::LoadInternal(FileReadResult result, FileSharedPtr pFile)
     }
 }
 
-void ResourceDataStore::Inject(const nlohmann::json& data)
+void ResourceDataStore::Inject(const Json::Data& data)
 {
     m_Data = data;
     Save();

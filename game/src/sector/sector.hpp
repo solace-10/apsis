@@ -24,6 +24,7 @@ public:
 
     Encounter* GetEncounter();
     EntitySharedPtr GetPlayerMech() const;
+    EntitySharedPtr GetPlayerCarrier() const;
 
 private:
     void DrawCameraDebugUI();
@@ -47,6 +48,11 @@ inline Encounter* Sector::GetEncounter()
 inline EntitySharedPtr Sector::GetPlayerMech() const
 {
     return m_pPlayerMech.lock();
+}
+
+inline EntitySharedPtr Sector::GetPlayerCarrier() const
+{
+    return m_pCarrier.lock();
 }
 
 } // namespace WingsOfSteel

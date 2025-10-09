@@ -182,14 +182,6 @@ void Sector::SpawnPlayerFleet()
             pScene->m_pCarrier = pEntity;
         }
     });
-
-    // std::array<std::string, 2> escortNames = { "Skyforger", "Fractal Blossom" };
-    // for (const std::string& name : escortNames)
-    // {
-    //     EntitySharedPtr pEscort = SpawnShip(name, "/models/flagship/light_carrier/light_carrier.glb");
-    //     pEscort->AddComponent<DiceComponent>();
-    //     m_pPlayerFleet->AddShip(pEscort);
-    // }
 }
 
 } // namespace WingsOfSteel

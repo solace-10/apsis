@@ -29,7 +29,9 @@ void CarrierSystem::Update(float delta)
                 CarrierComponent& carrierComponent = pCarrierEntity->GetComponent<CarrierComponent>();
                 if (carrierComponent.CurrentLaunch)
                 {
-                    pEntity->AddComponent<WingComponent>().ID = carrierComponent.CurrentLaunch->GetWingID();
+                    WingComponent& wingComponent = pEntity->AddComponent<WingComponent>();
+                    wingComponent.ID = carrierComponent.CurrentLaunch->GetWingID();
+                    wingComponent.Role = carrierComponent.CurrentLaunch->GetWingRole();
                     carrierComponent.CurrentLaunch.reset();
                 }
                 carrierComponent.TimeToNextLaunch = carrierComponent.TimeBetweenLaunches;

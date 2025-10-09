@@ -1,8 +1,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <core/serialization.hpp>
+#include <core/log.hpp>
+#include <core/random.hpp>
+#include <imgui/imgui.hpp>
+#include <pandora.hpp>
+#include <resources/resource_system.hpp>
+#include <vfs/vfs.hpp>
+
 #include "components/faction_component.hpp"
 #include "components/wing_component.hpp"
 #include "entity_builder/entity_builder.hpp"
+#include "sector/deck/deck.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "sector/wing.hpp"
@@ -11,20 +20,46 @@
 namespace WingsOfSteel
 {
 
-Encounter::Encounter()
-{
-
-}
-
-Encounter::~Encounter()
-{
-
-}
-
 void Encounter::Initialize(SectorSharedPtr pSector)
 {
     m_pSector = pSector;
-    SpawnCarrier();
+
+    // List all encounter files in the difficulty2 directory
+    const std::string encountersPath("/encounters/difficulty2");
+    const std::vector<std::string> encounterFiles = GetVFS()->List(encountersPath);
+    if (encounterFiles.empty())
+    {
+        Log::Error() << "No encounter files found in '" << encountersPath << "'."; 
+        return;
+    }
+
+    // Pick a random encounter file
+    const size_t randomIndex = Random::Get<size_t>(0, encounterFiles.size() - 1);
+    const std::string& encounterFile = encounterFiles[randomIndex];
+
+    // Load the encounter data
+    SectorWeakPtr pWeakSector = pSector;
+    GetResourceSystem()->RequestResource(encounterFile, [this, pWeakSector](ResourceSharedPtr pResource)
+    {
+        SectorSharedPtr pSector = pWeakSector.lock();
+        if (!pSector)
+        {
+            return;
+        }
+
+        ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        if (pDataStore)
+        {
+            for (uint32_t tier = 1; tier <= 1; tier++)
+            {
+                DeckUniquePtr pDeck = std::make_unique<Deck>();
+                pDeck->Initialize(pDataStore.get(), tier);
+                m_EncounterTiers[tier - 1] = std::move(pDeck);
+            }
+
+            SpawnCarrier();
+        }
+    });
 }
 
 void Encounter::SpawnCarrier()
@@ -37,26 +72,8 @@ void Encounter::SpawnCarrier()
         {
             Encounter* pEncounter = pSector->GetEncounter();
             pEncounter->m_pCarrier = pEntity;
-            pEncounter->RebuildTier(0);
         }
     });
-}
-
-void Encounter::RebuildTier(int tier)
-{
-    m_EncounterTiers[tier].actions.clear();
- 
-    EncounterWingDescription wingDescription;
-    for (int i = 0; i < 5; i++)
-    {
-        wingDescription.entities.push_back("/entity_prefabs/raiders/interceptor.json");
-    }
-
-    EncounterAction action;
-    action.wings.push_back(wingDescription);
-
-    m_EncounterTiers[tier].actions.push_back(action);
-    m_EncounterTiers[tier].currentAction = 0;
 }
 
 void Encounter::Update(float delta)
@@ -69,44 +86,70 @@ void Encounter::Update(float delta)
     m_TimeToNextAction -= delta;
     if (m_TimeToNextAction < 0.0)
     {
-        m_TimeToNextAction = 30.0f;
-
-        EncounterTier& currentTier = m_EncounterTiers[m_CurrentTier];
-        InstantiateAction(currentTier.actions[currentTier.currentAction]);
-        currentTier.currentAction++;
-
-        // Have we used all the actions in this tier?
-        if (m_EncounterTiers[m_CurrentTier].currentAction >= m_EncounterTiers[m_CurrentTier].actions.size())
+        Deck* pCurrentDeck = m_EncounterTiers[m_CurrentTier].get();
+        if (pCurrentDeck->PlayNextCard())
         {
-            // Go to the next tier if possible
-            if (m_CurrentTier + 1 < m_EncounterTiers.size() && !m_EncounterTiers[m_CurrentTier + 1].actions.empty())
+            m_TimeToNextAction = 30.0f;
+        }
+        else
+        {
+            if (m_CurrentTier + 1 < m_EncounterTiers.size())
             {
                 m_CurrentTier++;
             }
-
-            RebuildTier(m_CurrentTier);
+            else
+            {
+                m_EncounterTiers[m_CurrentTier]->ShuffleAndReset();
+            }
         }
     }
+
+    DrawDebugUI();
 }
 
-void Encounter::InstantiateAction(const Encounter::EncounterAction& action)
+void Encounter::DrawDebugUI()
 {
-    SectorSharedPtr pSector = m_pSector.lock();
-    if (!pSector)
+    if (!IsDebugUIVisible())
     {
         return;
     }
 
-    CarrierSystem* pCarrierSystem = pSector->GetSystem<CarrierSystem>();
-    EntitySharedPtr pCarrier = m_pCarrier.lock();
-    if (!pCarrierSystem || !pCarrier)
+    if (ImGui::Begin("Encounter", &m_ShowDebugUI))
     {
-        return;
-    }
+        ImGui::Text("Time to next action: %.2f seconds", m_TimeToNextAction);
+        ImGui::Text("Current tier: %d", m_CurrentTier + 1);
 
-    for (const auto& wing : action.wings)
-    {
-        pCarrierSystem->LaunchEscorts(pCarrier, wing.entities, WingRole::Defense);
+        if (ImGui::BeginTable("decks", 2, ImGuiTableFlags_Borders))
+        {
+            ImGui::TableSetupColumn("Tier");
+            ImGui::TableSetupColumn("Card");
+            ImGui::TableHeadersRow();
+
+            for (size_t tier = 0; tier < m_EncounterTiers.size(); tier++)
+            {
+                Deck* pDeck = m_EncounterTiers[tier].get();
+                if (!pDeck)
+                {
+                    continue;
+                }
+
+                std::vector<std::pair<Card*, bool>> cards = pDeck->GetAllCards();
+                for (auto [pCard, played] : cards)
+                {
+                    ImGui::BeginDisabled(played);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%d", tier + 1);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", pCard->GetName().c_str());
+                    ImGui::EndDisabled();
+                }
+            }
+
+            ImGui::EndTable();
+        }
+
+        ImGui::End();
     }
 }
 
