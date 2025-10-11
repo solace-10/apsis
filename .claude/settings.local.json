@@ -4,7 +4,8 @@
       "Bash(for:*)",
       "Bash(do echo \"Processing: $file\")",
       "Bash(done)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(cmake:*)"
     ],
     "deny": [],
     "ask": []
