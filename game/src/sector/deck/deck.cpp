@@ -43,25 +43,17 @@ void Deck::Initialize(ResourceDataStore* pResource, uint32_t tier)
 
     for (const auto& cardEntryObject : tierArray.value())
     {
-        const auto cardCount = Json::DeserializeUnsignedInteger(pResource, cardEntryObject, kCountKey);
-        if (!cardCount.has_value())
-        {
-            return;
-        }
-
         const auto cardObject = Json::DeserializeObject(pResource, cardEntryObject, kCardKey);
         if (!cardObject.has_value())
         {
             return;
         }
 
-        const auto cardType = Json::DeserializeString(pResource, cardObject.value(), kCardTypeKey);
-        if (!cardType.has_value())
+        const std::string cardInstanceType = Json::DeserializeString(pResource, cardObject.value(), kCardTypeKey);
+        if (cardInstanceType.empty())
         {
             return;
         }
-
-        const std::string cardInstanceType(cardType.value());
         CardSharedPtr pCard;
         if (cardInstanceType == "deploy_escort")
         {
@@ -80,7 +72,8 @@ void Deck::Initialize(ResourceDataStore* pResource, uint32_t tier)
 
         if (pCard)
         {
-            for (uint32_t count = 0; count < cardCount.value(); count++)
+            const uint32_t cardCount = Json::DeserializeUnsignedInteger(pResource, cardEntryObject, kCountKey);
+            for (uint32_t count = 0; count < cardCount; count++)
             {
                 m_Cards.emplace_back(pCard, false);
             }

@@ -24,12 +24,7 @@ namespace
 
 bool DeployEscortCard::Deserialize(const ResourceDataStore* pContext, const Json::Data& data)
 {
-    const auto name = Json::DeserializeString(pContext, data, kNameKey);
-    if (!name.has_value())
-    {
-        return false;
-    }
-    m_Name = name.value();
+    m_Name = Json::DeserializeString(pContext, data, kNameKey);
 
     const auto escorts = Json::DeserializeArray(pContext, data, kEscortsKey);
     if (!escorts.has_value())
@@ -42,13 +37,8 @@ bool DeployEscortCard::Deserialize(const ResourceDataStore* pContext, const Json
         m_Escorts.push_back(escort.get<std::string>());
     }
 
-    const auto wingRole = Json::DeserializeString(pContext, data, kWingRoleKey);
-    if (!wingRole.has_value())
-    {
-        return false;
-    }
-
-    const auto roleOpt = magic_enum::enum_cast<WingRole>(wingRole.value(), magic_enum::case_insensitive);
+    const std::string wingRole = Json::DeserializeString(pContext, data, kWingRoleKey);
+    const auto roleOpt = magic_enum::enum_cast<WingRole>(wingRole, magic_enum::case_insensitive);
     if (!roleOpt.has_value())
     {
         return false;
