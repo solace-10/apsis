@@ -21,6 +21,11 @@ void AIStrikecraftControllerSystem::Update(float delta)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto controllerView = registry.view<ShipNavigationComponent, AIStrikecraftControllerComponent, const TransformComponent, const WingComponent>();
     controllerView.each([this, delta](const auto entityHandle, ShipNavigationComponent& navigationComponent, AIStrikecraftControllerComponent& controllerComponent, const TransformComponent& transform, const WingComponent& wingComponent) {
+        if (controllerComponent.GetState() == AIStrikecraftState::LaunchingFromCarrier)
+        {
+            return;
+        }
+
         EntitySharedPtr pTargetEntity = controllerComponent.GetTarget();
         if (!pTargetEntity)
         {
@@ -39,7 +44,6 @@ void AIStrikecraftControllerSystem::Update(float delta)
             navigationComponent.SetThrust(ShipThrust::None);
         }
     });
-
 }
 
 void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, ShipNavigationComponent& navigation, AIStrikecraftControllerComponent& controller, const TransformComponent& transform, EntitySharedPtr target, float delta)
@@ -61,7 +65,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             navigation.SetTarget(interceptPoint);
             navigation.SetThrust(ShipThrust::Forward);
             
-            if (distanceToTarget <= controller.GetOptimalRange())
+            if (distanceToTarget <= controller.GetMaxRange())
             {
                 controller.SetState(AIStrikecraftState::ATTACK);
             }
@@ -106,7 +110,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
                 else
                 {
                     const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
-                    const glm::vec3 repositionOffset = repositionDirection * controller.GetOptimalRange();
+                    const glm::vec3 repositionOffset = repositionDirection * controller.GetMaxRange();
                     controller.SetRepositionTarget(targetPos + repositionOffset);
                     controller.SetState(AIStrikecraftState::REPOSITION);
                 }

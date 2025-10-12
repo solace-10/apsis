@@ -9,6 +9,7 @@ namespace WingsOfSteel
 
 enum class AIStrikecraftState
 {
+    LaunchingFromCarrier,
     APPROACH,
     ATTACK,
     BREAK,
@@ -19,11 +20,10 @@ class AIStrikecraftControllerComponent : public IComponent
 {
 public:
     AIStrikecraftControllerComponent() 
-        : m_State(AIStrikecraftState::APPROACH)
+        : m_State(AIStrikecraftState::LaunchingFromCarrier)
         , m_StateTimer(0.0f)
         , m_AttackTimer(0.0f)
         , m_BreakTimer(0.0f)
-        , m_OptimalRange(500.0f)
         , m_MinRange(100.0f)
         , m_MaxRange(800.0f)
         , m_FiringAngle(15.0f)
@@ -38,7 +38,6 @@ public:
     nlohmann::json Serialize() const override
     {
         nlohmann::json json;
-        json["optimal_range"] = m_OptimalRange;
         json["min_range"] = m_MinRange;
         json["max_range"] = m_MaxRange;
         json["firing_angle"] = m_FiringAngle;
@@ -49,7 +48,6 @@ public:
 
     void Deserialize(const nlohmann::json& json) override
     {
-        if (json.contains("optimal_range")) m_OptimalRange = json["optimal_range"];
         if (json.contains("min_range")) m_MinRange = json["min_range"];
         if (json.contains("max_range")) m_MaxRange = json["max_range"];
         if (json.contains("firing_angle")) m_FiringAngle = json["firing_angle"];
@@ -95,7 +93,6 @@ public:
         }
     }
 
-    float GetOptimalRange() const { return m_OptimalRange; }
     float GetMinRange() const { return m_MinRange; }
     float GetMaxRange() const { return m_MaxRange; }
     float GetStateTimer() const { return m_StateTimer; }
@@ -116,7 +113,6 @@ private:
     float m_AttackTimer{ 0.0f };
     float m_BreakTimer{ 0.0f };
     
-    float m_OptimalRange{ 500.0f };
     float m_MinRange{ 100.0f };
     float m_MaxRange{ 800.0f };
     float m_FiringAngle{ 15.0f };

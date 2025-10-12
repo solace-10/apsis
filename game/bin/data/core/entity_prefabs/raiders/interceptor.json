@@ -45,7 +45,6 @@
         },
         {
             "type": "ai_strikecraft_controller",
-            "optimal_range": 60,
             "min_range": 20,
             "max_range": 60,
             "firing_angle": 10,

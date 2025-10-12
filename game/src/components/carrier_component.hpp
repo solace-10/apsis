@@ -3,9 +3,13 @@
 #include <array>
 #include <deque>
 #include <optional>
+#include <vector>
+
+#include <glm/mat4x4.hpp>
 
 #include <scene/components/icomponent.hpp>
 #include <scene/components/component_factory.hpp>
+#include <scene/entity.hpp>
 
 #include "components/wing_component.hpp"
 
@@ -61,6 +65,8 @@ public:
     std::optional<EscortToLaunch> CurrentLaunch;
     float TimeToNextLaunch{0.0f};
     float TimeBetweenLaunches{1.5f};
+    std::vector<glm::mat4> LaunchWaypoints;
+    bool LaunchPointsInitialized{false};
 };
 
 REGISTER_COMPONENT(CarrierComponent, "carrier")
