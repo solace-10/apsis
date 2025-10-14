@@ -10,10 +10,10 @@ namespace WingsOfSteel
 enum class AIStrikecraftState
 {
     LaunchingFromCarrier,
-    APPROACH,
-    ATTACK,
-    BREAK,
-    REPOSITION
+    Approach,
+    Attack,
+    Break,
+    Reposition
 };
 
 class AIStrikecraftControllerComponent : public IComponent
@@ -74,7 +74,7 @@ public:
 
     bool ShouldFire(float distanceToTarget, float angleToTarget) const
     {
-        return m_State == AIStrikecraftState::ATTACK &&
+        return m_State == AIStrikecraftState::Attack &&
                distanceToTarget >= m_MinRange &&
                distanceToTarget <= m_MaxRange &&
                angleToTarget <= m_FiringAngle;
@@ -84,9 +84,9 @@ public:
     {
         switch (m_State)
         {
-            case AIStrikecraftState::ATTACK:
+            case AIStrikecraftState::Attack:
                 return m_StateTimer >= m_AttackDuration;
-            case AIStrikecraftState::BREAK:
+            case AIStrikecraftState::Break:
                 return m_StateTimer >= m_BreakDuration;
             default:
                 return false;
@@ -108,7 +108,7 @@ public:
 
 private:
     EntityWeakPtr m_pTarget;
-    AIStrikecraftState m_State{ AIStrikecraftState::APPROACH };
+    AIStrikecraftState m_State{ AIStrikecraftState::Approach };
     float m_StateTimer{ 0.0f };
     float m_AttackTimer{ 0.0f };
     float m_BreakTimer{ 0.0f };

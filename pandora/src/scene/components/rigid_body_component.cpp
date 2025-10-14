@@ -175,9 +175,20 @@ void RigidBodyComponent::SetMotionType(MotionType motionType)
     }
     else
     {
-        flags &= btCollisionObject::CF_STATIC_OBJECT;
+        flags &= ~btCollisionObject::CF_STATIC_OBJECT;
     }
+
+    if (motionType == MotionType::Kinematic)
+    {
+        flags |= btCollisionObject::CF_KINEMATIC_OBJECT;
+    }
+    else
+    {
+        flags &= ~btCollisionObject::CF_KINEMATIC_OBJECT;
+    }
+
     m_pRigidBody->setCollisionFlags(flags);
+    m_pRigidBody->activate(true);
 
     m_MotionType = motionType;
 }

@@ -44,6 +44,9 @@ public:
 
     std::optional<RaycastResult> Raycast(const glm::vec3& from, const glm::vec3& to);
 
+    // Enable or disable collision between two specific entities
+    void SetCollisionBetween(EntitySharedPtr pEntity1, EntitySharedPtr pEntity2, bool enable);
+
 private:
     Scene* m_pScene{ nullptr };
     std::unique_ptr<btDefaultCollisionConfiguration> m_pCollisionConfiguration;

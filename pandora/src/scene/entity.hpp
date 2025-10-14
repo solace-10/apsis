@@ -32,6 +32,12 @@ public:
     }
 
     template <typename T>
+    void RemoveComponent()
+    {
+        m_pScene->m_Registry.remove<T>(m_EntityHandle);
+    }
+
+    template <typename T>
     T& GetComponent()
     {
         return m_pScene->m_Registry.get<T>(m_EntityHandle);

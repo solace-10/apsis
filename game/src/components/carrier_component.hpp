@@ -65,7 +65,14 @@ public:
     std::optional<EscortToLaunch> CurrentLaunch;
     float TimeToNextLaunch{0.0f};
     float TimeBetweenLaunches{1.5f};
-    std::vector<glm::mat4> LaunchWaypoints;
+
+    struct LaunchWaypoint
+    {
+        glm::mat4 transform;
+        float ratio{0.0f};
+    };
+
+    std::vector<LaunchWaypoint> LaunchWaypoints;
     bool LaunchPointsInitialized{false};
 };
 

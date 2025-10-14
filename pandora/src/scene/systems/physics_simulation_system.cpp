@@ -96,24 +96,49 @@ std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::R
 {
     btVector3 btFrom(from.x, from.y, from.z);
     btVector3 btTo(to.x, to.y, to.z);
-    
+
     btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
     m_pWorld->rayTest(btFrom, btTo, rayCallback);
-    
+
     if (rayCallback.hasHit())
     {
         RaycastResult result;
         result.position = glm::vec3(rayCallback.m_hitPointWorld.x(), rayCallback.m_hitPointWorld.y(), rayCallback.m_hitPointWorld.z());
-        
+
         // Find the entity associated with the hit collision object
         const btCollisionObject* pCollisionObject = rayCallback.m_collisionObject;
         const btRigidBody* pRigidBody = reinterpret_cast<const btRigidBody*>(pCollisionObject);
         result.pEntity = RigidBodyComponent::GetEntityFromRigidBody(pRigidBody);
-        
+
         return result;
     }
-    
+
     return std::nullopt;
+}
+
+void PhysicsSimulationSystem::SetCollisionBetween(EntitySharedPtr pEntity1, EntitySharedPtr pEntity2, bool enable)
+{
+    if (!pEntity1 || !pEntity2)
+    {
+        return;
+    }
+
+    if (!pEntity1->HasComponent<RigidBodyComponent>() || !pEntity2->HasComponent<RigidBodyComponent>())
+    {
+        return;
+    }
+
+    RigidBodyComponent& rb1 = pEntity1->GetComponent<RigidBodyComponent>();
+    RigidBodyComponent& rb2 = pEntity2->GetComponent<RigidBodyComponent>();
+
+    btRigidBody* pBulletRB1 = rb1.GetBulletRigidBody();
+    btRigidBody* pBulletRB2 = rb2.GetBulletRigidBody();
+
+    if (pBulletRB1 && pBulletRB2)
+    {
+        pBulletRB1->setIgnoreCollisionCheck(pBulletRB2, !enable);
+        pBulletRB2->setIgnoreCollisionCheck(pBulletRB1, !enable);
+    }
 }
 
 } // namespace WingsOfSteel

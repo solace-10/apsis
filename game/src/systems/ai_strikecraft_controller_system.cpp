@@ -59,7 +59,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
     
     switch (controller.GetState())
     {
-        case AIStrikecraftState::APPROACH:
+        case AIStrikecraftState::Approach:
         {
             glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
             navigation.SetTarget(interceptPoint);
@@ -67,14 +67,14 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             
             if (distanceToTarget <= controller.GetMaxRange())
             {
-                controller.SetState(AIStrikecraftState::ATTACK);
+                controller.SetState(AIStrikecraftState::Attack);
             }
             
             UpdateWeaponSystems(entity, targetPos, false);
             break;
         }
         
-        case AIStrikecraftState::ATTACK:
+        case AIStrikecraftState::Attack:
         {
             glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
             navigation.SetTarget(interceptPoint);
@@ -87,12 +87,12 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             {
                 glm::vec3 breakDir = GenerateBreakDirection(forward, glm::normalize(toTarget));
                 controller.SetBreakDirection(breakDir);
-                controller.SetState(AIStrikecraftState::BREAK);
+                controller.SetState(AIStrikecraftState::Break);
             }
             break;
         }
         
-        case AIStrikecraftState::BREAK:
+        case AIStrikecraftState::Break:
         {
             // Break away from the target. The actual distance doesn't matter, as we'll keep moving towards it for `break_duration`. 
             glm::vec3 breakTarget = myPos + controller.GetBreakDirection() * 100.0f;
@@ -105,20 +105,20 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             {
                 if (Random::Get(0.0f, 1.0f) < 0.8f)
                 {
-                    controller.SetState(AIStrikecraftState::APPROACH);
+                    controller.SetState(AIStrikecraftState::Approach);
                 }
                 else
                 {
                     const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
                     const glm::vec3 repositionOffset = repositionDirection * controller.GetMaxRange();
                     controller.SetRepositionTarget(targetPos + repositionOffset);
-                    controller.SetState(AIStrikecraftState::REPOSITION);
+                    controller.SetState(AIStrikecraftState::Reposition);
                 }
             }
             break;
         }
         
-        case AIStrikecraftState::REPOSITION:
+        case AIStrikecraftState::Reposition:
         {
             const glm::vec3& repositionTarget = controller.GetRepositionTarget();
             navigation.SetTarget(repositionTarget);
@@ -130,7 +130,7 @@ void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, Ship
             const float distanceToReposition = glm::length(repositionTarget - myPos);
             if (distanceToReposition < repositionGoalRadius)
             {
-                controller.SetState(AIStrikecraftState::APPROACH);
+                controller.SetState(AIStrikecraftState::Approach);
             }
             break;
         }

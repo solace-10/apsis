@@ -34,7 +34,8 @@ struct EntityUserData
 enum class MotionType
 {
     Static,
-    Dynamic
+    Dynamic,
+    Kinematic
 };
 
 REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")

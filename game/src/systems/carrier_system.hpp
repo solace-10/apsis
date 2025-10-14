@@ -15,6 +15,10 @@
 namespace WingsOfSteel
 {
 
+#ifndef DRAW_DEBUG_LAUNCH_WAYPOINTS
+#define DRAW_DEBUG_LAUNCH_WAYPOINTS (0)
+#endif
+
 class CarrierSystem : public System
 {
 public:
@@ -28,9 +32,12 @@ public:
 
 private:
     void InitializeLaunchWaypoints(CarrierComponent& carrierComponent, const ModelComponent& modelComponent);
-    void DrawDebugLaunchWaypoints(const CarrierComponent& carrierComponent, const TransformComponent& transformComponent);
     void ProcessLaunchQueues(float delta);
     void UpdateLaunchSequences(float delta);
+
+#if DRAW_DEBUG_LAUNCH_WAYPOINTS
+    void DrawDebugLaunchWaypoints(const CarrierComponent& carrierComponent, const TransformComponent& transformComponent);
+#endif
 };
 
 } // namespace WingsOfSteel
