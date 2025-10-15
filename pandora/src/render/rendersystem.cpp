@@ -10,6 +10,8 @@
 #include "imgui/imgui_system.hpp"
 #include "pandora.hpp"
 #include "render/debug_render.hpp"
+#include "render/render_pass/base_render_pass.hpp"
+#include "render/render_pass/ui_render_pass.hpp"
 #include "render/shader_compiler.hpp"
 #include "render/shader_editor.hpp"
 #include "render/window.hpp"
@@ -79,6 +81,9 @@ void RenderSystem::InitializeInternal()
     CreateGlobalUniforms();
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderEditor = std::make_unique<ShaderEditor>();
+
+    AddRenderPass(std::make_shared<BaseRenderPass>());
+    AddRenderPass(std::make_shared<UIRenderPass>());
 }
 
 void RenderSystem::Update()
@@ -95,14 +100,43 @@ void RenderSystem::Update()
     };
     wgpu::CommandEncoder encoder = GetDevice().CreateCommandEncoder(&commandEncoderDescriptor);
 
-    RenderBasePass(encoder);
-    RenderUIPass(encoder);
+    for (auto& pRenderPass : m_RenderPasses)
+    {
+        pRenderPass->Render(encoder);
+    }
 
     wgpu::CommandBufferDescriptor commandBufferDescriptor{
         .label = "Pandora default command buffer"
     };
     wgpu::CommandBuffer commands = encoder.Finish(&commandBufferDescriptor);
     GetDevice().GetQueue().Submit(1, &commands);
+}
+
+void RenderSystem::AddRenderPass(RenderPassSharedPtr pRenderPass)
+{
+    m_RenderPasses.push_back(pRenderPass);
+}
+
+const std::list<RenderPassSharedPtr>& RenderSystem::GetRenderPasses() const
+{
+    return m_RenderPasses;
+}
+
+void RenderSystem::ClearRenderPasses()
+{
+    m_RenderPasses.clear();
+}
+
+RenderPassSharedPtr RenderSystem::GetRenderPass(const std::string& name) const
+{
+    for (auto& pRenderPass : m_RenderPasses)
+    {
+        if (pRenderPass->GetName() == name)
+        {
+            return pRenderPass;
+        }
+    }
+    return nullptr;
 }
 
 void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)

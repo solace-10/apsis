@@ -1,6 +1,9 @@
 #include <debug_visualization/model_visualization.hpp>
 #include <imgui/imgui_system.hpp>
 #include <pandora.hpp>
+#include <render/render_pass/base_render_pass.hpp>
+#include <render/render_pass/ui_render_pass.hpp>
+#include <render/rendersystem.hpp>
 #include <scene/camera.hpp>
 #include <scene/entity.hpp>
 #include <scene/scene.hpp>
@@ -13,6 +16,7 @@
 #include "sector/sector.hpp"
 #include "ui/prefab_editor.hpp"
 #include "systems/ai_strategic_system.hpp"
+#include "render_pass/threat_indicator_render_pass.hpp"
 
 namespace WingsOfSteel
 {
@@ -35,6 +39,12 @@ Game* Game::Get()
 void Game::Initialize()
 {
     g_pGame = this;
+
+    RenderSystem* pRenderSystem = GetRenderSystem();
+    pRenderSystem->ClearRenderPasses();
+    pRenderSystem->AddRenderPass(std::make_shared<BaseRenderPass>());
+    pRenderSystem->AddRenderPass(std::make_shared<ThreatIndicatorRenderPass>());
+    pRenderSystem->AddRenderPass(std::make_shared<UIRenderPass>());
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 

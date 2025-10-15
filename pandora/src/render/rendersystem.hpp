@@ -1,6 +1,8 @@
 #pragma once
 
+#include <list>
 #include <functional>
+#include <string>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
@@ -12,6 +14,7 @@ namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(DebugRender);
+DECLARE_SMART_PTR(RenderPass);
 DECLARE_SMART_PTR(ShaderCompiler);
 DECLARE_SMART_PTR(ShaderEditor);
 
@@ -26,6 +29,11 @@ public:
     void Initialize(OnRenderSystemInitializedCallback onInitializedCallback);
     void Update();
 
+    void AddRenderPass(RenderPassSharedPtr pRenderPass);
+    const std::list<RenderPassSharedPtr>& GetRenderPasses() const;
+    RenderPassSharedPtr GetRenderPass(const std::string& name) const;
+    void ClearRenderPasses();
+
     wgpu::Instance& GetInstance() const;
     wgpu::Adapter& GetAdapter() const;
     wgpu::Device& GetDevice() const;
@@ -35,6 +43,8 @@ public:
     ShaderCompiler* GetShaderCompiler() const;
     ShaderEditor* GetShaderEditor() const;
 
+    void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPassEncoder);
+
     static constexpr size_t MsaaSampleCount = 4;
 
 private:
@@ -42,7 +52,6 @@ private:
     void InitializeInternal();
 
     void CreateGlobalUniforms();
-    void UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass);
 
     void RenderBasePass(wgpu::CommandEncoder& encoder);
     void RenderUIPass(wgpu::CommandEncoder& encoder);
@@ -65,6 +74,8 @@ private:
 
     ShaderCompilerUniquePtr m_pShaderCompiler;
     ShaderEditorUniquePtr m_pShaderEditor;
+
+    std::list<RenderPassSharedPtr> m_RenderPasses;
 };
 
 } // namespace WingsOfSteel

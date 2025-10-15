@@ -31,6 +31,7 @@
 #include "systems/player_controller_system.hpp"
 #include "systems/ship_navigation_system.hpp"
 #include "systems/target_overlay_system.hpp"
+#include "systems/threat_indicator_system.hpp"
 #include "systems/weapon_system.hpp"
 
 namespace WingsOfSteel
@@ -59,6 +60,7 @@ void Sector::Initialize()
     AddSystem<WeaponSystem>();
     AddSystem<AmmoSystem>();
     AddSystem<TargetOverlaySystem>();
+    AddSystem<ThreatIndicatorSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
