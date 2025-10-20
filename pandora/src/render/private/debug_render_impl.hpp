@@ -11,6 +11,8 @@ using ddVec3_Out = glm::vec3&;
 
 #include <webgpu/webgpu_cpp.h>
 
+#include "render/rendersystem.hpp"
+#include "render/vertex_types.hpp"
 #include "resources/resource_shader.hpp"
 
 namespace WingsOfSteel::Private
@@ -49,19 +51,10 @@ private:
     wgpu::BindGroup m_GlyphBindGroup;
     wgpu::BindGroupLayout m_GlyphBindGroupLayout;
 
-    struct LineData
-    {
-        glm::vec3 position;
-        glm::vec3 color;
-    };
+    using LineData = VertexP3C3;
     std::vector<LineData> m_LineData;
 
-    struct GlyphData
-    {
-        glm::vec2 position;
-        glm::vec3 color;
-        glm::vec2 uv;
-    };
+    using GlyphData = VertexP2C3UV;
     std::vector<GlyphData> m_GlyphData;
 };
 

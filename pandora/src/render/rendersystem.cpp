@@ -14,6 +14,7 @@
 #include "render/render_pass/ui_render_pass.hpp"
 #include "render/shader_compiler.hpp"
 #include "render/shader_editor.hpp"
+#include "render/vertex_buffer_schemas.hpp"
 #include "render/window.hpp"
 #include "scene/camera.hpp"
 #include "scene/components/camera_component.hpp"
@@ -79,6 +80,7 @@ void RenderSystem::Initialize(OnRenderSystemInitializedCallback onInitializedCal
 void RenderSystem::InitializeInternal()
 {
     CreateGlobalUniforms();
+    m_pVertexBufferSchemas = std::make_unique<VertexBufferSchemas>();
     m_pShaderCompiler = std::make_unique<ShaderCompiler>();
     m_pShaderEditor = std::make_unique<ShaderEditor>();
 
@@ -137,73 +139,6 @@ RenderPassSharedPtr RenderSystem::GetRenderPass(const std::string& name) const
         }
     }
     return nullptr;
-}
-
-void RenderSystem::RenderBasePass(wgpu::CommandEncoder& encoder)
-{
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
-    wgpu::RenderPassColorAttachment colorAttachment{
-        .view = GetWindow()->GetMsaaColorTexture().GetTextureView(),
-        .resolveTarget = surfaceTexture.texture.CreateView(),
-        .loadOp = wgpu::LoadOp::Clear,
-        .storeOp = wgpu::StoreOp::Store,
-        .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
-    };
-
-    wgpu::RenderPassDepthStencilAttachment depthAttachment{
-        .view = GetWindow()->GetDepthTexture().GetTextureView(),
-        .depthLoadOp = wgpu::LoadOp::Clear,
-        .depthStoreOp = wgpu::StoreOp::Store,
-        .depthClearValue = 1.0f
-    };
-
-    wgpu::RenderPassDescriptor renderpass{
-        .colorAttachmentCount = 1,
-        .colorAttachments = &colorAttachment,
-        .depthStencilAttachment = &depthAttachment
-    };
-
-    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
-    UpdateGlobalUniforms(renderPass);
-
-    Scene* pScene = GetActiveScene();
-    if (pScene)
-    {
-        ModelRenderSystem* pModelRenderSystem = pScene->GetSystem<ModelRenderSystem>();
-        if (pModelRenderSystem)
-        {
-            pModelRenderSystem->Render(renderPass);
-        }
-    }
-
-    renderPass.End();
-}
-
-void RenderSystem::RenderUIPass(wgpu::CommandEncoder& encoder)
-{
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
-    wgpu::RenderPassColorAttachment colorAttachment{
-        .view = surfaceTexture.texture.CreateView(),
-        .loadOp = wgpu::LoadOp::Load,
-        .storeOp = wgpu::StoreOp::Store
-    };
-
-    wgpu::RenderPassDescriptor renderpass{
-        .colorAttachmentCount = 1,
-        .colorAttachments = &colorAttachment
-    };
-
-    wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderpass);
-    UpdateGlobalUniforms(renderPass);
-
-    GetDebugRender()->Render(renderPass);
-    GetImGuiSystem()->Render(renderPass);
-
-    renderPass.End();
 }
 
 wgpu::Instance& RenderSystem::GetInstance() const
@@ -362,6 +297,18 @@ void RenderSystem::UpdateGlobalUniforms(wgpu::RenderPassEncoder& renderPass)
 wgpu::BindGroupLayout& RenderSystem::GetGlobalUniformsLayout()
 {
     return m_GlobalUniformsBindGroupLayout;
+}
+
+const wgpu::VertexBufferLayout* RenderSystem::GetVertexBufferLayout(VertexFormat vertexFormat) const
+{
+    if (m_pVertexBufferSchemas)
+    {
+        return m_pVertexBufferSchemas->GetLayout(vertexFormat);
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 ShaderCompiler* RenderSystem::GetShaderCompiler() const

@@ -10,23 +10,43 @@
 namespace WingsOfSteel
 {
 
-void ThreatIndicatorSystem::Initialize(Scene* pScene)
-{
-    // Initialization stub
-}
-
 void ThreatIndicatorSystem::Update(float delta)
 {
+    m_CurrentUpdate++;
+    
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<const ThreatIndicatorComponent, const FactionComponent, const TransformComponent>();
 
-    view.each([delta, this](
-        const auto entity,
+    view.each([this, delta](
+        const auto entityHandle,
         const ThreatIndicatorComponent& threatIndicatorComponent,
         const FactionComponent& factionComponent,
         const TransformComponent& transformComponent) {
 
-        // TODO: Implement threat indicator logic here
+        auto threatIt = m_Threats.find(entityHandle);
+        if (threatIt == m_Threats.cend())
+        {
+            return;
+        }
+
+        Threat& threat = threatIt->second;
+        threat.timeSinceSpawned += delta;
+        threat.lastUpdate = m_CurrentUpdate;
+        threat.position = transformComponent.transform[3];
+    });
+
+    static const float sRemovalDelay = 1.0f; // Time in seconds before a threat which has disappeared is removed from the list.
+    for (auto& threatIt : m_Threats)
+    {
+        Threat& threat = threatIt.second;
+        if (threat.lastUpdate != m_CurrentUpdate)
+        {
+            threat.timeSinceLastSeen += delta;
+        }
+    }
+
+    std::erase_if(m_Threats, [](const auto& item) {
+        return item.second.timeSinceLastSeen > sRemovalDelay;
     });
 }
 

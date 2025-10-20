@@ -180,25 +180,6 @@ void DebugRenderImpl::CreateLineRenderPipeline()
         .targets = &colorTargetState
     };
 
-    static const int sAttributeCount = 2;
-    wgpu::VertexAttribute attributes[sAttributeCount] = {
-        { // Position
-            .format = wgpu::VertexFormat::Float32x3,
-            .offset = 0,
-            .shaderLocation = 0 },
-        { // Color
-            .format = wgpu::VertexFormat::Float32x3,
-            .offset = 3 * sizeof(float),
-            .shaderLocation = 1 }
-    };
-
-    wgpu::VertexBufferLayout vertexBufferLayout{
-        .arrayStride = 6 * sizeof(float),
-        .stepMode = wgpu::VertexStepMode::Vertex,
-        .attributeCount = sAttributeCount,
-        .attributes = attributes
-    };
-
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
         .bindGroupLayoutCount = 1,
         .bindGroupLayouts = &GetRenderSystem()->GetGlobalUniformsLayout()
@@ -211,7 +192,8 @@ void DebugRenderImpl::CreateLineRenderPipeline()
         .vertex = {
             .module = m_pUntexturedShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = &vertexBufferLayout },
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_C3)
+        },
         .primitive = { .topology = wgpu::PrimitiveTopology::LineList },
         .fragment = &fragmentState
     };
@@ -240,29 +222,6 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
         .targets = &colorTargetState
     };
 
-    static const int sAttributeCount = 3;
-    wgpu::VertexAttribute attributes[sAttributeCount] = {
-        { // Position
-            .format = wgpu::VertexFormat::Float32x2,
-            .offset = 0,
-            .shaderLocation = 0 },
-        { // Color
-            .format = wgpu::VertexFormat::Float32x3,
-            .offset = 2 * sizeof(float),
-            .shaderLocation = 1 },
-        { // UV
-            .format = wgpu::VertexFormat::Float32x2,
-            .offset = 5 * sizeof(float),
-            .shaderLocation = 2 }
-    };
-
-    wgpu::VertexBufferLayout vertexBufferLayout{
-        .arrayStride = 7 * sizeof(float),
-        .stepMode = wgpu::VertexStepMode::Vertex,
-        .attributeCount = sAttributeCount,
-        .attributes = attributes
-    };
-
     wgpu::BindGroupLayout bindGroupLayouts[] = {
         GetRenderSystem()->GetGlobalUniformsLayout(),
         m_GlyphBindGroupLayout
@@ -280,7 +239,8 @@ void DebugRenderImpl::CreateGlyphRenderPipeline()
         .vertex = {
             .module = m_pGlyphShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = &vertexBufferLayout },
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P2_C3_UV) 
+        },
         .fragment = &fragmentState
     };
     m_GlyphRenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
