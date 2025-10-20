@@ -26,6 +26,11 @@ void ThreatIndicatorSystem::Update(float delta)
         auto threatIt = m_Threats.find(entityHandle);
         if (threatIt == m_Threats.cend())
         {
+            Threat threat;
+            threat.timeSinceLastSeen = 0.0f;
+            threat.lastUpdate = m_CurrentUpdate;
+            threat.position = transformComponent.transform[3];
+            m_Threats[entityHandle] = threat;
             return;
         }
 
@@ -48,6 +53,18 @@ void ThreatIndicatorSystem::Update(float delta)
     std::erase_if(m_Threats, [](const auto& item) {
         return item.second.timeSinceLastSeen > sRemovalDelay;
     });
+}
+
+std::vector<Threat> ThreatIndicatorSystem::GetThreats() const
+{
+    std::vector<Threat> threats;
+
+    for (const auto& threat : m_Threats)
+    {
+        threats.push_back(threat.second);
+    }
+
+    return threats;    
 }
 
 } // namespace WingsOfSteel

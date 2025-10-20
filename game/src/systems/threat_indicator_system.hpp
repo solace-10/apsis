@@ -29,6 +29,8 @@ public:
 
     void Update(float delta) override;
 
+    std::vector<Threat> GetThreats() const;
+
 private:
     using ThreatMap = std::unordered_map<EntityHandle, Threat>;
     ThreatMap m_Threats;

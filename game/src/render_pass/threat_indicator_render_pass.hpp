@@ -18,11 +18,13 @@ public:
 
 private:
     void CreateRenderPipeline();
+    void UpdateVertexBuffer();
 
     ResourceShaderSharedPtr m_pShader;
     wgpu::Buffer m_VertexBuffer;
     wgpu::RenderPipeline m_RenderPipeline;
     bool m_Initialized = false;
+    uint32_t m_VertexCount = 0;
 };
 
 } // namespace WingsOfSteel

@@ -28,6 +28,10 @@
         {
             "type": "faction",
             "value": "Hostile"
+        },
+        {
+            "type": "threat_indicator",
+            "value": "carrier"
         }
     ]
 }
