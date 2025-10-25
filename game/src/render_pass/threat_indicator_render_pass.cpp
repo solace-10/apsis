@@ -1,5 +1,6 @@
 #include "render_pass/threat_indicator_render_pass.hpp"
 
+#include <array>
 #include <render/rendersystem.hpp>
 #include <render/window.hpp>
 #include <resources/resource_system.hpp>
@@ -8,6 +9,10 @@
 #include <pandora.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "render/material.hpp"
+#include "render/vertex_types.hpp"
+#include "resources/resource.fwd.hpp"
+#include "resources/resource_texture_2d.hpp"
 #include "systems/threat_indicator_system.hpp"
 #include "sector/sector.hpp"
 #include "game.hpp"
@@ -19,9 +24,20 @@ ThreatIndicatorRenderPass::ThreatIndicatorRenderPass()
 : RenderPass("Threat indicator render pass")
 {
     // Load the debug shader
-    GetResourceSystem()->RequestResource("/shaders/debug_render_untextured.wgsl", [this](ResourceSharedPtr pResource) {
+    GetResourceSystem()->RequestResource("/shaders/vertex_color_texture.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
-        CreateRenderPipeline();
+
+        GetResourceSystem()->RequestResource("/ui/icons/chevron.png", [this](ResourceSharedPtr pResource) {
+            m_pChevron = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+
+            MaterialSpec ms;
+            ms.pBaseColorTexture = m_pChevron.get();
+            ms.blendMode = BlendMode::Additive;
+
+            m_ChevronMaterial = std::make_unique<Material>(ms);
+   
+            CreateRenderPipeline();
+        });        
     });
 
     m_Initialized = true;
@@ -34,8 +50,22 @@ void ThreatIndicatorRenderPass::CreateRenderPipeline()
         return;
     }
 
+    wgpu::BlendState blendState{
+        .color = {
+            .operation = wgpu::BlendOperation::Add,
+            .srcFactor = wgpu::BlendFactor::One,
+            .dstFactor = wgpu::BlendFactor::One
+        },
+        .alpha = {
+            .operation = wgpu::BlendOperation::Add,
+            .srcFactor = wgpu::BlendFactor::One,
+            .dstFactor = wgpu::BlendFactor::One
+        }
+    };
+
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
+        .format = GetWindow()->GetTextureFormat(),
+        .blend = &blendState
     };
 
     wgpu::FragmentState fragmentState{
@@ -44,10 +74,14 @@ void ThreatIndicatorRenderPass::CreateRenderPipeline()
         .targets = &colorTargetState
     };
 
-    // Pipeline layout with global uniforms
+    // Pipeline layout with global uniforms and material bind group
+    std::array<wgpu::BindGroupLayout, 2> bindGroupLayouts = {
+        GetRenderSystem()->GetGlobalUniformsLayout(),
+        m_ChevronMaterial->GetBindGroupLayout()
+    };
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
-        .bindGroupLayoutCount = 1,
-        .bindGroupLayouts = &GetRenderSystem()->GetGlobalUniformsLayout()
+        .bindGroupLayoutCount = static_cast<uint32_t>(bindGroupLayouts.size()),
+        .bindGroupLayouts = bindGroupLayouts.data()
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
@@ -65,7 +99,7 @@ void ThreatIndicatorRenderPass::CreateRenderPipeline()
         .vertex = {
             .module = m_pShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_C3)
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_C4_UV)
         },
         .primitive = {
             .topology = wgpu::PrimitiveTopology::TriangleList,
@@ -112,9 +146,10 @@ void ThreatIndicatorRenderPass::Render(wgpu::CommandEncoder& encoder)
     UpdateVertexBuffer();
 
     // Draw the threat markers if the pipeline is ready and we have vertices
-    if (m_RenderPipeline && m_VertexBuffer && m_VertexCount > 0)
+    if (m_RenderPipeline && m_ChevronMaterial && m_VertexBuffer && m_VertexCount > 0)
     {
         renderPass.SetPipeline(m_RenderPipeline);
+        renderPass.SetBindGroup(1, m_ChevronMaterial->GetBindGroup());
         renderPass.SetVertexBuffer(0, m_VertexBuffer);
         renderPass.Draw(m_VertexCount);
     }
@@ -153,12 +188,13 @@ void ThreatIndicatorRenderPass::UpdateVertexBuffer()
     }
 
     // Collect all vertices for all threat markers
-    std::vector<VertexP3C3> vertices;
-    vertices.reserve(threats.size() * 6); // 6 vertices per marker (2 triangles)
+    std::vector<VertexP3C4UV> vertices;
+    vertices.reserve(threats.size() * 6);
 
-    const float circleRadius = 10.0f; // 20 units diameter = 10 units radius
-    const float markerHalfSize = 2.0f; // Marker is 4x4 units
+    const float circleRadius = 15.0f;
+    const float markerHalfSize = 1.0f;
 
+    float yOffset = 0.0f;
     for (const Threat& threat : threats)
     {
         // Calculate direction from player to threat on XZ plane
@@ -183,25 +219,32 @@ void ThreatIndicatorRenderPass::UpdateVertexBuffer()
         // Create rotation matrix
         glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-        // Define marker vertices (arrow/triangle shape pointing along +Z before rotation)
-        glm::vec3 localVertices[6] = {
-            // Triangle pointing towards threat (along +Z)
-            glm::vec3(-markerHalfSize, 0.0f, -markerHalfSize), // Bottom-left
-            glm::vec3(markerHalfSize, 0.0f, -markerHalfSize),  // Bottom-right
-            glm::vec3(0.0f, 0.0f, markerHalfSize),             // Top (point)
-            // Back triangle (base)
-            glm::vec3(-markerHalfSize, 0.0f, -markerHalfSize), // Bottom-left
-            glm::vec3(0.0f, 0.0f, markerHalfSize),             // Top
-            glm::vec3(markerHalfSize, 0.0f, -markerHalfSize)   // Bottom-right
+        // Define marker vertices as a square (two triangles) pointing along +Z before rotation
+        struct VertexData {
+            glm::vec3 position;
+            glm::vec2 uv;
+        };
+
+        VertexData localVertices[6] = {
+            // First triangle (bottom-left, bottom-right, top-right)
+            { glm::vec3(-markerHalfSize, yOffset, -markerHalfSize), glm::vec2(0.0f, 1.0f) }, // Bottom-left
+            { glm::vec3(markerHalfSize, yOffset, -markerHalfSize),  glm::vec2(1.0f, 1.0f) }, // Bottom-right
+            { glm::vec3(markerHalfSize, yOffset, markerHalfSize),   glm::vec2(1.0f, 0.0f) }, // Top-right
+            // Second triangle (bottom-left, top-right, top-left)
+            { glm::vec3(-markerHalfSize, yOffset, -markerHalfSize), glm::vec2(0.0f, 1.0f) }, // Bottom-left
+            { glm::vec3(markerHalfSize, yOffset, markerHalfSize),   glm::vec2(1.0f, 0.0f) }, // Top-right
+            { glm::vec3(-markerHalfSize, yOffset, markerHalfSize),  glm::vec2(0.0f, 0.0f) }  // Top-left
         };
 
         // Transform and add vertices
-        glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f); // Red
+        glm::vec4 color = glm::vec4(0.75f, 0.0f, 0.0f, 0.8f);
         for (int i = 0; i < 6; i++)
         {
-            glm::vec3 worldPos = glm::vec3(rotation * glm::vec4(localVertices[i], 1.0f)) + markerCenter;
-            vertices.push_back({ worldPos, color });
+            glm::vec3 worldPos = glm::vec3(rotation * glm::vec4(localVertices[i].position, 1.0f)) + markerCenter;
+            vertices.push_back({ worldPos, color, localVertices[i].uv });
         }
+
+        yOffset += 0.1f;        
     }
 
     m_VertexCount = static_cast<uint32_t>(vertices.size());
@@ -213,11 +256,11 @@ void ThreatIndicatorRenderPass::UpdateVertexBuffer()
         wgpu::BufferDescriptor bufferDescriptor{
             .label = "Threat indicator vertex buffer",
             .usage = wgpu::BufferUsage::Vertex,
-            .size = vertices.size() * sizeof(VertexP3C3),
+            .size = vertices.size() * sizeof(VertexP3C4UV),
             .mappedAtCreation = true
         };
         m_VertexBuffer = device.CreateBuffer(&bufferDescriptor);
-        memcpy(m_VertexBuffer.GetMappedRange(), vertices.data(), vertices.size() * sizeof(VertexP3C3));
+        memcpy(m_VertexBuffer.GetMappedRange(), vertices.data(), vertices.size() * sizeof(VertexP3C4UV));
         m_VertexBuffer.Unmap();
     }
 }

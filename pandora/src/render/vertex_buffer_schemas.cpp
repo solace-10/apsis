@@ -1,4 +1,5 @@
 #include "render/vertex_buffer_schemas.hpp"
+#include "render/vertex_types.hpp"
 
 namespace WingsOfSteel
 {
@@ -61,6 +62,38 @@ VertexBufferSchemas::VertexBufferSchemas()
             .attributes = schema.attributes.data()
         };
     }
+
+    {
+        Schema& schema = GetSchema(VertexFormat::VERTEX_FORMAT_P3_C4_UV);
+        schema.attributes.push_back( // Position
+            {
+                .format = wgpu::VertexFormat::Float32x3,
+                .offset = 0,
+                .shaderLocation = 0
+            }
+        );
+        schema.attributes.push_back( // Color
+            {
+                .format = wgpu::VertexFormat::Float32x4,
+                .offset = 3 * sizeof(float),
+                .shaderLocation = 1
+            }
+        );
+        schema.attributes.push_back( // UV
+            {
+                .format = wgpu::VertexFormat::Float32x2,
+                .offset = 7 * sizeof(float),
+                .shaderLocation = 2
+            }
+        );
+
+        schema.layout = {
+            .arrayStride = sizeof(VertexP3C4UV),
+            .stepMode = wgpu::VertexStepMode::Vertex,
+            .attributeCount = schema.attributes.size(),
+            .attributes = schema.attributes.data()
+        };
+    } 
 }
 
 const wgpu::VertexBufferLayout* VertexBufferSchemas::GetLayout(VertexFormat vertexFormat) const

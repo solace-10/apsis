@@ -4,10 +4,18 @@
 #include <glm/vec4.hpp>
 #include <webgpu/webgpu_cpp.h>
 
+#include "core/smart_ptr.hpp"
 #include "resources/resource.fwd.hpp"
 
 namespace WingsOfSteel
 {
+
+enum class BlendMode
+{
+    None,
+    Blend,
+    Additive
+};
 
 struct MaterialSpec
 {
@@ -20,8 +28,10 @@ struct MaterialSpec
     ResourceTexture2D* pNormalTexture{ nullptr };
     ResourceTexture2D* pOcclusionTexture{ nullptr };
     ResourceTexture2D* pEmissiveTexture{ nullptr };
+    BlendMode blendMode{ BlendMode::None };
 };
 
+DECLARE_SMART_PTR(Material);
 class Material
 {
 public:
