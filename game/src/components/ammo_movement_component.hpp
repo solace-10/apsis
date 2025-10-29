@@ -24,7 +24,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         m_Range = DeserializeOptional<float>(json, "range", 100.0f);
         m_Speed = DeserializeRequired<float>(json, "speed");

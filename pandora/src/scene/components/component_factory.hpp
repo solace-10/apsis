@@ -6,6 +6,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include "core/serialization.hpp"
 #include "icomponent.hpp"
 #include "scene/entity.hpp"
 
@@ -15,11 +16,11 @@ namespace WingsOfSteel
 class ComponentFactory
 {
 private:
-    using EntityAdderFunc = std::function<void(Entity*, const nlohmann::json&)>;
-    
+    using EntityAdderFunc = std::function<void(Entity*, const ResourceDataStore*, const Json::Data&)>;
+
     inline static std::unordered_map<std::string, EntityAdderFunc>* sRegistry = nullptr;
 
-public:    
+public:
     template<typename T>
     static void Register(const std::string& typeName)
     {
@@ -28,23 +29,23 @@ public:
             sRegistry = new std::unordered_map<std::string, EntityAdderFunc>();
         }
 
-        (*sRegistry)[typeName] = [](Entity* pEntity, const nlohmann::json& jsonData) {
+        (*sRegistry)[typeName] = [](Entity* pEntity, const ResourceDataStore* pContext, const Json::Data& jsonData) {
             T& component = pEntity->AddComponent<T>();
-            component.Deserialize(jsonData);
+            component.Deserialize(pContext, jsonData);
         };
     }
 
-    static bool Create(Entity* pEntity, const std::string& typeName, const nlohmann::json& jsonData)
+    static bool Create(Entity* pEntity, const ResourceDataStore* pContext, const std::string& typeName, const Json::Data& jsonData)
     {
         if (!sRegistry)
         {
             return false;
         }
-        
+
         auto it = sRegistry->find(typeName);
         if (it != sRegistry->cend())
         {
-            it->second(pEntity, jsonData);
+            it->second(pEntity, pContext, jsonData);
             return true;
         }
 

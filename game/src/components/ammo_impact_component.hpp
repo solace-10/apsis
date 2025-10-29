@@ -24,7 +24,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         ArmorPenetration = DeserializeRequired<int32_t>(json, "armor_penetration");
         Damage = DeserializeRequired<int32_t>(json, "damage");

@@ -79,7 +79,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         bool hasRadius = DeserializeOptional<bool>(json, "has_radius", false);
         if (hasRadius)
@@ -90,7 +90,7 @@ public:
         {
             radius.reset();
         }
-        
+
         bool hasWidth = DeserializeOptional<bool>(json, "has_width", false);
         if (hasWidth)
         {
@@ -100,7 +100,7 @@ public:
         {
             width.reset();
         }
-        
+
         bool hasHeight = DeserializeOptional<bool>(json, "has_height", false);
         if (hasHeight)
         {
@@ -110,7 +110,7 @@ public:
         {
             height.reset();
         }
-        
+
         bool hasLength = DeserializeOptional<bool>(json, "has_length", false);
         if (hasLength)
         {
@@ -120,16 +120,16 @@ public:
         {
             length.reset();
         }
-        
+
         const auto& colorArray = json["color"];
         if (!colorArray.is_array() || colorArray.size() != 3)
         {
             Log::Error() << "Invalid color format";
             throw std::runtime_error("Invalid color format");
         }
-        color = Color(colorArray[0].get<float>(), colorArray[1].get<float>(), 
+        color = Color(colorArray[0].get<float>(), colorArray[1].get<float>(),
                      colorArray[2].get<float>());
-        
+
         shape = DeserializeEnum<DebugRenderShape>(json, "shape", DebugRenderShape::Cone);
     }
 };

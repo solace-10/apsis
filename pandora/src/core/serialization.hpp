@@ -4,6 +4,9 @@
 #include <string>
 
 #include <nlohmann/json.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 #include "core/smart_ptr.hpp"
 #include "core/result.hpp"
@@ -38,6 +41,15 @@ Result<DeserializationError, float> TryDeserializeFloat(const ResourceDataStore*
 
 bool DeserializeBool(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<bool> defaultValue = std::nullopt);
 Result<DeserializationError, bool> TryDeserializeBool(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<bool> defaultValue = std::nullopt);
+
+glm::vec2 DeserializeVec2(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec2> defaultValue = std::nullopt);
+Result<DeserializationError, glm::vec2> TryDeserializeVec2(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec2> defaultValue = std::nullopt);
+
+glm::vec3 DeserializeVec3(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec3> defaultValue = std::nullopt);
+Result<DeserializationError, glm::vec3> TryDeserializeVec3(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec3> defaultValue = std::nullopt);
+
+glm::vec4 DeserializeVec4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec4> defaultValue = std::nullopt);
+Result<DeserializationError, glm::vec4> TryDeserializeVec4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec4> defaultValue = std::nullopt);
 
 } // namespace Json
 } // namespace WingsOfSteel

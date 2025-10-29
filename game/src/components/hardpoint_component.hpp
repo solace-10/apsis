@@ -42,7 +42,7 @@ public:
     std::vector<Hardpoint> hardpoints;
 
     nlohmann::json Serialize() const override;
-    void Deserialize(const nlohmann::json& json) override;
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override;
 
 private:
     ResourceModelSharedPtr m_pResource;

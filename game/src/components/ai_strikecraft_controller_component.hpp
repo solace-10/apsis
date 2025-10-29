@@ -46,7 +46,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         if (json.contains("min_range")) m_MinRange = json["min_range"];
         if (json.contains("max_range")) m_MaxRange = json["max_range"];

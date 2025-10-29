@@ -62,7 +62,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         m_Range = DeserializeRequired<float>(json, "range");
         m_RateOfFire = DeserializeRequired<float>(json, "rate_of_fire");

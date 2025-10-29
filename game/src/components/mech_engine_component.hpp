@@ -20,7 +20,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         linearForce = DeserializeOptional<float>(json, "linear_force", 0.0f);
         torque = DeserializeOptional<float>(json, "torque", 0.0f);

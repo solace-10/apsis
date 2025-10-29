@@ -18,7 +18,7 @@ RigidBodyComponent::~RigidBodyComponent()
     }
 }
 
-void RigidBodyComponent::Deserialize(const nlohmann::json& json)
+void RigidBodyComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)
 {
     m_MotionType = DeserializeEnum<MotionType>(json, "motion_type", MotionType::Dynamic);
     m_Mass = DeserializeRequired<int32_t>(json, "mass");

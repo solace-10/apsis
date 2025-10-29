@@ -47,7 +47,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         position = DeserializeVec3(json, "position");
         maximumDrift = DeserializeVec3(json, "maximum_drift");

@@ -25,7 +25,7 @@ public:
     static void Build(const std::string& resourcePath, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback);
 
 private:
-    static void InstantiateComponents(EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath);
+    static void InstantiateComponents(EntitySharedPtr pEntity, const ResourceDataStore* pContext, const Json::Data& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath);
 };
 
 } // namespace WingsOfSteel

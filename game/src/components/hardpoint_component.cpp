@@ -40,25 +40,25 @@ nlohmann::json HardpointComponent::Serialize() const
     return json;
 }
 
-void HardpointComponent::Deserialize(const nlohmann::json& json)
+void HardpointComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)
 {
     using namespace WingsOfSteel;
 
     hardpoints.clear();
-    
+
     if (!json.contains("hardpoints"))
     {
         Log::Error() << "Missing required field: hardpoints";
         return;
     }
-    
+
     const auto& hardpointsArray = json["hardpoints"];
     if (!hardpointsArray.is_array())
     {
         Log::Error() << "Hardpoints field must be an array";
         return;
     }
-    
+
     for (const auto& hardpointJson : hardpointsArray)
     {
         Hardpoint hardpoint;

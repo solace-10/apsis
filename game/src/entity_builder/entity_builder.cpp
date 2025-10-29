@@ -31,7 +31,7 @@ void EntityBuilder::Build(SceneWeakPtr& pWeakScene, const std::string& prefabRes
         EntitySharedPtr pEntity = pScene->CreateEntity();
 
         ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
-        const nlohmann::json& jsonData = pDataStore->Data();
+        const Json::Data& jsonData = pDataStore->Data();
 
         std::vector<std::string> resourcesToLoad;
         auto resourcesIt = jsonData.find("resources");
@@ -48,13 +48,13 @@ void EntityBuilder::Build(SceneWeakPtr& pWeakScene, const std::string& prefabRes
 
         if (resourcesToLoad.empty())
         {
-            InstantiateComponents(pEntity, jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath);
+            InstantiateComponents(pEntity, pDataStore.get(), jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath);
         }
         else
         {
-            GetResourceSystem()->RequestResources(resourcesToLoad, [pEntity, jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath](std::unordered_map<std::string, ResourceSharedPtr>)
+            GetResourceSystem()->RequestResources(resourcesToLoad, [pEntity, pDataStore, jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath](std::unordered_map<std::string, ResourceSharedPtr>)
             {
-                InstantiateComponents(pEntity, jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath);
+                InstantiateComponents(pEntity, pDataStore.get(), jsonData, worldTransform, onEntityReadyCallback, prefabResourcePath);
             });
         }
     });
@@ -66,7 +66,7 @@ void EntityBuilder::Build(const std::string& prefabResourcePath, const glm::mat4
     Build(pScene, prefabResourcePath, worldTransform, onEntityReadyCallback);
 }
 
-void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohmann::json& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath)
+void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const ResourceDataStore* pContext, const Json::Data& jsonData, const glm::mat4& worldTransform, OnEntityReady onEntityReadyCallback, const std::string& prefabResourcePath)
 {
     auto componentsIt = jsonData.find("components");
     if (componentsIt != jsonData.cend() && componentsIt->is_array())
@@ -78,7 +78,7 @@ void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const nlohman
             {
                 const std::string typeName(*typeIt);
 
-                if (!ComponentFactory::Create(pEntity.get(), typeName, componentData))
+                if (!ComponentFactory::Create(pEntity.get(), pContext, typeName, componentData))
                 {
                     Log::Error() << "Don't know how to create component type '" << typeName << "' in '" << prefabResourcePath << "'.";
                     return;

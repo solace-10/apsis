@@ -33,7 +33,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         distance = DeserializeOptional<float>(json, "distance", 10.0f);
         orbitAngle = DeserializeOptional<float>(json, "orbit_angle", 0.0f);

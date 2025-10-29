@@ -28,7 +28,7 @@ public:
         return json;
     }
 
-    void Deserialize(const nlohmann::json& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         Health = DeserializeRequired<int32_t>(json, "health");
         Thickness = DeserializeOptional<int32_t>(json, "thickness", 10);

@@ -10,31 +10,35 @@ namespace WingsOfSteel::Json
 
 void DefaultErrorHandler(const ResourceDataStore* pContext, const std::string& key, DeserializationError error, const std::string& expectedType)
 {
+    const std::string contextPath = pContext ? pContext->GetPath() : "<no context>";
+
     if (error == DeserializationError::KeyNotFound)
     {
-        Log::Error() << pContext->GetPath() << ": failed to find key '" << key << "'.";
+        Log::Error() << contextPath << ": failed to find key '" << key << "'.";
     }
     else if (error == DeserializationError::TypeMismatch)
     {
-        Log::Error() << pContext->GetPath() << ": key '" << key << "' is not '" << expectedType << "'.";
+        Log::Error() << contextPath << ": key '" << key << "' is not '" << expectedType << "'.";
     }
     else
     {
-        Log::Error() << pContext->GetPath() << ": unhandled deserialization error '" << magic_enum::enum_name(error) << "'.";
+        Log::Error() << contextPath << ": unhandled deserialization error '" << magic_enum::enum_name(error) << "'.";
     }
 }
 
 Result<DeserializationError, const Data> DeserializeArray(const ResourceDataStore* pContext, const Data& data, const std::string& key)
 {
+    const std::string contextPath = pContext ? pContext->GetPath() : "<no context>";
+
     auto it = data.find(key);
     if (it == data.cend())
     {
-        Log::Warning() << pContext->GetPath() << ": failed to find key '" << key << "'.";
+        Log::Warning() << contextPath << ": failed to find key '" << key << "'.";
         return Result<DeserializationError, const Data>(DeserializationError::KeyNotFound);
     }
     else if (!it->is_array())
     {
-        Log::Warning() << pContext->GetPath() << ": key '" << key << "' is not an array.";
+        Log::Warning() << contextPath << ": key '" << key << "' is not an array.";
         return Result<DeserializationError, const Data>(DeserializationError::TypeMismatch);
     }
     else
@@ -45,15 +49,17 @@ Result<DeserializationError, const Data> DeserializeArray(const ResourceDataStor
 
 Result<DeserializationError, const Data> DeserializeObject(const ResourceDataStore* pContext, const Data& data, const std::string& key)
 {
+    const std::string contextPath = pContext ? pContext->GetPath() : "<no context>";
+
     auto it = data.find(key);
     if (it == data.cend())
     {
-        Log::Warning() << pContext->GetPath() << ": failed to find key '" << key << "'.";
+        Log::Warning() << contextPath << ": failed to find key '" << key << "'.";
         return Result<DeserializationError, const Data>(DeserializationError::KeyNotFound);
     }
     else if (!it->is_object())
     {
-        Log::Warning() << pContext->GetPath() << ": key '" << key << "' is not an object.";
+        Log::Warning() << contextPath << ": key '" << key << "' is not an object.";
         return Result<DeserializationError, const Data>(DeserializationError::TypeMismatch);
     }
     else
@@ -215,6 +221,123 @@ Result<DeserializationError, bool> TryDeserializeBool(const ResourceDataStore* p
     {
         const bool value = it->get<bool>();
         return Result<DeserializationError, bool>(value);
+    }
+}
+
+glm::vec2 DeserializeVec2(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec2> defaultValue /* = std::nullopt */)
+{
+    auto result = TryDeserializeVec2(pContext, data, key, defaultValue);
+    if (result.has_value())
+    {
+        return result.value();
+    }
+    else
+    {
+        DefaultErrorHandler(pContext, key, result.error(), "vec2");
+        return glm::vec2(0.0f);
+    }
+}
+
+Result<DeserializationError, glm::vec2> TryDeserializeVec2(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec2> defaultValue /* = std::nullopt */)
+{
+    auto it = data.find(key);
+    if (it == data.cend())
+    {
+        if (defaultValue.has_value())
+        {
+            return Result<DeserializationError, glm::vec2>(defaultValue.value());
+        }
+        else
+        {
+            return Result<DeserializationError, glm::vec2>(DeserializationError::KeyNotFound);
+        }
+    }
+    else if (!it->is_array() || it->size() != 2)
+    {
+        return Result<DeserializationError, glm::vec2>(DeserializationError::TypeMismatch);
+    }
+    else
+    {
+        const glm::vec2 value((*it)[0].get<float>(), (*it)[1].get<float>());
+        return Result<DeserializationError, glm::vec2>(value);
+    }
+}
+
+glm::vec3 DeserializeVec3(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec3> defaultValue /* = std::nullopt */)
+{
+    auto result = TryDeserializeVec3(pContext, data, key, defaultValue);
+    if (result.has_value())
+    {
+        return result.value();
+    }
+    else
+    {
+        DefaultErrorHandler(pContext, key, result.error(), "vec3");
+        return glm::vec3(0.0f);
+    }
+}
+
+Result<DeserializationError, glm::vec3> TryDeserializeVec3(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec3> defaultValue /* = std::nullopt */)
+{
+    auto it = data.find(key);
+    if (it == data.cend())
+    {
+        if (defaultValue.has_value())
+        {
+            return Result<DeserializationError, glm::vec3>(defaultValue.value());
+        }
+        else
+        {
+            return Result<DeserializationError, glm::vec3>(DeserializationError::KeyNotFound);
+        }
+    }
+    else if (!it->is_array() || it->size() != 3)
+    {
+        return Result<DeserializationError, glm::vec3>(DeserializationError::TypeMismatch);
+    }
+    else
+    {
+        const glm::vec3 value((*it)[0].get<float>(), (*it)[1].get<float>(), (*it)[2].get<float>());
+        return Result<DeserializationError, glm::vec3>(value);
+    }
+}
+
+glm::vec4 DeserializeVec4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec4> defaultValue /* = std::nullopt */)
+{
+    auto result = TryDeserializeVec4(pContext, data, key, defaultValue);
+    if (result.has_value())
+    {
+        return result.value();
+    }
+    else
+    {
+        DefaultErrorHandler(pContext, key, result.error(), "vec4");
+        return glm::vec4(0.0f);
+    }
+}
+
+Result<DeserializationError, glm::vec4> TryDeserializeVec4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::vec4> defaultValue /* = std::nullopt */)
+{
+    auto it = data.find(key);
+    if (it == data.cend())
+    {
+        if (defaultValue.has_value())
+        {
+            return Result<DeserializationError, glm::vec4>(defaultValue.value());
+        }
+        else
+        {
+            return Result<DeserializationError, glm::vec4>(DeserializationError::KeyNotFound);
+        }
+    }
+    else if (!it->is_array() || it->size() != 4)
+    {
+        return Result<DeserializationError, glm::vec4>(DeserializationError::TypeMismatch);
+    }
+    else
+    {
+        const glm::vec4 value((*it)[0].get<float>(), (*it)[1].get<float>(), (*it)[2].get<float>(), (*it)[3].get<float>());
+        return Result<DeserializationError, glm::vec4>(value);
     }
 }
 
