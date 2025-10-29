@@ -31,7 +31,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        std::string factionStr = DeserializeRequired<std::string>(json, "value");
+        std::string factionStr = Json::DeserializeString(pContext, json, "value");
         auto faction = magic_enum::enum_cast<Faction>(factionStr);
         if (faction.has_value())
         {

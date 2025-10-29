@@ -43,7 +43,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        SetModel(DeserializeRequired<std::string>(json, "resource"));
+        SetModel(Json::DeserializeString(pContext, json, "resource"));
     }
 
 private:

@@ -146,6 +146,45 @@ Result<DeserializationError, uint32_t> TryDeserializeUnsignedInteger(const Resou
     }
 }
 
+int32_t DeserializeInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<int32_t> defaultValue /* = std::nullopt */)
+{
+    auto result = TryDeserializeInteger(pContext, data, key, defaultValue);
+    if (result.has_value())
+    {
+        return result.value();
+    }
+    else
+    {
+        DefaultErrorHandler(pContext, key, result.error(), "integer");
+        return 0;
+    }
+}
+
+Result<DeserializationError, int32_t> TryDeserializeInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<int32_t> defaultValue /* = std::nullopt */)
+{
+    auto it = data.find(key);
+    if (it == data.cend())
+    {
+        if (defaultValue.has_value())
+        {
+            return Result<DeserializationError, int32_t>(defaultValue.value());
+        }
+        else
+        {
+            return Result<DeserializationError, int32_t>(DeserializationError::KeyNotFound);
+        }
+    }
+    else if (!it->is_number_integer())
+    {
+        return Result<DeserializationError, int32_t>(DeserializationError::TypeMismatch);
+    }
+    else
+    {
+        const int32_t value = it->get<int32_t>();
+        return Result<DeserializationError, int32_t>(value);
+    }
+}
+
 float DeserializeFloat(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<float> defaultValue /* = std::nullopt */)
 {
     auto result = TryDeserializeFloat(pContext, data, key, defaultValue);

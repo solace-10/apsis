@@ -22,8 +22,8 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        linearForce = DeserializeOptional<float>(json, "linear_force", 0.0f);
-        torque = DeserializeOptional<float>(json, "torque", 0.0f);
+        linearForce = Json::DeserializeFloat(pContext, json, "linear_force", 0.0f);
+        torque = Json::DeserializeFloat(pContext, json, "torque", 0.0f);
     }
 };
 

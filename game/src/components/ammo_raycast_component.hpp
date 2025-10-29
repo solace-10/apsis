@@ -23,7 +23,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        m_RaycastLength = DeserializeRequired<float>(json, "raycast_length");
+        m_RaycastLength = Json::DeserializeFloat(pContext, json, "raycast_length");
     }
 
 private:

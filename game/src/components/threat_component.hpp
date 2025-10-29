@@ -24,7 +24,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        Value = DeserializeRequired<std::string>(json, "value");
+        Value = Json::DeserializeString(pContext, json, "value");
     }
 };
 

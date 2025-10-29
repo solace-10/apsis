@@ -21,16 +21,16 @@ RigidBodyComponent::~RigidBodyComponent()
 void RigidBodyComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)
 {
     m_MotionType = DeserializeEnum<MotionType>(json, "motion_type", MotionType::Dynamic);
-    m_Mass = DeserializeRequired<int32_t>(json, "mass");
-    m_LinearDamping = DeserializeRequired<float>(json, "linear_damping");
-    m_AngularDamping = DeserializeRequired<float>(json, "angular_damping");
-    m_LinearFactor = DeserializeVec3(json, "linear_factor");
-    m_AngularFactor = DeserializeVec3(json, "angular_factor");
+    m_Mass = Json::DeserializeInteger(pContext, json, "mass");
+    m_LinearDamping = Json::DeserializeFloat(pContext, json, "linear_damping");
+    m_AngularDamping = Json::DeserializeFloat(pContext, json, "angular_damping");
+    m_LinearFactor = Json::DeserializeVec3(pContext, json, "linear_factor");
+    m_AngularFactor = Json::DeserializeVec3(pContext, json, "angular_factor");
 
 
     assert((m_Mass > 0 && m_MotionType == MotionType::Dynamic) || (m_Mass == 0 && m_MotionType == MotionType::Static));
 
-    m_ResourcePath = DeserializeRequired<std::string>(json, "resource");
+    m_ResourcePath = Json::DeserializeString(pContext, json, "resource");
     GetResourceSystem()->RequestResource(m_ResourcePath, [this](ResourceSharedPtr pResource) {
         m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
 

@@ -30,8 +30,8 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        Health = DeserializeRequired<int32_t>(json, "health");
-        Thickness = DeserializeOptional<int32_t>(json, "thickness", 10);
+        Health = Json::DeserializeInteger(pContext, json, "health");
+        Thickness = Json::DeserializeInteger(pContext, json, "thickness", 10);
     }
 };
 

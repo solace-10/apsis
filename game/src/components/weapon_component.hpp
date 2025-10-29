@@ -64,11 +64,11 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        m_Range = DeserializeRequired<float>(json, "range");
-        m_RateOfFire = DeserializeRequired<float>(json, "rate_of_fire");
-        m_Ammo = DeserializeRequired<std::string>(json, "ammo");
+        m_Range = Json::DeserializeFloat(pContext, json, "range");
+        m_RateOfFire = Json::DeserializeFloat(pContext, json, "rate_of_fire");
+        m_Ammo = Json::DeserializeString(pContext, json, "ammo");
 
-        const std::string accuracy = DeserializeRequired<std::string>(json, "accuracy");
+        const std::string accuracy = Json::DeserializeString(pContext, json, "accuracy");
         if (accuracy == "perfect")
         {
             m_Accuracy = WeaponAccuracy::Perfect;

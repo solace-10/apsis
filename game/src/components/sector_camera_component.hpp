@@ -51,11 +51,11 @@ public:
     {
         position = DeserializeVec3(json, "position");
         maximumDrift = DeserializeVec3(json, "maximum_drift");
-        driftTimer = DeserializeRequired<float>(json, "drift_timer");
+        driftTimer = Json::DeserializeFloat(pContext, json, "drift_timer");
         target = DeserializeVec3(json, "target");
         positionVelocity = DeserializeVec3(json, "position_velocity");
         targetVelociy = DeserializeVec3(json, "target_velocity");
-        debugDraw = DeserializeOptional<bool>(json, "debug_draw", false);
+        debugDraw = Json::DeserializeBool(pContext, json, "debug_draw", false);
     }
 };
 

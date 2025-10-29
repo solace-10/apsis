@@ -35,11 +35,11 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        distance = DeserializeOptional<float>(json, "distance", 10.0f);
-        orbitAngle = DeserializeOptional<float>(json, "orbit_angle", 0.0f);
-        pitch = DeserializeOptional<float>(json, "pitch", 0.0f);
-        minimumPitch = DeserializeOptional<float>(json, "minimum_pitch", 0.0f);
-        maximumPitch = DeserializeOptional<float>(json, "maximum_pitch", 1.0f);
+        distance = Json::DeserializeFloat(pContext, json, "distance", 10.0f);
+        orbitAngle = Json::DeserializeFloat(pContext, json, "orbit_angle", 0.0f);
+        pitch = Json::DeserializeFloat(pContext, json, "pitch", 0.0f);
+        minimumPitch = Json::DeserializeFloat(pContext, json, "minimum_pitch", 0.0f);
+        maximumPitch = Json::DeserializeFloat(pContext, json, "maximum_pitch", 1.0f);
     }
 };
 

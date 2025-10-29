@@ -26,8 +26,8 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        m_Range = DeserializeOptional<float>(json, "range", 100.0f);
-        m_Speed = DeserializeRequired<float>(json, "speed");
+        m_Range = Json::DeserializeFloat(pContext, json, "range", 100.0f);
+        m_Speed = Json::DeserializeFloat(pContext, json, "speed");
     }
 
 private:

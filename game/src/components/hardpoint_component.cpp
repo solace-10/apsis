@@ -66,7 +66,7 @@ void HardpointComponent::Deserialize(const ResourceDataStore* pContext, const Js
         hardpoints.push_back(hardpoint);
     }
 
-    m_ResourcePath = DeserializeRequired<std::string>(json, "resource");
+    m_ResourcePath = Json::DeserializeString(pContext, json, "resource");
     GetResourceSystem()->RequestResource(m_ResourcePath, [this](ResourceSharedPtr pResource) {
         m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
 

@@ -36,6 +36,9 @@ Result<DeserializationError, std::string> TryDeserializeString(const ResourceDat
 uint32_t DeserializeUnsignedInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<uint32_t> defaultValue = std::nullopt);
 Result<DeserializationError, uint32_t> TryDeserializeUnsignedInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<uint32_t> defaultValue = std::nullopt);
 
+int32_t DeserializeInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<int32_t> defaultValue = std::nullopt);
+Result<DeserializationError, int32_t> TryDeserializeInteger(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<int32_t> defaultValue = std::nullopt);
+
 float DeserializeFloat(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<float> defaultValue = std::nullopt);
 Result<DeserializationError, float> TryDeserializeFloat(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<float> defaultValue = std::nullopt);
 

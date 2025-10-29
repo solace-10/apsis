@@ -81,40 +81,40 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        bool hasRadius = DeserializeOptional<bool>(json, "has_radius", false);
+        bool hasRadius = Json::DeserializeBool(pContext, json, "has_radius", false);
         if (hasRadius)
         {
-            radius = DeserializeRequired<float>(json, "radius");
+            radius = Json::DeserializeFloat(pContext, json, "radius");
         }
         else
         {
             radius.reset();
         }
 
-        bool hasWidth = DeserializeOptional<bool>(json, "has_width", false);
+        bool hasWidth = Json::DeserializeBool(pContext, json, "has_width", false);
         if (hasWidth)
         {
-            width = DeserializeRequired<float>(json, "width");
+            width = Json::DeserializeFloat(pContext, json, "width");
         }
         else
         {
             width.reset();
         }
 
-        bool hasHeight = DeserializeOptional<bool>(json, "has_height", false);
+        bool hasHeight = Json::DeserializeBool(pContext, json, "has_height", false);
         if (hasHeight)
         {
-            height = DeserializeRequired<float>(json, "height");
+            height = Json::DeserializeFloat(pContext, json, "height");
         }
         else
         {
             height.reset();
         }
 
-        bool hasLength = DeserializeOptional<bool>(json, "has_length", false);
+        bool hasLength = Json::DeserializeBool(pContext, json, "has_length", false);
         if (hasLength)
         {
-            length = DeserializeRequired<float>(json, "length");
+            length = Json::DeserializeFloat(pContext, json, "length");
         }
         else
         {

@@ -5,7 +5,8 @@
       "Bash(do echo \"Processing: $file\")",
       "Bash(done)",
       "Bash(sed:*)",
-      "Bash(cmake:*)"
+      "Bash(cmake:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
