@@ -19,13 +19,6 @@ public:
 
     glm::mat4 transform{ 1.0f };
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["transform"] = SerializeMat4(transform);
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         transform = Json::DeserializeMat4(pContext, json, "transform");

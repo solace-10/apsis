@@ -29,12 +29,6 @@ public:
     void ClearTarget() { m_Target.reset(); }
     const std::optional<glm::vec3>& GetTarget() const { return m_Target; }
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
     }

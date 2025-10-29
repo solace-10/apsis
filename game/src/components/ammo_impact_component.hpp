@@ -16,14 +16,6 @@ public:
     int32_t ArmorPenetration{0};
     int32_t Damage{10};
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["armor_penetration"] = ArmorPenetration;
-        json["damage"] = Damage;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         ArmorPenetration = Json::DeserializeInteger(pContext, json, "armor_penetration");

@@ -17,12 +17,6 @@ public:
     : m_pOwner(pOwner)
     {}
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
     }

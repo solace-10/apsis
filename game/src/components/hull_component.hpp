@@ -20,14 +20,6 @@ public:
     // This is used by ammo to calculate whether it punches through an entity or not.
     int32_t Thickness{10};
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["health"] = Health;
-        json["thickness"] = Thickness;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         Health = Json::DeserializeInteger(pContext, json, "health");

@@ -24,13 +24,6 @@ public:
     WingComponent() {}
     ~WingComponent() {}
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["value"] = ID;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         ID = Json::DeserializeUnsignedInteger(pContext, json, "value");

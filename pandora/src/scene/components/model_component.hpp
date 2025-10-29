@@ -33,14 +33,6 @@ public:
         });
     }
 
-
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["resource"] = m_ResourcePath;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         SetModel(Json::DeserializeString(pContext, json, "resource"));

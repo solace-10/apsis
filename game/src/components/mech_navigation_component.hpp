@@ -23,12 +23,6 @@ public:
     void SetAim(const glm::vec3& aim) { m_Aim = aim; }
     void ClearAim() { m_Aim.reset(); }
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
     }

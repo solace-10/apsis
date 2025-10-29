@@ -13,12 +13,6 @@ public:
     CarrierLaunchComponent() = default;
     ~CarrierLaunchComponent() = default;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
 

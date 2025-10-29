@@ -20,17 +20,6 @@ public:
 
     Camera camera;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["fov"] = camera.GetFieldOfView();
-        json["near_plane"] = camera.GetNearPlane();
-        json["far_plane"] = camera.GetFarPlane();
-        json["position"] = SerializeVec3(camera.GetPosition());
-        json["target"] = SerializeVec3(camera.GetTarget());
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         float fov = Json::DeserializeFloat(pContext, json, "fov", 45.0f);

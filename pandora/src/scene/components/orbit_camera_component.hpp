@@ -22,17 +22,6 @@ public:
     float maximumPitch = 1.0f;
     EntityWeakPtr anchorEntity;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["distance"] = distance;
-        json["orbit_angle"] = orbitAngle;
-        json["pitch"] = pitch;
-        json["minimum_pitch"] = minimumPitch;
-        json["maximum_pitch"] = maximumPitch;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         distance = Json::DeserializeFloat(pContext, json, "distance", 10.0f);

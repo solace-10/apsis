@@ -16,14 +16,6 @@ public:
     void SetRange(float value) { m_Range = value; }
     float GetSpeed() const { return m_Speed; }
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["range"] = m_Range;
-        json["speed"] = m_Speed;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         m_Range = Json::DeserializeFloat(pContext, json, "range", 100.0f);

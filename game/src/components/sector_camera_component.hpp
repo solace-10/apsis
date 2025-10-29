@@ -34,19 +34,6 @@ public:
     EntityWeakPtr anchorEntity;
     bool debugDraw{false};
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["position"] = SerializeVec3(position);
-        json["maximum_drift"] = SerializeVec3(maximumDrift);
-        json["drift_timer"] = driftTimer;
-        json["target"] = SerializeVec3(target);
-        json["position_velocity"] = SerializeVec3(positionVelocity);
-        json["target_velocity"] = SerializeVec3(targetVelociy);
-        json["debug_draw"] = debugDraw;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         position = Json::DeserializeVec3(pContext, json, "position");

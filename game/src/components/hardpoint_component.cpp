@@ -6,16 +6,6 @@
 namespace WingsOfSteel
 {
 
-nlohmann::json Hardpoint::Serialize() const
-{
-    nlohmann::json json;
-    json["name"] = m_Name;
-    json["weapon"] = m_Weapon;
-    json["arc_min_degrees"] = m_ArcMinDegrees;
-    json["arc_max_degrees"] = m_ArcMaxDegrees;
-    return json;
-}
-
 void Hardpoint::Deserialize(const ResourceDataStore* pContext, const nlohmann::json& json)
 {
     m_Name = Json::DeserializeString(pContext, json, "name");
@@ -23,21 +13,6 @@ void Hardpoint::Deserialize(const ResourceDataStore* pContext, const nlohmann::j
     m_ArcMinDegrees = Json::DeserializeFloat(pContext, json, "arc_min_degrees");
     m_ArcMaxDegrees = Json::DeserializeFloat(pContext, json, "arc_max_degrees");
     m_AutomatedTargeting = Json::DeserializeBool(pContext, json, "automated_targeting", true);
-}
-
-nlohmann::json HardpointComponent::Serialize() const
-{
-    nlohmann::json json;
-    nlohmann::json hardpointsArray = nlohmann::json::array();
-    
-    for (const auto& hardpoint : hardpoints)
-    {
-        hardpointsArray.push_back(hardpoint.Serialize());
-    }
-    
-    json["hardpoints"] = hardpointsArray;
-    json["resource"] = m_ResourcePath;
-    return json;
 }
 
 void HardpointComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)

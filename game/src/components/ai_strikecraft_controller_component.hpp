@@ -32,19 +32,8 @@ public:
         , m_LastTargetPosition(0.0f)
         , m_BreakDirection(1.0f, 0.0f, 0.0f)
     {}
-    
-    ~AIStrikecraftControllerComponent() {}
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["min_range"] = m_MinRange;
-        json["max_range"] = m_MaxRange;
-        json["firing_angle"] = m_FiringAngle;
-        json["attack_duration"] = m_AttackDuration;
-        json["break_duration"] = m_BreakDuration;
-        return json;
-    }
+    ~AIStrikecraftControllerComponent() {}
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {

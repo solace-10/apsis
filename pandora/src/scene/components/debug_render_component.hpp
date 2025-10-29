@@ -29,56 +29,6 @@ public:
     Color color = Color::White;
     DebugRenderShape shape = DebugRenderShape::Cone;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        
-        if (radius.has_value())
-        {
-            json["radius"] = radius.value();
-            json["has_radius"] = true;
-        }
-        else
-        {
-            json["has_radius"] = false;
-        }
-        
-        if (width.has_value())
-        {
-            json["width"] = width.value();
-            json["has_width"] = true;
-        }
-        else
-        {
-            json["has_width"] = false;
-        }
-        
-        if (height.has_value())
-        {
-            json["height"] = height.value();
-            json["has_height"] = true;
-        }
-        else
-        {
-            json["has_height"] = false;
-        }
-        
-        if (length.has_value())
-        {
-            json["length"] = length.value();
-            json["has_length"] = true;
-        }
-        else
-        {
-            json["has_length"] = false;
-        }
-        
-        json["color"] = nlohmann::json::array({color.r, color.g, color.b});
-        json["shape"] = static_cast<int>(shape);
-        
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         bool hasRadius = Json::DeserializeBool(pContext, json, "has_radius", false);

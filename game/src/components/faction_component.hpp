@@ -22,13 +22,6 @@ public:
 
     Faction Value;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["value"] = magic_enum::enum_name(Value);
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         std::string factionStr = Json::DeserializeString(pContext, json, "value");

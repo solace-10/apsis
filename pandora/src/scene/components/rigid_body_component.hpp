@@ -77,19 +77,6 @@ public:
     const glm::vec3 GetUpVector() const;
     const glm::vec3 GetRightVector() const;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["motion_type"] = static_cast<int>(m_MotionType);
-        json["mass"] = m_Mass;
-        json["linear_damping"] = m_LinearDamping;
-        json["angular_damping"] = m_AngularDamping;
-        json["linear_velocity"] = SerializeVec3(GetLinearVelocity());
-        json["angular_velocity"] = SerializeVec3(GetAngularVelocity());
-
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override;
 
     void SetOwner(EntitySharedPtr pOwner);

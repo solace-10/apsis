@@ -14,13 +14,6 @@ public:
 
     float GetRaycastLength() const { return m_RaycastLength; }
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["raycast_length"] = m_RaycastLength;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         m_RaycastLength = Json::DeserializeFloat(pContext, json, "raycast_length");

@@ -29,8 +29,7 @@ struct Hardpoint
     EntitySharedPtr m_pEntity;
     EntityWeakPtr m_pParent;
     bool m_AutomatedTargeting{ true };
-    
-    nlohmann::json Serialize() const;
+
     void Deserialize(const ResourceDataStore* pContext, const nlohmann::json& json);
 };
 
@@ -41,7 +40,6 @@ public:
     ~HardpointComponent() = default;
     std::vector<Hardpoint> hardpoints;
 
-    nlohmann::json Serialize() const override;
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override;
 
 private:

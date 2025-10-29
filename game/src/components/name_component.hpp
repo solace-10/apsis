@@ -16,13 +16,6 @@ public:
 
     std::string Value;
 
-    nlohmann::json Serialize() const override
-    {
-        nlohmann::json json;
-        json["value"] = Value;
-        return json;
-    }
-
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         Value = Json::DeserializeString(pContext, json, "value");
