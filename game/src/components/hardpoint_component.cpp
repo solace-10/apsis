@@ -16,13 +16,13 @@ nlohmann::json Hardpoint::Serialize() const
     return json;
 }
 
-void Hardpoint::Deserialize(const nlohmann::json& json)
+void Hardpoint::Deserialize(const ResourceDataStore* pContext, const nlohmann::json& json)
 {
-    m_Name = IComponent::DeserializeRequired<std::string>(json, "name");
-    m_Weapon = IComponent::DeserializeOptional<std::string>(json, "weapon", "");
-    m_ArcMinDegrees = IComponent::DeserializeRequired<float>(json, "arc_min_degrees");
-    m_ArcMaxDegrees = IComponent::DeserializeRequired<float>(json, "arc_max_degrees");
-    m_AutomatedTargeting = IComponent::DeserializeOptional<bool>(json, "automated_targeting", true);
+    m_Name = Json::DeserializeString(pContext, json, "name");
+    m_Weapon = Json::DeserializeString(pContext, json, "weapon", "");
+    m_ArcMinDegrees = Json::DeserializeFloat(pContext, json, "arc_min_degrees");
+    m_ArcMaxDegrees = Json::DeserializeFloat(pContext, json, "arc_max_degrees");
+    m_AutomatedTargeting = Json::DeserializeBool(pContext, json, "automated_targeting", true);
 }
 
 nlohmann::json HardpointComponent::Serialize() const
@@ -62,7 +62,7 @@ void HardpointComponent::Deserialize(const ResourceDataStore* pContext, const Js
     for (const auto& hardpointJson : hardpointsArray)
     {
         Hardpoint hardpoint;
-        hardpoint.Deserialize(hardpointJson);
+        hardpoint.Deserialize(pContext, hardpointJson);
         hardpoints.push_back(hardpoint);
     }
 

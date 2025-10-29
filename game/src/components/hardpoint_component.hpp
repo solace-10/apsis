@@ -31,7 +31,7 @@ struct Hardpoint
     bool m_AutomatedTargeting{ true };
     
     nlohmann::json Serialize() const;
-    void Deserialize(const nlohmann::json& json);
+    void Deserialize(const ResourceDataStore* pContext, const nlohmann::json& json);
 };
 
 class HardpointComponent : public IComponent

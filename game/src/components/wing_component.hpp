@@ -33,7 +33,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        ID = DeserializeRequired<WingID>(json, "value");
+        ID = Json::DeserializeUnsignedInteger(pContext, json, "value");
     }
 
     WingID ID{0};

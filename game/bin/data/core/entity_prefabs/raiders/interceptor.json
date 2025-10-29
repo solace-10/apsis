@@ -11,7 +11,7 @@
         {
             "type": "rigid_body",
             "resource": "/models/raiders/interceptor.glb",
-            "motion_type": 1,
+            "motion_type": "Dynamic",
             "mass": 10,
             "linear_damping": 0.5,
             "angular_damping": 0.5,

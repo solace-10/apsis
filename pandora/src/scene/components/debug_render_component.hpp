@@ -130,7 +130,7 @@ public:
         color = Color(colorArray[0].get<float>(), colorArray[1].get<float>(),
                      colorArray[2].get<float>());
 
-        shape = DeserializeEnum<DebugRenderShape>(json, "shape", DebugRenderShape::Cone);
+        shape = Json::DeserializeEnum<DebugRenderShape>(pContext, json, "shape", DebugRenderShape::Cone);
     }
 };
 

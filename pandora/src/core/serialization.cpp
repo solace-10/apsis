@@ -380,4 +380,51 @@ Result<DeserializationError, glm::vec4> TryDeserializeVec4(const ResourceDataSto
     }
 }
 
+glm::mat4 DeserializeMat4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::mat4> defaultValue /* = std::nullopt */)
+{
+    auto result = TryDeserializeMat4(pContext, data, key, defaultValue);
+    if (result.has_value())
+    {
+        return result.value();
+    }
+    else
+    {
+        DefaultErrorHandler(pContext, key, result.error(), "mat4");
+        return glm::mat4(1.0f);
+    }
+}
+
+Result<DeserializationError, glm::mat4> TryDeserializeMat4(const ResourceDataStore* pContext, const Data& data, const std::string& key, std::optional<glm::mat4> defaultValue /* = std::nullopt */)
+{
+    auto it = data.find(key);
+    if (it == data.cend())
+    {
+        if (defaultValue.has_value())
+        {
+            return Result<DeserializationError, glm::mat4>(defaultValue.value());
+        }
+        else
+        {
+            return Result<DeserializationError, glm::mat4>(DeserializationError::KeyNotFound);
+        }
+    }
+    else if (!it->is_array() || it->size() != 16)
+    {
+        return Result<DeserializationError, glm::mat4>(DeserializationError::TypeMismatch);
+    }
+    else
+    {
+        glm::mat4 result;
+        int index = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                result[i][j] = (*it)[index++].get<float>();
+            }
+        }
+        return Result<DeserializationError, glm::mat4>(result);
+    }
+}
+
 } // namespace WingsOfSteel

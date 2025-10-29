@@ -20,7 +20,7 @@ RigidBodyComponent::~RigidBodyComponent()
 
 void RigidBodyComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)
 {
-    m_MotionType = DeserializeEnum<MotionType>(json, "motion_type", MotionType::Dynamic);
+    m_MotionType = Json::DeserializeEnum<MotionType>(pContext, json, "motion_type", MotionType::Dynamic);
     m_Mass = Json::DeserializeInteger(pContext, json, "mass");
     m_LinearDamping = Json::DeserializeFloat(pContext, json, "linear_damping");
     m_AngularDamping = Json::DeserializeFloat(pContext, json, "angular_damping");

@@ -49,12 +49,12 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        position = DeserializeVec3(json, "position");
-        maximumDrift = DeserializeVec3(json, "maximum_drift");
+        position = Json::DeserializeVec3(pContext, json, "position");
+        maximumDrift = Json::DeserializeVec3(pContext, json, "maximum_drift");
         driftTimer = Json::DeserializeFloat(pContext, json, "drift_timer");
-        target = DeserializeVec3(json, "target");
-        positionVelocity = DeserializeVec3(json, "position_velocity");
-        targetVelociy = DeserializeVec3(json, "target_velocity");
+        target = Json::DeserializeVec3(pContext, json, "target");
+        positionVelocity = Json::DeserializeVec3(pContext, json, "position_velocity");
+        targetVelociy = Json::DeserializeVec3(pContext, json, "target_velocity");
         debugDraw = Json::DeserializeBool(pContext, json, "debug_draw", false);
     }
 };

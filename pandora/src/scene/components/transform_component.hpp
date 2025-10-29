@@ -28,7 +28,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        transform = DeserializeMat4(json, "transform");
+        transform = Json::DeserializeMat4(pContext, json, "transform");
     }
 };
 
