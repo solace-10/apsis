@@ -125,6 +125,7 @@ CollisionShapeConvexHull::CollisionShapeConvexHull(const ConvexHullVertices& ver
 {
     auto pConvexHullShape = std::make_unique<btConvexHullShape>(reinterpret_cast<const btScalar*>(vertices.data()), static_cast<int>(vertices.size()), static_cast<int>(sizeof(glm::vec3)));
     pConvexHullShape->optimizeConvexHull();
+    pConvexHullShape->initializePolyhedralFeatures();
     pConvexHullShape->setUserPointer(this);
     m_pShape = std::move(pConvexHullShape);
 }
