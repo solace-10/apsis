@@ -10,13 +10,16 @@
         },
         {
             "type": "rigid_body",
-            "resource": "/models/raiders/bomber.glb",
             "motion_type": "Dynamic",
             "mass": 10,
             "linear_damping": 0.5,
             "angular_damping": 0.5,
             "linear_factor": [ 1.0, 0.5, 1.0 ],
-            "angular_factor": [ 0.0, 1.0, 0.0 ]
+            "angular_factor": [ 0.0, 1.0, 0.0 ],
+            "shape": {
+                "type": "ConvexHull",
+                "resource": "/models/raiders/bomber.glb"
+            }
         },
         {
             "type": "hull",

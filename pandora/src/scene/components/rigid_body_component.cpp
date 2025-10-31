@@ -2,6 +2,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "core/serialization.hpp"
 #include "pandora.hpp"
 #include "physics/collision_shape.hpp"
 #include "resources/resource_system.hpp"
@@ -18,52 +19,93 @@ RigidBodyComponent::~RigidBodyComponent()
     }
 }
 
-void RigidBodyComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& json)
+void RigidBodyComponent::Deserialize(const ResourceDataStore* pContext, const Json::Data& jsonData)
 {
-    m_MotionType = Json::DeserializeEnum<MotionType>(pContext, json, "motion_type", MotionType::Dynamic);
-    m_Mass = Json::DeserializeInteger(pContext, json, "mass");
-    m_LinearDamping = Json::DeserializeFloat(pContext, json, "linear_damping");
-    m_AngularDamping = Json::DeserializeFloat(pContext, json, "angular_damping");
-    m_LinearFactor = Json::DeserializeVec3(pContext, json, "linear_factor");
-    m_AngularFactor = Json::DeserializeVec3(pContext, json, "angular_factor");
-
+    m_MotionType = Json::DeserializeEnum<MotionType>(pContext, jsonData, "motion_type", MotionType::Dynamic);
+    m_Mass = Json::DeserializeInteger(pContext, jsonData, "mass");
+    m_LinearDamping = Json::DeserializeFloat(pContext, jsonData, "linear_damping");
+    m_AngularDamping = Json::DeserializeFloat(pContext, jsonData, "angular_damping");
+    m_LinearFactor = Json::DeserializeVec3(pContext, jsonData, "linear_factor");
+    m_AngularFactor = Json::DeserializeVec3(pContext, jsonData, "angular_factor");
 
     assert((m_Mass > 0 && m_MotionType == MotionType::Dynamic) || (m_Mass == 0 && m_MotionType == MotionType::Static));
 
-    m_ResourcePath = Json::DeserializeString(pContext, json, "resource");
-    GetResourceSystem()->RequestResource(m_ResourcePath, [this](ResourceSharedPtr pResource) {
-        m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
+    DeserializeShape(pContext, jsonData);
+}
 
-        btTransform worldTransform;
-        worldTransform.setFromOpenGLMatrix(glm::value_ptr(GetWorldTransform()));
-        m_pMotionState = std::make_unique<btDefaultMotionState>(worldTransform);
+void RigidBodyComponent::DeserializeShape(const ResourceDataStore* pContext, const Json::Data& jsonData)
+{
+    auto shapeDataResult = Json::DeserializeObject(pContext, jsonData, "shape");
+    if (!shapeDataResult.has_value())
+    {
+        Log::Error() << pContext->GetPath() << ": Rigid body needs to have a shape.";
+        return;
+    }
 
-        m_pShape = m_pResource->GetCollisionShape();
-        btCollisionShape* pCollisionShape = m_pShape->GetBulletShape();
-        btVector3 localInertia(0.0f, 0.0f, 0.0f);
-        if (m_MotionType == MotionType::Dynamic)
-        {
-            pCollisionShape->calculateLocalInertia(static_cast<btScalar>(m_Mass), localInertia);
-        }
+    const Json::Data& shapeData = shapeDataResult.value();
+    CollisionShape::Type shapeType = Json::DeserializeEnum<CollisionShape::Type>(pContext, shapeData, "type", CollisionShape::Type::Sphere);
+    if (shapeType == CollisionShape::Type::Sphere)
+    {
+        const float radius = Json::DeserializeFloat(pContext, shapeData, "radius", 1.0f);
+        BuildRigidBody();
+    }
+    else if (shapeType == CollisionShape::Type::Box)
+    {
+        const glm::vec3 dimensions = Json::DeserializeVec3(pContext, shapeData, "dimensions", glm::vec3(1.0f, 1.0f, 1.0f));
+        BuildRigidBody();
+    }
+    else if (shapeType == CollisionShape::Type::ConvexHull)
+    {
+        const std::string& resourcePath = Json::DeserializeString(pContext, shapeData, "resource");
+        GetResourceSystem()->RequestResource(resourcePath, [this](ResourceSharedPtr pResource) {
+            m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
+            m_pShape = m_pResource->GetCollisionShape();
+            BuildRigidBody();
+        });
+    }
+    else
+    {
+        Log::Error() << pContext->GetPath() << ": Unsupported collision shape.";
+        return;
+    }
+}
 
-        btRigidBody::btRigidBodyConstructionInfo rbInfo(
-            static_cast<btScalar>(m_Mass),
-            m_pMotionState.get(),
-            m_pShape->GetBulletShape(),
-            localInertia);
+void RigidBodyComponent::BuildRigidBody()
+{
+    if (!m_pShape)
+    {
+        Log::Error() << "Rigid body can't be built without a shape.";
+        return;
+    }
 
-        rbInfo.m_linearDamping = m_LinearDamping;
-        rbInfo.m_angularDamping = m_AngularDamping;
+    btTransform worldTransform;
+    worldTransform.setFromOpenGLMatrix(glm::value_ptr(GetWorldTransform()));
+    m_pMotionState = std::make_unique<btDefaultMotionState>(worldTransform);
 
-        m_pRigidBody = std::make_unique<btRigidBody>(rbInfo);
-        m_pRigidBody->setActivationState(DISABLE_DEACTIVATION);
-        m_pRigidBody->setCollisionFlags(m_pRigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        m_pRigidBody->setLinearFactor(btVector3(m_LinearFactor.x, m_LinearFactor.y, m_LinearFactor.z));
-        m_pRigidBody->setAngularFactor(btVector3(m_AngularFactor.x, m_AngularFactor.y, m_AngularFactor.z));
-        m_pRigidBody->setUserPointer(this);
+    btCollisionShape* pCollisionShape = m_pShape->GetBulletShape();
+    btVector3 localInertia(0.0f, 0.0f, 0.0f);
+    if (m_MotionType == MotionType::Dynamic)
+    {
+        pCollisionShape->calculateLocalInertia(static_cast<btScalar>(m_Mass), localInertia);
+    }
 
-        CalculateInvInertiaTensorWorld();
-    });
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(
+        static_cast<btScalar>(m_Mass),
+        m_pMotionState.get(),
+        m_pShape->GetBulletShape(),
+        localInertia);
+
+    rbInfo.m_linearDamping = m_LinearDamping;
+    rbInfo.m_angularDamping = m_AngularDamping;
+
+    m_pRigidBody = std::make_unique<btRigidBody>(rbInfo);
+    m_pRigidBody->setActivationState(DISABLE_DEACTIVATION);
+    m_pRigidBody->setCollisionFlags(m_pRigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    m_pRigidBody->setLinearFactor(btVector3(m_LinearFactor.x, m_LinearFactor.y, m_LinearFactor.z));
+    m_pRigidBody->setAngularFactor(btVector3(m_AngularFactor.x, m_AngularFactor.y, m_AngularFactor.z));
+    m_pRigidBody->setUserPointer(this);
+
+    CalculateInvInertiaTensorWorld();
 }
 
 glm::vec3 RigidBodyComponent::GetPosition() const
@@ -121,7 +163,7 @@ void RigidBodyComponent::SetAngularDamping(float value)
 
 glm::mat4x4 RigidBodyComponent::GetWorldTransform() const
 {
-    // It is possible for a component not to have a rigid body between component creation and 
+    // It is possible for a component not to have a rigid body between component creation and
     // loading of the ResourceModel which will be used to generate the convex hull.
     // In that case, we return the transform the rigid body will have once it is created.
     if (m_pRigidBody && m_pMotionState)
@@ -247,13 +289,13 @@ EntitySharedPtr RigidBodyComponent::GetEntityFromRigidBody(const btRigidBody* pR
     {
         return nullptr;
     }
-    
+
     EntityUserData* pUserData = static_cast<EntityUserData*>(pRigidBody->getUserPointer());
     if (!pUserData)
     {
         return nullptr;
     }
-    
+
     return pUserData->entity.lock();
 }
 

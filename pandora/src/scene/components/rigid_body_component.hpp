@@ -77,7 +77,7 @@ public:
     const glm::vec3 GetUpVector() const;
     const glm::vec3 GetRightVector() const;
 
-    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override;
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& jsonData) override;
 
     void SetOwner(EntitySharedPtr pOwner);
     EntityWeakPtr GetOwner() { return m_pOwner; }
@@ -86,6 +86,8 @@ public:
     static EntitySharedPtr GetEntityFromRigidBody(const btRigidBody* pRigidBody);
 
 private:
+    void DeserializeShape(const ResourceDataStore* pContext, const Json::Data& jsonData);
+    void BuildRigidBody();
     void CalculateInvInertiaTensorWorld();
 
     CollisionShapeSharedPtr m_pShape;
