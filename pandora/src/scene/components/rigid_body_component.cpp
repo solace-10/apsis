@@ -47,11 +47,20 @@ void RigidBodyComponent::DeserializeShape(const ResourceDataStore* pContext, con
     if (shapeType == CollisionShape::Type::Sphere)
     {
         const float radius = Json::DeserializeFloat(pContext, shapeData, "radius", 1.0f);
+        m_pShape = std::make_shared<CollisionShapeSphere>(radius);
         BuildRigidBody();
     }
     else if (shapeType == CollisionShape::Type::Box)
     {
         const glm::vec3 dimensions = Json::DeserializeVec3(pContext, shapeData, "dimensions", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_pShape = std::make_shared<CollisionShapeBox>(dimensions.x, dimensions.y, dimensions.z);
+        BuildRigidBody();
+    }
+    else if (shapeType == CollisionShape::Type::Cylinder)
+    {
+        const CollisionShapeCylinder::Axis axis = Json::DeserializeEnum<CollisionShapeCylinder::Axis>(pContext, shapeData, "axis", CollisionShapeCylinder::Axis::Y);
+        const glm::vec3 dimensions = Json::DeserializeVec3(pContext, shapeData, "dimensions", glm::vec3(1.0f, 1.0f, 1.0f));
+        m_pShape = std::make_shared<CollisionShapeCylinder>(axis, dimensions.x, dimensions.y, dimensions.z);
         BuildRigidBody();
     }
     else if (shapeType == CollisionShape::Type::ConvexHull)
