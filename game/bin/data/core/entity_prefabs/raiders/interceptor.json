@@ -17,8 +17,8 @@
             "linear_factor": [ 1.0, 0.5, 1.0 ],
             "angular_factor": [ 0.0, 1.0, 0.0 ],
             "shape": {
-                "type": "ConvexHull",
-                "resource": "/models/raiders/interceptor.glb"
+                "type": "Box",
+                "dimensions": [ 4, 2, 5 ]
             }
         },
         {

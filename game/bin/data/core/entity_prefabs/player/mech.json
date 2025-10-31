@@ -17,8 +17,9 @@
             "linear_factor": [ 1.0, 0.0, 1.0 ],
             "angular_factor": [ 0.0, 1.0, 0.0 ],
             "shape": {
-                "type": "ConvexHull",
-                "resource": "/models/player/mech.glb"
+                "type": "Cylinder",
+                "axis": "Y",
+                "dimensions": [ 6, 8, 6 ]
             }
         },
         {
