@@ -516,6 +516,8 @@ void ResourceModel::SetupCollisionShape()
             {
                 ConvexHullVertices convexHullVertices;
                 auto& mesh = m_pModel->meshes[meshId.value()];
+                const glm::mat4& nodeTransform = node.GetTransform();
+
                 for (auto& primitive : mesh.primitives)
                 {
                     const int positionAttribute = primitive.attributes["POSITION"];
@@ -528,7 +530,9 @@ void ResourceModel::SetupCollisionShape()
                     for (size_t i = 0; i < accessor.count; i++)
                     {
                         const float* pData = reinterpret_cast<const float*>(pPositionData);
-                        convexHullVertices.push_back(glm::vec3(pData[0], pData[1], pData[2]));
+                        const glm::vec3 position(pData[0], pData[1], pData[2]);
+                        const glm::vec3 transformedPosition = glm::vec3(nodeTransform * glm::vec4(position, 1.0f));
+                        convexHullVertices.push_back(transformedPosition);
                         pPositionData += arrayStride;
                     }
                 }
