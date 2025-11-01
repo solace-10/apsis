@@ -1,0 +1,26 @@
+{
+    "resources": [
+        "/models/player/mech_energy_shield.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/player/mech_energy_shield.glb"
+        },
+        {
+            "type": "ghost",
+            "shape": {
+                "type": "Sphere",
+                "radius": 10
+            }
+        },
+        {
+            "type": "faction",
+            "value": "Allied"
+        },
+        {
+            "type": "shield",
+            "value": 0
+        }
+    ]
+}

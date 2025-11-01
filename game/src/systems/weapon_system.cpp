@@ -4,6 +4,7 @@
 
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
+#include <scene/components/ghost_component.hpp>
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
@@ -336,7 +337,7 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
                 const glm::vec3 aimDirection = glm::normalize(glm::vec3(localRotationTransform * hardpointWorldTransform[2]));
                 const glm::vec3 raycastEnd = raycastStart + aimDirection * weaponComponent.m_Range;
                 std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(raycastStart, raycastEnd);
-                if (raycastResult.has_value() && raycastResult->pEntity && raycastResult->pEntity->HasComponent<FactionComponent>())
+                if (raycastResult.has_value() && raycastResult->pEntity && raycastResult->pEntity->HasComponent<FactionComponent>() && !raycastResult->pEntity->HasComponent<GhostComponent>())
                 {
                     const FactionComponent& otherFactionComponent = raycastResult->pEntity->GetComponent<FactionComponent>();
                     if (factionComponent.Value == otherFactionComponent.Value)

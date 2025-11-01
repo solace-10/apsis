@@ -7,6 +7,7 @@
 #include <resources/resource_system.hpp>
 #include <scene/components/component_factory.hpp>
 #include <scene/components/entity_reference_component.hpp>
+#include <scene/components/ghost_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/scene.hpp>
@@ -103,8 +104,16 @@ void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const Resourc
 
     if (pEntity->HasComponent<RigidBodyComponent>())
     {
-        pEntity->GetComponent<RigidBodyComponent>().SetOwner(pEntity);
-        pEntity->GetComponent<RigidBodyComponent>().SetWorldTransform(worldTransform);
+        RigidBodyComponent& rigidBodyComponent = pEntity->GetComponent<RigidBodyComponent>();
+        rigidBodyComponent.SetOwner(pEntity);
+        rigidBodyComponent.SetWorldTransform(worldTransform);
+    }
+
+    if (pEntity->HasComponent<GhostComponent>())
+    {
+        GhostComponent& ghostComponent = pEntity->GetComponent<GhostComponent>();
+        ghostComponent.SetOwner(pEntity);
+        ghostComponent.SetWorldTransform(worldTransform);
     }
 
     if (pEntity->HasComponent<EntityReferenceComponent>())

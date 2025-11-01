@@ -34,6 +34,9 @@ public:
     void OnRigidBodyCreated(entt::registry& registry, entt::entity entity);
     void OnRigidBodyDestroyed(entt::registry& registry, entt::entity entity);
 
+    void OnGhostComponentCreated(entt::registry& registry, entt::entity entity);
+    void OnGhostComponentDestroyed(entt::registry& registry, entt::entity entity);
+
     PhysicsVisualization* GetVisualization() { return m_pPhysicsVisualization.get(); }
 
     struct RaycastResult
@@ -65,6 +68,7 @@ private:
     };
 
     std::vector<EntityToAdd> m_EntitiesToAdd;
+    std::vector<EntityToAdd> m_GhostEntitiesToAdd;
 };
 
 } // namespace WingsOfSteel

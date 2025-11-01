@@ -2,10 +2,12 @@
 
 #include "pandora.hpp"
 #include "physics/physics_visualization.hpp"
+#include "scene/components/ghost_component.hpp"
 #include "scene/components/rigid_body_component.hpp"
 #include "scene/components/transform_component.hpp"
 #include "scene/scene.hpp"
 
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <algorithm>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -31,6 +33,8 @@ PhysicsSimulationSystem::~PhysicsSimulationSystem()
 {
     m_pScene->GetRegistry().on_construct<RigidBodyComponent>().disconnect<&PhysicsSimulationSystem::OnRigidBodyCreated>(this);
     m_pScene->GetRegistry().on_destroy<RigidBodyComponent>().disconnect<&PhysicsSimulationSystem::OnRigidBodyDestroyed>(this);
+    m_pScene->GetRegistry().on_construct<GhostComponent>().disconnect<&PhysicsSimulationSystem::OnGhostComponentCreated>(this);
+    m_pScene->GetRegistry().on_destroy<GhostComponent>().disconnect<&PhysicsSimulationSystem::OnGhostComponentDestroyed>(this);
 }
 
 void PhysicsSimulationSystem::Initialize(Scene* pScene)
@@ -38,6 +42,8 @@ void PhysicsSimulationSystem::Initialize(Scene* pScene)
     m_pScene = pScene;
     m_pScene->GetRegistry().on_construct<RigidBodyComponent>().connect<&PhysicsSimulationSystem::OnRigidBodyCreated>(this);
     m_pScene->GetRegistry().on_destroy<RigidBodyComponent>().connect<&PhysicsSimulationSystem::OnRigidBodyDestroyed>(this);
+    m_pScene->GetRegistry().on_construct<GhostComponent>().connect<&PhysicsSimulationSystem::OnGhostComponentCreated>(this);
+    m_pScene->GetRegistry().on_destroy<GhostComponent>().connect<&PhysicsSimulationSystem::OnGhostComponentDestroyed>(this);
 }
 
 void PhysicsSimulationSystem::Update(float delta)
@@ -54,9 +60,26 @@ void PhysicsSimulationSystem::Update(float delta)
             }
         }
 
-        m_EntitiesToAdd.erase(std::remove_if(m_EntitiesToAdd.begin(), m_EntitiesToAdd.end(), 
-            [](const EntityToAdd& entityToAdd) { return entityToAdd.added; }), 
+        m_EntitiesToAdd.erase(std::remove_if(m_EntitiesToAdd.begin(), m_EntitiesToAdd.end(),
+                                  [](const EntityToAdd& entityToAdd) { return entityToAdd.added; }),
             m_EntitiesToAdd.end());
+    }
+
+    if (!m_GhostEntitiesToAdd.empty())
+    {
+        for (auto& entityToAdd : m_GhostEntitiesToAdd)
+        {
+            GhostComponent& ghostComponent = m_pScene->GetRegistry().get<GhostComponent>(entityToAdd.entity);
+            if (ghostComponent.GetBulletGhostObject())
+            {
+                m_pWorld->addCollisionObject(ghostComponent.GetBulletGhostObject());
+                entityToAdd.added = true;
+            }
+        }
+
+        m_GhostEntitiesToAdd.erase(std::remove_if(m_GhostEntitiesToAdd.begin(), m_GhostEntitiesToAdd.end(),
+                                       [](const EntityToAdd& entityToAdd) { return entityToAdd.added; }),
+            m_GhostEntitiesToAdd.end());
     }
 
     m_pWorld->stepSimulation(delta, 5);
@@ -92,6 +115,28 @@ void PhysicsSimulationSystem::OnRigidBodyDestroyed(entt::registry& registry, ent
     }
 }
 
+void PhysicsSimulationSystem::OnGhostComponentCreated(entt::registry& registry, entt::entity entity)
+{
+    GhostComponent& ghostComponent = m_pScene->GetRegistry().get<GhostComponent>(entity);
+    if (ghostComponent.GetBulletGhostObject())
+    {
+        m_pWorld->addCollisionObject(ghostComponent.GetBulletGhostObject());
+    }
+    else
+    {
+        m_GhostEntitiesToAdd.emplace_back(entity);
+    }
+}
+
+void PhysicsSimulationSystem::OnGhostComponentDestroyed(entt::registry& registry, entt::entity entity)
+{
+    GhostComponent& ghostComponent = registry.get<GhostComponent>(entity);
+    if (ghostComponent.GetBulletGhostObject())
+    {
+        m_pWorld->removeCollisionObject(ghostComponent.GetBulletGhostObject());
+    }
+}
+
 std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::Raycast(const glm::vec3& from, const glm::vec3& to)
 {
     btVector3 btFrom(from.x, from.y, from.z);
@@ -107,10 +152,22 @@ std::optional<PhysicsSimulationSystem::RaycastResult> PhysicsSimulationSystem::R
 
         // Find the entity associated with the hit collision object
         const btCollisionObject* pCollisionObject = rayCallback.m_collisionObject;
-        const btRigidBody* pRigidBody = reinterpret_cast<const btRigidBody*>(pCollisionObject);
-        result.pEntity = RigidBodyComponent::GetEntityFromRigidBody(pRigidBody);
 
-        return result;
+        // Try to cast to rigid body first
+        const btRigidBody* pRigidBody = btRigidBody::upcast(pCollisionObject);
+        if (pRigidBody)
+        {
+            result.pEntity = RigidBodyComponent::GetEntityFromRigidBody(pRigidBody);
+            return result;
+        }
+
+        // If not a rigid body, try ghost object
+        const btGhostObject* pGhostObject = btGhostObject::upcast(pCollisionObject);
+        if (pGhostObject)
+        {
+            result.pEntity = GhostComponent::GetEntityFromGhostObject(pGhostObject);
+            return result;
+        }
     }
 
     return std::nullopt;
