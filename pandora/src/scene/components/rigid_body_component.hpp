@@ -10,7 +10,7 @@
 #include <glm/vec3.hpp>
 
 #include "core/smart_ptr.hpp"
-#include "icomponent.hpp"
+#include "collision_component.hpp"
 #include "component_factory.hpp"
 #include "scene/entity.hpp"
 #include "resources/resource_model.hpp"
@@ -20,8 +20,6 @@ class btMotionState;
 
 namespace WingsOfSteel
 {
-
-DECLARE_SMART_PTR(CollisionShape);
 
 // Safe wrapper for storing Entity weak_ptr in Bullet's void* user pointer
 struct EntityUserData
@@ -39,7 +37,7 @@ enum class MotionType
 };
 
 REGISTER_COMPONENT(RigidBodyComponent, "rigid_body")
-class RigidBodyComponent : public IComponent
+class RigidBodyComponent : public CollisionComponent
 {
 public:
     RigidBodyComponent() = default;
@@ -86,11 +84,9 @@ public:
     static EntitySharedPtr GetEntityFromRigidBody(const btRigidBody* pRigidBody);
 
 private:
-    void DeserializeShape(const ResourceDataStore* pContext, const Json::Data& jsonData);
     void BuildRigidBody();
     void CalculateInvInertiaTensorWorld();
 
-    CollisionShapeSharedPtr m_pShape;
     std::unique_ptr<btRigidBody> m_pRigidBody;
     std::unique_ptr<btMotionState> m_pMotionState;
     MotionType m_MotionType{ MotionType::Dynamic };
@@ -101,10 +97,6 @@ private:
     glm::vec3 m_LinearFactor{ 1.0f, 1.0f, 1.0f };
     glm::vec3 m_AngularFactor{ 1.0f, 1.0f, 1.0f };
     glm::mat3x3 m_InvInertiaTensorWorld{ 1.0f };
-    ResourceModelSharedPtr m_pResource;
-    std::string m_ResourcePath;
-    std::optional<glm::mat4> m_WorldTransform;
-    EntityWeakPtr m_pOwner;
     std::unique_ptr<EntityUserData> m_pUserData;
 };
 
