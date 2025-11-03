@@ -11,7 +11,7 @@
             "type": "ghost",
             "shape": {
                 "type": "Sphere",
-                "radius": 10
+                "radius": 7
             }
         },
         {

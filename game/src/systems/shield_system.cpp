@@ -9,7 +9,6 @@
 #include <scene/scene.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
-#include "components/faction_component.hpp"
 #include "components/shield_component.hpp"
 
 namespace WingsOfSteel
@@ -26,9 +25,8 @@ void ShieldSystem::Initialize(Scene* pScene)
 void ShieldSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<ShieldComponent, TransformComponent, const FactionComponent>();
-    view.each([delta, this](const auto entity, ShieldComponent& shieldComponent, TransformComponent& transformComponent, const FactionComponent& factionComponent) {
-        glm::mat4 rootWorldTransform{ 1.0f };
+    auto view = registry.view<ShieldComponent, GhostComponent>();
+    view.each([delta, this](const auto entity, ShieldComponent& shieldComponent, GhostComponent& ghostComponent) {
         EntitySharedPtr pShieldEntity = shieldComponent.GetOwner().lock();
         if (!pShieldEntity)
         {
@@ -36,11 +34,13 @@ void ShieldSystem::Update(float delta)
         }
 
         EntitySharedPtr pParentEntity = pShieldEntity->GetParent().lock();
-        if (pParentEntity)
+        if (!pParentEntity)
         {
-            rootWorldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
-            transformComponent.transform = rootWorldTransform;
+            return;
         }
+
+        const glm::mat4& worldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
+        ghostComponent.SetWorldTransform(worldTransform);
     });
 }
 

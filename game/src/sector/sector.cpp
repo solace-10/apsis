@@ -16,6 +16,7 @@
 
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "components/shield_component.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "entity_builder/entity_builder.hpp"
@@ -178,13 +179,21 @@ void Sector::SpawnPlayerFleet()
             );
 
             SceneWeakPtr pLocalWeakScene = pScene->GetWeakPtr();
-            EntityBuilder::Build(pLocalWeakScene, "/entity_prefabs/player/mech_energy_shield.json", glm::mat4(1.0f), [pLocalWeakScene](EntitySharedPtr pShieldEntity) {
+            EntityBuilder::Build(pLocalWeakScene, "/entity_prefabs/player/mech_energy_shield.json", glm::mat4(1.0f), [pLocalWeakScene, pMechEntity](EntitySharedPtr pShieldEntity) {
                 SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pLocalWeakScene.lock());
                 if (!pScene)
                 {
                     return;
-                }           
-                              
+                }
+
+                if (!pShieldEntity->HasComponent<ShieldComponent>())
+                {
+                    Log::Error() << "Mech's shield has no ShieldComponent.";
+                    return;
+                }
+
+                pShieldEntity->SetParent(pMechEntity);
+                pShieldEntity->GetComponent<ShieldComponent>().SetOwner(pShieldEntity);
             });
         }
     });
