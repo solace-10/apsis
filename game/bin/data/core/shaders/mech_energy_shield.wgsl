@@ -11,7 +11,8 @@ struct VertexOutput
     @builtin(position) position: vec4f,
     @location(0) worldPosition: vec3f,
     @location(1) worldNormal: vec3f,
-    @location(2) uv: vec2f
+    @location(2) normal: vec3f,
+    @location(3) uv: vec2f
 };
 
 struct LocalUniforms
@@ -42,6 +43,7 @@ struct InstanceUniforms
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * modelMatrix * vec4f(in.position, 1.0);
     out.worldPosition = (modelMatrix * vec4f(in.position, 1.0)).xyz;
     out.worldNormal = (modelMatrix * vec4f(in.normal, 0.0)).xyz;
+    out.normal = in.normal;
     out.uv = in.uv;
     return out;
 }
@@ -57,8 +59,10 @@ struct InstanceUniforms
     let ambientLight = vec3f(0.12, 0.42, 0.42);
     let ambientStrength = vec3f(0.1);
 
+    let baseIntensity = max(0, in.normal.z);
+    let shieldColor = vec4f(1.0, 0.1, 0.0, baseIntensity * baseIntensity);
 
     let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
-    //return vec4f(in.worldNormal, 1.0);
+    return shieldColor;
     return vec4f(ambientLight * ambientStrength + objectColor * diffuseStrength, 1);
 }

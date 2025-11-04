@@ -34,35 +34,21 @@ ThreatIndicatorRenderPass::ThreatIndicatorRenderPass()
             ms.pBaseColorTexture = m_pChevron.get();
             ms.blendMode = BlendMode::Additive;
 
-            m_ChevronMaterial = std::make_unique<Material>(ms);
+            m_pChevronMaterial = std::make_unique<Material>(ms);
    
             CreateRenderPipeline();
         });        
     });
-
-    m_Initialized = true;
 }
 
 void ThreatIndicatorRenderPass::CreateRenderPipeline()
 {
-    if (!m_pShader || !m_Initialized)
+    if (!m_pShader || !m_pChevronMaterial)
     {
         return;
     }
 
-    wgpu::BlendState blendState{
-        .color = {
-            .operation = wgpu::BlendOperation::Add,
-            .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::One
-        },
-        .alpha = {
-            .operation = wgpu::BlendOperation::Add,
-            .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::One
-        }
-    };
-
+    wgpu::BlendState blendState = m_pChevronMaterial->GetBlendState();
     wgpu::ColorTargetState colorTargetState{
         .format = GetWindow()->GetTextureFormat(),
         .blend = &blendState
@@ -77,7 +63,7 @@ void ThreatIndicatorRenderPass::CreateRenderPipeline()
     // Pipeline layout with global uniforms and material bind group
     std::array<wgpu::BindGroupLayout, 2> bindGroupLayouts = {
         GetRenderSystem()->GetGlobalUniformsLayout(),
-        m_ChevronMaterial->GetBindGroupLayout()
+        m_pChevronMaterial->GetBindGroupLayout()
     };
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
         .bindGroupLayoutCount = static_cast<uint32_t>(bindGroupLayouts.size()),
@@ -145,11 +131,10 @@ void ThreatIndicatorRenderPass::Render(wgpu::CommandEncoder& encoder)
 
     UpdateVertexBuffer();
 
-    // Draw the threat markers if the pipeline is ready and we have vertices
-    if (m_RenderPipeline && m_ChevronMaterial && m_VertexBuffer && m_VertexCount > 0)
+    if (m_RenderPipeline && m_pChevronMaterial && m_VertexBuffer && m_VertexCount > 0)
     {
         renderPass.SetPipeline(m_RenderPipeline);
-        renderPass.SetBindGroup(1, m_ChevronMaterial->GetBindGroup());
+        renderPass.SetBindGroup(1, m_pChevronMaterial->GetBindGroup());
         renderPass.SetVertexBuffer(0, m_VertexBuffer);
         renderPass.Draw(m_VertexCount);
     }

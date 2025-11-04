@@ -25,10 +25,9 @@ private:
 
     ResourceShaderSharedPtr m_pShader;
     ResourceTexture2DSharedPtr m_pChevron;
-    MaterialUniquePtr m_ChevronMaterial;
+    MaterialUniquePtr m_pChevronMaterial;
     wgpu::Buffer m_VertexBuffer;
     wgpu::RenderPipeline m_RenderPipeline;
-    bool m_Initialized = false;
     uint32_t m_VertexCount = 0;
 };
 
