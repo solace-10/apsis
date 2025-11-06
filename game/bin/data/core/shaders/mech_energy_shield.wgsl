@@ -25,6 +25,9 @@ struct InstanceUniforms
     transform: array<mat4x4<f32>, 256>
 };
 
+// Hexagon pattern constants
+const hexS = vec2f(1.0, 1.7320508); // sqrt(3)
+
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
 @group(2) @binding(0) var<uniform> uInstanceUniforms: InstanceUniforms;
@@ -34,6 +37,31 @@ struct InstanceUniforms
 //@group(3) @binding(3) var normalTexture: texture_2d<f32>;
 //@group(3) @binding(4) var occlusionTexture: texture_2d<f32>;
 //@group(3) @binding(5) var emissiveTexture: texture_2d<f32>;
+
+// Hexagon pattern functions (ported from hex.glsl)
+fn calcHexDistance(p: vec2f) -> f32
+{
+    let absP = abs(p);
+    return max(dot(absP, hexS * 0.5), absP.x);
+}
+
+fn calcHexOffset(uv: vec2f) -> vec2f
+{
+    let hexCenter = round(vec4f(uv, uv - vec2f(0.5, 1.0)) / vec4f(hexS.xyxy));
+    let offset = vec4f(uv - hexCenter.xy * hexS, uv - (hexCenter.zw + 0.5) * hexS);
+    return select(offset.zw, offset.xy, dot(offset.xy, offset.xy) < dot(offset.zw, offset.zw));
+}
+
+fn smoothStep(edge0: f32, edge1: f32, x: f32) -> f32
+{
+    let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
+}
+
+fn hexSmoothstep(resolution: f32, value: f32, thickness: f32) -> f32
+{
+    return smoothStep(thickness / resolution, 0.0, abs(value));
+}
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -48,21 +76,36 @@ struct InstanceUniforms
     return out;
 }
 
-@fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
+@fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f
 {
-    let lightPosition = vec3f(100.0, 100.0, 100.0);
-    let lightDir = normalize(lightPosition - in.worldPosition);
+    let jitterScale = 0.0025;
+    let jitter = array<vec2f, 4>(
+       vec2f(-1.0, -1.0) * jitterScale,
+       vec2f(-1.0, 1.0) * jitterScale,
+       vec2f(1.0, 1.0) * jitterScale,
+       vec2f(1.0, -1.0) * jitterScale
+    );
 
-    let NdotL = dot(in.worldNormal, lightDir);
+    var ringsPattern = vec3f(0.0);
+    let time = uGlobalUniforms.time * 1.5;
+    let resolution = 128.0;
 
-    var diffuseStrength = max(NdotL, 0.0);
-    let ambientLight = vec3f(0.12, 0.42, 0.42);
-    let ambientStrength = vec3f(0.1);
+    for (var i = 0; i < 4; i++)
+    {
+        let generatedUV = vec2(in.normal.x + 0.5 + jitter[i].x, in.normal.y + 0.5 + jitter[i].y);
+        let uv = generatedUV * 4.0;
 
-    let baseIntensity = max(0, in.normal.z);
-    let shieldColor = vec4f(1.0, 0.1, 0.0, baseIntensity * baseIntensity);
+        let uvLength = length(generatedUV * 2.0 - 1.0);
+        let animationPhase = cos(2.0 * (2.0 * uvLength - time));
+        let hexDist = calcHexDistance(calcHexOffset(uv));
 
-    let objectColor = textureSample(baseTexture, defaultSampler, in.uv).rgb;
-    return shieldColor;
-    return vec4f(ambientLight * ambientStrength + objectColor * diffuseStrength, 1);
+        ringsPattern += hexSmoothstep(resolution, abs(sin(hexDist * animationPhase * 10.0)), 18.0);
+    }
+
+    let ringsColor = ringsPattern / 4.0 * vec3f(0.5, 1.0, 1.0);
+    let finalColor = ringsColor + vec3(0.0f, 0.25f, 0.5f);
+
+	// Base shield intensity based on surface normal (mech's local forward = more visible)
+    let baseIntensity = max(0.0, in.normal.z);
+    return vec4f(finalColor, baseIntensity * baseIntensity);
 }
