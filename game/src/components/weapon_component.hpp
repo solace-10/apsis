@@ -23,6 +23,7 @@ enum class WeaponAccuracy
     High,
     Medium,
     Low,
+    Unused,
 
     Count
 };
@@ -43,6 +44,7 @@ public:
     bool m_WantsToFire{ false }; // A controller has requested this weapon to fire.
     bool m_AutomatedTargeting{ true }; // AI-controlled target acquisition.
     WeaponAccuracy m_Accuracy{ WeaponAccuracy::Perfect };
+    bool m_Dummy{ false }; // This weapon is a dummy and doesn't do anything; attached for visual interest but controlled by a different system.
 
     std::string m_Ammo;
 
@@ -55,11 +57,12 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        m_Range = Json::DeserializeFloat(pContext, json, "range");
-        m_RateOfFire = Json::DeserializeFloat(pContext, json, "rate_of_fire");
-        m_Ammo = Json::DeserializeString(pContext, json, "ammo");
+        m_Range = Json::DeserializeFloat(pContext, json, "range", 0.0f);
+        m_RateOfFire = Json::DeserializeFloat(pContext, json, "rate_of_fire", 0.0f);
+        m_Ammo = Json::DeserializeString(pContext, json, "ammo", "");
+        m_Dummy = Json::DeserializeBool(pContext, json, "dummy", false);
 
-        const std::string accuracy = Json::DeserializeString(pContext, json, "accuracy");
+        const std::string accuracy = Json::DeserializeString(pContext, json, "accuracy", "unused");
         if (accuracy == "perfect")
         {
             m_Accuracy = WeaponAccuracy::Perfect;
@@ -80,10 +83,14 @@ public:
         {
             m_Accuracy = WeaponAccuracy::Low;
         }
+        else if (accuracy == "unused")
+        {
+            m_Accuracy = WeaponAccuracy::Unused;
+        }
         else
         {
             Log::Error() << "Unable to deserialize WeaponComponent, invalid 'accuracy' value: '" << accuracy << "'. "
-                << "Value must be 'perfect', 'very_high', 'high', 'medium' or 'low'.";
+                << "Value must be 'perfect', 'very_high', 'high', 'medium', 'low' or 'unused'.";
         }
     }
 

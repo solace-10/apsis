@@ -15,18 +15,33 @@
 namespace WingsOfSteel
 {
 
+enum class ShieldState
+{
+    Inactive,
+    PoweringUp,
+    Active,
+    PoweringDown  
+};
+
 class ShieldComponent : public IComponent
 {
 public:
     ShieldComponent() = default;
 
-    // Owner: the Entity that has this component.
     void SetOwner(EntityWeakPtr pOwner) { m_pOwner = pOwner; }
     EntityWeakPtr GetOwner() { return m_pOwner; }
 
-    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& data) override
     {
+        PowerUpDuration = Json::DeserializeFloat(pContext, data, "power_up_duration", 0.0f);
+        PowerDownDuration = Json::DeserializeFloat(pContext, data, "power_down_duration", 0.0f);
     }
+
+    ShieldState CurrentState{ ShieldState::Inactive };
+    ShieldState WantedState{ ShieldState::Inactive };
+    float TransitionValue{ 0.0f };
+    float PowerUpDuration{ 0.0f };
+    float PowerDownDuration{ 0.0f };
 
 private:
     EntityWeakPtr m_pOwner;

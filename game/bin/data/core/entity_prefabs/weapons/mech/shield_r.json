@@ -1,0 +1,15 @@
+{
+    "resources": [
+        "/models/weapons/mech/shield_r.glb"
+    ],
+    "components": [
+        {
+            "type": "model",
+            "resource": "/models/weapons/mech/shield_r.glb"
+        },
+        {
+            "type": "weapon",
+            "dummy": true
+        }
+    ]
+}

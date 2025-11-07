@@ -162,14 +162,12 @@ void Sector::SpawnPlayerFleet()
             pMechEntity->AddComponent<PlayerControllerComponent>();
             pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pMechEntity;
 
-            /*
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
-                "/entity_prefabs/weapons/mech/autocannon_r.json",
+                "/entity_prefabs/weapons/mech/shield_r.json",
                 pMechEntity,
                 "RightArm",
                 false
             );
-            */
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
                 "/entity_prefabs/weapons/mech/rotary_cannon_l.json",
