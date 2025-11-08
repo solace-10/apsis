@@ -8,6 +8,7 @@
 
 #include "components/player_controller_component.hpp"
 #include "components/mech_navigation_component.hpp"
+#include "components/shield_component.hpp"
 #include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
@@ -70,7 +71,7 @@ void PlayerControllerSystem::Update(float delta)
     const glm::vec3 targetWorldPos = Game::Get()->GetSector()->GetSystem<CameraSystem>()->MouseToWorld(m_MousePosition);
 
     auto navigationView = registry.view<MechNavigationComponent, const PlayerControllerComponent>();
-    navigationView.each([this, targetWorldPos](const auto entity, MechNavigationComponent& mechNavigationComponent, const PlayerControllerComponent& playerControllerComponent) {
+    navigationView.each([this, targetWorldPos](const auto entityHandle, MechNavigationComponent& mechNavigationComponent, const PlayerControllerComponent& playerControllerComponent) {
         const std::optional<glm::vec2> movementDirection = GetMovementDirection();
         if (movementDirection.has_value())
         {
@@ -87,7 +88,7 @@ void PlayerControllerSystem::Update(float delta)
     });
 
     auto weaponsView = registry.view<WeaponComponent>();
-    weaponsView.each([this, targetWorldPos](const auto entity, WeaponComponent& weaponComponent) {
+    weaponsView.each([this, targetWorldPos](const auto entityHandle, WeaponComponent& weaponComponent) {
         EntitySharedPtr pParentShip;
         EntitySharedPtr pOwnerEntity = weaponComponent.GetOwner().lock();
         if (pOwnerEntity)
@@ -105,6 +106,29 @@ void PlayerControllerSystem::Update(float delta)
                 else
                 {
                     weaponComponent.m_WantsToFire = it->second;
+                }
+            }
+        }
+    });
+
+    auto shieldsView = registry.view<ShieldComponent>();
+    shieldsView.each([this, targetWorldPos](const auto entityHandle, ShieldComponent& shieldComponent) {
+        EntitySharedPtr pParentShip;
+        EntitySharedPtr pOwnerEntity = shieldComponent.GetOwner().lock();
+        if (pOwnerEntity)
+        {
+            pParentShip = pOwnerEntity->GetParent().lock();
+            if (pParentShip && pParentShip->HasComponent<PlayerControllerComponent>())
+            {
+                auto it = m_WeaponActivations.find("RightArm");
+                if (it == m_WeaponActivations.cend())
+                {
+                    shieldComponent.WantedState = ShieldState::Inactive;
+                }
+                else
+                {
+                    const bool activated = it->second;
+                    shieldComponent.WantedState = activated ? ShieldState::Active : ShieldState::Inactive;
                 }
             }
         }

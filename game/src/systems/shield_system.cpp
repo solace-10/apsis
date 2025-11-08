@@ -5,6 +5,7 @@
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <scene/components/ghost_component.hpp>
+#include <scene/components/model_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
@@ -25,8 +26,8 @@ void ShieldSystem::Initialize(Scene* pScene)
 void ShieldSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<ShieldComponent, GhostComponent>();
-    view.each([delta, this](const auto entity, ShieldComponent& shieldComponent, GhostComponent& ghostComponent) {
+    auto view = registry.view<ShieldComponent, GhostComponent, ModelComponent>();
+    view.each([delta, this](const auto entity, ShieldComponent& shieldComponent, GhostComponent& ghostComponent, ModelComponent& modelComponent) {
         EntitySharedPtr pShieldEntity = shieldComponent.GetOwner().lock();
         if (!pShieldEntity)
         {
@@ -41,6 +42,15 @@ void ShieldSystem::Update(float delta)
 
         const glm::mat4& worldTransform = pParentEntity->GetComponent<TransformComponent>().transform;
         ghostComponent.SetWorldTransform(worldTransform);
+
+        modelComponent.SetShaderParameter("shield_damage", shieldComponent.ShieldDamage);
+        modelComponent.SetShaderParameter("shield_power", shieldComponent.ShieldPower);
+
+        shieldComponent.ShieldPower += delta;
+        if (shieldComponent.ShieldPower > 1.0f)
+        {
+            shieldComponent.ShieldPower = 0.0f;
+        }
     });
 }
 
