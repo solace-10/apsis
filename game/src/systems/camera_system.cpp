@@ -141,16 +141,8 @@ void CameraSystem::Update(float delta)
                 glm::sin(orbitCameraComponent.pitch),
                 glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch));
 
-            EntitySharedPtr pAnchorEntity = orbitCameraComponent.anchorEntity.lock();
-            glm::vec3 anchorPosition(0.0f);
-            if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
-            {
-                const glm::mat4& anchorTransform = pAnchorEntity->GetComponent<TransformComponent>().transform;
-                anchorPosition = glm::vec3(anchorTransform[3]);
-            }
-
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-            cameraComponent.camera.LookAt(anchorPosition + position * orbitCameraComponent.distance, anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+            cameraComponent.camera.LookAt(orbitCameraComponent.anchorPosition + position * orbitCameraComponent.distance, orbitCameraComponent.anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
         }
     }
 }

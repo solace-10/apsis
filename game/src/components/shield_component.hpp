@@ -42,6 +42,8 @@ public:
     float TransitionValue{ 0.0f };
     float PowerUpDuration{ 0.0f };
     float PowerDownDuration{ 0.0f };
+    float ShieldDamage{ 0.0f };
+    float ShieldPower{ 0.0f };
 
 private:
     EntityWeakPtr m_pOwner;

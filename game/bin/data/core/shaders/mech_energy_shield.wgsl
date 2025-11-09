@@ -25,6 +25,21 @@ struct InstanceUniforms
     transform: array<mat4x4<f32>, 256>
 };
 
+// The dynamic uniforms are packed into an array of 8 vec4fs.
+// We can access them through their location in the array, e.g. params[0].x for the first float.
+//
+// struct DynamicUniforms {
+//    params: array<vec4f, 8>,
+// }
+//
+// However, WGSL actually does allow us to access the raw buffer in a structured way, even if we
+// explicitly define it in code:
+
+struct DynamicUniforms {
+    shieldDamage: f32,
+    shieldPower: f32
+}
+
 // Hexagon pattern constants
 const hexS = vec2f(1.0, 1.7320508); // sqrt(3)
 
@@ -37,6 +52,7 @@ const hexS = vec2f(1.0, 1.7320508); // sqrt(3)
 //@group(3) @binding(3) var normalTexture: texture_2d<f32>;
 //@group(3) @binding(4) var occlusionTexture: texture_2d<f32>;
 //@group(3) @binding(5) var emissiveTexture: texture_2d<f32>;
+@group(3) @binding(6) var<uniform> uDynamicUniforms: DynamicUniforms;
 
 // Hexagon pattern functions (ported from hex.glsl)
 fn calcHexDistance(p: vec2f) -> f32
@@ -103,9 +119,10 @@ fn hexSmoothstep(resolution: f32, value: f32, thickness: f32) -> f32
     }
 
     let ringsColor = ringsPattern / 4.0 * vec3f(0.5, 1.0, 1.0);
-    let finalColor = ringsColor + vec3(0.0f, 0.25f, 0.5f);
+    let finalColor = ringsColor + vec3(0.0f, 0.25f, 0.5f) + vec3(uDynamicUniforms.shieldPower, uDynamicUniforms.shieldDamage, 0.0);
 
 	// Base shield intensity based on surface normal (mech's local forward = more visible)
     let baseIntensity = max(0.0, in.normal.z);
+    
     return vec4f(finalColor, baseIntensity * baseIntensity);
 }

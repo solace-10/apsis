@@ -83,6 +83,7 @@ void Encounter::Update(float delta)
         return;
     }
 
+    /*
     m_TimeToNextAction -= delta;
     if (m_TimeToNextAction < 0.0)
     {
@@ -103,6 +104,7 @@ void Encounter::Update(float delta)
             }
         }
     }
+    */
 
     DrawDebugUI();
 }
