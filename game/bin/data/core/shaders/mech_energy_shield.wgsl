@@ -119,10 +119,17 @@ fn hexSmoothstep(resolution: f32, value: f32, thickness: f32) -> f32
     }
 
     let ringsColor = ringsPattern / 4.0 * vec3f(0.5, 1.0, 1.0);
-    let finalColor = ringsColor + vec3(0.0f, 0.25f, 0.5f) + vec3(uDynamicUniforms.shieldPower, uDynamicUniforms.shieldDamage, 0.0);
+    let finalColor = ringsColor + vec3(0.0f, 0.25f, 0.5f);
 
 	// Base shield intensity based on surface normal (mech's local forward = more visible)
-    let baseIntensity = max(0.0, in.normal.z);
+    var baseIntensity = max(0.0, in.normal.z);
+    var v = uDynamicUniforms.shieldPower;
+    if (baseIntensity >= v)
+    {
+        baseIntensity = 0;
+    }
+    
+    //baseIntensity = min(0.0, baseIntensity - uDynamicUniforms.shieldPower);
     
     return vec4f(finalColor, baseIntensity * baseIntensity);
 }

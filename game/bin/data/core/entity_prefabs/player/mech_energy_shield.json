@@ -20,7 +20,8 @@
         },
         {
             "type": "shield",
-            "value": 0
+            "power_up_duration": 0.5,
+            "power_down_duration": 0.5
         }
     ]
 }
