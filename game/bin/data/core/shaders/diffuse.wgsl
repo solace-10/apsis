@@ -15,12 +15,12 @@ struct LocalUniforms
 
 struct InstanceUniforms
 {
-    transform: array<mat4x4<f32>, 256>
+    transform: array<mat4x4<f32>>
 };
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uLocalUniforms: LocalUniforms;
-@group(2) @binding(0) var<uniform> uInstanceUniforms: InstanceUniforms;
+@group(2) @binding(0) var<storage, read> uInstanceUniforms: InstanceUniforms;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
