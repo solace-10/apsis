@@ -1,2 +1,0 @@
-set VCVARS="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-wt -d .. cmd.exe /k hx . ; split-pane -d . --vertical --size 0.33 cmd.exe /k %VCVARS% ; split-pane -d .. --horizontal cmd.exe /k \"%VCVARS% && claude\"
