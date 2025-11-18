@@ -12,6 +12,7 @@
 #include "components/ammo_movement_component.hpp"
 #include "components/ammo_raycast_component.hpp"
 #include "components/hull_component.hpp"
+#include "components/shield_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
@@ -32,71 +33,80 @@ void AmmoSystem::Update(float delta)
     PhysicsSimulationSystem* pPhysicsSystem = GetActiveScene()->GetSystem<PhysicsSimulationSystem>();
 
     view.each([delta, this, pPhysicsSystem](
-        const auto entity, 
-        const TransformComponent& transformComponent, 
-        AmmoImpactComponent& ammoImpactComponent,
-        const AmmoRaycastComponent& ammoRaycastComponent, 
-        EntityReferenceComponent& entityReferenceComponent) {
-        
+                  const auto entityHandle,
+                  const TransformComponent& transformComponent,
+                  AmmoImpactComponent& ammoImpactComponent,
+                  const AmmoRaycastComponent& ammoRaycastComponent,
+                  EntityReferenceComponent& entityReferenceComponent) {
         glm::vec3 startPos = transformComponent.GetTranslation();
         glm::vec3 direction = transformComponent.GetForward();
         glm::vec3 endPos = startPos + direction * ammoRaycastComponent.GetRaycastLength();
 
-        std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(startPos, endPos);
-        if (raycastResult.has_value())
+        std::vector<PhysicsSimulationSystem::RaycastResult> raycastResults = pPhysicsSystem->RaycastAll(startPos, endPos);
+        if (raycastResults.empty())
         {
-            const auto& result = raycastResult.value();
-            GetDebugRender()->Line(
-                startPos,
-                endPos,
-                Color::Red
-            );
-
-            GetDebugRender()->Circle(
-                result.position,
-                glm::vec3(0.0f, 1.0f, 0.0f),
-                Color::Red,
-                0.2f,
-                8
-            );
-
-            EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
-            if (pAmmoEntity)
-            {
-                // TODO: Calculate penetration on hit.
-                EntitySharedPtr pHitEntity = result.pEntity;
-                if (pHitEntity)
-                {
-                    bool hitEntityStillAlive = true;
-                    ApplyHullDamage(pAmmoEntity, pHitEntity, hitEntityStillAlive);
-
-                    if (!hitEntityStillAlive)
-                    {
-                        Game::Get()->GetSector()->RemoveEntity(pHitEntity);
-                    }
-                }
-
-                // TODO: Handle armor penetration.
-                if (ammoImpactComponent.ArmorPenetration <= 0)
-                {
-                    Game::Get()->GetSector()->RemoveEntity(pAmmoEntity);
-                } 
-            }
+            GetDebugRender()->Line(startPos, endPos, Color::Yellow);
         }
         else
         {
-            GetDebugRender()->Line(
-                startPos,
-                endPos,
-                Color::Yellow
-            );
+            for (const auto& result : raycastResults)
+            {
+                bool hasHitTerminalEntity = false;
+                bool hasHitShieldEntity = false;
+                bool wasBlockedByShield = false;
+                EntitySharedPtr pAmmoEntity = entityReferenceComponent.GetOwner();
+                if (pAmmoEntity)
+                {
+                    EntitySharedPtr pHitEntity = result.pEntity;
+                    if (pHitEntity)
+                    {
+                        if (pHitEntity->HasComponent<ShieldComponent>())
+                        {
+                            hasHitShieldEntity = true;
+                            ShieldComponent& shieldComponent = pHitEntity->GetComponent<ShieldComponent>();
+                            if (shieldComponent.CurrentState == ShieldState::Active)
+                            {
+                                hasHitTerminalEntity = true;
+                                wasBlockedByShield = true;
+                            }
+                        }
+
+                        if (!hasHitShieldEntity && !wasBlockedByShield)
+                        {
+                            bool hitEntityStillAlive = true;
+                            ApplyHullDamage(pAmmoEntity, pHitEntity, hitEntityStillAlive);
+                            hasHitTerminalEntity = true;
+
+                            if (!hitEntityStillAlive)
+                            {
+                                Game::Get()->GetSector()->RemoveEntity(pHitEntity);
+                            }
+                        }
+
+                        if (hasHitTerminalEntity)
+                        {
+                            Game::Get()->GetSector()->RemoveEntity(pAmmoEntity);
+                        }
+                    }
+                }
+
+                if (hasHitTerminalEntity)
+                {
+                    GetDebugRender()->Line(startPos, result.position, Color::Red);
+                    GetDebugRender()->Circle(result.position, glm::vec3(0.0f, 1.0f, 0.0f), Color::Red, 0.2f, 8);
+                    break;
+                }
+                else
+                {
+                    GetDebugRender()->Line(startPos, endPos, Color::Yellow);
+                }
+            }
         }
     });
 
     // Advance the projectile and kill it if it has exceeded its maximum range.
     auto movementView = registry.view<TransformComponent, AmmoMovementComponent, EntityReferenceComponent>();
     movementView.each([delta, this, pPhysicsSystem](const auto entity, TransformComponent& transformComponent, AmmoMovementComponent& ammoMovementComponent, EntityReferenceComponent& entityReferenceComponent) {
-        
         const glm::vec3 startPos = transformComponent.GetTranslation();
         const glm::vec3 direction = transformComponent.GetForward();
 
@@ -131,9 +141,9 @@ void AmmoSystem::Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponen
 
     // Accuracy changes the initial forward vector of the ammo being fired.
     // Values are in degrees.
-    static const std::array<float, static_cast<size_t>(WeaponAccuracy::Count)> sAccuracyModifiers {
-        0.0f,  // Perfect
-        2.5f,  // Very high
+    static const std::array<float, static_cast<size_t>(WeaponAccuracy::Count)> sAccuracyModifiers{
+        0.0f, // Perfect
+        2.5f, // Very high
         5.0f, // High
         10.0f, // Medium
         15.0f, // Low
@@ -151,21 +161,19 @@ void AmmoSystem::Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponen
         pWeakScene,
         weaponComponent.m_Ammo,
         ammoTransform,
-        [weaponComponent](EntitySharedPtr pEntity)
-        {
+        [weaponComponent](EntitySharedPtr pEntity) {
             float range = weaponComponent.m_Range;
 
             if (pEntity->HasComponent<AmmoRaycastComponent>())
             {
-                range -= pEntity->GetComponent<AmmoRaycastComponent>().GetRaycastLength();    
+                range -= pEntity->GetComponent<AmmoRaycastComponent>().GetRaycastLength();
             }
 
             if (pEntity->HasComponent<AmmoMovementComponent>())
             {
                 pEntity->GetComponent<AmmoMovementComponent>().SetRange(range);
             }
-        }
-    );
+        });
 }
 
 void AmmoSystem::ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const
@@ -174,7 +182,7 @@ void AmmoSystem::ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pH
     {
         AmmoImpactComponent& ammoImpactComponent = pAmmoEntity->GetComponent<AmmoImpactComponent>();
         HullComponent& hullComponent = pHitEntity->GetComponent<HullComponent>();
-        
+
         hullComponent.Health -= ammoImpactComponent.Damage;
         ammoImpactComponent.ArmorPenetration -= hullComponent.Thickness;
         hitEntityStillAlive = (hullComponent.Health > 0.0f);
