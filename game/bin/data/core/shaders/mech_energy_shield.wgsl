@@ -6,13 +6,14 @@ struct VertexInput
     @location(2) uv: vec2f
 };
 
-struct VertexOutput 
+struct VertexOutput
 {
     @builtin(position) position: vec4f,
     @location(0) worldPosition: vec3f,
     @location(1) worldNormal: vec3f,
     @location(2) normal: vec3f,
-    @location(3) uv: vec2f
+    @location(3) uv: vec2f,
+    @location(4) @interpolate(flat) instanceIdx: u32
 };
 
 struct LocalUniforms
@@ -25,19 +26,16 @@ struct InstanceUniforms
     transform: array<mat4x4<f32>>
 };
 
-// The dynamic uniforms are packed into an array of 8 vec4fs.
-// We can access them through their location in the array, e.g. params[0].x for the first float.
-//
-// struct DynamicUniforms {
-//    params: array<vec4f, 8>,
-// }
-//
-// However, WGSL actually does allow us to access the raw buffer in a structured way, even if we
-// explicitly define it in code:
+// The dynamic uniforms are packed into an array of 8 vec4fs per instance.
+// The C++ side sends: array<vec4f, 8> for each instance (128 bytes per instance)
+// We need to match that layout when reading from the storage buffer.
 
 struct DynamicUniforms {
-    shieldDamage: f32,
-    shieldPower: f32
+    params: array<vec4f, 8>
+}
+
+struct DynamicUniformsArray {
+    data: array<DynamicUniforms>
 }
 
 // Hexagon pattern constants
@@ -52,7 +50,7 @@ const hexS = vec2f(1.0, 1.7320508); // sqrt(3)
 //@group(3) @binding(3) var normalTexture: texture_2d<f32>;
 //@group(3) @binding(4) var occlusionTexture: texture_2d<f32>;
 //@group(3) @binding(5) var emissiveTexture: texture_2d<f32>;
-@group(3) @binding(6) var<uniform> uDynamicUniforms: DynamicUniforms;
+@group(3) @binding(6) var<storage, read> uDynamicUniforms: DynamicUniformsArray;
 
 // Hexagon pattern functions (ported from hex.glsl)
 fn calcHexDistance(p: vec2f) -> f32
@@ -89,6 +87,7 @@ fn hexSmoothstep(resolution: f32, value: f32, thickness: f32) -> f32
     out.worldNormal = (modelMatrix * vec4f(in.normal, 0.0)).xyz;
     out.normal = in.normal;
     out.uv = in.uv;
+    out.instanceIdx = in.instanceIdx;
     return out;
 }
 
@@ -123,13 +122,14 @@ fn hexSmoothstep(resolution: f32, value: f32, thickness: f32) -> f32
 
 	// Base shield intensity based on surface normal (mech's local forward = more visible)
     var baseIntensity = max(0.0, in.normal.z);
-    var v = uDynamicUniforms.shieldPower;
-    if (baseIntensity >= v)
+    // shield_power is at offset 1, which is params[0].y (second component of first vec4)
+    var shieldPower = uDynamicUniforms.data[in.instanceIdx].params[0].y;
+    if (baseIntensity >= shieldPower)
     {
         baseIntensity = 0;
     }
-    
-    //baseIntensity = min(0.0, baseIntensity - uDynamicUniforms.shieldPower);
-    
+
+    //baseIntensity = min(0.0, baseIntensity - shieldPower);
+
     return vec4f(finalColor, baseIntensity * baseIntensity);
 }
