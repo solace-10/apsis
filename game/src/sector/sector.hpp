@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/vec3.hpp>
+
 #include <core/smart_ptr.hpp>
 #include <scene/scene.hpp>
 
@@ -30,6 +32,7 @@ private:
     void DrawCameraDebugUI();
     void SpawnDome();
     void SpawnPlayerFleet();
+    void SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech);
 
     EncounterUniquePtr m_pEncounter;
     EntitySharedPtr m_pDome;

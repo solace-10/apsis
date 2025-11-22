@@ -17,9 +17,9 @@
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/shield_component.hpp"
+#include "entity_builder/entity_builder.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
-#include "entity_builder/entity_builder.hpp"
 #include "systems/ai_strategic_system.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
 #include "systems/ammo_system.hpp"
@@ -94,7 +94,7 @@ void Sector::Update(float delta)
     {
         GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Color::White);
     }
-    
+
     DrawCameraDebugUI();
 }
 
@@ -154,27 +154,48 @@ void Sector::SpawnDome()
 void Sector::SpawnPlayerFleet()
 {
     SceneWeakPtr pWeakScene = weak_from_this();
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", glm::translate(glm::mat4(1.0f), glm::vec3(-200.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pMechEntity){
+
+    SpawnMech(glm::vec3(-200.0f, 0.0f, 0.0f), 90.0f, true);
+    SpawnMech(glm::vec3(-200.0f, 0.0f, 30.0f), 90.0f, false);
+    SpawnMech(glm::vec3(-200.0f, 0.0f, -30.0f), 90.0f, false);
+
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-250.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity) {
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
         if (pScene)
         {
-            pScene->m_pPlayerMech = pMechEntity;
-            pMechEntity->AddComponent<PlayerControllerComponent>();
-            pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pMechEntity;
+            pScene->m_pCarrier = pEntity;
+        }
+    });
+}
+
+void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech)
+{
+    glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+    transform = glm::rotate(transform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    SceneWeakPtr pWeakScene = weak_from_this();
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", transform, [pWeakScene, isPlayerMech](EntitySharedPtr pMechEntity) {
+        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
+        if (pScene)
+        {
+            if (isPlayerMech)
+            {
+                pScene->m_pPlayerMech = pMechEntity;
+                pMechEntity->AddComponent<PlayerControllerComponent>();
+                pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pMechEntity;
+            }
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
                 "/entity_prefabs/weapons/mech/shield_r.json",
                 pMechEntity,
                 "RightArm",
-                false
-            );
+                false);
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
                 "/entity_prefabs/weapons/mech/rotary_cannon_l.json",
                 pMechEntity,
                 "LeftArm",
-                false
-            );
+                false);
 
             SceneWeakPtr pLocalWeakScene = pScene->GetWeakPtr();
             EntityBuilder::Build(pLocalWeakScene, "/entity_prefabs/player/mech_energy_shield.json", glm::mat4(1.0f), [pLocalWeakScene, pMechEntity](EntitySharedPtr pShieldEntity) {
@@ -193,14 +214,6 @@ void Sector::SpawnPlayerFleet()
                 pShieldEntity->SetParent(pMechEntity);
                 pShieldEntity->GetComponent<ShieldComponent>().SetOwner(pShieldEntity);
             });
-        }
-    });
-
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-250.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity){
-        SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
-        if (pScene)
-        {
-            pScene->m_pCarrier = pEntity;
         }
     });
 }
