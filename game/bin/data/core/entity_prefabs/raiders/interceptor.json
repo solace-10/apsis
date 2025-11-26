@@ -63,7 +63,7 @@
             "value": "Hostile"
         },
         {
-            "type": "threat_indicator",
+            "type": "threat",
             "value": "interceptor"
         }
     ]

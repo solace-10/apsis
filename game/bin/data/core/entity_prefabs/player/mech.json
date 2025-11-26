@@ -55,10 +55,6 @@
             "value": "Allied"
         },
         {
-            "type": "wing",
-            "value": 0
-        },
-        {
             "type": "name",
             "value": "Knight"
         }

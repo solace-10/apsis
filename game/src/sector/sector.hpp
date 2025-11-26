@@ -5,6 +5,8 @@
 #include <core/smart_ptr.hpp>
 #include <scene/scene.hpp>
 
+#include "components/wing_component.hpp"
+
 namespace WingsOfSteel
 {
 
@@ -32,7 +34,7 @@ private:
     void DrawCameraDebugUI();
     void SpawnDome();
     void SpawnPlayerFleet();
-    void SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech);
+    void SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech, WingRole role);
 
     EncounterUniquePtr m_pEncounter;
     EntitySharedPtr m_pDome;

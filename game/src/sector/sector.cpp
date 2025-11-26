@@ -14,12 +14,14 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/ai_mech_controller_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/shield_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
+#include "systems/ai_mech_controller_system.hpp"
 #include "systems/ai_strategic_system.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
 #include "systems/ammo_system.hpp"
@@ -52,6 +54,7 @@ void Sector::Initialize()
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<AIStrategicSystem>();
+    AddSystem<AIMechControllerSystem>();
     AddSystem<AIStrikecraftControllerSystem>();
     AddSystem<CarrierSystem>();
     AddSystem<PlayerControllerSystem>();
@@ -155,9 +158,9 @@ void Sector::SpawnPlayerFleet()
 {
     SceneWeakPtr pWeakScene = weak_from_this();
 
-    SpawnMech(glm::vec3(-200.0f, 0.0f, 0.0f), 90.0f, true);
-    SpawnMech(glm::vec3(-200.0f, 0.0f, 30.0f), 90.0f, false);
-    SpawnMech(glm::vec3(-200.0f, 0.0f, -30.0f), 90.0f, false);
+    SpawnMech(glm::vec3(-200.0f, 0.0f, 0.0f), 90.0f, true, WingRole::Offense);
+    SpawnMech(glm::vec3(-200.0f, 0.0f, 30.0f), 90.0f, false, WingRole::Defense);
+    SpawnMech(glm::vec3(-200.0f, 0.0f, -30.0f), 90.0f, false, WingRole::Interception);
 
     EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(-250.0f, 0.0f, 0.0f)), [pWeakScene](EntitySharedPtr pEntity) {
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
@@ -168,21 +171,30 @@ void Sector::SpawnPlayerFleet()
     });
 }
 
-void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech)
+void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech, WingRole role)
 {
     glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
     transform = glm::rotate(transform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
 
     SceneWeakPtr pWeakScene = weak_from_this();
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", transform, [pWeakScene, isPlayerMech](EntitySharedPtr pMechEntity) {
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/player/mech.json", transform, [pWeakScene, isPlayerMech, role](EntitySharedPtr pMechEntity) {
         SectorSharedPtr pScene = std::dynamic_pointer_cast<Sector>(pWeakScene.lock());
         if (pScene)
         {
+            WingComponent& wingComponent = pMechEntity->AddComponent<WingComponent>();
+            wingComponent.Role = role;
+            
             if (isPlayerMech)
             {
                 pScene->m_pPlayerMech = pMechEntity;
                 pMechEntity->AddComponent<PlayerControllerComponent>();
                 pScene->m_pCamera->GetComponent<SectorCameraComponent>().anchorEntity = pMechEntity;
+            }
+            else
+            {
+                AIMechControllerComponent& mechControllerComponent = pMechEntity->AddComponent<AIMechControllerComponent>();
+                mechControllerComponent.OffenseContext.pOwner = pMechEntity;
+                mechControllerComponent.NavigationContext.pOwner = pMechEntity;
             }
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(

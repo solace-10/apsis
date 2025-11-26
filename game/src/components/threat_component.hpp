@@ -7,12 +7,12 @@
 namespace WingsOfSteel
 {
 
-class ThreatIndicatorComponent : public IComponent
+class ThreatComponent : public IComponent
 {
 public:
-    ThreatIndicatorComponent() {}
-    ThreatIndicatorComponent(const std::string& name) : Value(name) {}
-    ~ThreatIndicatorComponent() {}
+    ThreatComponent() {}
+    ThreatComponent(const std::string& name) : Value(name) {}
+    ~ThreatComponent() {}
 
     std::string Value;
 
@@ -22,6 +22,6 @@ public:
     }
 };
 
-REGISTER_COMPONENT(ThreatIndicatorComponent, "threat_indicator")
+REGISTER_COMPONENT(ThreatComponent, "threat")
 
 } // namespace WingsOfSteel

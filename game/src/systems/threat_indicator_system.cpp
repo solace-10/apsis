@@ -15,11 +15,11 @@ void ThreatIndicatorSystem::Update(float delta)
     m_CurrentUpdate++;
     
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const ThreatIndicatorComponent, const FactionComponent, const TransformComponent>();
+    auto view = registry.view<const ThreatComponent, const FactionComponent, const TransformComponent>();
 
     view.each([this, delta](
         const auto entityHandle,
-        const ThreatIndicatorComponent& threatIndicatorComponent,
+        const ThreatComponent& threatIndicatorComponent,
         const FactionComponent& factionComponent,
         const TransformComponent& transformComponent) {
 

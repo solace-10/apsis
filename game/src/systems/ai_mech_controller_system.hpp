@@ -1,15 +1,40 @@
 #pragma once
 
+#include <optional>
+
+#include <scene/entity.hpp>
 #include <scene/state_machine/state_machine.hpp>
 #include <scene/systems/system.hpp>
 
 namespace WingsOfSteel
 {
 
-// Forward declarations for state machine contexts
-struct MechNavigationContext;
-struct MechOffenseContext;
-struct MechDefenseContext;
+// Forward declarations for state enums (defined below)
+enum class MechNavigationState;
+enum class MechOffenseState;
+enum class MechDefenseState;
+
+// Context definitions
+struct MechNavigationContext
+{
+    EntityWeakPtr pOwner;
+    float optimalRange{ 0.0f };
+    std::optional<MechNavigationState> currentState;
+};
+
+struct MechOffenseContext
+{
+    EntityWeakPtr pOwner;
+    float timeUntilRetarget{ 0.0f };
+    float optimalRange{ 0.0f };
+    std::optional<MechOffenseState> currentState;
+};
+
+struct MechDefenseContext
+{
+    bool underFire{ false };
+    std::optional<MechDefenseState> currentState;
+};
 
 enum class MechNavigationState
 {
