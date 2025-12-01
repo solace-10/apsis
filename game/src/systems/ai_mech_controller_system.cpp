@@ -1,6 +1,7 @@
 
 #include <glm/vec3.hpp>
 
+#include <core/random.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <scene/components/transform_component.hpp>
@@ -88,11 +89,15 @@ public:
         const glm::vec3& mechPosition = pMechEntity->GetComponent<TransformComponent>().GetTranslation();
         const glm::vec3& targetPosition = pCurrentTarget->GetComponent<TransformComponent>().GetTranslation();
         const float distanceToTarget = glm::length(targetPosition - mechPosition);
+        const glm::vec3 directionToTarget = glm::normalize(targetPosition - mechPosition);
         MechNavigationComponent& mechNavigationComponent = pMechEntity->GetComponent<MechNavigationComponent>();
         if (distanceToTarget > context.optimalRange)
         {
-            const glm::vec3 directionToTarget = glm::normalize(targetPosition - mechPosition);
             mechNavigationComponent.SetThrust(directionToTarget);
+        }
+        else if (distanceToTarget < context.optimalRange * 0.75f)
+        {
+            mechNavigationComponent.SetThrust(-directionToTarget);
         }
         else
         {
@@ -130,7 +135,7 @@ public:
 
         if (pAcquiredTarget)
         {
-            context.timeUntilRetarget = 3.0f;
+            context.timeUntilRetarget = Random::Get(3.0f, 5.0f);
             if (!pMechEntity->HasComponent<CurrentTargetComponent>())
             {
                 pMechEntity->AddComponent<CurrentTargetComponent>();
@@ -160,6 +165,17 @@ public:
                 context.optimalRange = AIUtils::CalculateOptimalRange(pMechEntity);
             }
         }
+    }
+
+    void OnExit(MechOffenseContext& context) override
+    {
+        EntitySharedPtr pMechEntity = context.pOwner.lock();
+        if (!pMechEntity)
+        {
+            return;
+        }
+
+        CeaseFire(pMechEntity);
     }
 
     std::optional<MechOffenseState> Update(float delta, MechOffenseContext& context) override
@@ -197,7 +213,7 @@ public:
         GetDebugRender()->Line(pMechEntity->GetComponent<TransformComponent>().GetTranslation(), targetTransformComponent.GetTranslation(), Color::Red);
 
         // Fire if within weapon range.
-        if (!pMechEntity->HasComponent<WeaponComponent>())
+        if (!pMechEntity->HasComponent<HardpointComponent>())
         {
             return std::nullopt;
         }
@@ -213,16 +229,34 @@ public:
             }
 
             WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
-            if (weaponComponent.m_Range <= distanceToTarget)
-            {
-                weaponComponent.m_WantsToFire = true;
-            }
+            weaponComponent.m_WantsToFire = (distanceToTarget <= weaponComponent.m_Range);
         }
-        
+
         return std::nullopt;
     }
 
     MechOffenseState GetStateID() const override { return MechOffenseState::Attack; }
+
+private:
+    void CeaseFire(EntitySharedPtr pMechEntity)
+    {
+        if (!pMechEntity->HasComponent<HardpointComponent>())
+        {
+            return;
+        }
+        
+        HardpointComponent& hardpointComponent = pMechEntity->GetComponent<HardpointComponent>();
+        for (auto& hardpoint : hardpointComponent.hardpoints)
+        {
+            EntitySharedPtr pWeaponEntity = hardpoint.m_pEntity;
+            if (!pWeaponEntity || !pWeaponEntity->HasComponent<WeaponComponent>())
+            {
+                continue;
+            }
+
+            pWeaponEntity->GetComponent<WeaponComponent>().m_WantsToFire = false;
+        }
+    }
 };
 
 // Defense state implementations
