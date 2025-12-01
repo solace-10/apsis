@@ -122,16 +122,21 @@ public:
             return std::nullopt;
         }
 
-        WingRole wingRole = WingRole::Offense;
+        WingRole wingRole = WingRole::Interception;
         if (pMechEntity->HasComponent<WingComponent>())
         {
             wingRole = pMechEntity->GetComponent<WingComponent>().Role;
         }
 
-        // TODO: WingRole: defense = always prioritise bomber-class threats, sorting by "closest to carrier"
-        // Otherwise, target closest threat.
-
-        EntitySharedPtr pAcquiredTarget = AIUtils::AcquireTarget(pMechEntity, AIUtils::TargetPriorityOrder::Closest);
+        EntitySharedPtr pAcquiredTarget;
+        if (wingRole == WingRole::Defense)
+        {
+            pAcquiredTarget = AIUtils::AcquireTarget(pMechEntity, { ThreatCategory::AntiCapital, ThreatCategory::Interceptor, ThreatCategory::Carrier }, AIUtils::TargetRangeOrder::Closest);
+        }
+        else
+        {
+            pAcquiredTarget = AIUtils::AcquireTarget(pMechEntity, { ThreatCategory::Interceptor, ThreatCategory::AntiCapital, ThreatCategory::Carrier }, AIUtils::TargetRangeOrder::Closest);
+        }
 
         if (pAcquiredTarget)
         {
@@ -189,7 +194,7 @@ public:
         context.timeUntilRetarget -= delta;
         if (context.timeUntilRetarget <= 0.0f)
         {
-            context.timeUntilRetarget = 3.0f;
+            context.timeUntilRetarget = Random::Get(3.0f, 5.0f);
             return MechOffenseState::Idle;
         }
 
@@ -244,7 +249,7 @@ private:
         {
             return;
         }
-        
+
         HardpointComponent& hardpointComponent = pMechEntity->GetComponent<HardpointComponent>();
         for (auto& hardpoint : hardpointComponent.hardpoints)
         {

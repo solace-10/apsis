@@ -4,8 +4,9 @@
 
 #include <pandora.hpp>
 #include <scene/components/transform_component.hpp>
-#include <scene/scene.hpp>
+#include <scene/scene.hpp>
 
+#include "components/faction_component.hpp"
 #include "components/hardpoint_component.hpp"
 #include "components/threat_component.hpp"
 #include "components/weapon_component.hpp"
@@ -14,10 +15,18 @@
 namespace WingsOfSteel
 {
 
-EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, TargetPriorityOrder targetPriorityOrder, std::optional<std::string> priorityThreatType)
+EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, const std::vector<ThreatCategory>& targetCategoryOrder, TargetRangeOrder targetRangeOrder)
 {
+    if (!pAcquiringEntity->HasComponent<FactionComponent>())
+    {
+        return nullptr;
+    }
+
+    const Faction acquiringEntityFaction = pAcquiringEntity->GetComponent<FactionComponent>().Value;
+    const Faction targetFaction = GetOppositeFaction(acquiringEntityFaction);
+    
     glm::vec3 startPosition{ 0.0f };
-    if (targetPriorityOrder == TargetPriorityOrder::Closest)
+    if (targetRangeOrder == TargetRangeOrder::Closest)
     {
         startPosition = pAcquiringEntity->GetComponent<TransformComponent>().GetTranslation();
     }
@@ -27,24 +36,86 @@ EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, TargetP
         return nullptr;
     }
 
-    EntitySharedPtr pAcquiredTarget;
-    float closestDistanceSquared = FLT_MAX;
+    struct AcquiredTarget
+    {
+        EntityHandle entityHandle{ 0 };
+        size_t threatIndex{ 0 };
+        float distanceSquared{ FLT_MAX };
+    };
+    std::optional<AcquiredTarget> acquiredTarget;
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto threatsView = registry.view<const TransformComponent, const ThreatComponent>();
-    threatsView.each([&startPosition, &closestDistanceSquared, &pAcquiredTarget](const auto entityHandle, const TransformComponent& transformComponent, const ThreatComponent& threatComponent) {
+    auto threatsView = registry.view<const TransformComponent, const ThreatComponent, const FactionComponent>();
+    threatsView.each([targetFaction, &startPosition, &acquiredTarget, targetCategoryOrder](const auto entityHandle, const TransformComponent& transformComponent, const ThreatComponent& threatComponent, const FactionComponent& factionComponent) {
+        if (targetFaction != factionComponent.Value)
+        {
+            return;
+        }
+        
         const glm::vec3 entityPosition = transformComponent.GetTranslation();
         const glm::vec3 positionDelta = entityPosition - startPosition;
         const float distanceSquared = glm::dot(positionDelta, positionDelta);
 
-        if (distanceSquared < closestDistanceSquared)
+        std::optional<size_t> threatIndex = GetThreatIndex(targetCategoryOrder, threatComponent.Value);
+        if (!threatIndex.has_value())
         {
-            closestDistanceSquared = distanceSquared;
-            pAcquiredTarget = GetActiveScene()->GetEntity(entityHandle);
+            return;
+        }
+
+        if (!acquiredTarget.has_value())
+        {
+            acquiredTarget = AcquiredTarget{
+                .entityHandle = entityHandle,
+                .threatIndex = threatIndex.value(),
+                .distanceSquared = distanceSquared
+            };
+        }
+        else
+        {
+            // This is a confusing bit of logic. We receive the threat category order as a vector, with the highest priority being at the start of the vector.
+            // e.g. [ ThreatCategory::AntiCapital, ThreatCategory::Interceptor, ThreatCategory::Carrier ] means that AntiCapital is our highest priority.
+            // By storing the index, we can quickly identify if the new threat has a higher priority than the one we previously acquired.
+            // However, due to the order of categories in the vector, the index 0 has the highest prioirty.
+
+            const size_t newThreatIndex = threatIndex.value();
+            const size_t existingThreatIndex = acquiredTarget.value().threatIndex;
+            if (newThreatIndex > existingThreatIndex)
+            {
+                // The new threat has a lower priority than the one we already have, don't do anything.
+                return;
+            }
+            else if (newThreatIndex < existingThreatIndex)
+            {
+                // The new threat has a higher priority than the one we had acquired, switch to the new threat.
+                acquiredTarget = AcquiredTarget{
+                    .entityHandle = entityHandle,
+                    .threatIndex = newThreatIndex,
+                    .distanceSquared = distanceSquared
+                };
+            }
+            else
+            {
+                // The new threat has the same priority as the one we had acquired. Prioritise the closest one.
+                if (distanceSquared < acquiredTarget.value().distanceSquared)
+                {
+                    acquiredTarget = AcquiredTarget{
+                        .entityHandle = entityHandle,
+                        .threatIndex = newThreatIndex,
+                        .distanceSquared = distanceSquared
+                    };
+                }
+            }
         }
     });
 
-    return pAcquiredTarget;
+    if (acquiredTarget.has_value())
+    {
+        return GetActiveScene()->GetEntity(acquiredTarget.value().entityHandle);
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 float AIUtils::CalculateOptimalRange(EntitySharedPtr pMechEntity)
@@ -71,6 +142,36 @@ float AIUtils::CalculateOptimalRange(EntitySharedPtr pMechEntity)
     }
 
     return optimalRange.value_or(0.0f);
+}
+
+Faction AIUtils::GetOppositeFaction(Faction faction)
+{
+    if (faction == Faction::Allied)
+    {
+        return Faction::Hostile;
+    }
+    else if (faction == Faction::Hostile)
+    {
+        return Faction::Allied;
+    }
+    else
+    {
+        assert(false); // Not supported.
+        return Faction::Hostile;
+    }
+}
+
+std::optional<size_t> AIUtils::GetThreatIndex(const std::vector<ThreatCategory>& targetCategoryOrder, ThreatCategory targetCategory)
+{
+    for (size_t index = 0; index < targetCategoryOrder.size(); index++)
+    {
+        if (targetCategoryOrder[index] == targetCategory)
+        {
+            return index;
+        }
+    }
+    
+    return std::nullopt;
 }
 
 } // namespace WingsOfSteel

@@ -7,18 +7,25 @@
 namespace WingsOfSteel
 {
 
+enum class ThreatCategory
+{
+    Interceptor, // Interceptors are a threat mechs, but they normally do not pack enough firepower to threaten a carrier.
+    AntiCapital, // Any ship which can deal significant damage to carriers should be considered AntiCapital. Not just large ships, but mechs and bombers. 
+    Carrier,
+    Invalid
+};
+
 class ThreatComponent : public IComponent
 {
 public:
     ThreatComponent() {}
-    ThreatComponent(const std::string& name) : Value(name) {}
     ~ThreatComponent() {}
 
-    std::string Value;
+    ThreatCategory Value;
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        Value = Json::DeserializeString(pContext, json, "value");
+        Value = Json::DeserializeEnum<ThreatCategory>(pContext, json, "value");
     }
 };
 
