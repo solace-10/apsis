@@ -23,6 +23,7 @@ public:
     static EntitySharedPtr AcquireTarget(EntitySharedPtr pAcquiringEntity, const std::vector<ThreatCategory>& targetCategoryOrder, TargetRangeOrder targetRangeOrder);
     static float CalculateOptimalRange(EntitySharedPtr pMechEntity);
     static Faction GetOppositeFaction(Faction faction);
+    static EntitySharedPtr GetCarrier(Faction faction);
 
 private:
     static std::optional<size_t> GetThreatIndex(const std::vector<ThreatCategory>& targetCategoryOrder, ThreatCategory targetCategory);

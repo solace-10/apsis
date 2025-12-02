@@ -10,6 +10,8 @@
 #include "components/hardpoint_component.hpp"
 #include "components/threat_component.hpp"
 #include "components/weapon_component.hpp"
+#include "sector/encounter.hpp"
+#include "sector/sector.hpp"
 #include "systems/ai_utils.hpp"
 
 namespace WingsOfSteel
@@ -30,10 +32,17 @@ EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, const s
     {
         startPosition = pAcquiringEntity->GetComponent<TransformComponent>().GetTranslation();
     }
-    else
+    else if (targetRangeOrder == TargetRangeOrder::ClosestToCarrier)
     {
-        assert(false); // Not implemented yet.
-        return nullptr;
+        EntitySharedPtr pCarrier = GetCarrier(acquiringEntityFaction);
+        if (pCarrier && pCarrier->HasComponent<TransformComponent>())
+        {
+            startPosition = pCarrier->GetComponent<TransformComponent>().GetTranslation();
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
     struct AcquiredTarget
@@ -75,7 +84,7 @@ EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, const s
             // This is a confusing bit of logic. We receive the threat category order as a vector, with the highest priority being at the start of the vector.
             // e.g. [ ThreatCategory::AntiCapital, ThreatCategory::Interceptor, ThreatCategory::Carrier ] means that AntiCapital is our highest priority.
             // By storing the index, we can quickly identify if the new threat has a higher priority than the one we previously acquired.
-            // However, due to the order of categories in the vector, the index 0 has the highest prioirty.
+            // However, due to the order of categories in the vector, the index 0 has the highest priority.
 
             const size_t newThreatIndex = threatIndex.value();
             const size_t existingThreatIndex = acquiredTarget.value().threatIndex;
@@ -170,8 +179,22 @@ std::optional<size_t> AIUtils::GetThreatIndex(const std::vector<ThreatCategory>&
             return index;
         }
     }
-    
+
     return std::nullopt;
+}
+
+EntitySharedPtr AIUtils::GetCarrier(Faction faction)
+{
+    Sector* pSector = static_cast<Sector*>(GetActiveScene());
+    if (faction == Faction::Allied)
+    {
+        return pSector->GetPlayerCarrier();
+    }
+    else
+    {
+        Encounter* pEncounter = pSector->GetEncounter();
+        return pEncounter ? pEncounter->GetCarrier() : nullptr;
+    }
 }
 
 } // namespace WingsOfSteel

@@ -9,7 +9,7 @@ namespace WingsOfSteel
 
 enum class ThreatCategory
 {
-    Interceptor, // Interceptors are a threat mechs, but they normally do not pack enough firepower to threaten a carrier.
+    Interceptor, // Interceptors are a threat to mechs, but they normally do not pack enough firepower to threaten a carrier.
     AntiCapital, // Any ship which can deal significant damage to carriers should be considered AntiCapital. Not just large ships, but mechs and bombers. 
     Carrier,
     Invalid

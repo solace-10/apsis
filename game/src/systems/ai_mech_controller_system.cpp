@@ -131,7 +131,7 @@ public:
         EntitySharedPtr pAcquiredTarget;
         if (wingRole == WingRole::Defense)
         {
-            pAcquiredTarget = AIUtils::AcquireTarget(pMechEntity, { ThreatCategory::AntiCapital, ThreatCategory::Interceptor, ThreatCategory::Carrier }, AIUtils::TargetRangeOrder::Closest);
+            pAcquiredTarget = AIUtils::AcquireTarget(pMechEntity, { ThreatCategory::AntiCapital, ThreatCategory::Interceptor, ThreatCategory::Carrier }, AIUtils::TargetRangeOrder::ClosestToCarrier);
         }
         else
         {
@@ -214,8 +214,6 @@ public:
 
         MechNavigationComponent& mechNavigationComponent = pMechEntity->GetComponent<MechNavigationComponent>();
         mechNavigationComponent.SetAim(targetTransformComponent.GetTranslation());
-
-        GetDebugRender()->Line(pMechEntity->GetComponent<TransformComponent>().GetTranslation(), targetTransformComponent.GetTranslation(), Color::Red);
 
         // Fire if within weapon range.
         if (!pMechEntity->HasComponent<HardpointComponent>())

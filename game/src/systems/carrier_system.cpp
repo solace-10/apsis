@@ -192,7 +192,9 @@ void CarrierSystem::UpdateLaunchSequences(float delta)
 
             if (pEscort->HasComponent<AIStrikecraftControllerComponent>())
             {
-                pEscort->GetComponent<AIStrikecraftControllerComponent>().SetState(AIStrikecraftState::Approach);
+                auto& controller = pEscort->GetComponent<AIStrikecraftControllerComponent>();
+                controller.Context.pOwner = pEscort;
+                controller.Context.currentState = StrikecraftState::Approach;
             }
         }
 

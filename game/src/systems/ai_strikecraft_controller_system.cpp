@@ -1,8 +1,7 @@
+#include <core/random.hpp>
 #include <pandora.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
-#include <render/debug_render.hpp>
-#include <core/random.hpp>
 
 #include "components/ai_strikecraft_controller_component.hpp"
 #include "components/hardpoint_component.hpp"
@@ -16,160 +15,349 @@
 namespace WingsOfSteel
 {
 
-void AIStrikecraftControllerSystem::Update(float delta)
+// Helper functions (file-local)
+namespace
 {
-    entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto controllerView = registry.view<ShipNavigationComponent, AIStrikecraftControllerComponent, const TransformComponent, const WingComponent>();
-    controllerView.each([this, delta](const auto entityHandle, ShipNavigationComponent& navigationComponent, AIStrikecraftControllerComponent& controllerComponent, const TransformComponent& transform, const WingComponent& wingComponent) {
-        if (controllerComponent.GetState() == AIStrikecraftState::LaunchingFromCarrier)
+    glm::vec3 CalculateInterceptPoint(const glm::vec3& shooterPos, const glm::vec3& targetPos,
+        const glm::vec3& targetVel, float projectileSpeed)
+    {
+        const glm::vec3 toTarget = targetPos - shooterPos;
+        const float distance = glm::length(toTarget);
+        const float timeToIntercept = distance / projectileSpeed;
+        return targetPos + targetVel * timeToIntercept;
+    }
+
+    glm::vec3 GenerateBreakDirection(const glm::vec3& forward, const glm::vec3& toTarget)
+    {
+        const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+        const float rightComponent = Random::Get(-1.0f, 1.0f);
+        const float forwardComponent = Random::Get(-0.5f, 0.5f);
+        const glm::vec3 breakDir = right * rightComponent + forward * forwardComponent;
+        return glm::normalize(breakDir);
+    }
+
+    void UpdateWeaponSystems(EntitySharedPtr pOwner, const glm::vec3& targetPos, bool shouldFire)
+    {
+        if (!pOwner || !pOwner->HasComponent<HardpointComponent>())
         {
             return;
         }
 
-        EntitySharedPtr pTargetEntity = controllerComponent.GetTarget();
-        if (!pTargetEntity)
+        HardpointComponent& hardpointComponent = pOwner->GetComponent<HardpointComponent>();
+        for (const auto& hardpoint : hardpointComponent.hardpoints)
         {
-            pTargetEntity = AcquireTarget(wingComponent);
-            controllerComponent.SetTarget(pTargetEntity);
+            if (hardpoint.m_pEntity && hardpoint.m_pEntity->HasComponent<WeaponComponent>())
+            {
+                WeaponComponent& weaponComponent = hardpoint.m_pEntity->GetComponent<WeaponComponent>();
+                weaponComponent.m_TargetPosition = targetPos;
+                weaponComponent.m_WantsToFire = shouldFire;
+            }
+        }
+    }
+
+    void CeaseFire(EntitySharedPtr pOwner)
+    {
+        if (!pOwner || !pOwner->HasComponent<HardpointComponent>())
+        {
+            return;
         }
 
-        if (pTargetEntity)
+        HardpointComponent& hardpointComponent = pOwner->GetComponent<HardpointComponent>();
+        for (const auto& hardpoint : hardpointComponent.hardpoints)
         {
-            controllerComponent.UpdateTimers(delta);
-            ProcessCombatState(entityHandle, navigationComponent, controllerComponent, transform, pTargetEntity, delta);
+            if (hardpoint.m_pEntity && hardpoint.m_pEntity->HasComponent<WeaponComponent>())
+            {
+                WeaponComponent& weaponComponent = hardpoint.m_pEntity->GetComponent<WeaponComponent>();
+                weaponComponent.m_WantsToFire = false;
+            }
+        }
+    }
+} // anonymous namespace
+
+class LaunchingFromCarrierState : public State<StrikecraftState, StrikecraftContext>
+{
+public:
+    StrikecraftState GetStateID() const override { return StrikecraftState::LaunchingFromCarrier; }
+
+    std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
+    {
+        // The carrier launch system will transition this state externally
+        // when the strikecraft has cleared the hangar.
+        // This state is a placeholder - the actual transition happens via
+        // external code setting context.currentState to Approach.
+        return std::nullopt;
+    }
+};
+
+class ApproachState : public State<StrikecraftState, StrikecraftContext>
+{
+public:
+    StrikecraftState GetStateID() const override { return StrikecraftState::Approach; }
+
+    void OnEnter(StrikecraftContext& context) override
+    {
+        context.stateTimer = 0.0f;
+    }
+
+    std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
+    {
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        EntitySharedPtr pTarget = context.pTarget.lock();
+        if (!pOwner || !pTarget)
+            return std::nullopt;
+
+        const auto& transform = pOwner->GetComponent<TransformComponent>();
+        auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
+
+        const glm::vec3 myPos = transform.GetTranslation();
+        const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
+        const float distanceToTarget = glm::length(targetPos - myPos);
+
+        // Navigate toward intercept point
+        glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
+        navigation.SetTarget(interceptPoint);
+        navigation.SetThrust(ShipThrust::Forward);
+
+        // Weapons off during approach
+        UpdateWeaponSystems(pOwner, targetPos, false);
+
+        // Transition to Attack when in range
+        if (distanceToTarget <= context.maxRange)
+        {
+            return StrikecraftState::Attack;
+        }
+
+        return std::nullopt;
+    }
+};
+
+class AttackState : public State<StrikecraftState, StrikecraftContext>
+{
+public:
+    StrikecraftState GetStateID() const override { return StrikecraftState::Attack; }
+
+    void OnEnter(StrikecraftContext& context) override
+    {
+        context.stateTimer = 0.0f;
+    }
+
+    std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
+    {
+        context.stateTimer += delta;
+
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        EntitySharedPtr pTarget = context.pTarget.lock();
+        if (!pOwner || !pTarget)
+            return std::nullopt;
+
+        const auto& transform = pOwner->GetComponent<TransformComponent>();
+        auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
+
+        const glm::vec3 myPos = transform.GetTranslation();
+        const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
+        const glm::vec3 toTarget = targetPos - myPos;
+        const float distanceToTarget = glm::length(toTarget);
+        const glm::vec3 forward = transform.GetForward();
+        const float angleToTarget = glm::degrees(
+            glm::acos(glm::clamp(glm::dot(glm::normalize(toTarget), forward), -1.0f, 1.0f)));
+
+        // Navigate toward intercept point
+        glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
+        navigation.SetTarget(interceptPoint);
+        navigation.SetThrust(ShipThrust::Forward);
+
+        // Fire if conditions are met
+        const bool shouldFire = distanceToTarget >= context.minRange && distanceToTarget <= context.maxRange && angleToTarget <= context.firingAngle;
+
+        UpdateWeaponSystems(pOwner, targetPos, shouldFire);
+
+        // Transition to Break when attack duration expires or too close
+        if (context.stateTimer >= context.attackDuration || distanceToTarget < context.minRange)
+        {
+            // Pre-calculate break direction for the Break state
+            context.breakDirection = GenerateBreakDirection(forward, glm::normalize(toTarget));
+            return StrikecraftState::Break;
+        }
+
+        return std::nullopt;
+    }
+
+    void OnExit(StrikecraftContext& context) override
+    {
+        // Cease fire when leaving attack state
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        if (pOwner)
+        {
+            CeaseFire(pOwner);
+        }
+    }
+};
+
+class BreakState : public State<StrikecraftState, StrikecraftContext>
+{
+public:
+    StrikecraftState GetStateID() const override { return StrikecraftState::Break; }
+
+    void OnEnter(StrikecraftContext& context) override
+    {
+        context.stateTimer = 0.0f;
+    }
+
+    std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
+    {
+        context.stateTimer += delta;
+
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        EntitySharedPtr pTarget = context.pTarget.lock();
+        if (!pOwner)
+            return std::nullopt;
+
+        const auto& transform = pOwner->GetComponent<TransformComponent>();
+        auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
+
+        const glm::vec3 myPos = transform.GetTranslation();
+
+        // Break away from target
+        glm::vec3 breakTarget = myPos + context.breakDirection * 100.0f;
+        navigation.SetTarget(breakTarget);
+        navigation.SetThrust(ShipThrust::Forward);
+
+        // Weapons off during break
+        if (pTarget)
+        {
+            const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
+            UpdateWeaponSystems(pOwner, targetPos, false);
+        }
+
+        // Transition after break duration
+        if (context.stateTimer >= context.breakDuration)
+        {
+            if (Random::Get(0.0f, 1.0f) < 0.8f)
+            {
+                return StrikecraftState::Approach;
+            }
+            else
+            {
+                // Calculate reposition target
+                if (pTarget)
+                {
+                    const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
+                    const glm::vec3 repositionDirection = glm::normalize(
+                        glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
+                    context.repositionTarget = targetPos + repositionDirection * context.maxRange;
+                }
+                return StrikecraftState::Reposition;
+            }
+        }
+
+        return std::nullopt;
+    }
+};
+
+class RepositionState : public State<StrikecraftState, StrikecraftContext>
+{
+public:
+    StrikecraftState GetStateID() const override { return StrikecraftState::Reposition; }
+
+    void OnEnter(StrikecraftContext& context) override
+    {
+        context.stateTimer = 0.0f;
+    }
+
+    std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
+    {
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        EntitySharedPtr pTarget = context.pTarget.lock();
+        if (!pOwner)
+            return std::nullopt;
+
+        const auto& transform = pOwner->GetComponent<TransformComponent>();
+        auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
+
+        const glm::vec3 myPos = transform.GetTranslation();
+
+        // Navigate to reposition target
+        navigation.SetTarget(context.repositionTarget);
+        navigation.SetThrust(ShipThrust::Forward);
+
+        // Weapons off during reposition
+        if (pTarget)
+        {
+            const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
+            UpdateWeaponSystems(pOwner, targetPos, false);
+        }
+
+        // Transition to Approach when near reposition target
+        const float repositionGoalRadius = 20.0f;
+        const float distanceToReposition = glm::length(context.repositionTarget - myPos);
+        if (distanceToReposition < repositionGoalRadius)
+        {
+            return StrikecraftState::Approach;
+        }
+
+        return std::nullopt;
+    }
+};
+
+void AIStrikecraftControllerSystem::Initialize(Scene* pScene)
+{
+    // Create state machine
+    m_pStateMachine = std::make_unique<StateMachine<StrikecraftState, StrikecraftContext>>();
+
+    // Register states
+    m_pStateMachine->AddState(StrikecraftState::LaunchingFromCarrier, std::make_unique<LaunchingFromCarrierState>());
+    m_pStateMachine->AddState(StrikecraftState::Approach, std::make_unique<ApproachState>());
+    m_pStateMachine->AddState(StrikecraftState::Attack, std::make_unique<AttackState>());
+    m_pStateMachine->AddState(StrikecraftState::Break, std::make_unique<BreakState>());
+    m_pStateMachine->AddState(StrikecraftState::Reposition, std::make_unique<RepositionState>());
+
+    // Set initial state
+    m_pStateMachine->SetInitialState(StrikecraftState::LaunchingFromCarrier);
+
+    // Define transitions
+    m_pStateMachine->AddTransitions(StrikecraftState::LaunchingFromCarrier, { StrikecraftState::Approach });
+    m_pStateMachine->AddTransitions(StrikecraftState::Approach, { StrikecraftState::Attack });
+    m_pStateMachine->AddTransitions(StrikecraftState::Attack, { StrikecraftState::Break });
+    m_pStateMachine->AddTransitions(StrikecraftState::Break, { StrikecraftState::Approach, StrikecraftState::Reposition });
+    m_pStateMachine->AddTransitions(StrikecraftState::Reposition, { StrikecraftState::Approach });
+}
+
+void AIStrikecraftControllerSystem::Update(float delta)
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<AIStrikecraftControllerComponent, const WingComponent>();
+
+    view.each([this, delta, &registry](const auto entityHandle, AIStrikecraftControllerComponent& controller, const WingComponent& wingComponent) {
+        StrikecraftContext& context = controller.Context;
+
+        // Skip if still launching (handled externally by carrier system)
+        if (context.currentState.has_value() && context.currentState.value() == StrikecraftState::LaunchingFromCarrier)
+        {
+            return;
+        }
+
+        // Acquire target if needed
+        EntitySharedPtr pTarget = context.pTarget.lock();
+        if (!pTarget)
+        {
+            pTarget = AcquireTarget(wingComponent);
+            context.pTarget = pTarget;
+        }
+
+        // Update state machine if we have a target
+        if (pTarget)
+        {
+            m_pStateMachine->Update(delta, context);
         }
         else
         {
-            navigationComponent.ClearTarget();
-            navigationComponent.SetThrust(ShipThrust::None);
-        }
-    });
-}
-
-void AIStrikecraftControllerSystem::ProcessCombatState(entt::entity entity, ShipNavigationComponent& navigation, AIStrikecraftControllerComponent& controller, const TransformComponent& transform, EntitySharedPtr target, float delta)
-{
-    const glm::vec3 myPos = transform.GetTranslation();
-    const glm::vec3 targetPos = target->GetComponent<TransformComponent>().GetTranslation();
-    const glm::vec3 toTarget = targetPos - myPos;
-    const float distanceToTarget = glm::length(toTarget);
-    const glm::vec3 forward = transform.GetForward();
-    const float angleToTarget = glm::degrees(glm::acos(glm::clamp(glm::dot(glm::normalize(toTarget), forward), -1.0f, 1.0f)));
-    
-    controller.SetLastTargetPosition(targetPos);
-    
-    switch (controller.GetState())
-    {
-        case AIStrikecraftState::Approach:
-        {
-            glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
-            navigation.SetTarget(interceptPoint);
-            navigation.SetThrust(ShipThrust::Forward);
-            
-            if (distanceToTarget <= controller.GetMaxRange())
+            // No target - clear navigation
+            EntitySharedPtr pOwner = context.pOwner.lock();
+            if (pOwner && pOwner->HasComponent<ShipNavigationComponent>())
             {
-                controller.SetState(AIStrikecraftState::Attack);
-            }
-            
-            UpdateWeaponSystems(entity, targetPos, false);
-            break;
-        }
-        
-        case AIStrikecraftState::Attack:
-        {
-            glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
-            navigation.SetTarget(interceptPoint);
-            navigation.SetThrust(ShipThrust::Forward);
-            
-            const bool shouldFire = controller.ShouldFire(distanceToTarget, angleToTarget);
-            UpdateWeaponSystems(entity, targetPos, shouldFire);
-            
-            if (controller.ShouldChangeState() || distanceToTarget < controller.GetMinRange())
-            {
-                glm::vec3 breakDir = GenerateBreakDirection(forward, glm::normalize(toTarget));
-                controller.SetBreakDirection(breakDir);
-                controller.SetState(AIStrikecraftState::Break);
-            }
-            break;
-        }
-        
-        case AIStrikecraftState::Break:
-        {
-            // Break away from the target. The actual distance doesn't matter, as we'll keep moving towards it for `break_duration`. 
-            glm::vec3 breakTarget = myPos + controller.GetBreakDirection() * 100.0f;
-            navigation.SetTarget(breakTarget);
-            navigation.SetThrust(ShipThrust::Forward);
-            
-            UpdateWeaponSystems(entity, targetPos, false);
-            
-            if (controller.ShouldChangeState())
-            {
-                if (Random::Get(0.0f, 1.0f) < 0.8f)
-                {
-                    controller.SetState(AIStrikecraftState::Approach);
-                }
-                else
-                {
-                    const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
-                    const glm::vec3 repositionOffset = repositionDirection * controller.GetMaxRange();
-                    controller.SetRepositionTarget(targetPos + repositionOffset);
-                    controller.SetState(AIStrikecraftState::Reposition);
-                }
-            }
-            break;
-        }
-        
-        case AIStrikecraftState::Reposition:
-        {
-            const glm::vec3& repositionTarget = controller.GetRepositionTarget();
-            navigation.SetTarget(repositionTarget);
-            navigation.SetThrust(ShipThrust::Forward);
-            
-            UpdateWeaponSystems(entity, targetPos, false);
-
-            const float repositionGoalRadius = 20.0f;
-            const float distanceToReposition = glm::length(repositionTarget - myPos);
-            if (distanceToReposition < repositionGoalRadius)
-            {
-                controller.SetState(AIStrikecraftState::Approach);
-            }
-            break;
-        }
-    }
-}
-
-glm::vec3 AIStrikecraftControllerSystem::CalculateInterceptPoint(const glm::vec3& shooterPos, const glm::vec3& targetPos, const glm::vec3& targetVel, float projectileSpeed) const
-{
-    const glm::vec3 toTarget = targetPos - shooterPos;
-    const float distance = glm::length(toTarget);
-    const float timeToIntercept = distance / projectileSpeed;
-    return targetPos + targetVel * timeToIntercept;
-}
-
-glm::vec3 AIStrikecraftControllerSystem::GenerateBreakDirection(const glm::vec3& forward, const glm::vec3& toTarget) const
-{
-    const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));    
-    const float rightComponent = Random::Get(-1.0f, 1.0f);
-    const float forwardComponent = Random::Get(-0.5f, 0.5f);
-    const glm::vec3 breakDir = right * rightComponent + forward * forwardComponent;
-    return glm::normalize(breakDir);
-}
-
-void AIStrikecraftControllerSystem::UpdateWeaponSystems(entt::entity shipEntity, const glm::vec3& targetPos, bool shouldFire)
-{
-    entt::registry& registry = GetActiveScene()->GetRegistry();
-    
-    auto hardpointView = registry.view<HardpointComponent>();
-    hardpointView.each([&registry, shipEntity, targetPos, shouldFire](const auto entity, HardpointComponent& hardpointComponent) {
-        if (entity == shipEntity)
-        {
-            for (const auto& hardpoint : hardpointComponent.hardpoints)
-            {
-                if (hardpoint.m_pEntity && hardpoint.m_pEntity->HasComponent<WeaponComponent>())
-                {
-                    WeaponComponent& weaponComponent = hardpoint.m_pEntity->GetComponent<WeaponComponent>();
-                    weaponComponent.m_TargetPosition = targetPos;
-                    weaponComponent.m_WantsToFire = shouldFire;
-                }
+                auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
+                navigation.ClearTarget();
+                navigation.SetThrust(ShipThrust::None);
             }
         }
     });
@@ -186,10 +374,7 @@ EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget(const WingComponent
     {
         return Game::Get()->GetSector()->GetPlayerMech();
     }
-    else
-    {
-        return nullptr;
-    }
+    return nullptr;
 }
 
 } // namespace WingsOfSteel
