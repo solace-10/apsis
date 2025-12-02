@@ -11,6 +11,7 @@
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "systems/ai_strikecraft_controller_system.hpp"
+#include "systems/ai_utils.hpp"
 
 namespace WingsOfSteel
 {
@@ -18,8 +19,7 @@ namespace WingsOfSteel
 // Helper functions (file-local)
 namespace
 {
-    glm::vec3 CalculateInterceptPoint(const glm::vec3& shooterPos, const glm::vec3& targetPos,
-        const glm::vec3& targetVel, float projectileSpeed)
+    glm::vec3 CalculateInterceptPoint(const glm::vec3& shooterPos, const glm::vec3& targetPos, const glm::vec3& targetVel, float projectileSpeed)
     {
         const glm::vec3 toTarget = targetPos - shooterPos;
         const float distance = glm::length(toTarget);
@@ -104,24 +104,26 @@ public:
         EntitySharedPtr pOwner = context.pOwner.lock();
         EntitySharedPtr pTarget = context.pTarget.lock();
         if (!pOwner || !pTarget)
+        {
             return std::nullopt;
+        }
 
         const auto& transform = pOwner->GetComponent<TransformComponent>();
         auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
 
-        const glm::vec3 myPos = transform.GetTranslation();
-        const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
-        const float distanceToTarget = glm::length(targetPos - myPos);
+        const glm::vec3 strikecraftPosition = transform.GetTranslation();
+        const glm::vec3 targetPosition = pTarget->GetComponent<TransformComponent>().GetTranslation();
 
         // Navigate toward intercept point
-        glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
+        glm::vec3 interceptPoint = CalculateInterceptPoint(strikecraftPosition, targetPosition, glm::vec3(0.0f), 1000.0f);
         navigation.SetTarget(interceptPoint);
         navigation.SetThrust(ShipThrust::Forward);
 
         // Weapons off during approach
-        UpdateWeaponSystems(pOwner, targetPos, false);
+        UpdateWeaponSystems(pOwner, targetPosition, false);
 
         // Transition to Attack when in range
+        const float distanceToTarget = glm::length(targetPosition - strikecraftPosition);
         if (distanceToTarget <= context.maxRange)
         {
             return StrikecraftState::Attack;
@@ -148,7 +150,9 @@ public:
         EntitySharedPtr pOwner = context.pOwner.lock();
         EntitySharedPtr pTarget = context.pTarget.lock();
         if (!pOwner || !pTarget)
+        {
             return std::nullopt;
+        }
 
         const auto& transform = pOwner->GetComponent<TransformComponent>();
         auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
@@ -158,8 +162,7 @@ public:
         const glm::vec3 toTarget = targetPos - myPos;
         const float distanceToTarget = glm::length(toTarget);
         const glm::vec3 forward = transform.GetForward();
-        const float angleToTarget = glm::degrees(
-            glm::acos(glm::clamp(glm::dot(glm::normalize(toTarget), forward), -1.0f, 1.0f)));
+        const float angleToTarget = glm::degrees(glm::acos(glm::clamp(glm::dot(glm::normalize(toTarget), forward), -1.0f, 1.0f)));
 
         // Navigate toward intercept point
         glm::vec3 interceptPoint = CalculateInterceptPoint(myPos, targetPos, glm::vec3(0.0f), 1000.0f);
@@ -210,7 +213,9 @@ public:
         EntitySharedPtr pOwner = context.pOwner.lock();
         EntitySharedPtr pTarget = context.pTarget.lock();
         if (!pOwner)
+        {
             return std::nullopt;
+        }
 
         const auto& transform = pOwner->GetComponent<TransformComponent>();
         auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
@@ -242,8 +247,7 @@ public:
                 if (pTarget)
                 {
                     const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
-                    const glm::vec3 repositionDirection = glm::normalize(
-                        glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
+                    const glm::vec3 repositionDirection = glm::normalize(glm::vec3(Random::Get(-1.0f, 1.0f), 0.0f, Random::Get(-1.0f, 1.0f)));
                     context.repositionTarget = targetPos + repositionDirection * context.maxRange;
                 }
                 return StrikecraftState::Reposition;
@@ -264,12 +268,18 @@ public:
         context.stateTimer = 0.0f;
     }
 
+    void OnExit(StrikecraftContext& context) override
+    {
+        context.pTarget.reset();
+    }
+
     std::optional<StrikecraftState> Update(float delta, StrikecraftContext& context) override
     {
         EntitySharedPtr pOwner = context.pOwner.lock();
-        EntitySharedPtr pTarget = context.pTarget.lock();
         if (!pOwner)
+        {
             return std::nullopt;
+        }
 
         const auto& transform = pOwner->GetComponent<TransformComponent>();
         auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
@@ -281,6 +291,7 @@ public:
         navigation.SetThrust(ShipThrust::Forward);
 
         // Weapons off during reposition
+        EntitySharedPtr pTarget = context.pTarget.lock();
         if (pTarget)
         {
             const glm::vec3 targetPos = pTarget->GetComponent<TransformComponent>().GetTranslation();
@@ -336,11 +347,17 @@ void AIStrikecraftControllerSystem::Update(float delta)
             return;
         }
 
+        EntitySharedPtr pOwner = context.pOwner.lock();
+        if (!pOwner)
+        {
+            return;
+        }
+
         // Acquire target if needed
         EntitySharedPtr pTarget = context.pTarget.lock();
         if (!pTarget)
         {
-            pTarget = AcquireTarget(wingComponent);
+            pTarget = AcquireTarget(pOwner, wingComponent);
             context.pTarget = pTarget;
         }
 
@@ -352,8 +369,7 @@ void AIStrikecraftControllerSystem::Update(float delta)
         else
         {
             // No target - clear navigation
-            EntitySharedPtr pOwner = context.pOwner.lock();
-            if (pOwner && pOwner->HasComponent<ShipNavigationComponent>())
+            if (pOwner->HasComponent<ShipNavigationComponent>())
             {
                 auto& navigation = pOwner->GetComponent<ShipNavigationComponent>();
                 navigation.ClearTarget();
@@ -363,16 +379,16 @@ void AIStrikecraftControllerSystem::Update(float delta)
     });
 }
 
-EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget(const WingComponent& wingComponent) const
+EntitySharedPtr AIStrikecraftControllerSystem::AcquireTarget(EntitySharedPtr pAcquiringEntity, const WingComponent& wingComponent) const
 {
     const WingRole role = wingComponent.Role;
     if (role == WingRole::Offense)
     {
-        return Game::Get()->GetSector()->GetPlayerCarrier();
+        return AIUtils::AcquireTarget(pAcquiringEntity, { ThreatCategory::Carrier, ThreatCategory::AntiCapital, ThreatCategory::Interceptor }, AIUtils::TargetRangeOrder::Closest);
     }
     else if (role == WingRole::Interception || role == WingRole::Defense)
     {
-        return Game::Get()->GetSector()->GetPlayerMech();
+        return AIUtils::AcquireTarget(pAcquiringEntity, { ThreatCategory::AntiCapital, ThreatCategory::Carrier, ThreatCategory::Interceptor }, AIUtils::TargetRangeOrder::Closest);
     }
     return nullptr;
 }

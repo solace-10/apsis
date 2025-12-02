@@ -23,6 +23,11 @@ void ThreatIndicatorSystem::Update(float delta)
         const FactionComponent& factionComponent,
         const TransformComponent& transformComponent) {
 
+        if (factionComponent.Value != Faction::Hostile)
+        {
+            return;
+        }
+
         auto threatIt = m_Threats.find(entityHandle);
         if (threatIt == m_Threats.cend())
         {

@@ -56,7 +56,7 @@ public:
     void Update(float delta) override;
 
 private:
-    EntitySharedPtr AcquireTarget(const WingComponent& wingComponent) const;
+    EntitySharedPtr AcquireTarget(EntitySharedPtr pAcquiringEntity, const WingComponent& wingComponent) const;
 
     std::unique_ptr<StateMachine<StrikecraftState, StrikecraftContext>> m_pStateMachine;
 };

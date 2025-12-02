@@ -33,6 +33,10 @@
             "type": "carrier"
         },
         {
+            "type": "threat",
+            "value": "Carrier"
+        },
+        {
             "type": "hardpoint",
             "resource": "/models/player/carrier.glb",
             "hardpoints": [
