@@ -31,11 +31,17 @@ public:
 
 private:
     void SpawnCarrier();
+
+    struct EncounterTier
+    {
+        DeckUniquePtr pDeck;
+        float timeBetweenActions{ 30.0f };  
+    };
+    
     EntityWeakPtr m_pCarrier;
     std::vector<WingUniquePtr> m_Wings;
-
-    SectorWeakPtr m_pSector;
-    std::array<DeckUniquePtr, 3> m_EncounterTiers;
+    SectorWeakPtr m_pSector;    
+    std::array<EncounterTier, 3> m_EncounterTiers;
     int m_CurrentTier{0};
     float m_TimeToNextAction{ 0.0f };
 };

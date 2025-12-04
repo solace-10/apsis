@@ -54,7 +54,10 @@ void Encounter::Initialize(SectorSharedPtr pSector)
             {
                 DeckUniquePtr pDeck = std::make_unique<Deck>();
                 pDeck->Initialize(pDataStore.get(), tier);
-                m_EncounterTiers[tier - 1] = std::move(pDeck);
+                m_EncounterTiers[tier - 1] = EncounterTier{
+                    .pDeck = std::move(pDeck),
+                    .timeBetweenActions = 15.0f
+                };
             }
 
             SpawnCarrier();
@@ -86,20 +89,20 @@ void Encounter::Update(float delta)
     m_TimeToNextAction -= delta;
     if (m_TimeToNextAction < 0.0)
     {
-        Deck* pCurrentDeck = m_EncounterTiers[m_CurrentTier].get();
+        Deck* pCurrentDeck = m_EncounterTiers[m_CurrentTier].pDeck.get();
         if (pCurrentDeck->PlayNextCard())
         {
-            m_TimeToNextAction = 30.0f;
+            m_TimeToNextAction = m_EncounterTiers[m_CurrentTier].timeBetweenActions;
         }
         else
         {
-            if (m_CurrentTier + 1 < m_EncounterTiers.size())
+            if (m_CurrentTier + 1 < m_EncounterTiers.size() && m_EncounterTiers[m_CurrentTier + 1].pDeck != nullptr)
             {
                 m_CurrentTier++;
             }
             else
             {
-                m_EncounterTiers[m_CurrentTier]->ShuffleAndReset();
+                m_EncounterTiers[m_CurrentTier].pDeck->ShuffleAndReset();
             }
         }
     }
@@ -127,7 +130,7 @@ void Encounter::DrawDebugUI()
 
             for (size_t tier = 0; tier < m_EncounterTiers.size(); tier++)
             {
-                Deck* pDeck = m_EncounterTiers[tier].get();
+                Deck* pDeck = m_EncounterTiers[tier].pDeck.get();
                 if (!pDeck)
                 {
                     continue;
@@ -139,7 +142,7 @@ void Encounter::DrawDebugUI()
                     ImGui::BeginDisabled(played);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Text("%d", tier + 1);
+                    ImGui::Text("%d", static_cast<int>(tier + 1));
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", pCard->GetName().c_str());
                     ImGui::EndDisabled();
