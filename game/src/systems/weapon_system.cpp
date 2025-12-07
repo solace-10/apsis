@@ -12,6 +12,8 @@
 
 #include "components/faction_component.hpp"
 #include "components/hardpoint_component.hpp"
+#include "components/mech_modules_component.hpp"
+#include "components/shield_component.hpp"
 #include "components/weapon_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "game.hpp"
@@ -117,6 +119,32 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
                 Log::Error() << "Adding a WeaponComponent to an entity where the parent doesn't have a FactionComponent. This will break AI!";
             }
 
+            if (pParentEntity->HasComponent<MechModulesComponent>())
+            {
+                MechModulesComponent& mechModulesComponent = pParentEntity->GetComponent<MechModulesComponent>();
+                if (hardpointName == "LeftArm")
+                {
+                    mechModulesComponent.LeftArm = pWeaponEntity;
+                }
+                else if (hardpointName == "RightArm")
+                {
+                    mechModulesComponent.RightArm = pWeaponEntity;
+                }
+                else if (hardpointName == "LeftShoulder")
+                {
+                    mechModulesComponent.LeftShoulder = pWeaponEntity;
+                }
+                else if (hardpointName == "RightShoulder")
+                {
+                    mechModulesComponent.RightShoulder = pWeaponEntity;
+                }
+                else
+                {
+                    Log::Error() << "Attempting to attach a weapon to an unexpected hardpoint name for a mech.";
+                }
+            }            
+
+            bool hardpointFound = false;
             HardpointComponent& hardpointComponent = pParentEntity->GetComponent<HardpointComponent>();
             for (auto& hardpoint : hardpointComponent.hardpoints)
             {
@@ -129,8 +157,14 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
                     weaponComponent.m_ArcMaxDegrees = hardpoint.m_ArcMaxDegrees;
                     weaponComponent.m_AngleDegrees = (hardpoint.m_ArcMinDegrees + hardpoint.m_ArcMaxDegrees) / 2.0f;
                     weaponComponent.m_AutomatedTargeting = automatedTargeting;
+                    hardpointFound = true;
                     break;
                 }
+            }
+
+            if (!hardpointFound)
+            {
+                Log::Error() << "Failed to attach weapon to hardpoint.";
             }
         });
 }
@@ -327,6 +361,21 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
         else
         {
             weaponComponent.m_WantsToFire = false;
+        }
+    }
+
+    EntitySharedPtr pWeaponParentEntity = pWeaponEntity->GetParent().lock();
+    if (pWeaponParentEntity && pWeaponParentEntity->HasComponent<MechModulesComponent>())
+    {
+        const MechModulesComponent& mechModulesComponent = pWeaponParentEntity->GetComponent<MechModulesComponent>();
+        EntitySharedPtr pEnergyShieldEntity = mechModulesComponent.EnergyShield.lock();
+        if (pEnergyShieldEntity)
+        {
+            const ShieldComponent& shieldComponent = pEnergyShieldEntity->GetComponent<ShieldComponent>();
+            if (shieldComponent.CurrentState != ShieldState::Inactive)
+            {
+                weaponComponent.m_WantsToFire = false;
+            }
         }
     }
 

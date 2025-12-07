@@ -15,6 +15,7 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/ai_mech_controller_component.hpp"
+#include "components/mech_modules_component.hpp"
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/shield_component.hpp"
@@ -225,6 +226,14 @@ void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech
 
                 pShieldEntity->SetParent(pMechEntity);
                 pShieldEntity->GetComponent<ShieldComponent>().SetOwner(pShieldEntity);
+                
+                if (!pMechEntity->HasComponent<MechModulesComponent>())
+                {
+                    Log::Error() << "Mech has no MechModulesComponent.";
+                    return;
+                }
+
+                pMechEntity->GetComponent<MechModulesComponent>().EnergyShield = pShieldEntity;
             });
         }
     });
