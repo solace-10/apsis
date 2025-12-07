@@ -27,7 +27,7 @@
         },
         {
             "type": "ship_engine",
-            "linear_force": 100.0,
+            "linear_force": 150.0,
             "torque": 200.0
         },
         {
