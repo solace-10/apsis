@@ -14,7 +14,8 @@ public:
     ~HullComponent() {}
 
     // If the health of the hull is 0 or less, the ship should be destroyed.
-    int32_t Health{10};
+    int32_t Health{ 10 };
+    int32_t MaximumHealth{ 10 };
 
     // Thickness is essentially armor that doesn't get degraded.
     // This is used by ammo to calculate whether it punches through an entity or not.
@@ -22,7 +23,7 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
-        Health = Json::DeserializeInteger(pContext, json, "health");
+        MaximumHealth = Health = Json::DeserializeInteger(pContext, json, "health");
         Thickness = Json::DeserializeInteger(pContext, json, "thickness", 10);
     }
 };

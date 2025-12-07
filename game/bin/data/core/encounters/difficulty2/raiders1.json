@@ -1,34 +1,103 @@
 {
-    "deck": {
-        "tier1": [
-            {
-                "card": {
-                    "name": "Launch interceptors",
-                    "type": "deploy_escort",
-                    "escorts": [
-                        "/entity_prefabs/raiders/interceptor.json",
-                        "/entity_prefabs/raiders/interceptor.json",
-                        "/entity_prefabs/raiders/interceptor.json",
-                        "/entity_prefabs/raiders/interceptor.json",
-                        "/entity_prefabs/raiders/interceptor.json"
-                    ],
-                    "wing_role": "interception"
+    "tiers": [
+        {
+            "time_between_actions": 25,
+            "deck": [
+                {
+                    "card": {
+                        "name": "Launch interceptors",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json"
+                        ],
+                        "wing_role": "interception"
+                    },
+                    "count": 4
                 },
-                "count": 4
-            },
-            {
-                "card": {
-                    "name": "Launch bombers",
-                    "type": "deploy_escort",
-                    "escorts": [ 
-                        "/entity_prefabs/raiders/bomber.json",
-                        "/entity_prefabs/raiders/bomber.json",
-                        "/entity_prefabs/raiders/bomber.json"
-                    ],
-                    "wing_role": "offense"
+                {
+                    "card": {
+                        "name": "Launch bombers",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json"
+                        ],
+                        "wing_role": "offense"
+                    },
+                    "count": 4
+                }
+            ]
+        },
+        {
+            "time_between_actions": 20,
+            "deck": [
+                {
+                    "card": {
+                        "name": "Launch interceptors",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json"
+                        ],
+                        "wing_role": "interception"
+                    },
+                    "count": 4
                 },
-                "count": 4
-            }
-        ]
-    }
+                {
+                    "card": {
+                        "name": "Launch bombers",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json"
+                        ],
+                        "wing_role": "offense"
+                    },
+                    "count": 4
+                }
+            ]
+        },
+        {
+            "time_between_actions": 15,
+            "deck": [
+                {
+                    "card": {
+                        "name": "Launch interceptors",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json",
+                            "/entity_prefabs/raiders/interceptor.json"
+                        ],
+                        "wing_role": "interception"
+                    },
+                    "count": 4
+                },
+                {
+                    "card": {
+                        "name": "Launch bombers",
+                        "type": "deploy_escort",
+                        "escorts": [
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json",
+                            "/entity_prefabs/raiders/bomber.json"
+                        ],
+                        "wing_role": "offense"
+                    },
+                    "count": 4
+                }
+            ]
+        }
+    ]
 }

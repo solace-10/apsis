@@ -22,8 +22,8 @@ public:
     ~Deck() = default;
 
     // `pResource`: an encounter from `encounters/difficulty<n>`.
-    // `tier`: 1, 2 or 3
-    void Initialize(ResourceDataStore* pResource, uint32_t tier);
+    // `tierObject`: the JSON object for this tier from the "tiers" array.
+    void Initialize(ResourceDataStore* pResource, const Json::Data& tierObject);
 
     // Plays a card from the deck if possible; returns if it was successful.
     bool PlayNextCard();

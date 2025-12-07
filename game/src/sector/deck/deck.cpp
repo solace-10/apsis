@@ -1,15 +1,14 @@
 #include "sector/deck/deck.hpp"
 
 #include <algorithm>
-#include <sstream>
 #include <random>
 
-#include <core/serialization.hpp>
 #include <core/log.hpp>
-#include <pandora.hpp>
+#include <core/serialization.hpp>
+#include <pandora.hpp>
 
-#include "sector/deck/deploy_escort_card.hpp"
 #include "sector/deck/card.hpp"
+#include "sector/deck/deploy_escort_card.hpp"
 
 namespace WingsOfSteel
 {
@@ -20,28 +19,17 @@ namespace
     constexpr const char* kCardKey = "card";
     constexpr const char* kCardTypeKey = "type";
     constexpr const char* kCountKey = "count";
-}
+} // namespace
 
-void Deck::Initialize(ResourceDataStore* pResource, uint32_t tier)
+void Deck::Initialize(ResourceDataStore* pResource, const Json::Data& tierObject)
 {
-    const Json::Data& data = pResource->Data();
-
-    const auto deckObject = Json::DeserializeObject(pResource, data, kDeckKey);
-    if (!deckObject.has_value())
+    const auto deckArray = Json::DeserializeArray(pResource, tierObject, kDeckKey);
+    if (!deckArray.has_value())
     {
         return;
     }
 
-    std::stringstream tierKeyStream;
-    tierKeyStream << "tier" << tier;
-    const std::string tierKey(tierKeyStream.str());
-    const auto tierArray = Json::DeserializeArray(pResource, deckObject.value(), tierKey);
-    if (!tierArray.has_value())
-    {
-        return;
-    }
-
-    for (const auto& cardEntryObject : tierArray.value())
+    for (const auto& cardEntryObject : deckArray.value())
     {
         const auto cardObject = Json::DeserializeObject(pResource, cardEntryObject, kCardKey);
         if (!cardObject.has_value())
@@ -54,6 +42,7 @@ void Deck::Initialize(ResourceDataStore* pResource, uint32_t tier)
         {
             return;
         }
+
         CardSharedPtr pCard;
         if (cardInstanceType == "deploy_escort")
         {

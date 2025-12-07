@@ -31,6 +31,8 @@ public:
 
 private:
     void SpawnCarrier();
+    void EvaluateEscalation();
+    void EscalateTier();
 
     struct EncounterTier
     {

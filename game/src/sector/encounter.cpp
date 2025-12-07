@@ -1,21 +1,18 @@
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <core/serialization.hpp>
 #include <core/log.hpp>
 #include <core/random.hpp>
+#include <core/serialization.hpp>
 #include <imgui/imgui.hpp>
 #include <pandora.hpp>
 #include <resources/resource_system.hpp>
 #include <vfs/vfs.hpp>
 
-#include "components/faction_component.hpp"
-#include "components/wing_component.hpp"
+#include "components/hull_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "sector/deck/deck.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
-#include "sector/wing.hpp"
-#include "systems/carrier_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -29,7 +26,7 @@ void Encounter::Initialize(SectorSharedPtr pSector)
     const std::vector<std::string> encounterFiles = GetVFS()->List(encountersPath);
     if (encounterFiles.empty())
     {
-        Log::Error() << "No encounter files found in '" << encountersPath << "'."; 
+        Log::Error() << "No encounter files found in '" << encountersPath << "'.";
         return;
     }
 
@@ -39,8 +36,7 @@ void Encounter::Initialize(SectorSharedPtr pSector)
 
     // Load the encounter data
     SectorWeakPtr pWeakSector = pSector;
-    GetResourceSystem()->RequestResource(encounterFile, [this, pWeakSector](ResourceSharedPtr pResource)
-    {
+    GetResourceSystem()->RequestResource(encounterFile, [this, pWeakSector](ResourceSharedPtr pResource) {
         SectorSharedPtr pSector = pWeakSector.lock();
         if (!pSector)
         {
@@ -50,14 +46,23 @@ void Encounter::Initialize(SectorSharedPtr pSector)
         ResourceDataStoreSharedPtr pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         if (pDataStore)
         {
-            for (uint32_t tier = 1; tier <= 1; tier++)
+            auto tiersArray = Json::DeserializeArray(pDataStore.get(), pDataStore->Data(), "tiers");
+            if (!tiersArray.has_value())
             {
+                Log::Error() << "Encounter file missing 'tiers' array.";
+                return;
+            }
+
+            const size_t numTiers = std::min(tiersArray.value().size(), m_EncounterTiers.size());
+            for (size_t tierIndex = 0; tierIndex < numTiers; tierIndex++)
+            {
+                const auto& tierObject = tiersArray.value()[tierIndex];
+
+                m_EncounterTiers[tierIndex].timeBetweenActions = Json::DeserializeFloat(pDataStore.get(), tierObject, "time_between_actions");
+
                 DeckUniquePtr pDeck = std::make_unique<Deck>();
-                pDeck->Initialize(pDataStore.get(), tier);
-                m_EncounterTiers[tier - 1] = EncounterTier{
-                    .pDeck = std::move(pDeck),
-                    .timeBetweenActions = 15.0f
-                };
+                pDeck->Initialize(pDataStore.get(), tierObject);
+                m_EncounterTiers[tierIndex].pDeck = std::move(pDeck);
             }
 
             SpawnCarrier();
@@ -69,7 +74,7 @@ void Encounter::SpawnCarrier()
 {
     SceneWeakPtr pWeakScene = m_pSector;
     SectorWeakPtr pWeakSector = m_pSector;
-    EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, 0.0f)), [pWeakSector](EntitySharedPtr pEntity){
+    EntityBuilder::Build(pWeakScene, "/entity_prefabs/raiders/carrier.json", glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, 0.0f)), [pWeakSector](EntitySharedPtr pEntity) {
         SectorSharedPtr pSector = pWeakSector.lock();
         if (pSector)
         {
@@ -96,18 +101,52 @@ void Encounter::Update(float delta)
         }
         else
         {
-            if (m_CurrentTier + 1 < m_EncounterTiers.size() && m_EncounterTiers[m_CurrentTier + 1].pDeck != nullptr)
-            {
-                m_CurrentTier++;
-            }
-            else
-            {
-                m_EncounterTiers[m_CurrentTier].pDeck->ShuffleAndReset();
-            }
+            EscalateTier();
         }
     }
 
+    EvaluateEscalation();
+
     DrawDebugUI();
+}
+
+void Encounter::EvaluateEscalation()
+{
+    EntitySharedPtr pCarrier = m_pCarrier.lock();
+    if (!pCarrier->HasComponent<HullComponent>())
+    {
+        return;
+    }
+
+    // Don't trigger escalation logic at the highest tier, as that will just cause the deck to be reshuffled.
+    if (m_CurrentTier == 2)
+    {
+        return;
+    }
+
+    const HullComponent& hullComponent = pCarrier->GetComponent<HullComponent>();
+    const float hullRatio = static_cast<float>(hullComponent.Health) / static_cast<float>(hullComponent.MaximumHealth);
+    if (m_CurrentTier == 0 && hullRatio <= 0.66f)
+    {
+        EscalateTier();
+    }
+    else if (m_CurrentTier == 1 && hullRatio <= 0.33f)
+    {
+        EscalateTier();
+    }
+}
+
+void Encounter::EscalateTier()
+{
+    if (m_CurrentTier + 1 < m_EncounterTiers.size() && m_EncounterTiers[m_CurrentTier + 1].pDeck != nullptr)
+    {
+        m_CurrentTier++;
+        Log::Info() << "Encounter escalated to tier " << m_CurrentTier;
+    }
+    else
+    {
+        m_EncounterTiers[m_CurrentTier].pDeck->ShuffleAndReset();
+    }
 }
 
 void Encounter::DrawDebugUI()
