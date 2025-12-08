@@ -15,6 +15,8 @@
 #include "components/mech_navigation_component.hpp"
 #include "components/threat_component.hpp"
 #include "components/weapon_component.hpp"
+#include "components/mech_modules_component.hpp"
+#include "components/shield_component.hpp"
 #include "components/wing_component.hpp"
 #include "systems/ai_mech_controller_system.hpp"
 #include "systems/ai_utils.hpp"
@@ -272,6 +274,10 @@ class IdleDefenseState : public State<MechDefenseState, MechDefenseContext>
 public:
     std::optional<MechDefenseState> Update(float delta, MechDefenseContext& context) override
     {
+        if (context.underFire)
+        {
+            return MechDefenseState::UnderFire;
+        }
         return std::nullopt;
     }
 
@@ -283,14 +289,52 @@ class UnderFireDefenseState : public State<MechDefenseState, MechDefenseContext>
 public:
     void OnEnter(MechDefenseContext& context) override
     {
+        context.shieldCooldown = context.shieldDuration;
+        SetShieldActive(context, true);
+    }
+
+    void OnExit(MechDefenseContext& context) override
+    {
+        SetShieldActive(context, false);
     }
 
     std::optional<MechDefenseState> Update(float delta, MechDefenseContext& context) override
     {
+        // Reset cooldown timer if we're still under fire.
+        if (context.underFire)
+        {
+            context.shieldCooldown = context.shieldDuration;
+            context.underFire = false;
+        }
+
+        context.shieldCooldown -= delta;
+        if (context.shieldCooldown <= 0.0f)
+        {
+            return MechDefenseState::Idle;
+        }
+
         return std::nullopt;
     }
 
     MechDefenseState GetStateID() const override { return MechDefenseState::UnderFire; }
+
+private:
+    void SetShieldActive(MechDefenseContext& context, bool active)
+    {
+        EntitySharedPtr pMechEntity = context.pOwner.lock();
+        if (!pMechEntity || !pMechEntity->HasComponent<MechModulesComponent>())
+        {
+            return;
+        }
+
+        MechModulesComponent& modulesComponent = pMechEntity->GetComponent<MechModulesComponent>();
+        EntitySharedPtr pShieldEntity = modulesComponent.EnergyShield.lock();
+        if (pShieldEntity && pShieldEntity->HasComponent<ShieldComponent>())
+        {
+            ShieldComponent& shieldComponent = pShieldEntity->GetComponent<ShieldComponent>();
+            shieldComponent.WantedState = active ? ShieldState::Active : ShieldState::Inactive;
+        }
+    }
 };
 
 class RetreatDefenseState : public State<MechDefenseState, MechDefenseContext>

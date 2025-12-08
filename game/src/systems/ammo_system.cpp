@@ -8,6 +8,7 @@
 #include <scene/scene.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/ai_mech_controller_component.hpp"
 #include "components/ammo_impact_component.hpp"
 #include "components/ammo_movement_component.hpp"
 #include "components/ammo_raycast_component.hpp"
@@ -182,6 +183,12 @@ void AmmoSystem::ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pH
         hullComponent.Health -= ammoImpactComponent.Damage;
         ammoImpactComponent.ArmorPenetration -= hullComponent.Thickness;
         hitEntityStillAlive = (hullComponent.Health > 0.0f);
+
+        // Notify AI that this entity is under fire.
+        if (pHitEntity->HasComponent<AIMechControllerComponent>())
+        {
+            pHitEntity->GetComponent<AIMechControllerComponent>().DefenseContext.underFire = true;
+        }
     }
     else
     {

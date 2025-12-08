@@ -32,7 +32,10 @@ struct MechOffenseContext
 
 struct MechDefenseContext
 {
+    EntityWeakPtr pOwner;
     bool underFire{ false };
+    float shieldCooldown{ 0.0f };
+    float shieldDuration{ 2.0f };  // How long to keep shield up after last hit
     std::optional<MechDefenseState> currentState;
 };
 

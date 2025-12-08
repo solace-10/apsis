@@ -196,6 +196,7 @@ void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech
                 AIMechControllerComponent& mechControllerComponent = pMechEntity->AddComponent<AIMechControllerComponent>();
                 mechControllerComponent.OffenseContext.pOwner = pMechEntity;
                 mechControllerComponent.NavigationContext.pOwner = pMechEntity;
+                mechControllerComponent.DefenseContext.pOwner = pMechEntity;
             }
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
