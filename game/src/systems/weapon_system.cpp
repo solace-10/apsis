@@ -394,7 +394,7 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
                 const glm::vec3 aimDirection = glm::normalize(glm::vec3(localRotationTransform * hardpointWorldTransform[2]));
                 const glm::vec3 raycastEnd = raycastStart + aimDirection * weaponComponent.m_Range;
                 std::optional<PhysicsSimulationSystem::RaycastResult> raycastResult = pPhysicsSystem->Raycast(raycastStart, raycastEnd);
-                if (raycastResult.has_value() && raycastResult->pEntity && raycastResult->pEntity->HasComponent<FactionComponent>() && !raycastResult->pEntity->HasComponent<GhostComponent>())
+                if (raycastResult.has_value() && raycastResult->pEntity && raycastResult->pEntity->HasComponent<FactionComponent>())
                 {
                     const FactionComponent& otherFactionComponent = raycastResult->pEntity->GetComponent<FactionComponent>();
                     if (factionComponent.Value == otherFactionComponent.Value)

@@ -221,7 +221,8 @@ public:
             return std::nullopt;
         }
 
-        const float distanceToTarget = glm::distance(pMechEntity->GetComponent<TransformComponent>().GetTranslation(), targetTransformComponent.GetTranslation());
+        const glm::vec3 targetPosition = targetTransformComponent.GetTranslation();
+        const float distanceToTarget = glm::distance(pMechEntity->GetComponent<TransformComponent>().GetTranslation(), targetPosition);
         HardpointComponent& hardpointComponent = pMechEntity->GetComponent<HardpointComponent>();
         for (auto& hardpoint : hardpointComponent.hardpoints)
         {
@@ -233,6 +234,7 @@ public:
 
             WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
             weaponComponent.m_WantsToFire = (distanceToTarget <= weaponComponent.m_Range);
+            weaponComponent.m_TargetPosition = targetPosition;
         }
 
         return std::nullopt;
@@ -257,7 +259,9 @@ private:
                 continue;
             }
 
-            pWeaponEntity->GetComponent<WeaponComponent>().m_WantsToFire = false;
+            WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
+            weaponComponent.m_WantsToFire = false;
+            weaponComponent.m_TargetPosition.reset();
         }
     }
 };
