@@ -60,15 +60,11 @@ void AmmoSystem::Update(float delta)
                     EntitySharedPtr pHitEntity = result.pEntity;
                     if (pHitEntity)
                     {
-                        if (pHitEntity->HasComponent<ShieldComponent>())
+                        hasHitShieldEntity = pHitEntity->HasComponent<ShieldComponent>();    
+                        if (WasBlockedByShield(pHitEntity, result.position))
                         {
-                            hasHitShieldEntity = true;
-                            ShieldComponent& shieldComponent = pHitEntity->GetComponent<ShieldComponent>();
-                            if (shieldComponent.CurrentState == ShieldState::Active)
-                            {
-                                hasHitTerminalEntity = true;
-                                wasBlockedByShield = true;
-                            }
+                            hasHitTerminalEntity = true;
+                            wasBlockedByShield = true;
                         }
 
                         if (!hasHitShieldEntity && !wasBlockedByShield)
@@ -191,6 +187,29 @@ void AmmoSystem::ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pH
     {
         hitEntityStillAlive = true;
     }
+}
+
+bool AmmoSystem::WasBlockedByShield(EntitySharedPtr pHitEntity, const glm::vec3& hitPosition) const
+{
+    if (!pHitEntity->HasComponent<ShieldComponent>())
+    {
+        return false;
+    }
+
+    const ShieldComponent& shieldComponent = pHitEntity->GetComponent<ShieldComponent>();
+    if (shieldComponent.CurrentState != ShieldState::Active)
+    {
+        return false;
+    }
+
+    // Shield only blocks in a 180 degree front arc.
+    const TransformComponent& transformComponent = pHitEntity->GetComponent<TransformComponent>();
+    const glm::vec3 entityPosition = transformComponent.GetTranslation();
+    const glm::vec3 entityForward = transformComponent.GetForward();
+    const glm::vec3 toHitPosition = glm::normalize(hitPosition - entityPosition);
+
+    // Dot product > 0 means the hit is in the front hemisphere.
+    return glm::dot(entityForward, toHitPosition) > 0.0f;
 }
 
 } // namespace WingsOfSteel

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/vec3.hpp>
+
 #include <scene/systems/system.hpp>
 #include <scene/entity.hpp>
 
@@ -21,6 +23,7 @@ public:
 
 private:
     void ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const;
+    bool WasBlockedByShield(EntitySharedPtr pHitEntity, const glm::vec3& hitPosition) const;
 };
 
 } // namespace WingsOfSteel
