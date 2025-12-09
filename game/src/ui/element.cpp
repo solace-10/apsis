@@ -7,6 +7,13 @@
 namespace WingsOfSteel::UI
 {
 
+static uint32_t sElementId = 0;
+
+Element::Element()
+{
+    m_Id = ++sElementId;
+}
+
 nlohmann::json Element::Serialize() const
 {
     nlohmann::json data;

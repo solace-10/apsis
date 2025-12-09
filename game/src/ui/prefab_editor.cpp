@@ -282,7 +282,9 @@ void PrefabEditor::RenderProperties()
     ElementSharedPtr pSelectedElement = m_pSelectedElement.lock();
     if (pSelectedElement)
     {
+        ImGui::PushID(pSelectedElement->GetId());
         pSelectedElement->RenderProperties();
+        ImGui::PopID();
     }
     else
     {

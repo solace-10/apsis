@@ -11,8 +11,8 @@
 #include <core/smart_ptr.hpp>
 #include <imgui/fonts/icons_font_awesome.hpp>
 
-#include "ui/ui.fwd.hpp"
 #include "ui/property.hpp"
+#include "ui/ui.fwd.hpp"
 
 namespace WingsOfSteel::UI
 {
@@ -23,16 +23,16 @@ class Element : public std::enable_shared_from_this<Element>
 public:
     enum class Flags
     {
-        None             = 0,
+        None = 0,
         SelectedInEditor = 1 << 0,
-        AutoSize         = 1 << 1,
-        Selected         = 1 << 2,
-        Disabled         = 1 << 3,
-        Bound            = 1 << 4,
-        Hidden           = 1 << 5
+        AutoSize = 1 << 1,
+        Selected = 1 << 2,
+        Disabled = 1 << 3,
+        Bound = 1 << 4,
+        Hidden = 1 << 5
     };
 
-    Element() {}
+    Element();
     virtual ~Element() {}
 
     virtual ElementType GetType() const = 0;
@@ -61,6 +61,8 @@ public:
     Element* GetParent() const;
     void SetParent(ElementSharedPtr pElement);
 
+    uint32_t GetId() const;
+
 protected:
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, std::string& value, const std::string& defaultValue);
     bool TryDeserialize(const nlohmann::json& data, const std::string& key, int& value, int defaultValue);
@@ -78,13 +80,19 @@ protected:
     }
 
 private:
+    uint32_t m_Id{ 0 };
     PropertyContainer m_Properties;
     std::string m_Name;
     ElementWeakPtr m_pParentElement;
-    uint32_t m_Flags{0};
-    glm::ivec2 m_Size{0};
-    glm::ivec2 m_Position{0};
+    uint32_t m_Flags{ 0 };
+    glm::ivec2 m_Size{ 0 };
+    glm::ivec2 m_Position{ 0 };
 };
+
+inline uint32_t Element::GetId() const
+{
+    return m_Id;
+}
 
 inline Element* Element::GetParent() const
 {
