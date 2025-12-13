@@ -24,7 +24,7 @@ void Image::Render()
     const ImVec2 cp0 = ImGui::GetCursorScreenPos();
     ImVec2 cp1 = cp0;
 
-    if (m_SizeMode == SizeMode::Source)
+    if (m_SizeMode == SizeMode::Source && m_pTexture)
     {
         cp1 = cp0 + glm::vec2(m_pTexture->GetWidth(), m_pTexture->GetHeight());
     }
@@ -36,7 +36,7 @@ void Image::Render()
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
     if (m_pTexture)
     {
-        pDrawList->AddImage(reinterpret_cast<ImTextureID>(m_pTexture->GetTextureView().Get()), cp0, cp1);
+        pDrawList->AddImage(reinterpret_cast<ImTextureID>(m_pTexture->GetTextureView().Get()), cp0, cp1, ImVec2(0, 0), ImVec2(1, 1), m_Color);
     }
     else
     {
@@ -66,6 +66,12 @@ void Image::RenderProperties()
     {
         SetSizeMode(static_cast<SizeMode>(sizeMode));
     }
+
+    ImVec4 color = ImGui::ColorConvertU32ToFloat4(m_Color);
+    if (ImGui::ColorEdit4("Color", &color.x))
+    {
+        SetColor(ImGui::ColorConvertFloat4ToU32(color));
+    }
 }
 
 nlohmann::json Image::Serialize() const
@@ -73,6 +79,12 @@ nlohmann::json Image::Serialize() const
     nlohmann::json data = StackableElement::Serialize();
     data["size_mode"] = magic_enum::enum_name(m_SizeMode);
     data["source"] = m_Source;
+    data["color"] = {
+        static_cast<int>((m_Color >> IM_COL32_R_SHIFT) & 0xFF),
+        static_cast<int>((m_Color >> IM_COL32_G_SHIFT) & 0xFF),
+        static_cast<int>((m_Color >> IM_COL32_B_SHIFT) & 0xFF),
+        static_cast<int>((m_Color >> IM_COL32_A_SHIFT) & 0xFF)
+    };
     return data;
 }
 
@@ -87,6 +99,17 @@ void Image::Deserialize(const nlohmann::json& data)
     SizeMode sizeMode;
     TryDeserialize(data, "size_mode", sizeMode, SizeMode::Source);
     SetSizeMode(sizeMode);
+
+    if (data.contains("color") && data["color"].is_array() && data["color"].size() == 4)
+    {
+        const auto& c = data["color"];
+        SetColor(IM_COL32(
+            c[0].get<int>(),
+            c[1].get<int>(),
+            c[2].get<int>(),
+            c[3].get<int>()
+        ));
+    }
 }
 
 void Image::SetSource(const std::string& source)
@@ -118,6 +141,11 @@ void Image::SetSizeMode(SizeMode sizeMode)
     {
         AddFlag(Flags::AutoSize);
     }
+}
+
+void Image::SetColor(ImU32 color)
+{
+    m_Color = color;
 }
 
 } // namespace WingsOfSteel::UI

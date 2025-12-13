@@ -1,5 +1,8 @@
-#include <imgui/imgui.hpp>
 #include <magic_enum.hpp>
+
+#include <imgui/imgui.hpp>
+#include <imgui/imgui_system.hpp>
+#include <pandora.hpp>
 
 #include "ui/internal/default_markdown.hpp"
 #include "ui/text.hpp"
@@ -44,11 +47,25 @@ void Text::Render()
         }
         else if (m_Mode == Mode::MultiLine)
         {
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::SUPPLY_MONO_REGULAR_22));
             ImGui::TextWrapped("%s", m_Text.c_str());
+            ImGui::PopFont();
         }
         else if (m_Mode == Mode::SingleLine)
         {
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::SUPPLY_MONO_REGULAR_22));
+            if (m_Alignment == Alignment::Right)
+            {
+                const float textWidth = ImGui::CalcTextSize(m_Text.c_str()).x;
+                ImGui::SetCursorScreenPos(ImVec2(cp1.x - textWidth, cp0.y));
+            }
+            else if (m_Alignment == Alignment::Center)
+            {
+                const float textWidth = ImGui::CalcTextSize(m_Text.c_str()).x;
+                ImGui::SetCursorScreenPos(ImVec2(cp0.x + (contentSize.x - textWidth) * 0.5f, cp0.y));
+            }
             ImGui::TextUnformatted(m_Text.c_str());
+            ImGui::PopFont();
         }
     }
 

@@ -13,7 +13,9 @@
 namespace WingsOfSteel
 {
 
+DECLARE_SMART_PTR(DefeatWindow);
 DECLARE_SMART_PTR(Sector);
+DECLARE_SMART_PTR(VictoryWindow);
 
 DECLARE_SMART_PTR(Encounter);
 class Encounter : public IDebugUI
@@ -46,6 +48,9 @@ private:
     std::array<EncounterTier, 3> m_EncounterTiers;
     int m_CurrentTier{0};
     float m_TimeToNextAction{ 0.0f };
+
+    VictoryWindowSharedPtr m_pVictoryWindow;
+    DefeatWindowSharedPtr m_pDefeatWindow;
 };
 
 } // namespace WingsOfSteel

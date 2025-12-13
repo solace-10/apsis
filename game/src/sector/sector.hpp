@@ -42,7 +42,7 @@ private:
     EntityWeakPtr m_pPlayerMech;
     EntityWeakPtr m_pCarrier;
     bool m_ShowCameraDebugUI{ false };
-    bool m_ShowGrid{ true };
+    bool m_ShowGrid{ false };
 };
 
 inline Encounter* Sector::GetEncounter()

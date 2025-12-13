@@ -11,8 +11,10 @@
 #include "components/hull_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "sector/deck/deck.hpp"
+#include "sector/defeat_window.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
+#include "sector/victory_window.hpp"
 
 namespace WingsOfSteel
 {
@@ -66,6 +68,9 @@ void Encounter::Initialize(SectorSharedPtr pSector)
             }
 
             SpawnCarrier();
+
+            m_pVictoryWindow = std::make_shared<VictoryWindow>();
+            m_pVictoryWindow->Initialize("/ui/prefabs/victory.json");
         }
     });
 }
@@ -106,6 +111,16 @@ void Encounter::Update(float delta)
     }
 
     EvaluateEscalation();
+
+    if (m_pVictoryWindow)
+    {
+        m_pVictoryWindow->Render();
+    }
+
+    if (m_pDefeatWindow)
+    {
+        m_pDefeatWindow->Render();
+    }
 
     DrawDebugUI();
 }

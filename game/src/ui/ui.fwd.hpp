@@ -13,7 +13,8 @@ enum class ElementType
     Panel,
     Heading,
     Dice,
-    Divider
+    Divider,
+    Shape
 };
 
 } // namespace WingsOfSteel::UI

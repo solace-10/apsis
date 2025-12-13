@@ -1,5 +1,7 @@
 #pragma once
 
+#include <imgui/imgui.hpp>
+
 #include <core/smart_ptr.hpp>
 #include <resources/resource.fwd.hpp>
 #include <resources/resource_texture_2d.hpp>
@@ -33,11 +35,13 @@ public:
 
     void SetSource(const std::string& source);
     void SetSizeMode(SizeMode sizeMode);
+    void SetColor(ImU32 color);
 
 private:
     ResourceTexture2DSharedPtr m_pTexture;
     Property<std::string> m_Source;
     SizeMode m_SizeMode{SizeMode::Source};
+    ImU32 m_Color{IM_COL32(255, 255, 255, 255)};
 };
 
 } // namespace WingsOfSteel::UI

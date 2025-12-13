@@ -3,6 +3,7 @@
 #include <imgui/imgui.hpp>
 
 #include "ui/prefab_editor.hpp"
+#include "imgui/fonts/icons_font_awesome.hpp"
 #include "ui/window.hpp"
 #include "ui/stack.hpp"
 #include "ui/theme.hpp"
@@ -215,10 +216,6 @@ void PrefabEditor::HandleElementPopup()
                 {
                     pNewElement = CreateElement("Button");
                 }
-                if (ImGui::MenuItem(ICON_FA_DICE_FIVE " Dice"))
-                {
-                    pNewElement = CreateElement("Dice");
-                }
                 if (ImGui::MenuItem(ICON_FA_DIVIDE " Divider"))
                 {
                     pNewElement = CreateElement("Divider");
@@ -230,6 +227,10 @@ void PrefabEditor::HandleElementPopup()
                 if (ImGui::MenuItem(ICON_FA_IMAGE " Image"))
                 {
                     pNewElement = CreateElement("Image");
+                }
+                if (ImGui::MenuItem(ICON_FA_DRAW_POLYGON " Shape"))
+                {
+                    pNewElement = CreateElement("Shape");
                 }
                 if (ImGui::MenuItem(ICON_FA_BARS " Stack"))
                 {

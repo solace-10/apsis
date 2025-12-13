@@ -74,8 +74,8 @@ void Heading::Render()
 
         if (!m_Text.empty())
         {
-            ImGui::SetCursorScreenPos(cp0 + ImVec2(8, 4));
-            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_32));
+            ImGui::SetCursorScreenPos(cp0 + ImVec2(8, 8));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::SUPPLY_MONO_REGULAR_32));
             ImGui::TextUnformatted(m_Text.c_str());
             ImGui::PopFont();
         }
@@ -84,8 +84,10 @@ void Heading::Render()
     {
         if (!m_Text.empty())
         {
-            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_22));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::SUPPLY_MONO_SEMIBOLD_18));
+            ImGui::PushStyleColor(ImGuiCol_Text, Theme::AccentColor.Value);
             ImGui::TextUnformatted(m_Text.c_str());
+            ImGui::PopStyleColor();
             ImGui::PopFont();
         }
 

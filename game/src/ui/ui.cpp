@@ -6,6 +6,7 @@
 #include "ui/heading.hpp"
 #include "ui/image.hpp"
 #include "ui/panel.hpp"
+#include "ui/shape.hpp"
 #include "ui/stack.hpp"
 #include "ui/text.hpp"
 #include "ui/ui.hpp"
@@ -42,6 +43,10 @@ ElementSharedPtr CreateElement(const std::string& typeName)
     else if (typeName == "Text")
     {
         return std::make_shared<Text>();
+    }
+    else if (typeName == "Shape")
+    {
+        return std::make_shared<Shape>();
     }
     else
     {

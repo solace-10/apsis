@@ -31,8 +31,8 @@ public:
     enum class Alignment
     {
         Left,
-        Center,
-        Right
+        Right,
+        Center
     };
 
     enum class Mode

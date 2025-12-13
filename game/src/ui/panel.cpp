@@ -1,6 +1,7 @@
 #include <imgui/imgui.hpp>
 
 #include "ui/panel.hpp"
+#include "ui/theme.hpp"
 
 namespace WingsOfSteel::UI
 {
@@ -26,7 +27,7 @@ void Panel::Render()
     const ImVec2 cp0 = ImGui::GetCursorScreenPos();
     const ImVec2 cp1 = cp0 + GetCellSize();
 
-    static const ImU32 accentColor = IM_COL32(5, 250, 191, 255);
+    static const ImU32 accentColor = Theme::AccentColor;
     static const ImU32 backgroundStartColor = IM_COL32(46, 46, 46, 180);
     static const ImU32 backgroundEndColor = IM_COL32(20, 20, 20, 180);
     static const float notchSize = 16.0f;

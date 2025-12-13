@@ -81,8 +81,9 @@ void Button::Render()
         ImGui::PushClipRect(cp0, cp1, false);
         const int stepWidth = 32;
         const int numSteps = (static_cast<int>(screenSize.x) / stepWidth) + 1;
-        const ImColor c1 = ImColor(0.02f, 0.98f, 0.75f, 0.2f);
-        const ImColor c2 = ImColor(0.02f, 0.98f, 0.75f, 0.1f);
+        const ImColor accentColor = Theme::AccentColor;
+        const ImColor c1 = ImColor(accentColor.Value.x, accentColor.Value.y, accentColor.Value.z, 0.2f);
+        const ImColor c2 = ImColor(accentColor.Value.x, accentColor.Value.y, accentColor.Value.z, 0.1f);
 
         m_BackgroundOffset += ImGui::GetIO().DeltaTime * stepWidth;
         if (m_BackgroundOffset > static_cast<float>(stepWidth * 2))
@@ -119,7 +120,7 @@ void Button::Render()
 
     if (!m_Text.empty())
     {
-        ImGui::SetCursorScreenPos(cp0 + glm::vec2(48.0f, 7.0f));
+        ImGui::SetCursorScreenPos(cp0 + glm::vec2(48.0f, 12.0f));
         const ImColor textColor = highlighted ? Theme::ButtonTextHovered : Theme::ButtonText;
         ImGui::PushStyleColor(ImGuiCol_Text, static_cast<ImVec4>(textColor));
 
@@ -129,7 +130,7 @@ void Button::Render()
         }
         else
         {
-            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::EXO2_SEMIBOLD_22));
+            ImGui::PushFont(GetImGuiSystem()->GetFont(Font::SUPPLY_MONO_REGULAR_22));
             ImGui::TextUnformatted(m_Text.c_str());
             ImGui::PopFont();
         }

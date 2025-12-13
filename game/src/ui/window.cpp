@@ -13,6 +13,7 @@
 #include "ui/window.hpp"
 #include "ui/prefab_editor.hpp"
 #include "ui/stack.hpp"
+#include "ui/theme.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel::UI
@@ -90,7 +91,7 @@ void Window::Render()
     ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
-    ImGui::Begin("test", nullptr, windowFlags);
+    ImGui::Begin("window", nullptr, windowFlags);
 
     RenderBackground();
 
@@ -121,8 +122,7 @@ void Window::RenderBackground()
     const ImVec2 cp0 = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
     const ImVec2 cp1 = cp0 + GetSize();
 
-    //const Theme* pActiveTheme = g_pGame->GetThemeManager()->GetActiveTheme();
-    static const ImU32 accentColor = IM_COL32(5, 250, 191, 255);
+    static const ImU32 accentColor = Theme::AccentColor;
     static const ImU32 backgroundStartColor = IM_COL32(46, 46, 46, 240);
     static const ImU32 backgroundEndColor = IM_COL32(20, 20, 20, 240);
     static const float notchSize = 16.0f;
