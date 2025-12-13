@@ -71,6 +71,14 @@ void Encounter::Initialize(SectorSharedPtr pSector)
 
             m_pVictoryWindow = std::make_shared<VictoryWindow>();
             m_pVictoryWindow->Initialize("/ui/prefabs/victory.json");
+            m_pVictoryWindow->AddFlag(UI::Element::Flags::Hidden);
+
+            GetEncounterResolvedSignal().Connect([this](EncounterResult encounterResult) {
+                if (encounterResult == EncounterResult::Victory)
+                {
+                    m_pVictoryWindow->RemoveFlag(UI::Element::Flags::Hidden);
+                }
+            });
         }
     });
 }
@@ -91,26 +99,32 @@ void Encounter::SpawnCarrier()
 
 void Encounter::Update(float delta)
 {
-    if (m_pCarrier.expired())
+    if (!m_HasEncounterStarted)
     {
+        EvaluateEncounterStarted();
         return;
     }
 
-    m_TimeToNextAction -= delta;
-    if (m_TimeToNextAction < 0.0)
+    if (!m_pCarrier.expired())
     {
-        Deck* pCurrentDeck = m_EncounterTiers[m_CurrentTier].pDeck.get();
-        if (pCurrentDeck->PlayNextCard())
+
+        m_TimeToNextAction -= delta;
+        if (m_TimeToNextAction < 0.0)
         {
-            m_TimeToNextAction = m_EncounterTiers[m_CurrentTier].timeBetweenActions;
-        }
-        else
-        {
-            EscalateTier();
+            Deck* pCurrentDeck = m_EncounterTiers[m_CurrentTier].pDeck.get();
+            if (pCurrentDeck->PlayNextCard())
+            {
+                m_TimeToNextAction = m_EncounterTiers[m_CurrentTier].timeBetweenActions;
+            }
+            else
+            {
+                EscalateTier();
+            }
         }
     }
 
     EvaluateEscalation();
+    EvaluateEncounterResult();
 
     if (m_pVictoryWindow)
     {
@@ -125,10 +139,36 @@ void Encounter::Update(float delta)
     DrawDebugUI();
 }
 
+void Encounter::EvaluateEncounterStarted()
+{
+    if (m_pCarrier.expired())
+    {
+        return;
+    }
+
+    SectorSharedPtr pSector = m_pSector.lock();
+    if (!pSector)
+    {
+        return;
+    }
+
+    if (!pSector->GetPlayerMech() || !pSector->GetPlayerCarrier())
+    {
+        return;
+    }
+
+    m_HasEncounterStarted = true;
+}
+
 void Encounter::EvaluateEscalation()
 {
+    if (GetEncounterResult() != EncounterResult::Undecided)
+    {
+        return;
+    }
+
     EntitySharedPtr pCarrier = m_pCarrier.lock();
-    if (!pCarrier->HasComponent<HullComponent>())
+    if (!pCarrier || !pCarrier->HasComponent<HullComponent>())
     {
         return;
     }
@@ -161,6 +201,37 @@ void Encounter::EscalateTier()
     else
     {
         m_EncounterTiers[m_CurrentTier].pDeck->ShuffleAndReset();
+    }
+}
+
+void Encounter::EvaluateEncounterResult()
+{
+    if (GetEncounterResult() != EncounterResult::Undecided)
+    {
+        return;
+    }
+
+    EntitySharedPtr pCarrier = m_pCarrier.lock();
+    if (!pCarrier)
+    {
+        m_EncounterResult = EncounterResult::Victory;
+    }
+
+    SectorSharedPtr pSector = m_pSector.lock();
+    if (!pSector)
+    {
+        return;
+    }
+
+    if (!pSector->GetPlayerCarrier() || !pSector->GetPlayerMech())
+    {
+        m_EncounterResult = EncounterResult::Defeat;
+    }
+
+    if (m_EncounterResult != EncounterResult::Undecided)
+    {
+        m_EncounterResolvedSignal.Emit(m_EncounterResult);
+        m_EncounterResolvedSignal.DisconnectAll();
     }
 }
 
