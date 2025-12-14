@@ -10,6 +10,7 @@ This is a C++20 CMake project called "Knight-One" with multiple executable targe
 - **Configure**: `cmake --preset debug-linux` (or debug-windows/debug-web)
 - **Build Linux**: `cmake --build build/debug-linux --target setup_compile_commands game dome forge`
 - **Build Windows**: `cmake --build build/debug-windows --target setup_compile_commands game dome forge`
+- **Build Web**: `cmake --build build/debug-web --target setup_compile_commands game dome forge`
 
 ### Available Targets
 - `game` - Main game executable (primary target)
@@ -79,3 +80,4 @@ The project follows a modular architecture with four main components:
 
 ## Code Modification Guidelines
 - After you modify a code file, always build the game to ensure everything compiles.
+- There's a file modification bug in Claude Code. The workaround is: always use complete absolute Windows paths with drive letters and backslashes for ALL file operations.
