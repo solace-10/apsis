@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include <glm/common.hpp>
 #include <imgui/imgui.hpp>
 #include <magic_enum.hpp>

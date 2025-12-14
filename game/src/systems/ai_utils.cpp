@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cfloat>
 
 #include <glm/vec3.hpp>
 
