@@ -16,7 +16,6 @@
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "sector/victory_window.hpp"
-#include "systems/ammo_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -25,10 +24,10 @@ Encounter::~Encounter()
 {
     if (m_OnEntityKilled != InvalidSignalId)
     {
-        AmmoSystem* pAmmoSystem = Game::Get()->GetSector()->GetSystem<AmmoSystem>();
-        if (pAmmoSystem)
+        Sector* pSector = Game::Get()->GetSector();
+        if (pSector)
         {
-            pAmmoSystem->GetEntityKilledSignal().Disconnect(m_OnEntityKilled);
+            pSector->GetEntityKilledSignal().Disconnect(m_OnEntityKilled);
         }
     }
 }
@@ -94,11 +93,7 @@ void Encounter::Initialize(SectorSharedPtr pSector)
                 }
             });
 
-            AmmoSystem* pAmmoSystem = Game::Get()->GetSector()->GetSystem<AmmoSystem>();
-            if (pAmmoSystem)
-            {
-                m_OnEntityKilled = pAmmoSystem->GetEntityKilledSignal().ConnectMember(this, &Encounter::OnEntityKilled);
-            }
+            m_OnEntityKilled = pSector->GetEntityKilledSignal().ConnectMember(this, &Encounter::OnEntityKilled);
         }
     });
 }

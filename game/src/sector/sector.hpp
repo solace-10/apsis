@@ -2,6 +2,7 @@
 
 #include <glm/vec3.hpp>
 
+#include <core/signal.hpp>
 #include <core/smart_ptr.hpp>
 #include <scene/scene.hpp>
 
@@ -30,6 +31,8 @@ public:
     EntitySharedPtr GetPlayerMech() const;
     EntitySharedPtr GetPlayerCarrier() const;
 
+    Signal<EntitySharedPtr, EntitySharedPtr>& GetEntityKilledSignal() { return m_EntityKilledSignal; }
+
 private:
     void DrawCameraDebugUI();
     void SpawnDome();
@@ -43,6 +46,8 @@ private:
     EntityWeakPtr m_pCarrier;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
+
+    Signal<EntitySharedPtr, EntitySharedPtr> m_EntityKilledSignal;
 };
 
 inline Encounter* Sector::GetEncounter()

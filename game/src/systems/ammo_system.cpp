@@ -84,7 +84,7 @@ void AmmoSystem::Update(float delta)
                                     pKilledBy = pAmmoEntity->GetComponent<AmmoFiredByComponent>().WeaponOwner.lock();
                                 }
 
-                                GetEntityKilledSignal().Emit(pHitEntity, pKilledBy);
+                                Game::Get()->GetSector()->GetEntityKilledSignal().Emit(pHitEntity, pKilledBy);
 
                                 Game::Get()->GetSector()->RemoveEntity(pHitEntity);
                             }
