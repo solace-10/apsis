@@ -2,6 +2,7 @@
 
 #include <glm/vec3.hpp>
 
+#include <core/signal.hpp>
 #include <scene/systems/system.hpp>
 #include <scene/entity.hpp>
 
@@ -21,9 +22,13 @@ public:
 
     void Instantiate(EntitySharedPtr pWeaponEntity, const WeaponComponent& weaponComponent);
 
+    Signal<EntitySharedPtr, EntitySharedPtr>& GetEntityKilledSignal() { return m_EntityKilledSignal; }
+
 private:
     void ApplyHullDamage(EntitySharedPtr pAmmoEntity, EntitySharedPtr pHitEntity, bool& hitEntityStillAlive) const;
     bool WasBlockedByShield(EntitySharedPtr pHitEntity, const glm::vec3& hitPosition) const;
+
+    Signal<EntitySharedPtr, EntitySharedPtr> m_EntityKilledSignal;
 };
 
 } // namespace WingsOfSteel

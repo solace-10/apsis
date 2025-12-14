@@ -9,6 +9,7 @@
 #include <scene/scene.hpp>
 
 #include "sector/deck/deck.hpp"
+#include "sector/encounter_stats.hpp"
 #include "sector/wing.hpp"
 
 namespace WingsOfSteel
@@ -31,13 +32,14 @@ class Encounter : public IDebugUI
 {
 public:
     Encounter() = default;
-    ~Encounter() = default;
+    ~Encounter();
 
     void Initialize(SectorSharedPtr pSector);
     void Update(float delta);
 
     EntitySharedPtr GetCarrier() { return m_pCarrier.lock(); }
     EncounterResult GetEncounterResult() const { return m_EncounterResult; }
+    const EncounterStats& GetEncounterStats() const { return m_EncounterStats; }
 
     Signal<EncounterResult>& GetEncounterResolvedSignal() { return m_EncounterResolvedSignal; }
 
@@ -49,6 +51,7 @@ private:
     void EvaluateEscalation();
     void EscalateTier();
     void EvaluateEncounterResult();
+    void OnEntityKilled(EntitySharedPtr pKilledEntity, EntitySharedPtr pKilledByEntity);
 
     struct EncounterTier
     {
@@ -64,8 +67,10 @@ private:
     int m_CurrentTier{0};
     float m_TimeToNextAction{ 0.0f };
     bool m_HasEncounterStarted{ false };
+    EncounterStats m_EncounterStats;
 
     Signal<EncounterResult> m_EncounterResolvedSignal;
+    SignalId m_OnEntityKilled{ InvalidSignalId };
 
     VictoryWindowSharedPtr m_pVictoryWindow;
     DefeatWindowSharedPtr m_pDefeatWindow;

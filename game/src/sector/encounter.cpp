@@ -10,14 +10,28 @@
 
 #include "components/hull_component.hpp"
 #include "entity_builder/entity_builder.hpp"
+#include "game.hpp"
 #include "sector/deck/deck.hpp"
 #include "sector/defeat_window.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "sector/victory_window.hpp"
+#include "systems/ammo_system.hpp"
 
 namespace WingsOfSteel
 {
+
+Encounter::~Encounter()
+{
+    if (m_OnEntityKilled != InvalidSignalId)
+    {
+        AmmoSystem* pAmmoSystem = Game::Get()->GetSector()->GetSystem<AmmoSystem>();
+        if (pAmmoSystem)
+        {
+            pAmmoSystem->GetEntityKilledSignal().Disconnect(m_OnEntityKilled);
+        }
+    }
+}
 
 void Encounter::Initialize(SectorSharedPtr pSector)
 {
@@ -79,6 +93,12 @@ void Encounter::Initialize(SectorSharedPtr pSector)
                     m_pVictoryWindow->RemoveFlag(UI::Element::Flags::Hidden);
                 }
             });
+
+            AmmoSystem* pAmmoSystem = Game::Get()->GetSector()->GetSystem<AmmoSystem>();
+            if (pAmmoSystem)
+            {
+                m_OnEntityKilled = pAmmoSystem->GetEntityKilledSignal().ConnectMember(this, &Encounter::OnEntityKilled);
+            }
         }
     });
 }
@@ -157,6 +177,7 @@ void Encounter::EvaluateEncounterStarted()
         return;
     }
 
+    m_EncounterStats.startedAt = std::chrono::steady_clock::now();
     m_HasEncounterStarted = true;
 }
 
@@ -230,6 +251,7 @@ void Encounter::EvaluateEncounterResult()
 
     if (m_EncounterResult != EncounterResult::Undecided)
     {
+        m_EncounterStats.finishedAt = std::chrono::steady_clock::now();
         m_EncounterResolvedSignal.Emit(m_EncounterResult);
         m_EncounterResolvedSignal.DisconnectAll();
     }
@@ -278,6 +300,20 @@ void Encounter::DrawDebugUI()
         }
 
         ImGui::End();
+    }
+}
+
+void Encounter::OnEntityKilled(EntitySharedPtr pKilledEntity, EntitySharedPtr pKilledByEntity)
+{
+    Sector* pSector = Game::Get()->GetSector();
+    if (!pSector)
+    {
+        return;
+    }
+
+    if (pKilledByEntity == pSector->GetPlayerMech())
+    {
+        m_EncounterStats.kills++;
     }
 }
 
