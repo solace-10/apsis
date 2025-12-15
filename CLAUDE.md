@@ -8,14 +8,13 @@ This is a C++20 CMake project called "Knight-One" with multiple executable targe
 
 ### Build Commands
 - **Configure**: `cmake --preset debug-linux` (or debug-windows/debug-web)
-- **Build Linux**: `cmake --build build/debug-linux --target setup_compile_commands game dome forge`
-- **Build Windows**: `cmake --build build/debug-windows --target setup_compile_commands game dome forge`
-- **Build Web**: `cmake --build build/debug-web --target setup_compile_commands game dome forge`
+- **Build Linux**: `cmake --build build/debug-linux --target setup_compile_commands game dome`
+- **Build Windows**: `cmake --build build/debug-windows --target setup_compile_commands game dome`
+- **Build Web**: `cmake --build build/debug-web --target setup_compile_commands game dome`
 
 ### Available Targets
 - `game` - Main game executable (primary target)
 - `dome` - Geometry processing tool for texture edge detection and mesh generation
-- `forge` - Asset manifest management tool
 - `pandora` - Core engine library (not an executable)
 
 ### Dependencies
@@ -24,7 +23,7 @@ Linux setup: `sudo apt install clang clangd cmake libx11-dev libxrandr-dev libxi
 ## Architecture
 
 ### Core Components
-The project follows a modular architecture with four main components:
+The project follows a modular architecture with three main components:
 
 1. **Pandora** (`pandora/`) - Core engine library providing:
    - Rendering system (WebGPU-based via Dawn)
@@ -45,10 +44,6 @@ The project follows a modular architecture with four main components:
    - Edge detection from textures, vertex simplification
    - Mesh generation with Delaunay triangulation
    - Texture processing pipeline (greyscale conversion, edge detection)
-
-4. **Forge** (`forge/`) - Asset management tool:
-   - Asset manifest creation and management
-   - Build pipeline integration for asset processing
 
 ### Key Technologies
 - **Graphics**: WebGPU (Dawn), OpenGL fallback, ImGui for UI

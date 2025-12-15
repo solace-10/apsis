@@ -6,7 +6,8 @@
       "Bash(done)",
       "Bash(sed:*)",
       "Bash(cmake:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
