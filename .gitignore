@@ -1,15 +1,13 @@
 .cache/
+.claude/
 .vscode/settings.json
 build/
 pandora/ext/
 game/assets/models/flagship/
 game/assets/wings_of_steel/
-game/bin/data/core/manifest.json
 game/bin/game*
 game/bin/imgui.ini
 game/bin/log.txt
-forge/bin/forge*
-forge/bin/imgui.ini
-forge/bin/log.txt
+game/bin/manifest.json
 compile_commands.json
 *.blend?
