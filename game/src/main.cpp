@@ -9,10 +9,10 @@ int main()
     windowSettings.SetSize(1440, 900);
     windowSettings.SetTitle("Knight-One");
 
-    Game game;
+    static Game game;  // Static storage ensures Game survives async WebGPU initialization
     Initialize(
         windowSettings,
-        [&game]() { game.Initialize(); },
-        [&game](float delta) { game.Update(delta); },
-        [&game]() { game.Shutdown(); });
+        []() { game.Initialize(); },
+        [](float delta) { game.Update(delta); },
+        []() { game.Shutdown(); });
 }
