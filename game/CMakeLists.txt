@@ -23,7 +23,10 @@ if(TARGET_PLATFORM_NATIVE)
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game> ${CMAKE_CURRENT_LIST_DIR}/bin
     )
 elseif(TARGET_PLATFORM_WEB)
-    set_target_properties(game PROPERTIES SUFFIX ".html")
+    set_target_properties(game PROPERTIES
+        SUFFIX ".html"
+        LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json"
+    )
     add_custom_command(TARGET game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.html ${CMAKE_CURRENT_LIST_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.js ${CMAKE_CURRENT_LIST_DIR}/bin

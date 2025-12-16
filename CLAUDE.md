@@ -17,6 +17,21 @@ This is a C++20 CMake project called "Knight-One" with multiple executable targe
 - `dome` - Geometry processing tool for texture edge detection and mesh generation
 - `pandora` - Core engine library (not an executable)
 
+### Forge Tool
+Forge is a Go CLI tool for managing web asset pipelines. Located at `pandora/tools/forge/`.
+
+**Build Forge** (requires Go 1.23+):
+```
+cd pandora/tools/forge/src
+go build -o ../bin/forge.exe .
+```
+
+**Commands**:
+- `forge manifest` - Generate asset manifest (auto-runs during web builds via CMake)
+- `forge serve` - Serve assets locally for development
+- `forge upload` - Upload assets to Cloudflare R2
+- `forge package` - Package everything for deployment
+
 ### Dependencies
 Linux setup: `sudo apt install clang clangd cmake libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglfw3-dev libx11-xcb-dev`
 

@@ -115,8 +115,7 @@
             "targets": [
                 "setup_compile_commands",
                 "game",
-                "dome",
-                "forge"
+                "dome"
             ]
         },
         {
