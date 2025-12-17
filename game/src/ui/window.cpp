@@ -1,20 +1,19 @@
 #include <array>
-#include <numbers>
-#include <string>
-#include <sstream>
 #include <imgui.h>
+#include <sstream>
+#include <string>
 
 #include <core/log.hpp>
+#include <pandora.hpp>
 #include <resources/resource.fwd.hpp>
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_system.hpp>
-#include <pandora.hpp>
 
-#include "ui/window.hpp"
+#include "game.hpp"
 #include "ui/prefab_editor.hpp"
 #include "ui/stack.hpp"
 #include "ui/theme.hpp"
-#include "game.hpp"
+#include "ui/window.hpp"
 
 namespace WingsOfSteel::UI
 {
@@ -23,12 +22,10 @@ static const float sThemeWindowAccentHeight = 6.0f;
 
 Window::Window()
 {
-
 }
 
 Window::~Window()
 {
-
 }
 
 const std::string& Window::GetIcon() const
@@ -42,8 +39,13 @@ void Window::Initialize(const std::string& prefabPath)
     GetResourceSystem()->RequestResource(prefabPath, [this, prefabPath](ResourceSharedPtr pResource) {
         m_pDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         Deserialize(m_pDataStore->Data());
-        WindowSharedPtr pWindow = std::static_pointer_cast<Window>(shared_from_this());
-        Game::Get()->GetPrefabEditor()->AddPrefabData(prefabPath, pWindow);
+
+        UI::PrefabEditor* pPrefabEditor = Game::Get()->GetPrefabEditor();
+        if (pPrefabEditor)
+        {
+            WindowSharedPtr pWindow = std::static_pointer_cast<Window>(shared_from_this());
+            pPrefabEditor->AddPrefabData(prefabPath, pWindow);
+        }
         OnInitializationCompleted();
     });
 }
@@ -84,8 +86,7 @@ void Window::Render()
     ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
     ImVec2 windowPos(
         (viewportSize.x - windowSize.x) * 0.5f,
-        (viewportSize.y - windowSize.y) * 0.5f
-    );
+        (viewportSize.y - windowSize.y) * 0.5f);
 
     ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
     ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
@@ -129,18 +130,18 @@ void Window::RenderBackground()
     ImDrawList* pDrawList = ImGui::GetWindowDrawList();
 
     std::array<ImVec2, 5> background;
-    background[ 0 ] = ImVec2(cp0.x, cp0.y);
-    background[ 1 ] = ImVec2(cp1.x, cp0.y);
-    background[ 2 ] = ImVec2(cp1.x, cp1.y - notchSize);
-    background[ 3 ] = ImVec2(cp1.x - notchSize, cp1.y);
-    background[ 4 ] = ImVec2(cp0.x, cp1.y);
+    background[0] = ImVec2(cp0.x, cp0.y);
+    background[1] = ImVec2(cp1.x, cp0.y);
+    background[2] = ImVec2(cp1.x, cp1.y - notchSize);
+    background[3] = ImVec2(cp1.x - notchSize, cp1.y);
+    background[4] = ImVec2(cp0.x, cp1.y);
 
     std::array<ImU32, 5> backgroundColors;
-    backgroundColors[ 0 ] = backgroundStartColor;
-    backgroundColors[ 1 ] = backgroundStartColor;
-    backgroundColors[ 2 ] = backgroundEndColor;
-    backgroundColors[ 3 ] = backgroundEndColor;
-    backgroundColors[ 4 ] = backgroundEndColor;
+    backgroundColors[0] = backgroundStartColor;
+    backgroundColors[1] = backgroundStartColor;
+    backgroundColors[2] = backgroundEndColor;
+    backgroundColors[3] = backgroundEndColor;
+    backgroundColors[4] = backgroundEndColor;
     pDrawList->AddConvexPolyFilledMultiColor(background.data(), backgroundColors.data(), static_cast<int>(background.size()));
 
     pDrawList->AddRectFilled(ImVec2(cp0.x, cp0.y), ImVec2(cp1.x, cp0.y + sThemeWindowAccentHeight), accentColor);
@@ -165,7 +166,7 @@ ElementSharedPtr Window::FindElementInternal(const std::string& path) const
     std::vector<std::string> tokens;
     std::stringstream ss(path);
     std::string token;
-    while(std::getline(ss, token, '/'))
+    while (std::getline(ss, token, '/'))
     {
         tokens.push_back(token);
     }

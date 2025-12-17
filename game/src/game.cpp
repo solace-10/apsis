@@ -48,8 +48,10 @@ void Game::Initialize()
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 
+#if defined(TARGET_PLATFORM_NATIVE)
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
+#endif
 
     m_pSector = std::make_shared<Sector>();
     m_pSector->Initialize();
@@ -59,7 +61,9 @@ void Game::Initialize()
 
 void Game::Update(float delta)
 {
+#if defined(TARGET_PLATFORM_NATIVE)
     m_pPrefabEditor->DrawPrefabEditor();
+#endif
 }
 
 void Game::Shutdown()
@@ -176,11 +180,13 @@ void Game::DrawImGuiMenuBar()
 
     if (ImGui::BeginMenu("UI"))
     {
+#if defined(TARGET_PLATFORM_NATIVE)
         static bool sShowPrefabEditor = false;
         if (ImGui::MenuItem("Prefab Editor", nullptr, &sShowPrefabEditor))
         {
             m_pPrefabEditor->ShowPrefabEditor(sShowPrefabEditor);
         }
+#endif
         ImGui::EndMenu();
     }
 }
