@@ -96,7 +96,7 @@ void WeaponSystem::Update(float delta)
     });
 }
 
-void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName, bool automatedTargeting)
+void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName, bool automatedTargeting, WeaponFriendOrFoe friendOrFoe)
 {
     SceneWeakPtr pWeakScene = Game::Get()->GetSector()->GetWeakPtr();
 
@@ -104,11 +104,12 @@ void WeaponSystem::AttachWeapon(const std::string& resourcePath, EntitySharedPtr
         pWeakScene,
         resourcePath,
         glm::mat4(1.0f),
-        [pWeakScene, pParentEntity, hardpointName, automatedTargeting](EntitySharedPtr pWeaponEntity) {
+        [pWeakScene, pParentEntity, hardpointName, automatedTargeting, friendOrFoe](EntitySharedPtr pWeaponEntity) {
             pWeaponEntity->SetParent(pParentEntity);
 
             WeaponComponent& weaponComponent = pWeaponEntity->GetComponent<WeaponComponent>();
             weaponComponent.SetOwner(pWeaponEntity);
+            weaponComponent.m_FriendOrFoe = friendOrFoe;
 
             if (pParentEntity->HasComponent<FactionComponent>())
             {
@@ -384,7 +385,7 @@ void WeaponSystem::UpdateFiring(float delta, const glm::mat4& hardpointWorldTran
     {
         // Do a raycast to check if we have an ally in the line of fire. If so, don't open fire.
         bool isClearToFire = true;
-        if (weaponComponent.m_TargetPosition.has_value())
+        if (weaponComponent.m_FriendOrFoe == WeaponFriendOrFoe::Enabled && weaponComponent.m_TargetPosition.has_value())
         {
             PhysicsSimulationSystem* pPhysicsSystem = GetActiveScene()->GetSystem<PhysicsSimulationSystem>();
             if (pPhysicsSystem)

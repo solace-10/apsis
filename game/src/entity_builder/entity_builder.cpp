@@ -13,6 +13,7 @@
 #include <scene/scene.hpp>
 
 #include "components/hardpoint_component.hpp"
+#include "components/weapon_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "systems/weapon_system.hpp"
@@ -132,7 +133,8 @@ void EntityBuilder::InstantiateComponents(EntitySharedPtr pEntity, const Resourc
                     hardpoint.m_Weapon,
                     pEntity,
                     hardpoint.m_Name,
-                    hardpoint.m_AutomatedTargeting
+                    hardpoint.m_AutomatedTargeting,
+                    WeaponFriendOrFoe::Enabled
                 );
             }
         }

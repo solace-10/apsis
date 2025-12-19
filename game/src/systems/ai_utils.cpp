@@ -130,7 +130,7 @@ EntitySharedPtr AIUtils::AcquireTarget(EntitySharedPtr pAcquiringEntity, const s
 
 float AIUtils::CalculateOptimalRange(EntitySharedPtr pMechEntity)
 {
-    if (!pMechEntity->HasComponent<HardpointComponent>())
+    if (!pMechEntity || !pMechEntity->HasComponent<HardpointComponent>())
     {
         return 0.0f;
     }
@@ -139,7 +139,7 @@ float AIUtils::CalculateOptimalRange(EntitySharedPtr pMechEntity)
     HardpointComponent& hardpointComponent = pMechEntity->GetComponent<HardpointComponent>();
     for (auto& hardpoint : hardpointComponent.hardpoints)
     {
-        if (!hardpoint.m_pEntity->HasComponent<WeaponComponent>())
+        if (!hardpoint.m_pEntity || !hardpoint.m_pEntity->HasComponent<WeaponComponent>())
         {
             continue;
         }
@@ -166,7 +166,7 @@ Faction AIUtils::GetOppositeFaction(Faction faction)
     }
     else
     {
-        assert(false); // Not supported.
+        Log::Error() << "Calling AIUtils::GetOppositeFaction with an unsupported faction.";
         return Faction::Hostile;
     }
 }

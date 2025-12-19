@@ -19,6 +19,7 @@
 #include "components/player_controller_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/shield_component.hpp"
+#include "components/weapon_component.hpp"
 #include "entity_builder/entity_builder.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
@@ -199,17 +200,20 @@ void Sector::SpawnMech(const glm::vec3& position, float angle, bool isPlayerMech
                 mechControllerComponent.DefenseContext.pOwner = pMechEntity;
             }
 
+            const WeaponFriendOrFoe friendOrFoe = isPlayerMech ? WeaponFriendOrFoe::Disabled : WeaponFriendOrFoe::Enabled;
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
                 "/entity_prefabs/weapons/mech/shield_r.json",
                 pMechEntity,
                 "RightArm",
-                false);
+                false,
+                friendOrFoe);
 
             pScene->GetSystem<WeaponSystem>()->AttachWeapon(
                 "/entity_prefabs/weapons/mech/rotary_cannon_l.json",
                 pMechEntity,
                 "LeftArm",
-                false);
+                false,
+                friendOrFoe);
 
             SceneWeakPtr pLocalWeakScene = pScene->GetWeakPtr();
             EntityBuilder::Build(pLocalWeakScene, "/entity_prefabs/player/mech_energy_shield.json", glm::mat4(1.0f), [pLocalWeakScene, pMechEntity](EntitySharedPtr pShieldEntity) {

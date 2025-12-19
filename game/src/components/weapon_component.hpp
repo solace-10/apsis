@@ -28,6 +28,12 @@ enum class WeaponAccuracy
     Count
 };
 
+enum class WeaponFriendOrFoe
+{
+    Enabled,
+    Disabled
+};
+
 class WeaponComponent : public IComponent
 {
 public:
@@ -45,6 +51,7 @@ public:
     bool m_AutomatedTargeting{ true }; // AI-controlled target acquisition.
     WeaponAccuracy m_Accuracy{ WeaponAccuracy::Perfect };
     bool m_Dummy{ false }; // This weapon is a dummy and doesn't do anything; attached for visual interest but controlled by a different system.
+    WeaponFriendOrFoe m_FriendOrFoe{ WeaponFriendOrFoe::Enabled }; // If a weapon has FoF enabled, it will not open fire if its trajectory would intersect an ally.
 
     std::string m_Ammo;
 

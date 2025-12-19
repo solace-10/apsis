@@ -25,7 +25,7 @@ public:
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
-    void AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName, bool automatedTargeting);
+    void AttachWeapon(const std::string& resourcePath, EntitySharedPtr pParentEntity, const std::string& hardpointName, bool automatedTargeting, WeaponFriendOrFoe fof);
 
 private:
     void OnHardpointsDestroyed(entt::registry& registry, entt::entity entity);
