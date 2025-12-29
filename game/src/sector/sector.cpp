@@ -6,8 +6,10 @@
 #include <render/debug_render.hpp>
 #include <resources/resource_data_store.hpp>
 #include <resources/resource_system.hpp>
+#include <scene/components/ambient_light_component.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/debug_render_component.hpp>
+#include <scene/components/directional_light_component.hpp>
 #include <scene/components/model_component.hpp>
 #include <scene/components/rigid_body_component.hpp>
 #include <scene/components/transform_component.hpp>
@@ -83,6 +85,7 @@ void Sector::Initialize()
     SetCamera(m_pCamera);
 
     SpawnDome();
+    SpawnLight();
     SpawnPlayerFleet();
 
     m_pEncounter = std::make_unique<Encounter>();
@@ -154,6 +157,19 @@ void Sector::SpawnDome()
 
     ModelComponent& modelComponent = m_pDome->AddComponent<ModelComponent>();
     modelComponent.SetModel("/models/dome/dome.glb");
+}
+
+void Sector::SpawnLight()
+{
+    m_pLight = CreateEntity();
+
+    DirectionalLightComponent& directionalLightComponent = m_pLight->AddComponent<DirectionalLightComponent>();
+    directionalLightComponent.SetAngle(226.0f);
+    directionalLightComponent.SetPitch(40.0f);
+    directionalLightComponent.SetColor(1.0f, 0.96f, 0.68f);
+
+    AmbientLightComponent& ambientLightComponent = m_pLight->AddComponent<AmbientLightComponent>();
+    ambientLightComponent.SetColor(0.10f, 0.14f, 0.17f);    
 }
 
 void Sector::SpawnPlayerFleet()
