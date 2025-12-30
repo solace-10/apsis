@@ -23,9 +23,24 @@ if(TARGET_PLATFORM_NATIVE)
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game> ${CMAKE_CURRENT_LIST_DIR}/bin
     )
 elseif(TARGET_PLATFORM_WEB)
+    # Generate asset manifest using forge tool
+    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge.exe")
+    set(MANIFEST_OUTPUT "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json")
+
+    add_custom_command(
+        OUTPUT "${MANIFEST_OUTPUT}"
+        COMMAND "${FORGE_EXECUTABLE}" manifest
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Generating asset manifest..."
+        DEPENDS "${FORGE_EXECUTABLE}"
+    )
+
+    add_custom_target(generate_manifest DEPENDS "${MANIFEST_OUTPUT}")
+    add_dependencies(game generate_manifest)
+
     set_target_properties(game PROPERTIES
         SUFFIX ".html"
-        LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json"
+        LINK_DEPENDS "${MANIFEST_OUTPUT}"
     )
     add_custom_command(TARGET game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.html ${CMAKE_CURRENT_LIST_DIR}/bin
