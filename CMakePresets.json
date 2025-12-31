@@ -71,6 +71,13 @@
             }
         },
         {
+            "name": "release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
             "name": "debug-windows",
             "displayName": "Debug (Windows)",
             "inherits": [
@@ -94,6 +101,33 @@
             "inherits": [
                 "core",
                 "debug",
+                "web"
+            ]
+        },
+        {
+            "name": "release-windows",
+            "displayName": "Release (Windows)",
+            "inherits": [
+                "core",
+                "release",
+                "windows"
+            ]
+        },
+        {
+            "name": "release-linux",
+            "displayName": "Release (Linux)",
+            "inherits": [
+                "core",
+                "release",
+                "linux"
+            ]
+        },
+        {
+            "name": "release-web",
+            "displayName": "Release (Web)",
+            "inherits": [
+                "core",
+                "release",
                 "web"
             ]
         }
@@ -137,6 +171,47 @@
             "description": "Build Knight-One in Debug",
             "displayName": "Debug (Web)",
             "configurePreset": "debug-web",
+            "inherits": [
+                "core"
+            ],
+            "targets": [
+                "setup_compile_commands",
+                "game"
+            ]
+        },
+        {
+            "name": "release-windows",
+            "description": "Build Knight-One in Release",
+            "displayName": "Release (Windows)",
+            "configurePreset": "release-windows",
+            "inherits": [
+                "core"
+            ],
+            "targets": [
+                "setup_compile_commands",
+                "game",
+                "dome"
+            ]
+        },
+        {
+            "name": "release-linux",
+            "description": "Build Knight-One in Release",
+            "displayName": "Release (Linux)",
+            "configurePreset": "release-linux",
+            "inherits": [
+                "core"
+            ],
+            "targets": [
+                "setup_compile_commands",
+                "game",
+                "dome"
+            ]
+        },
+        {
+            "name": "release-web",
+            "description": "Build Knight-One in Release",
+            "displayName": "Release (Web)",
+            "configurePreset": "release-web",
             "inherits": [
                 "core"
             ],

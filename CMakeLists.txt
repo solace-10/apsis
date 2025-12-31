@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.22) # CMake version check
 project(app)                         # Create project "app"
 set(CMAKE_CXX_STANDARD 20)           # Enable C++20 standardq
 
+# Build configuration defines
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(BUILD_DEBUG)
+else()
+    add_compile_definitions(BUILD_RELEASE)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pandora/cmake/shared)
 
 # Enable compile commands for clangd, which is used by Cursor.

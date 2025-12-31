@@ -23,6 +23,10 @@ if(TARGET_PLATFORM_NATIVE)
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game> ${CMAKE_CURRENT_LIST_DIR}/bin
     )
 elseif(TARGET_PLATFORM_WEB)
+    target_link_options(game PRIVATE
+        "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/src/emscripten/shell.html"
+    )
+
     # Generate asset manifest using forge tool
     set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge.exe")
     set(MANIFEST_OUTPUT "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json")

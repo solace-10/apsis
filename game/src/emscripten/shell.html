@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Emscripten-Generated Code</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: black;
+      }
+
+      #canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border: 0px none;
+        background-color: black;
+      }
+
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      #overlay.hidden {
+        display: none;
+      }
+
+      .spinner {
+        height: 50px;
+        width: 50px;
+        animation: rotation 0.8s linear infinite;
+        border-left: 10px solid rgb(0,150,240);
+        border-right: 10px solid rgb(0,150,240);
+        border-bottom: 10px solid rgb(0,150,240);
+        border-top: 10px solid rgb(100,0,200);
+        border-radius: 100%;
+        background-color: rgb(200,100,250);
+      }
+
+      @keyframes rotation {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      #status {
+        color: white;
+        margin-top: 1em;
+        font-family: sans-serif;
+      }
+
+      #fullscreen-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 20;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+
+    <div id="overlay">
+      <div class="spinner"></div>
+      <div id="status">Downloading...</div>
+    </div>
+
+    <input type="button" id="fullscreen-btn" value="Fullscreen" onclick="Module.requestFullscreen(true, true)">
+
+    <script type='text/javascript'>
+      var statusElement = document.getElementById('status');
+      var overlayElement = document.getElementById('overlay');
+      var canvasElement = document.getElementById('canvas');
+
+      canvasElement.addEventListener("webglcontextlost", (e) => {
+        alert('WebGL context lost. You will need to reload the page.');
+        e.preventDefault();
+      }, false);
+
+      canvasElement.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        if (document.pointerLockElement !== canvasElement) {
+          canvasElement.requestPointerLock();
+        }
+      }, false);
+
+      canvasElement.addEventListener("auxclick", (e) => {
+        e.preventDefault();
+      }, false);
+
+      var Module = {
+        print(...args) {
+          console.log(...args);
+        },
+        canvas: canvasElement,
+        setStatus(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return;
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+          }
+          statusElement.innerHTML = text;
+          if (!text) {
+            overlayElement.classList.add('hidden');
+          }
+        },
+        totalDependencies: 0,
+        monitorRunDependencies(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = () => {
+        Module.setStatus('Exception thrown, see JavaScript console');
+        overlayElement.querySelector('.spinner').style.display = 'none';
+        Module.setStatus = (text) => {
+          if (text) console.error('[post-exception status] ' + text);
+        };
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>
