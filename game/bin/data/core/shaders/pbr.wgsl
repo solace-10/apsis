@@ -8,7 +8,8 @@ struct VertexInput
     @builtin(instance_index) instanceIdx: u32,
     @location(0) position: vec3f,
     @location(1) normal: vec3f,
-    @location(2) uv: vec2f
+    @location(2) uv: vec2f,
+    @location(4) tangent: vec4f
 };
 
 struct VertexOutput
@@ -16,7 +17,8 @@ struct VertexOutput
     @builtin(position) position: vec4f,
     @location(0) worldPosition: vec3f,
     @location(1) worldNormal: vec3f,
-    @location(2) uv: vec2f
+    @location(2) worldTangent: vec4f,
+    @location(3) uv: vec2f
 };
 
 struct LocalUniforms
@@ -46,28 +48,16 @@ struct InstanceUniforms
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * modelMatrix * vec4f(in.position, 1.0);
     out.worldPosition = (modelMatrix * vec4f(in.position, 1.0)).xyz;
     out.worldNormal = normalize((modelMatrix * vec4f(in.normal, 0.0)).xyz);
+    out.worldTangent = vec4f(normalize((modelMatrix * vec4f(in.tangent.xyz, 0.0)).xyz), in.tangent.w); // The sign of the bitangent is packed in w, to be used in computeTBN()
     out.uv = in.uv;
     return out;
 }
 
-// Compute TBN matrix from screen-space derivatives (for normal mapping without tangent attributes)
-fn computeTBN(worldPos: vec3f, worldNormal: vec3f, uv: vec2f) -> mat3x3<f32>
+fn computeTBN(worldNormal: vec3f, worldTangent: vec4f) -> mat3x3<f32>
 {
-    let dPdx = dpdx(worldPos);
-    let dPdy = dpdy(worldPos);
-    let dUVdx = dpdx(uv);
-    let dUVdy = dpdy(uv);
-
-    // Solve the linear system to get tangent and bitangent
-    let r = 1.0 / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);
-    let tangent = normalize((dPdx * dUVdy.y - dPdy * dUVdx.y) * r);
-    let bitangent = normalize((dPdy * dUVdx.x - dPdx * dUVdy.x) * r);
-
-    // Re-orthogonalize tangent with respect to normal using Gram-Schmidt
     let N = normalize(worldNormal);
-    let T = normalize(tangent - N * dot(N, tangent));
-    let B = cross(N, T);
-
+    let T = normalize(worldTangent).xyz;
+    let B = cross(N, T) * worldTangent.w;
     return mat3x3<f32>(T, B, N);
 }
 
@@ -132,7 +122,7 @@ fn geometrySmith(N: vec3f, V: vec3f, L: vec3f, roughness: f32) -> f32
     let emissive = textureSample(emissiveTexture, defaultSampler, in.uv).rgb;
 
     // Compute TBN matrix and transform normal to world space
-    let TBN = computeTBN(in.worldPosition, in.worldNormal, in.uv);
+    let TBN = computeTBN(in.worldNormal, in.worldTangent);
     let N = normalize(TBN * tangentNormal);
 
     // View and light directions
