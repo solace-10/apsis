@@ -48,9 +48,30 @@ struct InstanceUniforms
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * modelMatrix * vec4f(in.position, 1.0);
     out.worldPosition = (modelMatrix * vec4f(in.position, 1.0)).xyz;
     out.worldNormal = normalize((modelMatrix * vec4f(in.normal, 0.0)).xyz);
-    out.worldTangent = vec4f(normalize((modelMatrix * vec4f(in.tangent.xyz, 0.0)).xyz), in.tangent.w); // The sign of the bitangent is packed in w, to be used in computeTBN()
+    out.worldTangent = vec4f(normalize((modelMatrix * vec4f(in.tangent.xyz, 0.0)).xyz), in.tangent.w);
     out.uv = in.uv;
     return out;
+}
+
+// Compute TBN matrix from screen-space derivatives (for normal mapping without tangent attributes)
+fn computeTBNScreenSpace(worldPos: vec3f, worldNormal: vec3f, uv: vec2f) -> mat3x3<f32>
+{
+    let dPdx = dpdx(worldPos);
+    let dPdy = dpdy(worldPos);
+    let dUVdx = dpdx(uv);
+    let dUVdy = dpdy(uv);
+
+    // Solve the linear system to get tangent and bitangent
+    let r = 1.0 / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);
+    let tangent = normalize((dPdx * dUVdy.y - dPdy * dUVdx.y) * r);
+    let bitangent = normalize((dPdy * dUVdx.x - dPdx * dUVdy.x) * r);
+
+    // Re-orthogonalize tangent with respect to normal using Gram-Schmidt
+    let N = normalize(worldNormal);
+    let T = normalize(tangent - N * dot(N, tangent));
+    let B = cross(N, T);
+
+    return mat3x3<f32>(T, B, N);
 }
 
 fn computeTBN(worldNormal: vec3f, worldTangent: vec4f) -> mat3x3<f32>
@@ -122,6 +143,7 @@ fn geometrySmith(N: vec3f, V: vec3f, L: vec3f, roughness: f32) -> f32
     let emissive = textureSample(emissiveTexture, defaultSampler, in.uv).rgb;
 
     // Compute TBN matrix and transform normal to world space
+    //let TBN = computeTBNScreenSpace(in.worldPosition, in.worldNormal, in.uv);
     let TBN = computeTBN(in.worldNormal, in.worldTangent);
     let N = normalize(TBN * tangentNormal);
 

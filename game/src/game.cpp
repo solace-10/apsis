@@ -1,5 +1,6 @@
 #include <debug_visualization/model_visualization.hpp>
 #include <imgui/imgui_system.hpp>
+#include <input/input_system.hpp>
 #include <pandora.hpp>
 #include <render/render_pass/base_render_pass.hpp>
 #include <render/render_pass/ui_render_pass.hpp>
@@ -11,7 +12,6 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "game.hpp"
-#include "items/item_info.hpp"
 #include "sector/encounter.hpp"
 #include "sector/sector.hpp"
 #include "ui/prefab_editor.hpp"
@@ -48,7 +48,10 @@ void Game::Initialize()
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 
-#if defined(TARGET_PLATFORM_NATIVE)
+#if defined(TARGET_PLATFORM_WEB)
+    GetInputSystem()->SetCursorMode(CursorMode::Locked);
+#elif defined(TARGET_PLATFORM_NATIVE)
+    GetInputSystem()->SetCursorMode(CursorMode::Normal);
     m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
     m_pPrefabEditor->Initialize();
 #endif

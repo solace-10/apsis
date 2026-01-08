@@ -10,7 +10,7 @@ This is a C++20 CMake project called "Knight-One" with multiple executable targe
 - **Configure**: `cmake --preset debug-linux` (or debug-windows/debug-web)
 - **Build Linux**: `cmake --build build/debug-linux --target setup_compile_commands game dome`
 - **Build Windows**: `cmake --build build/debug-windows --target setup_compile_commands game dome`
-- **Build Web**: `cmake --build build/debug-web --target setup_compile_commands game dome`
+- **Build Web**: `cmake --build build/debug-web --target setup_compile_commands game`
 
 ### Available Targets
 - `game` - Main game executable (primary target)
