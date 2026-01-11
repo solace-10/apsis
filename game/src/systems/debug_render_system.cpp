@@ -4,7 +4,6 @@
 #include <scene/scene.hpp>
 #include <pandora.hpp>
 
-#include "components/name_component.hpp"
 #include "systems/debug_render_system.hpp"
 
 namespace WingsOfSteel
@@ -63,13 +62,6 @@ void DebugRenderSystem::Update(float delta)
                 buildPoint(transformComponent.transform, -halfLength, -halfHeight,  halfWidth)
             };
             GetDebugRender()->Box(points, debugRenderComponent.color);
-        }
-
-        NameComponent* pNameComponent = registry.try_get<NameComponent>(entity);
-        if (pNameComponent)
-        {
-            const glm::vec3 position(transformComponent.transform[3]);
-            GetDebugRender()->Label(pNameComponent->Value, position, Color::White);
         }
     });
 }

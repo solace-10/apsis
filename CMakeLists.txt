@@ -23,5 +23,4 @@ add_custom_target(setup_compile_commands ALL
 )
 
 add_subdirectory("pandora")
-add_subdirectory("dome")
 add_subdirectory("game")

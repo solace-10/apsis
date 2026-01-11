@@ -12,11 +12,7 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "game.hpp"
-#include "sector/encounter.hpp"
 #include "sector/sector.hpp"
-#include "ui/prefab_editor.hpp"
-#include "systems/ai_strategic_system.hpp"
-#include "render_pass/threat_indicator_render_pass.hpp"
 
 namespace WingsOfSteel
 {
@@ -43,7 +39,6 @@ void Game::Initialize()
     RenderSystem* pRenderSystem = GetRenderSystem();
     pRenderSystem->ClearRenderPasses();
     pRenderSystem->AddRenderPass(std::make_shared<BaseRenderPass>());
-    pRenderSystem->AddRenderPass(std::make_shared<ThreatIndicatorRenderPass>());
     pRenderSystem->AddRenderPass(std::make_shared<UIRenderPass>());
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
@@ -52,8 +47,6 @@ void Game::Initialize()
     GetInputSystem()->SetCursorMode(CursorMode::Locked);
 #elif defined(TARGET_PLATFORM_NATIVE)
     GetInputSystem()->SetCursorMode(CursorMode::Normal);
-    m_pPrefabEditor = std::make_unique<UI::PrefabEditor>();
-    m_pPrefabEditor->Initialize();
 #endif
 
     m_pSector = std::make_shared<Sector>();
@@ -64,9 +57,6 @@ void Game::Initialize()
 
 void Game::Update(float delta)
 {
-#if defined(TARGET_PLATFORM_NATIVE)
-    m_pPrefabEditor->DrawPrefabEditor();
-#endif
 }
 
 void Game::Shutdown()
@@ -82,31 +72,6 @@ void Game::DrawImGuiMenuBar()
     {
         if (ImGui::BeginMenu("Sector"))
         {
-            if (ImGui::BeginMenu("AI"))
-            {
-                AIStrategicSystem* pStrategicSystem = m_pSector->GetSystem<AIStrategicSystem>();
-                if (pStrategicSystem)
-                {
-                    bool showDebugUI = pStrategicSystem->IsDebugUIVisible();
-                    if (ImGui::MenuItem("Strategic layer", nullptr, &showDebugUI))
-                    {
-                        pStrategicSystem->ShowDebugUI(showDebugUI);
-                    }
-                }
-
-                Encounter* pEncounter = m_pSector->GetEncounter();
-                if (pEncounter)
-                {
-                    bool showDebugUI = pEncounter->IsDebugUIVisible();
-                    if (ImGui::MenuItem("Encounter", nullptr, &showDebugUI))
-                    {
-                        pEncounter->ShowDebugUI(showDebugUI);
-                    }
-                }
-
-                ImGui::EndMenu();
-            }
-
             static bool sShowCameraWindow = false;
             if (ImGui::MenuItem("Camera", nullptr, &sShowCameraWindow))
             {
@@ -179,18 +144,6 @@ void Game::DrawImGuiMenuBar()
             }
             ImGui::EndMenu();
         }
-    }
-
-    if (ImGui::BeginMenu("UI"))
-    {
-#if defined(TARGET_PLATFORM_NATIVE)
-        static bool sShowPrefabEditor = false;
-        if (ImGui::MenuItem("Prefab Editor", nullptr, &sShowPrefabEditor))
-        {
-            m_pPrefabEditor->ShowPrefabEditor(sShowPrefabEditor);
-        }
-#endif
-        ImGui::EndMenu();
     }
 }
 

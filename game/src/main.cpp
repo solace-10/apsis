@@ -7,7 +7,7 @@ int main()
 
     WindowSettings windowSettings;
     windowSettings.SetSize(1440, 900);
-    windowSettings.SetTitle("Knight-One");
+    windowSettings.SetTitle("Orbis");
 
     static Game game;  // Static storage ensures Game survives async WebGPU initialization
     Initialize(

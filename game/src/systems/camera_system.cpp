@@ -12,7 +12,6 @@
 #include <scene/entity.hpp>
 
 #include "components/sector_camera_component.hpp"
-#include "components/mech_navigation_component.hpp"
 #include "systems/camera_system.hpp"
 
 namespace WingsOfSteel
@@ -62,7 +61,7 @@ void CameraSystem::Update(float delta)
 
             EntitySharedPtr pAnchorEntity = sectorCameraComponent.anchorEntity.lock();
             glm::vec3 anchorPosition(0.0f);
-            glm::vec3 cameraWantedTarget(0.0f);
+            glm::vec3 cameraWantedTarget = sectorCameraComponent.target;
             glm::vec3 cameraWantedPosition = sectorCameraComponent.position;
             if (pAnchorEntity && pAnchorEntity->HasComponent<TransformComponent>())
             {
@@ -70,44 +69,6 @@ void CameraSystem::Update(float delta)
                 anchorPosition = glm::vec3(anchorTransform[3]);
                 cameraWantedPosition = sectorCameraComponent.position + anchorPosition;
                 cameraWantedTarget = anchorPosition;
-
-                if (pAnchorEntity->HasComponent<MechNavigationComponent>() && pAnchorEntity->HasComponent<RigidBodyComponent>())
-                {
-                    const MechNavigationComponent& mechNavigationComponent = pAnchorEntity->GetComponent<MechNavigationComponent>();
-                    const RigidBodyComponent& rigidBodyComponent = pAnchorEntity->GetComponent<RigidBodyComponent>();
-
-                    const std::optional<glm::vec3>& mechAim = mechNavigationComponent.GetAim();
-                    if (mechAim.has_value())
-                    {
-                        // Slowly move the camera back when the player is aiming towards the bottom of the screen (towards positive Z).
-                        glm::vec3 mechAimTarget(mechAim.value());
-                        glm::vec3 mechAimDirection = glm::normalize(mechAimTarget - anchorPosition);
-                        const float backOffFactorTarget = glm::max(0.0f, mechAimDirection.z);
-                        DampSpring(sectorCameraComponent.backOffFactor, backOffFactorTarget, sectorCameraComponent.backOffFactorVelocity, 3.0f, delta);
-                        glm::vec3 cameraBackoffOffset(0.0f, 0.0f, 30.0f * sectorCameraComponent.backOffFactor);
-
-                        // Keep the camera target between the mech and where the player is aiming at.
-                        // The aiming point is kept close to the mech to avoid having the camera turn too much,
-                        // as that makes the mech difficult to control.
-                        const float mechAimTargetDistance = glm::length(mechAimTarget - anchorPosition);
-                        const float maxMechAimTargetDistance = 20.0f;
-                        glm::vec3 mechAimTargetRestricted(mechAimTarget);
-                        if (mechAimTargetDistance > maxMechAimTargetDistance)
-                        {
-                            mechAimTargetRestricted = anchorPosition + glm::normalize(mechAimTarget - anchorPosition) * maxMechAimTargetDistance;
-                        }
-
-                        const glm::vec3 wantedAimLocal = mechAimTargetRestricted - anchorPosition;
-                        DampSpring(sectorCameraComponent.aimLocal, wantedAimLocal, sectorCameraComponent.aimLocalVelocity, 2.0f, delta);
-
-                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset + cameraBackoffOffset + sectorCameraComponent.aimLocal;
-                        cameraWantedTarget = anchorPosition + sectorCameraComponent.aimLocal;
-                    }
-                    else
-                    {
-                        cameraWantedPosition = anchorPosition + sectorCameraComponent.defaultOffset;
-                    }
-                }
             }
 
             DampSpring(sectorCameraComponent.position, cameraWantedPosition, sectorCameraComponent.positionVelocity, 0.5f, delta);
