@@ -11,10 +11,12 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/planet_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -33,6 +35,7 @@ void Sector::Initialize()
 
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
+    AddSystem<PlanetRenderSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -50,6 +53,9 @@ void Sector::Initialize()
 
     SpawnDome();
     SpawnLight();
+
+    m_pEarth = CreateEntity();
+    m_pEarth->AddComponent<PlanetComponent>();
 }
 
 void Sector::Update(float delta)

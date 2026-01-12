@@ -2,7 +2,6 @@
 #include <imgui/imgui_system.hpp>
 #include <input/input_system.hpp>
 #include <pandora.hpp>
-#include <render/render_pass/base_render_pass.hpp>
 #include <render/render_pass/ui_render_pass.hpp>
 #include <render/rendersystem.hpp>
 #include <scene/camera.hpp>
@@ -12,6 +11,7 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "game.hpp"
+#include "render/sector_render_pass.hpp"
 #include "sector/sector.hpp"
 
 namespace WingsOfSteel
@@ -38,7 +38,7 @@ void Game::Initialize()
 
     RenderSystem* pRenderSystem = GetRenderSystem();
     pRenderSystem->ClearRenderPasses();
-    pRenderSystem->AddRenderPass(std::make_shared<BaseRenderPass>());
+    pRenderSystem->AddRenderPass(std::make_shared<SectorRenderPass>());
     pRenderSystem->AddRenderPass(std::make_shared<UIRenderPass>());
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });

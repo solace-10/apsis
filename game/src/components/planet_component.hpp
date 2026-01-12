@@ -1,0 +1,36 @@
+#pragma once
+
+#include <webgpu/webgpu_cpp.h>
+
+#include <core/smart_ptr.hpp>
+#include <scene/components/component_factory.hpp>
+#include <scene/components/icomponent.hpp>
+
+namespace WingsOfSteel
+{
+DECLARE_SMART_PTR(Entity);
+}
+
+namespace WingsOfSteel
+{
+
+class PlanetComponent : public IComponent
+{
+public:
+    PlanetComponent() {}
+    ~PlanetComponent() {}
+
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
+    {
+    }
+
+    wgpu::Buffer vertexBuffer;
+    wgpu::Buffer indexBuffer;
+    uint32_t vertexCount{ 0 };
+    uint32_t indexCount{ 0 };
+    bool initialized{ false };
+};
+
+REGISTER_COMPONENT(PlanetComponent, "planet")
+
+} // namespace WingsOfSteel

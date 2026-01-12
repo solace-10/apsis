@@ -30,6 +30,7 @@ private:
     EntitySharedPtr m_pDome;
     EntitySharedPtr m_pCamera;
     EntitySharedPtr m_pLight;
+    EntitySharedPtr m_pEarth;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
 };
