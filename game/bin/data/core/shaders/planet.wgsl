@@ -26,6 +26,15 @@ struct VertexOutput
     return out;
 }
 
+// Convert linear color to sRGB (gamma correction)
+fn linearToSrgb(linear: vec3f) -> vec3f 
+{
+    let cutoff = linear < vec3f(0.0031308);
+    let higher = vec3f(1.055) * pow(linear, vec3f(1.0/2.4)) - vec3f(0.055);
+    let lower = linear * vec3f(12.92);
+    return select(higher, lower, cutoff);
+}
+
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
 {
     let baseColor = textureSample(colorTexture, textureSampler, in.uv).rgb;
@@ -35,6 +44,6 @@ struct VertexOutput
     let lightColor = uGlobalUniforms.directionalLightColor.rgb;
     let ambient = uGlobalUniforms.ambientLightColor.rgb;
     let finalColor = baseColor * (ambient + lightColor * diffuse);
-    //return vec4f(finalColor, 1.0);
-    return vec4f(baseColor, 1.0);
+    // Apply gamma correction since swap chain is BGRA8Unorm (not sRGB)
+    return vec4f(linearToSrgb(finalColor), 1.0);
 }
