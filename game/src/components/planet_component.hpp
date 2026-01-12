@@ -3,6 +3,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <core/smart_ptr.hpp>
+#include <resources/resource_texture_2d.hpp>
 #include <scene/components/component_factory.hpp>
 #include <scene/components/icomponent.hpp>
 
@@ -36,6 +37,10 @@ public:
     // Wireframe mesh (unindexed, with barycentric coordinates)
     wgpu::Buffer wireframeVertexBuffer;
     uint32_t wireframeVertexCount{ 0 };
+
+    // Texture for the planet surface
+    ResourceTexture2DSharedPtr colorTexture;
+    wgpu::BindGroup textureBindGroup;
 
     bool initialized{ false };
 };

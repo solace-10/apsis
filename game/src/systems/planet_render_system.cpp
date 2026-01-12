@@ -16,6 +16,8 @@ namespace WingsOfSteel
 
 PlanetRenderSystem::PlanetRenderSystem()
 {
+    CreateTextureBindGroupLayout();
+
     GetResourceSystem()->RequestResource("/shaders/planet.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateRenderPipeline();
@@ -27,6 +29,11 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_pWireframeShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateWireframePipeline();
         m_WireframeInitialized = true;
+    });
+
+    GetResourceSystem()->RequestResource("/textures/8081_earthmap4k.jpg", [this](ResourceSharedPtr pResource) {
+        m_pEarthTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        m_TextureInitialized = true;
     });
 }
 
@@ -52,10 +59,16 @@ void PlanetRenderSystem::Update(float delta)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<PlanetComponent>();
 
-    view.each([](const auto entity, PlanetComponent& planetComponent) {
+    view.each([this](const auto entity, PlanetComponent& planetComponent) {
         if (!planetComponent.initialized)
         {
             PlanetMeshGenerator::Generate(planetComponent, 24);
+        }
+
+        // Create texture bind group once the texture is loaded
+        if (m_TextureInitialized && !planetComponent.textureBindGroup && m_TextureBindGroupLayout)
+        {
+            CreateTextureBindGroup(planetComponent);
         }
     });
 }
@@ -79,7 +92,14 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
                 return;
             }
 
+            // Skip rendering if texture bind group is not ready
+            if (!planetComponent.textureBindGroup)
+            {
+                return;
+            }
+
             renderPass.SetPipeline(m_RenderPipeline);
+            renderPass.SetBindGroup(1, planetComponent.textureBindGroup);
             renderPass.SetVertexBuffer(0, planetComponent.vertexBuffer);
             renderPass.SetIndexBuffer(planetComponent.indexBuffer, wgpu::IndexFormat::Uint32);
             renderPass.DrawIndexed(planetComponent.indexCount);
@@ -119,9 +139,10 @@ void PlanetRenderSystem::CreateRenderPipeline()
         .targets = &colorTargetState
     };
 
-    // Pipeline layout with global uniforms only
-    std::array<wgpu::BindGroupLayout, 1> bindGroupLayouts = {
-        GetRenderSystem()->GetGlobalUniformsLayout()
+    // Pipeline layout with global uniforms and texture bind group
+    std::array<wgpu::BindGroupLayout, 2> bindGroupLayouts = {
+        GetRenderSystem()->GetGlobalUniformsLayout(),
+        m_TextureBindGroupLayout
     };
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
         .bindGroupLayoutCount = static_cast<uint32_t>(bindGroupLayouts.size()),
@@ -143,7 +164,7 @@ void PlanetRenderSystem::CreateRenderPipeline()
         .vertex = {
             .module = m_pShader->GetShaderModule(),
             .bufferCount = 1,
-            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_C3_N3) },
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_N3_UV) },
         .primitive = { .topology = wgpu::PrimitiveTopology::TriangleList, .cullMode = wgpu::CullMode::Back },
         .depthStencil = &depthState,
         .multisample = { .count = RenderSystem::MsaaSampleCount },
@@ -220,6 +241,67 @@ void PlanetRenderSystem::HandleShaderInjection()
                 }
             });
     }
+}
+
+void PlanetRenderSystem::CreateTextureBindGroupLayout()
+{
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+
+    // Create sampler for texture filtering
+    wgpu::SamplerDescriptor samplerDesc{
+        .label = "Planet texture sampler",
+        .addressModeU = wgpu::AddressMode::Repeat,
+        .addressModeV = wgpu::AddressMode::ClampToEdge,
+        .addressModeW = wgpu::AddressMode::ClampToEdge,
+        .magFilter = wgpu::FilterMode::Linear,
+        .minFilter = wgpu::FilterMode::Linear,
+        .mipmapFilter = wgpu::MipmapFilterMode::Linear,
+        .maxAnisotropy = 16
+    };
+    m_TextureSampler = device.CreateSampler(&samplerDesc);
+
+    // Bind group layout for texture: sampler at 0, texture at 1
+    std::array<wgpu::BindGroupLayoutEntry, 2> entries = { { { .binding = 0,
+                                                                .visibility = wgpu::ShaderStage::Fragment,
+                                                                .sampler = { .type = wgpu::SamplerBindingType::Filtering } },
+        { .binding = 1,
+            .visibility = wgpu::ShaderStage::Fragment,
+            .texture = {
+                .sampleType = wgpu::TextureSampleType::Float,
+                .viewDimension = wgpu::TextureViewDimension::e2D } } } };
+
+    wgpu::BindGroupLayoutDescriptor layoutDesc{
+        .label = "Planet texture bind group layout",
+        .entryCount = static_cast<uint32_t>(entries.size()),
+        .entries = entries.data()
+    };
+    m_TextureBindGroupLayout = device.CreateBindGroupLayout(&layoutDesc);
+}
+
+void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent)
+{
+    if (!m_pEarthTexture || !m_TextureBindGroupLayout)
+    {
+        return;
+    }
+
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+
+    // Store reference to texture in the component
+    planetComponent.colorTexture = m_pEarthTexture;
+
+    std::array<wgpu::BindGroupEntry, 2> entries = { { { .binding = 0,
+                                                          .sampler = m_TextureSampler },
+        { .binding = 1,
+            .textureView = m_pEarthTexture->GetTextureView() } } };
+
+    wgpu::BindGroupDescriptor bindGroupDesc{
+        .label = "Planet texture bind group",
+        .layout = m_TextureBindGroupLayout,
+        .entryCount = static_cast<uint32_t>(entries.size()),
+        .entries = entries.data()
+    };
+    planetComponent.textureBindGroup = device.CreateBindGroup(&bindGroupDesc);
 }
 
 } // namespace WingsOfSteel

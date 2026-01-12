@@ -6,10 +6,13 @@
 
 #include <core/signal.hpp>
 #include <resources/resource_shader.hpp>
+#include <resources/resource_texture_2d.hpp>
 #include <scene/systems/system.hpp>
 
 namespace WingsOfSteel
 {
+
+class PlanetComponent;
 
 class PlanetRenderSystem : public System
 {
@@ -27,14 +30,20 @@ public:
 private:
     void CreateRenderPipeline();
     void CreateWireframePipeline();
+    void CreateTextureBindGroupLayout();
+    void CreateTextureBindGroup(PlanetComponent& planetComponent);
     void HandleShaderInjection();
 
     ResourceShaderSharedPtr m_pShader;
     ResourceShaderSharedPtr m_pWireframeShader;
+    ResourceTexture2DSharedPtr m_pEarthTexture;
     wgpu::RenderPipeline m_RenderPipeline;
     wgpu::RenderPipeline m_WireframePipeline;
+    wgpu::BindGroupLayout m_TextureBindGroupLayout;
+    wgpu::Sampler m_TextureSampler;
     bool m_Initialized{ false };
     bool m_WireframeInitialized{ false };
+    bool m_TextureInitialized{ false };
     bool m_RenderWireframe{ false };
     std::optional<SignalId> m_ShaderInjectionSignalId;
 };
