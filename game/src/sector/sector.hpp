@@ -24,7 +24,6 @@ public:
 
 private:
     void DrawCameraDebugUI();
-    void SpawnDome();
     void SpawnLight();
 
     EntitySharedPtr m_pDome;

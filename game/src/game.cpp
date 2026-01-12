@@ -13,6 +13,7 @@
 #include "game.hpp"
 #include "render/sector_render_pass.hpp"
 #include "sector/sector.hpp"
+#include "systems/planet_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -141,6 +142,20 @@ void Game::DrawImGuiMenuBar()
             if (ImGui::MenuItem("Grid", nullptr, &sShowGrid))
             {
                 m_pSector->ShowGrid(sShowGrid);
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Earth"))
+        {
+            PlanetRenderSystem* pPlanetRenderSystem = m_pSector->GetSystem<PlanetRenderSystem>();
+            if (pPlanetRenderSystem)
+            {
+                bool wireframe = pPlanetRenderSystem->IsWireframeEnabled();
+                if (ImGui::MenuItem("Wireframe", nullptr, &wireframe))
+                {
+                    pPlanetRenderSystem->SetWireframeEnabled(wireframe);
+                }
             }
             ImGui::EndMenu();
         }

@@ -21,6 +21,9 @@ public:
     void Update(float delta) override;
     void Render(wgpu::RenderPassEncoder& renderPass);
 
+    bool IsWireframeEnabled() const { return m_RenderWireframe; }
+    void SetWireframeEnabled(bool enabled) { m_RenderWireframe = enabled; }
+
 private:
     void CreateRenderPipeline();
     void CreateWireframePipeline();
@@ -32,6 +35,7 @@ private:
     wgpu::RenderPipeline m_WireframePipeline;
     bool m_Initialized{ false };
     bool m_WireframeInitialized{ false };
+    bool m_RenderWireframe{ false };
     std::optional<SignalId> m_ShaderInjectionSignalId;
 };
 

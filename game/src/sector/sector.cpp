@@ -7,6 +7,7 @@
 #include <scene/components/camera_component.hpp>
 #include <scene/components/directional_light_component.hpp>
 #include <scene/components/model_component.hpp>
+#include <scene/components/orbit_camera_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
@@ -44,14 +45,11 @@ void Sector::Initialize()
 
     m_pCamera = CreateEntity();
     m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
-
-    SectorCameraComponent& sectorCameraComponent = m_pCamera->AddComponent<SectorCameraComponent>();
-    sectorCameraComponent.position = glm::vec3(0.0f, 45.0f, 30.0f);
-    sectorCameraComponent.target = glm::vec3(0.0f, 0.0f, 0.0f);
-    sectorCameraComponent.maximumDrift = glm::vec3(0.0f, 0.0f, 0.0f);
+    OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
+    orbitCameraComponent.distance = 50.0f;
+    orbitCameraComponent.maximumDistance = 100.0f;
     SetCamera(m_pCamera);
 
-    SpawnDome();
     SpawnLight();
 
     m_pEarth = CreateEntity();
@@ -108,19 +106,6 @@ void Sector::DrawCameraDebugUI()
     }
 
     ImGui::End();
-}
-
-void Sector::SpawnDome()
-{
-    m_pDome = CreateEntity();
-
-    SectorCameraComponent& sectorCameraComponent = m_pCamera->GetComponent<SectorCameraComponent>();
-
-    TransformComponent& transformComponent = m_pDome->AddComponent<TransformComponent>();
-    transformComponent.transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-    ModelComponent& modelComponent = m_pDome->AddComponent<ModelComponent>();
-    modelComponent.SetModel("/models/dome/dome.glb");
 }
 
 void Sector::SpawnLight()

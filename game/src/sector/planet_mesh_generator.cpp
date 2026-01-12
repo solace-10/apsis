@@ -1,5 +1,6 @@
 #include "planet_mesh_generator.hpp"
 
+#include <array>
 #include <vector>
 
 #include <pandora.hpp>
@@ -11,101 +12,94 @@
 namespace WingsOfSteel
 {
 
-void PlanetMeshGenerator::Generate(PlanetComponent& component)
+// Face definition for cube-to-sphere projection
+struct CubeFace
+{
+    glm::vec3 origin; // Center of the face on unit cube
+    glm::vec3 uAxis; // Tangent direction for U
+    glm::vec3 vAxis; // Tangent direction for V
+};
+
+// 6 faces of the cube, each defined by origin and UV tangent directions
+// The cube spans from -1 to +1 on each axis
+// UV axes chosen so cross(uAxis, vAxis) points outward (same direction as origin)
+static const std::array<CubeFace, 6> kCubeFaces = { {
+    { { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }, // +X: cross(+Y, +Z) = +X
+    { { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } }, // -X: cross(+Y, -Z) = -X
+    { { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }, // +Y: cross(+Z, +X) = +Y
+    { { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f, 0.0f } }, // -Y: cross(-Z, +X) = -Y
+    { { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } }, // +Z: cross(+X, +Y) = +Z
+    { { 0.0f, 0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } }, // -Z: cross(-X, +Y) = -Z
+} };
+
+void PlanetMeshGenerator::Generate(PlanetComponent& component, uint32_t subdivisions)
 {
     if (component.initialized)
     {
         return;
     }
 
-    const float halfExtent = 2.5f;
+    const float radius = 25.0f;
     const glm::vec3 color(0.4f, 0.6f, 0.3f); // Earthy green
 
-    // 24 vertices (4 per face for proper face normals)
-    // 6 faces: +X, -X, +Y, -Y, +Z, -Z
-    std::vector<VertexP3C3N3> vertices = {
-        // +X face (right)
-        { { halfExtent, -halfExtent, -halfExtent }, color, { 1.0f, 0.0f, 0.0f } },
-        { { halfExtent, halfExtent, -halfExtent }, color, { 1.0f, 0.0f, 0.0f } },
-        { { halfExtent, halfExtent, halfExtent }, color, { 1.0f, 0.0f, 0.0f } },
-        { { halfExtent, -halfExtent, halfExtent }, color, { 1.0f, 0.0f, 0.0f } },
+    const uint32_t vertsPerFace = (subdivisions + 1) * (subdivisions + 1);
+    const uint32_t indicesPerFace = subdivisions * subdivisions * 6;
 
-        // -X face (left)
-        { { -halfExtent, -halfExtent, halfExtent }, color, { -1.0f, 0.0f, 0.0f } },
-        { { -halfExtent, halfExtent, halfExtent }, color, { -1.0f, 0.0f, 0.0f } },
-        { { -halfExtent, halfExtent, -halfExtent }, color, { -1.0f, 0.0f, 0.0f } },
-        { { -halfExtent, -halfExtent, -halfExtent }, color, { -1.0f, 0.0f, 0.0f } },
+    std::vector<VertexP3C3N3> vertices;
+    std::vector<uint32_t> indices;
+    vertices.reserve(6 * vertsPerFace);
+    indices.reserve(6 * indicesPerFace);
 
-        // +Y face (top)
-        { { -halfExtent, halfExtent, -halfExtent }, color, { 0.0f, 1.0f, 0.0f } },
-        { { -halfExtent, halfExtent, halfExtent }, color, { 0.0f, 1.0f, 0.0f } },
-        { { halfExtent, halfExtent, halfExtent }, color, { 0.0f, 1.0f, 0.0f } },
-        { { halfExtent, halfExtent, -halfExtent }, color, { 0.0f, 1.0f, 0.0f } },
+    // Generate vertices and indices for each face
+    for (uint32_t faceIndex = 0; faceIndex < 6; ++faceIndex)
+    {
+        const CubeFace& face = kCubeFaces[faceIndex];
+        const uint32_t faceVertexOffset = faceIndex * vertsPerFace;
 
-        // -Y face (bottom)
-        { { -halfExtent, -halfExtent, halfExtent }, color, { 0.0f, -1.0f, 0.0f } },
-        { { -halfExtent, -halfExtent, -halfExtent }, color, { 0.0f, -1.0f, 0.0f } },
-        { { halfExtent, -halfExtent, -halfExtent }, color, { 0.0f, -1.0f, 0.0f } },
-        { { halfExtent, -halfExtent, halfExtent }, color, { 0.0f, -1.0f, 0.0f } },
+        // Generate vertices for this face
+        for (uint32_t v = 0; v <= subdivisions; ++v)
+        {
+            for (uint32_t u = 0; u <= subdivisions; ++u)
+            {
+                // Map (u, v) to [-1, 1] range on the face
+                float uNorm = (static_cast<float>(u) / static_cast<float>(subdivisions)) * 2.0f - 1.0f;
+                float vNorm = (static_cast<float>(v) / static_cast<float>(subdivisions)) * 2.0f - 1.0f;
 
-        // +Z face (front)
-        { { -halfExtent, -halfExtent, halfExtent }, color, { 0.0f, 0.0f, 1.0f } },
-        { { halfExtent, -halfExtent, halfExtent }, color, { 0.0f, 0.0f, 1.0f } },
-        { { halfExtent, halfExtent, halfExtent }, color, { 0.0f, 0.0f, 1.0f } },
-        { { -halfExtent, halfExtent, halfExtent }, color, { 0.0f, 0.0f, 1.0f } },
+                // Calculate position on cube face
+                glm::vec3 cubePos = face.origin + uNorm * face.uAxis + vNorm * face.vAxis;
 
-        // -Z face (back)
-        { { halfExtent, -halfExtent, -halfExtent }, color, { 0.0f, 0.0f, -1.0f } },
-        { { -halfExtent, -halfExtent, -halfExtent }, color, { 0.0f, 0.0f, -1.0f } },
-        { { -halfExtent, halfExtent, -halfExtent }, color, { 0.0f, 0.0f, -1.0f } },
-        { { halfExtent, halfExtent, -halfExtent }, color, { 0.0f, 0.0f, -1.0f } },
-    };
+                // Project onto sphere by normalizing and scaling by radius
+                glm::vec3 spherePos = glm::normalize(cubePos) * radius;
 
-    // 36 indices (6 faces * 2 triangles * 3 indices)
-    std::vector<uint32_t> indices = {
-        // +X face
-        0,
-        1,
-        2,
-        0,
-        2,
-        3,
-        // -X face
-        4,
-        5,
-        6,
-        4,
-        6,
-        7,
-        // +Y face
-        8,
-        9,
-        10,
-        8,
-        10,
-        11,
-        // -Y face
-        12,
-        13,
-        14,
-        12,
-        14,
-        15,
-        // +Z face
-        16,
-        17,
-        18,
-        16,
-        18,
-        19,
-        // -Z face
-        20,
-        21,
-        22,
-        20,
-        22,
-        23,
-    };
+                // For a sphere centered at origin, the normal is the normalized position
+                glm::vec3 normal = glm::normalize(spherePos);
+
+                vertices.push_back({ spherePos, color, normal });
+            }
+        }
+
+        // Generate indices for this face (two triangles per quad)
+        for (uint32_t v = 0; v < subdivisions; ++v)
+        {
+            for (uint32_t u = 0; u < subdivisions; ++u)
+            {
+                uint32_t topLeft = faceVertexOffset + v * (subdivisions + 1) + u;
+                uint32_t topRight = topLeft + 1;
+                uint32_t bottomLeft = topLeft + (subdivisions + 1);
+                uint32_t bottomRight = bottomLeft + 1;
+
+                // First triangle (counter-clockwise when viewed from outside)
+                indices.push_back(topLeft);
+                indices.push_back(bottomRight);
+                indices.push_back(bottomLeft);
+
+                // Second triangle
+                indices.push_back(topLeft);
+                indices.push_back(topRight);
+                indices.push_back(bottomRight);
+            }
+        }
+    }
 
     component.vertexCount = static_cast<uint32_t>(vertices.size());
     component.indexCount = static_cast<uint32_t>(indices.size());

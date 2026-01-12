@@ -28,7 +28,7 @@ struct VertexOutput
     
     // Use screen-space derivatives for consistent line width
     let d = fwidth(edgeFactor);
-    let lineWidth = 1.5;
+    let lineWidth = 0.75;
     let edge = smoothstep(0.0, d * lineWidth, edgeFactor);
     
     // Discard interior pixels (keep only edges)

@@ -55,7 +55,7 @@ void PlanetRenderSystem::Update(float delta)
     view.each([](const auto entity, PlanetComponent& planetComponent) {
         if (!planetComponent.initialized)
         {
-            PlanetMeshGenerator::Generate(planetComponent);
+            PlanetMeshGenerator::Generate(planetComponent, 24);
         }
     });
 }
@@ -87,7 +87,7 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     }
 
     // Render wireframe overlay
-    if (m_WireframeInitialized && m_WireframePipeline)
+    if (m_WireframeInitialized && m_WireframePipeline && m_RenderWireframe)
     {
         view.each([this, &renderPass](const auto entity, PlanetComponent& planetComponent) {
             if (!planetComponent.initialized || !planetComponent.wireframeVertexBuffer)
@@ -196,7 +196,7 @@ void PlanetRenderSystem::CreateWireframePipeline()
             .module = m_pWireframeShader->GetShaderModule(),
             .bufferCount = 1,
             .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_B3) },
-        .primitive = { .topology = wgpu::PrimitiveTopology::TriangleList, .cullMode = wgpu::CullMode::None },
+        .primitive = { .topology = wgpu::PrimitiveTopology::TriangleList, .cullMode = wgpu::CullMode::Back },
         .depthStencil = &depthState,
         .multisample = { .count = RenderSystem::MsaaSampleCount },
         .fragment = &fragmentState
