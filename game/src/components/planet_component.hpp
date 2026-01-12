@@ -24,6 +24,10 @@ public:
     {
     }
 
+    // Oblate spheroid dimensions (in kilometers)
+    float semiMajorRadius{ 1.0f }; // Equatorial radius (X, Z axes)
+    float semiMinorRadius{ 1.0f }; // Polar radius (Y axis)
+
     wgpu::Buffer vertexBuffer;
     wgpu::Buffer indexBuffer;
     uint32_t vertexCount{ 0 };

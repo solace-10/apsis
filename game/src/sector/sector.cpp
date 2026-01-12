@@ -44,16 +44,24 @@ void Sector::Initialize()
     AddSystem<DebugRenderSystem>();
 
     m_pCamera = CreateEntity();
-    m_pCamera->AddComponent<CameraComponent>(70.0f, 1.0f, 5000.0f);
+    // Near/far planes for orbital viewing (kilometers)
+    m_pCamera->AddComponent<CameraComponent>(70.0f, 10.0f, 200000.0f);
     OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
-    orbitCameraComponent.distance = 50.0f;
-    orbitCameraComponent.maximumDistance = 100.0f;
+    orbitCameraComponent.distance = 20000.0f; // ~3x Earth radius for full planet view
+    orbitCameraComponent.minimumDistance = 7000.0f; // Just above surface
+    orbitCameraComponent.maximumDistance = 100000.0f;
     SetCamera(m_pCamera);
 
     SpawnLight();
 
+    // Earth's WGS84 ellipsoid dimensions in kilometers
+    constexpr float kEarthSemiMajorRadius = 6378.137f; // Equatorial radius
+    constexpr float kEarthSemiMinorRadius = 6356.752f; // Polar radius
+
     m_pEarth = CreateEntity();
-    m_pEarth->AddComponent<PlanetComponent>();
+    PlanetComponent& planetComponent = m_pEarth->AddComponent<PlanetComponent>();
+    planetComponent.semiMajorRadius = kEarthSemiMajorRadius;
+    planetComponent.semiMinorRadius = kEarthSemiMinorRadius;
 }
 
 void Sector::Update(float delta)
@@ -62,7 +70,8 @@ void Sector::Update(float delta)
 
     if (m_ShowGrid)
     {
-        GetDebugRender()->XZSquareGrid(-1000.0f, 1000.0f, -1.0f, 100.0f, Color::White);
+        // Grid scaled for planetary viewing (kilometers): 200,000 km extent, 10,000 km spacing
+        GetDebugRender()->XZSquareGrid(-100000.0f, 100000.0f, -1.0f, 10000.0f, Color::White);
     }
 
     DrawCameraDebugUI();

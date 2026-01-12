@@ -39,8 +39,13 @@ void PlanetMeshGenerator::Generate(PlanetComponent& component, uint32_t subdivis
         return;
     }
 
-    const float radius = 25.0f;
+    const float semiMajorRadius = component.semiMajorRadius; // Equatorial (X, Z)
+    const float semiMinorRadius = component.semiMinorRadius; // Polar (Y)
     const glm::vec3 color(0.4f, 0.6f, 0.3f); // Earthy green
+
+    // Precompute squared radii for normal calculation
+    const float semiMajorRadiusSq = semiMajorRadius * semiMajorRadius;
+    const float semiMinorRadiusSq = semiMinorRadius * semiMinorRadius;
 
     const uint32_t vertsPerFace = (subdivisions + 1) * (subdivisions + 1);
     const uint32_t indicesPerFace = subdivisions * subdivisions * 6;
@@ -68,13 +73,24 @@ void PlanetMeshGenerator::Generate(PlanetComponent& component, uint32_t subdivis
                 // Calculate position on cube face
                 glm::vec3 cubePos = face.origin + uNorm * face.uAxis + vNorm * face.vAxis;
 
-                // Project onto sphere by normalizing and scaling by radius
-                glm::vec3 spherePos = glm::normalize(cubePos) * radius;
+                // Project onto oblate spheroid by normalizing direction and scaling each axis
+                glm::vec3 dir = glm::normalize(cubePos);
+                glm::vec3 spheroidPos = glm::vec3(
+                    dir.x * semiMajorRadius, // X - equatorial
+                    dir.y * semiMinorRadius, // Y - polar
+                    dir.z * semiMajorRadius // Z - equatorial
+                );
 
-                // For a sphere centered at origin, the normal is the normalized position
-                glm::vec3 normal = glm::normalize(spherePos);
+                // For an ellipsoid, the normal is NOT the normalized position.
+                // The correct normal is the gradient of the implicit surface:
+                // F(x,y,z) = (x/a)² + (y/b)² + (z/a)² - 1 = 0
+                // ∇F = (2x/a², 2y/b², 2z/a²), normalized
+                glm::vec3 normal = glm::normalize(glm::vec3(
+                    spheroidPos.x / semiMajorRadiusSq,
+                    spheroidPos.y / semiMinorRadiusSq,
+                    spheroidPos.z / semiMajorRadiusSq));
 
-                vertices.push_back({ spherePos, color, normal });
+                vertices.push_back({ spheroidPos, color, normal });
             }
         }
 
