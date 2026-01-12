@@ -23,11 +23,15 @@ public:
 
 private:
     void CreateRenderPipeline();
+    void CreateWireframePipeline();
     void HandleShaderInjection();
 
     ResourceShaderSharedPtr m_pShader;
+    ResourceShaderSharedPtr m_pWireframeShader;
     wgpu::RenderPipeline m_RenderPipeline;
+    wgpu::RenderPipeline m_WireframePipeline;
     bool m_Initialized{ false };
+    bool m_WireframeInitialized{ false };
     std::optional<SignalId> m_ShaderInjectionSignalId;
 };
 

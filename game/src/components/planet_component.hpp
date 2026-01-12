@@ -28,6 +28,11 @@ public:
     wgpu::Buffer indexBuffer;
     uint32_t vertexCount{ 0 };
     uint32_t indexCount{ 0 };
+
+    // Wireframe mesh (unindexed, with barycentric coordinates)
+    wgpu::Buffer wireframeVertexBuffer;
+    uint32_t wireframeVertexCount{ 0 };
+
     bool initialized{ false };
 };
 

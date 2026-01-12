@@ -138,6 +138,40 @@ void PlanetMeshGenerator::Generate(PlanetComponent& component)
         component.indexBuffer.Unmap();
     }
 
+    // Generate wireframe mesh with barycentric coordinates (unindexed)
+    // Each triangle gets 3 vertices with barycentric coords (1,0,0), (0,1,0), (0,0,1)
+    {
+        std::vector<VertexP3B3> wireframeVertices;
+        wireframeVertices.reserve(indices.size());
+
+        const glm::vec3 bary0(1.0f, 0.0f, 0.0f);
+        const glm::vec3 bary1(0.0f, 1.0f, 0.0f);
+        const glm::vec3 bary2(0.0f, 0.0f, 1.0f);
+
+        for (size_t i = 0; i < indices.size(); i += 3)
+        {
+            const glm::vec3& p0 = vertices[indices[i]].position;
+            const glm::vec3& p1 = vertices[indices[i + 1]].position;
+            const glm::vec3& p2 = vertices[indices[i + 2]].position;
+
+            wireframeVertices.push_back({ p0, bary0 });
+            wireframeVertices.push_back({ p1, bary1 });
+            wireframeVertices.push_back({ p2, bary2 });
+        }
+
+        component.wireframeVertexCount = static_cast<uint32_t>(wireframeVertices.size());
+
+        wgpu::BufferDescriptor bufferDescriptor{
+            .label = "Planet wireframe vertex buffer",
+            .usage = wgpu::BufferUsage::Vertex,
+            .size = wireframeVertices.size() * sizeof(VertexP3B3),
+            .mappedAtCreation = true
+        };
+        component.wireframeVertexBuffer = device.CreateBuffer(&bufferDescriptor);
+        memcpy(component.wireframeVertexBuffer.GetMappedRange(), wireframeVertices.data(), wireframeVertices.size() * sizeof(VertexP3B3));
+        component.wireframeVertexBuffer.Unmap();
+    }
+
     component.initialized = true;
 }
 
