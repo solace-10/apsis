@@ -12,6 +12,7 @@
 #include <scene/systems/model_render_system.hpp>
 #include <scene/systems/physics_simulation_system.hpp>
 
+#include "components/atmosphere_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "sector/sector.hpp"
@@ -62,6 +63,12 @@ void Sector::Initialize()
     PlanetComponent& planetComponent = m_pEarth->AddComponent<PlanetComponent>();
     planetComponent.semiMajorRadius = kEarthSemiMajorRadius;
     planetComponent.semiMinorRadius = kEarthSemiMinorRadius;
+
+    // Earth's atmosphere extends roughly 100km above the surface
+    AtmosphereComponent& atmosphereComponent = m_pEarth->AddComponent<AtmosphereComponent>();
+    atmosphereComponent.height = 100.0f;
+    atmosphereComponent.color = glm::vec3(0.4f, 0.6f, 1.0f);
+    atmosphereComponent.density = 1.0f;
 }
 
 void Sector::Update(float delta)
@@ -124,10 +131,10 @@ void Sector::SpawnLight()
     DirectionalLightComponent& directionalLightComponent = m_pLight->AddComponent<DirectionalLightComponent>();
     directionalLightComponent.SetAngle(226.0f);
     directionalLightComponent.SetPitch(40.0f);
-    directionalLightComponent.SetColor(1.0f, 0.96f, 0.68f);
+    directionalLightComponent.SetColor(1.0f, 0.96f, 0.90f); // Approximation for the sun (type G star at a temperature of 5778K)
 
     AmbientLightComponent& ambientLightComponent = m_pLight->AddComponent<AmbientLightComponent>();
-    ambientLightComponent.SetColor(0.10f, 0.14f, 0.17f);
+    ambientLightComponent.SetColor(0.0f, 0.0f, 0.0f);
 }
 
 } // namespace WingsOfSteel

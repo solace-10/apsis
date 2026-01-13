@@ -8,15 +8,29 @@
 #include <resources/resource_system.hpp>
 #include <scene/scene.hpp>
 
+#include "components/atmosphere_component.hpp"
 #include "components/planet_component.hpp"
 #include "sector/planet_mesh_generator.hpp"
 
 namespace WingsOfSteel
 {
 
+// Must match AtmosphereUniforms in atmosphere.wgsl
+struct AtmosphereUniformData
+{
+    glm::vec3 color; // offset 0
+    float height; // offset 12
+    float density; // offset 16
+    float _padding0; // offset 20
+    float _padding1; // offset 24
+    float _padding2; // offset 28
+    // Total: 32 bytes
+};
+
 PlanetRenderSystem::PlanetRenderSystem()
 {
     CreateTextureBindGroupLayout();
+    CreateAtmosphereBindGroupLayout();
 
     GetResourceSystem()->RequestResource("/shaders/planet.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
@@ -29,6 +43,12 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_pWireframeShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateWireframePipeline();
         m_WireframeInitialized = true;
+    });
+
+    GetResourceSystem()->RequestResource("/shaders/atmosphere.wgsl", [this](ResourceSharedPtr pResource) {
+        m_pAtmosphereShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
+        CreateAtmospherePipeline();
+        m_AtmosphereInitialized = true;
     });
 
     GetResourceSystem()->RequestResource("/textures/8081_earthmap4k.jpg", [this](ResourceSharedPtr pResource) {
@@ -57,20 +77,34 @@ void PlanetRenderSystem::Update(float delta)
     }
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<PlanetComponent>();
 
-    view.each([this](const auto entity, PlanetComponent& planetComponent) {
-        if (!planetComponent.initialized)
-        {
-            PlanetMeshGenerator::Generate(planetComponent, 24);
-        }
+    // Initialize planet components
+    {
+        auto view = registry.view<PlanetComponent>();
+        view.each([this](const auto entity, PlanetComponent& planetComponent) {
+            if (!planetComponent.initialized)
+            {
+                PlanetMeshGenerator::Generate(planetComponent, 24);
+            }
 
-        // Create texture bind group once the texture is loaded
-        if (m_TextureInitialized && !planetComponent.textureBindGroup && m_TextureBindGroupLayout)
-        {
-            CreateTextureBindGroup(planetComponent);
-        }
-    });
+            // Create texture bind group once the texture is loaded
+            if (m_TextureInitialized && !planetComponent.textureBindGroup && m_TextureBindGroupLayout)
+            {
+                CreateTextureBindGroup(planetComponent);
+            }
+        });
+    }
+
+    // Initialize atmosphere components
+    {
+        auto view = registry.view<AtmosphereComponent>();
+        view.each([this](const auto entity, AtmosphereComponent& atmosphereComponent) {
+            if (!atmosphereComponent.initialized && m_AtmosphereBindGroupLayout)
+            {
+                InitializeAtmosphereComponent(atmosphereComponent);
+            }
+        });
+    }
 }
 
 void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
@@ -118,6 +152,32 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
             renderPass.SetPipeline(m_WireframePipeline);
             renderPass.SetVertexBuffer(0, planetComponent.wireframeVertexBuffer);
             renderPass.Draw(planetComponent.wireframeVertexCount);
+        });
+    }
+
+    // Render atmosphere (after planet, with alpha blending)
+    if (m_AtmosphereInitialized && m_AtmospherePipeline)
+    {
+        auto atmosphereView = registry.view<PlanetComponent, AtmosphereComponent>();
+        atmosphereView.each([this, &renderPass](const auto entity, PlanetComponent& planetComponent, AtmosphereComponent& atmosphereComponent) {
+            if (!planetComponent.initialized || !atmosphereComponent.initialized)
+            {
+                return;
+            }
+
+            if (!planetComponent.vertexBuffer || !planetComponent.indexBuffer || !atmosphereComponent.bindGroup)
+            {
+                return;
+            }
+
+            // Update atmosphere uniforms in case they changed
+            UpdateAtmosphereUniforms(atmosphereComponent);
+
+            renderPass.SetPipeline(m_AtmospherePipeline);
+            renderPass.SetBindGroup(1, atmosphereComponent.bindGroup);
+            renderPass.SetVertexBuffer(0, planetComponent.vertexBuffer);
+            renderPass.SetIndexBuffer(planetComponent.indexBuffer, wgpu::IndexFormat::Uint32);
+            renderPass.DrawIndexed(planetComponent.indexCount);
         });
     }
 }
@@ -239,6 +299,10 @@ void PlanetRenderSystem::HandleShaderInjection()
                 {
                     CreateWireframePipeline();
                 }
+                else if (m_pAtmosphereShader.get() == pResourceShader)
+                {
+                    CreateAtmospherePipeline();
+                }
             });
     }
 }
@@ -302,6 +366,138 @@ void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent
         .entries = entries.data()
     };
     planetComponent.textureBindGroup = device.CreateBindGroup(&bindGroupDesc);
+}
+
+void PlanetRenderSystem::CreateAtmospherePipeline()
+{
+    if (!m_pAtmosphereShader)
+    {
+        return;
+    }
+
+    // Alpha blending for transparent atmosphere
+    wgpu::BlendState blendState{
+        .color = {
+            .operation = wgpu::BlendOperation::Add,
+            .srcFactor = wgpu::BlendFactor::SrcAlpha,
+            .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha },
+        .alpha = { .operation = wgpu::BlendOperation::Add, .srcFactor = wgpu::BlendFactor::One, .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha }
+    };
+
+    wgpu::ColorTargetState colorTargetState{
+        .format = GetWindow()->GetTextureFormat(),
+        .blend = &blendState,
+        .writeMask = wgpu::ColorWriteMask::All
+    };
+
+    wgpu::FragmentState fragmentState{
+        .module = m_pAtmosphereShader->GetShaderModule(),
+        .targetCount = 1,
+        .targets = &colorTargetState
+    };
+
+    // Pipeline layout with global uniforms and atmosphere uniforms
+    std::array<wgpu::BindGroupLayout, 2> bindGroupLayouts = {
+        GetRenderSystem()->GetGlobalUniformsLayout(),
+        m_AtmosphereBindGroupLayout
+    };
+    wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
+        .bindGroupLayoutCount = static_cast<uint32_t>(bindGroupLayouts.size()),
+        .bindGroupLayouts = bindGroupLayouts.data()
+    };
+    wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
+
+    // Depth state: test against depth but don't write (transparent)
+    wgpu::DepthStencilState depthState{
+        .format = wgpu::TextureFormat::Depth32Float,
+        .depthWriteEnabled = false,
+        .depthCompare = wgpu::CompareFunction::Less
+    };
+
+    // Create the atmosphere render pipeline
+    wgpu::RenderPipelineDescriptor descriptor{
+        .label = "Atmosphere render pipeline",
+        .layout = pipelineLayout,
+        .vertex = {
+            .module = m_pAtmosphereShader->GetShaderModule(),
+            .bufferCount = 1,
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P3_N3_UV) },
+        .primitive = { .topology = wgpu::PrimitiveTopology::TriangleList, .cullMode = wgpu::CullMode::Back },
+        .depthStencil = &depthState,
+        .multisample = { .count = RenderSystem::MsaaSampleCount },
+        .fragment = &fragmentState
+    };
+    m_AtmospherePipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
+}
+
+void PlanetRenderSystem::CreateAtmosphereBindGroupLayout()
+{
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+
+    // Bind group layout for atmosphere uniforms
+    wgpu::BindGroupLayoutEntry entry{
+        .binding = 0,
+        .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
+        .buffer = { .type = wgpu::BufferBindingType::Uniform }
+    };
+
+    wgpu::BindGroupLayoutDescriptor layoutDesc{
+        .label = "Atmosphere uniform bind group layout",
+        .entryCount = 1,
+        .entries = &entry
+    };
+    m_AtmosphereBindGroupLayout = device.CreateBindGroupLayout(&layoutDesc);
+}
+
+void PlanetRenderSystem::InitializeAtmosphereComponent(AtmosphereComponent& atmosphereComponent)
+{
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+
+    // Create uniform buffer
+    wgpu::BufferDescriptor bufferDesc{
+        .label = "Atmosphere uniform buffer",
+        .usage = wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst,
+        .size = sizeof(AtmosphereUniformData)
+    };
+    atmosphereComponent.uniformBuffer = device.CreateBuffer(&bufferDesc);
+
+    // Create bind group
+    wgpu::BindGroupEntry entry{
+        .binding = 0,
+        .buffer = atmosphereComponent.uniformBuffer,
+        .size = sizeof(AtmosphereUniformData)
+    };
+
+    wgpu::BindGroupDescriptor bindGroupDesc{
+        .label = "Atmosphere uniform bind group",
+        .layout = m_AtmosphereBindGroupLayout,
+        .entryCount = 1,
+        .entries = &entry
+    };
+    atmosphereComponent.bindGroup = device.CreateBindGroup(&bindGroupDesc);
+
+    // Write initial uniform data
+    UpdateAtmosphereUniforms(atmosphereComponent);
+
+    atmosphereComponent.initialized = true;
+}
+
+void PlanetRenderSystem::UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent)
+{
+    AtmosphereUniformData data{
+        .color = atmosphereComponent.color,
+        .height = atmosphereComponent.height,
+        .density = atmosphereComponent.density,
+        ._padding0 = 0.0f,
+        ._padding1 = 0.0f,
+        ._padding2 = 0.0f
+    };
+
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(
+        atmosphereComponent.uniformBuffer,
+        0,
+        &data,
+        sizeof(AtmosphereUniformData));
 }
 
 } // namespace WingsOfSteel
