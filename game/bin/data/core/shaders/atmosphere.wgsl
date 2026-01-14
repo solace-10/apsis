@@ -112,9 +112,12 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
     // - If ray hits planet (fPlanetHit > 0), march to the planet surface
     // - Otherwise, ray grazes the limb - find where it exits the outer atmosphere
     var fRayLength: f32;
-    if (fPlanetHit > 0.0) {
+    if (fPlanetHit > 0.0) 
+    {
         fRayLength = fPlanetHit;
-    } else {
+    } 
+    else
+    {
         // Ray exits on far side of outer atmosphere
         fRayLength = getFarIntersection(v3Pos, v3Ray, uAtmosphere.fOuterRadius2);
         fRayLength = max(0.0, fRayLength);
@@ -147,14 +150,21 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
         // Optical depth for light reaching this point and then reaching the camera
         let fLightAngle = dot(v3LightDir, v3SamplePoint) / fHeight;
         let fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
-        let fScatter = max(0, fStartOffset + fDepth * (scale(fLightAngle) - scale(fCameraAngle)));
+        let fScatter = max(0.0, fStartOffset + fDepth * (scale(fLightAngle) - scale(fCameraAngle)));
+        
+        // Smooth terminator falloff - fade scattering as we move into the night side
+        // fLightAngle of 0 = terminator, negative = night side
+        // Fade from full (1.0) at terminatorStart to zero at terminatorEnd
+        let terminatorStart = 0.2;  // Start fading slightly before terminator (~12 degrees)
+        let terminatorEnd = -0.2;   // Fully dark past terminator (~12 degrees into night)
+        let terminatorFade = smoothstep(terminatorEnd, terminatorStart, fLightAngle);
         
         // Attenuation due to out-scattering along the path
         let v3Attenuate = exp(-fScatter * (uAtmosphere.v3InvWavelength * uAtmosphere.fKr4PI + uAtmosphere.fKm4PI));
         
         // Accumulate: density * attenuation * path_segment_length * scale_factor
         // The scale factor normalizes the path length to atmosphere thickness units
-        v3FrontColor = v3FrontColor + v3Attenuate * fDepth * fSampleLength * uAtmosphere.fScale;
+        v3FrontColor = v3FrontColor + v3Attenuate * fDepth * fSampleLength * uAtmosphere.fScale * terminatorFade;
         v3SamplePoint = v3SamplePoint + v3SampleRay;
     }
 
