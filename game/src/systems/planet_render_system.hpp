@@ -36,7 +36,7 @@ private:
     void CreateAtmosphereBindGroupLayout();
     void CreateTextureBindGroup(PlanetComponent& planetComponent);
     void InitializeAtmosphereComponent(AtmosphereComponent& atmosphereComponent);
-    void UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent);
+    void UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent, PlanetComponent& planetComponent);
     void HandleShaderInjection();
 
     ResourceShaderSharedPtr m_pShader;

@@ -1,7 +1,9 @@
 #include "planet_render_system.hpp"
 
 #include <array>
+#include <cmath>
 
+#include <glm/gtc/constants.hpp>
 #include <pandora.hpp>
 #include <render/rendersystem.hpp>
 #include <render/window.hpp>
@@ -16,15 +18,37 @@ namespace WingsOfSteel
 {
 
 // Must match AtmosphereUniforms in atmosphere.wgsl
+// Sean O'Neil's atmospheric scattering parameters
+// Total size: 96 bytes (6 x 16-byte aligned blocks)
 struct AtmosphereUniformData
 {
-    glm::vec3 color; // offset 0
-    float height; // offset 12
-    float density; // offset 16
-    float _padding0; // offset 20
-    float _padding1; // offset 24
-    float _padding2; // offset 28
-    // Total: 32 bytes
+    // Block 1: vec4 aligned
+    glm::vec3 v3InvWavelength; // 1/pow(wavelength,4) for RGB
+    float fInnerRadius; // Planet surface radius
+
+    // Block 2: vec4 aligned
+    float fInnerRadius2; // fInnerRadius^2
+    float fOuterRadius; // Atmosphere outer radius
+    float fOuterRadius2; // fOuterRadius^2
+    float fKrESun; // Kr * ESun
+
+    // Block 3: vec4 aligned
+    float fKmESun; // Km * ESun
+    float fKr4PI; // Kr * 4 * PI
+    float fKm4PI; // Km * 4 * PI
+    float fScale; // 1 / (fOuterRadius - fInnerRadius)
+
+    // Block 4: vec4 aligned
+    float fScaleDepth; // Scale height (0.25)
+    float fScaleOverScaleDepth; // fScale / fScaleDepth
+    float g; // Mie asymmetry factor
+    float g2; // g * g
+
+    // Block 5: vec4 aligned
+    float fSamples; // Number of samples as float
+    float fAtmosphereHeight; // Atmosphere thickness for vertex expansion 
+    float _padding0;
+    float _padding1;
 };
 
 PlanetRenderSystem::PlanetRenderSystem()
@@ -171,7 +195,7 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
             }
 
             // Update atmosphere uniforms in case they changed
-            UpdateAtmosphereUniforms(atmosphereComponent);
+            UpdateAtmosphereUniforms(atmosphereComponent, planetComponent);
 
             renderPass.SetPipeline(m_AtmospherePipeline);
             renderPass.SetBindGroup(1, atmosphereComponent.bindGroup);
@@ -476,21 +500,48 @@ void PlanetRenderSystem::InitializeAtmosphereComponent(AtmosphereComponent& atmo
     };
     atmosphereComponent.bindGroup = device.CreateBindGroup(&bindGroupDesc);
 
-    // Write initial uniform data
-    UpdateAtmosphereUniforms(atmosphereComponent);
-
+    // Uniform data will be written in Render() where we have access to PlanetComponent
     atmosphereComponent.initialized = true;
 }
 
-void PlanetRenderSystem::UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent)
+void PlanetRenderSystem::UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent, PlanetComponent& planetComponent)
 {
+    // Use the larger radius (equatorial) since mesh vertices extend to semiMajorRadius
+    // The atmosphere shell must encompass all possible vertex positions
+    const float innerRadius = planetComponent.semiMajorRadius;
+
+    // O'Neil's algorithm requires atmosphere = 2.5% of planet radius for the scale function to work correctly
+    // For Earth (~6378km), this gives ~159km atmosphere thickness
+    const float outerRadius = innerRadius * 1.025f;
+    const float atmosphereHeight = outerRadius - innerRadius;
+
+    // Compute inverse wavelength^4 for Rayleigh scattering (wavelength-dependent scattering)
+    const glm::vec3 invWavelength(
+        1.0f / std::pow(atmosphereComponent.wavelength.r, 4.0f),
+        1.0f / std::pow(atmosphereComponent.wavelength.g, 4.0f),
+        1.0f / std::pow(atmosphereComponent.wavelength.b, 4.0f));
+
+    const float scale = 1.0f / atmosphereHeight;
+
     AtmosphereUniformData data{
-        .color = atmosphereComponent.color,
-        .height = atmosphereComponent.height,
-        .density = atmosphereComponent.density,
+        .v3InvWavelength = invWavelength,
+        .fInnerRadius = innerRadius,
+        .fInnerRadius2 = innerRadius * innerRadius,
+        .fOuterRadius = outerRadius,
+        .fOuterRadius2 = outerRadius * outerRadius,
+        .fKrESun = atmosphereComponent.Kr * atmosphereComponent.ESun,
+        .fKmESun = atmosphereComponent.Km * atmosphereComponent.ESun,
+        .fKr4PI = atmosphereComponent.Kr * 4.0f * glm::pi<float>(),
+        .fKm4PI = atmosphereComponent.Km * 4.0f * glm::pi<float>(),
+        .fScale = scale,
+        .fScaleDepth = atmosphereComponent.scaleDepth,
+        .fScaleOverScaleDepth = scale / atmosphereComponent.scaleDepth,
+        .g = atmosphereComponent.g,
+        .g2 = atmosphereComponent.g * atmosphereComponent.g,
+        .fSamples = static_cast<float>(atmosphereComponent.numSamples),
+        .fAtmosphereHeight = atmosphereHeight,
         ._padding0 = 0.0f,
-        ._padding1 = 0.0f,
-        ._padding2 = 0.0f
+        ._padding1 = 0.0f
     };
 
     GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(

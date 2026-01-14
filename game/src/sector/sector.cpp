@@ -64,11 +64,17 @@ void Sector::Initialize()
     planetComponent.semiMajorRadius = kEarthSemiMajorRadius;
     planetComponent.semiMinorRadius = kEarthSemiMinorRadius;
 
-    // Earth's atmosphere extends roughly 100km above the surface
+    // Atmospheric scattering using Sean O'Neil's algorithm
+    // The atmosphere height is computed automatically as 2.5% of planet radius (~159km for Earth)
+    // to match O'Neil's scale function calibration
     AtmosphereComponent& atmosphereComponent = m_pEarth->AddComponent<AtmosphereComponent>();
-    atmosphereComponent.height = 100.0f;
-    atmosphereComponent.color = glm::vec3(0.4f, 0.6f, 1.0f);
-    atmosphereComponent.density = 1.0f;
+    atmosphereComponent.Kr = 0.0015f; // Rayleigh scattering constant (reduced for thinner atmosphere)
+    atmosphereComponent.Km = 0.0005f; // Mie scattering constant
+    atmosphereComponent.ESun = 15.0f; // Sun brightness
+    atmosphereComponent.g = -0.950f; // Mie phase asymmetry
+    atmosphereComponent.wavelength = glm::vec3(0.650f, 0.570f, 0.475f); // RGB wavelengths (micrometers)
+    atmosphereComponent.scaleDepth = 0.25f; // Scale height
+    atmosphereComponent.numSamples = 5; // Ray march samples
 }
 
 void Sector::Update(float delta)
