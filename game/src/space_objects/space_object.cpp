@@ -1,8 +1,48 @@
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
 #include "core/serialization.hpp"
 #include "space_objects/space_object.hpp"
 
 namespace WingsOfSteel
 {
+
+namespace
+{
+
+// Parse ISO 8601 timestamp: "2026-01-14T15:04:24.142944"
+std::chrono::system_clock::time_point ParseEpoch(const std::string& epochStr)
+{
+    std::tm tm = {};
+    std::istringstream ss(epochStr);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+
+    // Convert to time_t (UTC)
+#ifdef _WIN32
+    std::time_t time = _mkgmtime(&tm);
+#else
+    std::time_t time = timegm(&tm);
+#endif
+
+    auto tp = std::chrono::system_clock::from_time_t(time);
+
+    // Parse fractional seconds if present
+    if (ss.peek() == '.')
+    {
+        ss.get(); // consume the '.'
+        std::string fractional;
+        ss >> fractional;
+        // Pad or truncate to 6 digits (microseconds)
+        fractional.resize(6, '0');
+        int microseconds = std::stoi(fractional);
+        tp += std::chrono::microseconds(microseconds);
+    }
+
+    return tp;
+}
+
+} // anonymous namespace
 
 SpaceObject::SpaceObject()
 {
@@ -35,7 +75,7 @@ bool SpaceObject::DeserializeOMM(const Json::Data& data)
 
     m_ObjectName = objectName.value();
     m_ObjectId = objectId.value();
-    m_Epoch = epoch.value();
+    m_Epoch = ParseEpoch(epoch.value());
     m_MeanMotion = meanMotion.value();
     m_Eccentricity = eccentricity.value();
     m_Inclination = inclination.value();

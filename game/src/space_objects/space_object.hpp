@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <optional>
 #include <string>
 
@@ -18,7 +19,7 @@ public:
 
     const std::string& GetObjectName() const { return m_ObjectName; }
     const std::string& GetObjectId() const { return m_ObjectId; }
-    const std::string& GetEpoch() const { return m_Epoch; }
+    std::chrono::system_clock::time_point GetEpoch() const { return m_Epoch; }
     float GetMeanMotion() const { return m_MeanMotion; }
     float GetEccentricity() const { return m_Eccentricity; }
     float GetInclination() const { return m_Inclination; }
@@ -30,7 +31,7 @@ public:
 private:
     std::string m_ObjectName{ "UNKNOWN" };
     std::string m_ObjectId{ "0" };
-    std::string m_Epoch;
+    std::chrono::system_clock::time_point m_Epoch;
     float m_MeanMotion{ 0.0f };
     float m_Eccentricity{ 0.0f };
     float m_Inclination{ 0.0f };

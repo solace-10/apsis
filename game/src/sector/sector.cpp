@@ -17,13 +17,16 @@
 #include "components/atmosphere_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "components/space_object_component.hpp"
 #include "sector/sector.hpp"
 #include "resources/resource.fwd.hpp"
 #include "space_objects/space_object.hpp"
 #include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
+#include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -43,6 +46,8 @@ void Sector::Initialize()
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlanetRenderSystem>();
+    AddSystem<OrbitSimulationSystem>();
+    AddSystem<SpaceObjectRenderSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
@@ -81,7 +86,7 @@ void Sector::Initialize()
     atmosphereComponent.scaleDepth = 0.25f; // Scale height
     atmosphereComponent.numSamples = 5; // Ray march samples
 
-    InitializeSpaceObjectCatalgue();
+    InitializeSpaceObjectCatalogue();
 }
 
 void Sector::Update(float delta)
@@ -97,7 +102,7 @@ void Sector::Update(float delta)
     DrawCameraDebugUI();
 }
 
-void Sector::InitializeSpaceObjectCatalgue()
+void Sector::InitializeSpaceObjectCatalogue()
 {
     m_pSpaceObjectCatalogue = std::make_unique<SpaceObjectCatalogue>();
     
@@ -110,8 +115,13 @@ void Sector::InitializeSpaceObjectCatalgue()
             SpaceObject spaceObject;
             if (spaceObject.DeserializeOMM(data))
             {
-                pCatalogue->Add(std::move(spaceObject));
+                pCatalogue->Add(spaceObject);
                 successfulEntries++;
+
+                EntitySharedPtr pEntity = CreateEntity();
+                SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
+                spaceObjectComponent.AssignSpaceObject(spaceObject);
+                pEntity->AddComponent<TransformComponent>();
             }
             else
             {

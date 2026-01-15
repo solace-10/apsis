@@ -29,7 +29,7 @@ public:
 private:
     void DrawCameraDebugUI();
     void SpawnLight();
-    void InitializeSpaceObjectCatalgue();
+    void InitializeSpaceObjectCatalogue();
 
     SpaceObjectCatalogueUniquePtr m_pSpaceObjectCatalogue;
     EntitySharedPtr m_pCamera;
