@@ -3,6 +3,8 @@
 #include <core/log.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
+#include <resources/resource_data_store.hpp>
+#include <resources/resource_system.hpp>
 #include <scene/components/ambient_light_component.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/directional_light_component.hpp>
@@ -16,6 +18,9 @@
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "sector/sector.hpp"
+#include "resources/resource.fwd.hpp"
+#include "space_objects/space_object.hpp"
+#include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/planet_render_system.hpp"
@@ -75,6 +80,8 @@ void Sector::Initialize()
     atmosphereComponent.wavelength = glm::vec3(0.650f, 0.570f, 0.475f); // RGB wavelengths (micrometers)
     atmosphereComponent.scaleDepth = 0.25f; // Scale height
     atmosphereComponent.numSamples = 5; // Ray march samples
+
+    InitializeSpaceObjectCatalgue();
 }
 
 void Sector::Update(float delta)
@@ -88,6 +95,32 @@ void Sector::Update(float delta)
     }
 
     DrawCameraDebugUI();
+}
+
+void Sector::InitializeSpaceObjectCatalgue()
+{
+    m_pSpaceObjectCatalogue = std::make_unique<SpaceObjectCatalogue>();
+    
+    GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
+        ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
+        SpaceObjectCatalogue* pCatalogue = GetSpaceObjectCatalogue();
+        size_t successfulEntries = 0;
+        for (const Json::Data& data : pResourceDataStore->Data())
+        {
+            SpaceObject spaceObject;
+            if (spaceObject.DeserializeOMM(data))
+            {
+                pCatalogue->Add(std::move(spaceObject));
+                successfulEntries++;
+            }
+            else
+            {
+                Log::Warning() << "Failed to deserialize OMM from " << pResourceDataStore->GetPath();
+            }
+        }
+
+        Log::Info() << "Added " << successfulEntries << " to space object catalogue.";
+    });
 }
 
 void Sector::ShowCameraDebugUI(bool state)

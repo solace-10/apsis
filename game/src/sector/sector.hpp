@@ -9,6 +9,8 @@
 namespace WingsOfSteel
 {
 
+DECLARE_SMART_PTR(SpaceObjectCatalogue);
+
 DECLARE_SMART_PTR(Sector);
 class Sector : public Scene
 {
@@ -22,11 +24,14 @@ public:
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
 
+    SpaceObjectCatalogue* GetSpaceObjectCatalogue() { return m_pSpaceObjectCatalogue.get(); }
+
 private:
     void DrawCameraDebugUI();
     void SpawnLight();
+    void InitializeSpaceObjectCatalgue();
 
-    EntitySharedPtr m_pDome;
+    SpaceObjectCatalogueUniquePtr m_pSpaceObjectCatalogue;
     EntitySharedPtr m_pCamera;
     EntitySharedPtr m_pLight;
     EntitySharedPtr m_pEarth;
