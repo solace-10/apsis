@@ -148,8 +148,7 @@
             ],
             "targets": [
                 "setup_compile_commands",
-                "game",
-                "dome"
+                "game"
             ]
         },
         {
@@ -162,8 +161,7 @@
             ],
             "targets": [
                 "setup_compile_commands",
-                "game",
-                "dome"
+                "game"
             ]
         },
         {
@@ -189,8 +187,7 @@
             ],
             "targets": [
                 "setup_compile_commands",
-                "game",
-                "dome"
+                "game"
             ]
         },
         {
@@ -203,8 +200,7 @@
             ],
             "targets": [
                 "setup_compile_commands",
-                "game",
-                "dome"
+                "game"
             ]
         },
         {
