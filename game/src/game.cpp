@@ -11,6 +11,7 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "game.hpp"
+#include "render/game_ui_render_pass.hpp"
 #include "render/sector_render_pass.hpp"
 #include "sector/sector.hpp"
 #include "systems/planet_render_system.hpp"
@@ -40,6 +41,7 @@ void Game::Initialize()
     RenderSystem* pRenderSystem = GetRenderSystem();
     pRenderSystem->ClearRenderPasses();
     pRenderSystem->AddRenderPass(std::make_shared<SectorRenderPass>());
+    pRenderSystem->AddRenderPass(std::make_shared<GameUIRenderPass>());
     pRenderSystem->AddRenderPass(std::make_shared<UIRenderPass>());
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });

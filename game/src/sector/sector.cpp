@@ -15,6 +15,7 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/atmosphere_component.hpp"
+#include "components/label_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/space_object_component.hpp"
@@ -24,6 +25,7 @@
 #include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/label_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_render_system.hpp"
@@ -53,6 +55,7 @@ void Sector::Initialize()
     // otherwise the camera and debug rendering will be offset by a frame.
     AddSystem<CameraSystem>();
     AddSystem<DebugRenderSystem>();
+    AddSystem<LabelSystem>();
 
     m_pCamera = CreateEntity();
     // Near/far planes for orbital viewing (kilometers)
@@ -122,6 +125,7 @@ void Sector::InitializeSpaceObjectCatalogue()
                 SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
                 spaceObjectComponent.AssignSpaceObject(spaceObject);
                 pEntity->AddComponent<TransformComponent>();
+                pEntity->AddComponent<LabelComponent>(spaceObject.GetObjectName());
             }
             else
             {
