@@ -20,10 +20,6 @@ struct VertexOutput
     let x = ((2.0 * (in.position.x - 0.5)) / uGlobalUniforms.windowWidth) - 1.0;
     let y = 1.0 - ((2.0 * (in.position.y - 0.5)) / uGlobalUniforms.windowHeight);
     out.position = vec4f(x, y, 0.0, 1.0);
-
-
-    //out.position = uGlobalUniforms.projectionMatrix * vec4f(in.position, 0.0, 1.0);
-    
     out.color = vec4f(in.color, 1.0);
     out.uv = in.uv;
     return out;

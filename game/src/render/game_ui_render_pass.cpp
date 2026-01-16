@@ -33,9 +33,7 @@ void GameUIRenderPass::Render(wgpu::CommandEncoder& encoder)
     };
 
     wgpu::RenderPassEncoder renderPass = encoder.BeginRenderPass(&renderPassDescriptor);
-
     GetRenderSystem()->UpdateGlobalUniforms(renderPass);
-    //GetRenderSystem()->UpdateGlobalUniformsOrthographic(renderPass);
 
     if (Game::Get()->GetSector())
     {
