@@ -19,8 +19,8 @@ struct VertexOutput
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
-    let x = ((2.0 * (in.position.x - 0.5)) / uGlobalUniforms.windowWidth) - 1.0;
-    let y = 1.0 - ((2.0 * (in.position.y - 0.5)) / uGlobalUniforms.windowHeight);
+    let x = ((2.0 * in.position.x) / uGlobalUniforms.windowWidth) - 1.0;
+    let y = 1.0 - ((2.0 * in.position.y) / uGlobalUniforms.windowHeight);
     out.position = vec4f(x, y, 0.0, 1.0);
     out.color = in.color;
     out.uv = in.uv;
@@ -30,5 +30,5 @@ struct VertexOutput
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f
 {
     let texColor = textureSample(uTexture, uSampler, in.uv);
-    return vec4f(in.color.rgb, in.color.a * texColor.r);
+    return vec4f(in.color.rgb, texColor.a);
 }

@@ -189,19 +189,14 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<LabelComponent>();
 
-    float yOffset = 0.0f;
-    view.each([this, &yOffset](const auto entity, const LabelComponent& labelComponent) {
+    view.each([this](const auto entity, const LabelComponent& labelComponent) {
         const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
         for (auto vertex : vertexData)
         {
             vertex.position += labelComponent.GetScreenSpacePosition();
             //vertex.position += glm::floor(labelComponent.GetScreenSpacePosition());
-
-            //vertex.position.y += yOffset;
             m_VertexData.push_back(vertex);
         }
-
-        yOffset += 24.0f;
     });
 
     if (m_VertexData.empty())
