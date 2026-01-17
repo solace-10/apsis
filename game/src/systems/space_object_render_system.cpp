@@ -1,11 +1,24 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <core/color.hpp>
+#include <pandora.hpp>
 #include <render/debug_render.hpp>
+#include <render/rendersystem.hpp>
+#include <render/window.hpp>
+#include <resources/resource_bitmap_font.hpp>
+#include <resources/resource_shader.hpp>
+#include <resources/resource_system.hpp>
+#include <scene/components/camera_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
-#include <pandora.hpp>
 
-#include "systems/space_object_render_system.hpp"
+#include "components/label_component.hpp"
 #include "components/space_object_component.hpp"
+#include "render/vertex_types.hpp"
+#include "resources/resource.fwd.hpp"
+#include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -18,23 +31,114 @@ SpaceObjectRenderSystem::~SpaceObjectRenderSystem()
 {
 }
 
+void SpaceObjectRenderSystem::Initialize(Scene* pScene)
+{
+    GetResourceSystem()->RequestResource("/shaders/label.wgsl", [this](ResourceSharedPtr pResource) {
+        m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
+        CreateRenderPipeline();
+    });
+
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+    wgpu::BufferDescriptor bufferDescriptor{
+        .label = "Label vertex buffer",
+        .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
+        .size = kMaxLabels * kVerticesPerQuad * sizeof(VertexP2C4UV)
+    };
+    m_VertexBuffer = device.CreateBuffer(&bufferDescriptor);
+    m_VertexData.reserve(kMaxLabels * kVerticesPerQuad);
+
+    GetResourceSystem()->RequestResource("/bitmap_fonts/SupplyMonoBitmap.fnt", [this](ResourceSharedPtr pResource) {
+        m_pFont = std::dynamic_pointer_cast<ResourceBitmapFont>(pResource);
+    });
+}
+
+void SpaceObjectRenderSystem::CreateRenderPipeline()
+{
+    wgpu::ColorTargetState colorTargetState{
+        .format = GetWindow()->GetTextureFormat()
+    };
+
+    wgpu::FragmentState fragmentState{
+        .module = m_pShader->GetShaderModule(),
+        .targetCount = 1,
+        .targets = &colorTargetState
+    };
+
+    wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
+        .bindGroupLayoutCount = 1,
+        .bindGroupLayouts = &GetRenderSystem()->GetGlobalUniformsLayout()
+    };
+    wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
+
+    wgpu::RenderPipelineDescriptor descriptor{
+        .label = "Label render pipeline",
+        .layout = pipelineLayout,
+        .vertex = {
+            .module = m_pShader->GetShaderModule(),
+            .bufferCount = 1,
+            .buffers = GetRenderSystem()->GetVertexBufferLayout(VertexFormat::VERTEX_FORMAT_P2_C4_UV) },
+        .primitive = { .topology = wgpu::PrimitiveTopology::TriangleList },
+        .fragment = &fragmentState
+    };
+    m_RenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
+}
+
 void SpaceObjectRenderSystem::Update(float delta)
 {
-    entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const SpaceObjectComponent, const TransformComponent>();
-
-    DebugRender* pDebugRender = GetDebugRender();
-
-    view.each([pDebugRender](const auto entity, const SpaceObjectComponent& spaceObjectComponent, const TransformComponent& transformComponent)
+    if (GetActiveScene() == nullptr || GetActiveScene()->GetCamera() == nullptr || !m_pFont)
     {
-        // Extract position from transform matrix (translation is in column 3)
-        glm::vec3 position = glm::vec3(transformComponent.transform[3]);
+        return;
+    }
 
-        // Draw a small cube at the space object's position
-        // Size of 100km to be visible at orbital scale
-        constexpr float kBoxSize = 100.0f;
-        pDebugRender->Box(position, Color::Cyan, kBoxSize, kBoxSize, kBoxSize);
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<LabelComponent, const TransformComponent>();
+
+    const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
+    const uint32_t windowWidth = GetWindow()->GetWidth();
+    const uint32_t windowHeight = GetWindow()->GetHeight();
+    view.each([this, &cameraComponent, windowWidth, windowHeight](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+        labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(transformComponent.GetTranslation(), windowWidth, windowHeight));
+
+        if (labelComponent.GetVertexData().empty())
+        {
+            labelComponent.SetVertexData(m_pFont->Generate(labelComponent.GetText()));
+        }
     });
+}
+
+void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
+{
+    if (GetActiveScene() == nullptr || !m_RenderPipeline || !m_pFont)
+    {
+        return;
+    }
+
+    m_VertexData.clear();
+
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<LabelComponent>();
+
+    view.each([this](const auto entity, const LabelComponent& labelComponent) {
+        const glm::vec2& pos = labelComponent.GetScreenSpacePosition();
+
+        const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
+        for (auto vertex : vertexData)
+        {
+            vertex.position += labelComponent.GetScreenSpacePosition();
+            m_VertexData.push_back(vertex);
+        }
+    });
+
+    if (m_VertexData.empty())
+    {
+        return;
+    }
+
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_VertexBuffer, 0, m_VertexData.data(), m_VertexData.size() * sizeof(VertexP2C4UV));
+
+    renderPass.SetPipeline(m_RenderPipeline);
+    renderPass.SetVertexBuffer(0, m_VertexBuffer);
+    renderPass.Draw(m_VertexData.size());
 }
 
 } // namespace WingsOfSteel

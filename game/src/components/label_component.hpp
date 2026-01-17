@@ -4,6 +4,7 @@
 
 #include <glm/vec2.hpp>
 
+#include <render/vertex_types.hpp>
 #include <scene/components/component_factory.hpp>
 #include <scene/components/icomponent.hpp>
 
@@ -25,14 +26,17 @@ public:
     {
     }
 
-    void SetText(const std::string& text) { m_Text = text; }
+    void SetText(const std::string& text) { m_Text = text; m_VertexData.clear(); }
     const std::string& GetText() const { return m_Text; }
     void SetScreenSpacePosition(const glm::vec2& position) { m_ScreenSpacePosition = position; }
     const glm::vec2& GetScreenSpacePosition() const { return m_ScreenSpacePosition; }
+    void SetVertexData(const std::vector<VertexP2C4UV>& vertexData) { m_VertexData = vertexData; }
+    const std::vector<VertexP2C4UV>& GetVertexData() const { return m_VertexData; }
 
 private:
     std::string m_Text{ "UNKNOWN" };
     glm::vec2 m_ScreenSpacePosition{ 0.0f };
+    std::vector<VertexP2C4UV> m_VertexData;
 };
 
 REGISTER_COMPONENT(LabelComponent, "label")

@@ -25,7 +25,6 @@
 #include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
-#include "systems/label_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_render_system.hpp"
@@ -55,7 +54,6 @@ void Sector::Initialize()
     // otherwise the camera and debug rendering will be offset by a frame.
     AddSystem<CameraSystem>();
     AddSystem<DebugRenderSystem>();
-    AddSystem<LabelSystem>();
 
     m_pCamera = CreateEntity();
     // Near/far planes for orbital viewing (kilometers)

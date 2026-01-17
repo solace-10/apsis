@@ -5,7 +5,7 @@
 #include <render/window.hpp>
 
 #include "sector/sector.hpp"
-#include "systems/label_system.hpp"
+#include "systems/space_object_render_system.hpp"
 #include "game.hpp"
 
 namespace WingsOfSteel
@@ -37,10 +37,10 @@ void GameUIRenderPass::Render(wgpu::CommandEncoder& encoder)
 
     if (Game::Get()->GetSector())
     {
-        LabelSystem* pLabelSystem = Game::Get()->GetSector()->GetSystem<LabelSystem>();
-        if (pLabelSystem)
+        SpaceObjectRenderSystem* pSpaceObjectRenderSystem = Game::Get()->GetSector()->GetSystem<SpaceObjectRenderSystem>();
+        if (pSpaceObjectRenderSystem)
         {
-            pLabelSystem->Render(renderPass);
+            pSpaceObjectRenderSystem->Render(renderPass);
         }
     }
 
