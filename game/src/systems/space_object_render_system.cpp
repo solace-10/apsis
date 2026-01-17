@@ -150,7 +150,9 @@ void SpaceObjectRenderSystem::Update(float delta)
 
         if (labelComponent.GetVertexData().empty())
         {
-            labelComponent.SetVertexData(m_pFont->Generate(labelComponent.GetText()));
+            // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
+            const std::string label = "\1" + labelComponent.GetText();
+            labelComponent.SetVertexData(m_pFont->Generate(label));
         }
     });
 }
