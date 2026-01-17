@@ -1,3 +1,5 @@
+#include <array>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,6 +12,7 @@
 #include <resources/resource_bitmap_font.hpp>
 #include <resources/resource_shader.hpp>
 #include <resources/resource_system.hpp>
+#include <resources/resource_texture_2d.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
@@ -33,12 +36,43 @@ SpaceObjectRenderSystem::~SpaceObjectRenderSystem()
 
 void SpaceObjectRenderSystem::Initialize(Scene* pScene)
 {
+    wgpu::Device device = GetRenderSystem()->GetDevice();
+
+    // Create sampler
+    wgpu::SamplerDescriptor samplerDesc{
+        .magFilter = wgpu::FilterMode::Linear,
+        .minFilter = wgpu::FilterMode::Linear,
+        .mipmapFilter = wgpu::MipmapFilterMode::Linear
+    };
+    m_Sampler = device.CreateSampler(&samplerDesc);
+
+    // Create texture bind group layout
+    std::array<wgpu::BindGroupLayoutEntry, 2> layoutEntries = {{
+        {
+            .binding = 0,
+            .visibility = wgpu::ShaderStage::Fragment,
+            .sampler{ .type = wgpu::SamplerBindingType::Filtering }
+        },
+        {
+            .binding = 1,
+            .visibility = wgpu::ShaderStage::Fragment,
+            .texture{
+                .sampleType = wgpu::TextureSampleType::Float,
+                .viewDimension = wgpu::TextureViewDimension::e2D }
+        }
+    }};
+
+    wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc{
+        .entryCount = layoutEntries.size(),
+        .entries = layoutEntries.data()
+    };
+    m_TextureBindGroupLayout = device.CreateBindGroupLayout(&bindGroupLayoutDesc);
+
     GetResourceSystem()->RequestResource("/shaders/label.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateRenderPipeline();
     });
 
-    wgpu::Device device = GetRenderSystem()->GetDevice();
     wgpu::BufferDescriptor bufferDescriptor{
         .label = "Label vertex buffer",
         .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
@@ -54,8 +88,18 @@ void SpaceObjectRenderSystem::Initialize(Scene* pScene)
 
 void SpaceObjectRenderSystem::CreateRenderPipeline()
 {
+    wgpu::BlendState blendState{
+        .color{
+            .srcFactor = wgpu::BlendFactor::SrcAlpha,
+            .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha },
+        .alpha{
+            .srcFactor = wgpu::BlendFactor::One,
+            .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha }
+    };
+
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
+        .format = GetWindow()->GetTextureFormat(),
+        .blend = &blendState
     };
 
     wgpu::FragmentState fragmentState{
@@ -64,9 +108,14 @@ void SpaceObjectRenderSystem::CreateRenderPipeline()
         .targets = &colorTargetState
     };
 
+    std::array<wgpu::BindGroupLayout, 2> bindGroupLayouts = {
+        GetRenderSystem()->GetGlobalUniformsLayout(),
+        m_TextureBindGroupLayout
+    };
+
     wgpu::PipelineLayoutDescriptor pipelineLayoutDescriptor{
-        .bindGroupLayoutCount = 1,
-        .bindGroupLayouts = &GetRenderSystem()->GetGlobalUniformsLayout()
+        .bindGroupLayoutCount = bindGroupLayouts.size(),
+        .bindGroupLayouts = bindGroupLayouts.data()
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
@@ -108,9 +157,31 @@ void SpaceObjectRenderSystem::Update(float delta)
 
 void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
 {
-    if (GetActiveScene() == nullptr || !m_RenderPipeline || !m_pFont)
+    if (GetActiveScene() == nullptr || !m_RenderPipeline || !m_pFont || !m_pFont->GetTexture())
     {
         return;
+    }
+
+    // Create texture bind group lazily once the font texture is available
+    if (!m_TextureBindGroup)
+    {
+        std::array<wgpu::BindGroupEntry, 2> entries = {{
+            {
+                .binding = 0,
+                .sampler = m_Sampler
+            },
+            {
+                .binding = 1,
+                .textureView = m_pFont->GetTexture()->GetTextureView()
+            }
+        }};
+
+        wgpu::BindGroupDescriptor bindGroupDesc{
+            .layout = m_TextureBindGroupLayout,
+            .entryCount = entries.size(),
+            .entries = entries.data()
+        };
+        m_TextureBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDesc);
     }
 
     m_VertexData.clear();
@@ -118,15 +189,19 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<LabelComponent>();
 
-    view.each([this](const auto entity, const LabelComponent& labelComponent) {
-        const glm::vec2& pos = labelComponent.GetScreenSpacePosition();
-
+    float yOffset = 0.0f;
+    view.each([this, &yOffset](const auto entity, const LabelComponent& labelComponent) {
         const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
         for (auto vertex : vertexData)
         {
             vertex.position += labelComponent.GetScreenSpacePosition();
+            //vertex.position += glm::floor(labelComponent.GetScreenSpacePosition());
+
+            //vertex.position.y += yOffset;
             m_VertexData.push_back(vertex);
         }
+
+        yOffset += 24.0f;
     });
 
     if (m_VertexData.empty())
@@ -137,6 +212,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_VertexBuffer, 0, m_VertexData.data(), m_VertexData.size() * sizeof(VertexP2C4UV));
 
     renderPass.SetPipeline(m_RenderPipeline);
+    renderPass.SetBindGroup(1, m_TextureBindGroup);
     renderPass.SetVertexBuffer(0, m_VertexBuffer);
     renderPass.Draw(m_VertexData.size());
 }

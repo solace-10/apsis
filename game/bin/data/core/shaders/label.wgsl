@@ -5,7 +5,7 @@ struct VertexInput
     @location(2) uv: vec2f
 };
 
-struct VertexOutput 
+struct VertexOutput
 {
     @builtin(position) position: vec4f,
     @location(1) color: vec4f,
@@ -13,6 +13,8 @@ struct VertexOutput
 };
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
+@group(1) @binding(0) var uSampler: sampler;
+@group(1) @binding(1) var uTexture: texture_2d<f32>;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -25,7 +27,8 @@ struct VertexOutput
     return out;
 }
 
-@fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
+@fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f
 {
-    return vec4f(1.0f);
+    let texColor = textureSample(uTexture, uSampler, in.uv);
+    return vec4f(in.color.rgb, in.color.a * texColor.r);
 }

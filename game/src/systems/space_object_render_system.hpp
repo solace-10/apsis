@@ -34,6 +34,9 @@ private:
     wgpu::RenderPipeline m_RenderPipeline;
     wgpu::Buffer m_VertexBuffer;
     std::vector<VertexP2C4UV> m_VertexData;
+    wgpu::BindGroupLayout m_TextureBindGroupLayout;
+    wgpu::BindGroup m_TextureBindGroup;
+    wgpu::Sampler m_Sampler;
 };
 
 } // namespace WingsOfSteel
