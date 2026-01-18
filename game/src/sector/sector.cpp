@@ -19,15 +19,15 @@
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/space_object_component.hpp"
-#include "sector/sector.hpp"
 #include "resources/resource.fwd.hpp"
+#include "sector/sector.hpp"
 #include "space_objects/space_object.hpp"
 #include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
-#include "systems/space_object_render_system.hpp"
+#include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -106,7 +106,7 @@ void Sector::Update(float delta)
 void Sector::InitializeSpaceObjectCatalogue()
 {
     m_pSpaceObjectCatalogue = std::make_unique<SpaceObjectCatalogue>();
-    
+
     GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
         ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         SpaceObjectCatalogue* pCatalogue = GetSpaceObjectCatalogue();
@@ -132,6 +132,10 @@ void Sector::InitializeSpaceObjectCatalogue()
         }
 
         Log::Info() << "Added " << successfulEntries << " to space object catalogue.";
+
+        SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
+        pSpaceObjectSystem->GenerateSpaceObjectGroups();
+        pSpaceObjectSystem->GenerateLabels();
     });
 }
 

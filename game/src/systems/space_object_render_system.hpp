@@ -6,7 +6,10 @@
 
 #include <render/vertex_types.hpp>
 #include <resources/resource.fwd.hpp>
+#include <scene/entity.hpp>
 #include <scene/systems/system.hpp>
+
+#include "space_objects/space_object.hpp"
 
 namespace WingsOfSteel
 {
@@ -20,10 +23,13 @@ public:
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
+    void GenerateSpaceObjectGroups();
+    void GenerateLabels();
     void Render(wgpu::RenderPassEncoder& renderPass);
 
 private:
     void CreateRenderPipeline();
+    size_t MakeOrbitalKey(const SpaceObject& object) const;
 
     static constexpr size_t kMaxLabels = 1024;
     static constexpr size_t kVerticesPerQuad = 6;

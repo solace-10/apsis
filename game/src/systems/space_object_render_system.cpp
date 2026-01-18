@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -19,6 +20,7 @@
 
 #include "components/label_component.hpp"
 #include "components/space_object_component.hpp"
+#include "components/space_object_group_component.hpp"
 #include "render/vertex_types.hpp"
 #include "resources/resource.fwd.hpp"
 #include "systems/space_object_render_system.hpp"
@@ -47,20 +49,14 @@ void SpaceObjectRenderSystem::Initialize(Scene* pScene)
     m_Sampler = device.CreateSampler(&samplerDesc);
 
     // Create texture bind group layout
-    std::array<wgpu::BindGroupLayoutEntry, 2> layoutEntries = {{
-        {
-            .binding = 0,
-            .visibility = wgpu::ShaderStage::Fragment,
-            .sampler{ .type = wgpu::SamplerBindingType::Filtering }
-        },
-        {
-            .binding = 1,
+    std::array<wgpu::BindGroupLayoutEntry, 2> layoutEntries = { { { .binding = 0,
+                                                                      .visibility = wgpu::ShaderStage::Fragment,
+                                                                      .sampler{ .type = wgpu::SamplerBindingType::Filtering } },
+        { .binding = 1,
             .visibility = wgpu::ShaderStage::Fragment,
             .texture{
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D }
-        }
-    }};
+                .viewDimension = wgpu::TextureViewDimension::e2D } } } };
 
     wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc{
         .entryCount = layoutEntries.size(),
@@ -167,16 +163,10 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     // Create texture bind group lazily once the font texture is available
     if (!m_TextureBindGroup)
     {
-        std::array<wgpu::BindGroupEntry, 2> entries = {{
-            {
-                .binding = 0,
-                .sampler = m_Sampler
-            },
-            {
-                .binding = 1,
-                .textureView = m_pFont->GetTexture()->GetTextureView()
-            }
-        }};
+        std::array<wgpu::BindGroupEntry, 2> entries = { { { .binding = 0,
+                                                              .sampler = m_Sampler },
+            { .binding = 1,
+                .textureView = m_pFont->GetTexture()->GetTextureView() } } };
 
         wgpu::BindGroupDescriptor bindGroupDesc{
             .layout = m_TextureBindGroupLayout,
@@ -196,7 +186,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         for (auto vertex : vertexData)
         {
             vertex.position += labelComponent.GetScreenSpacePosition();
-            //vertex.position += glm::floor(labelComponent.GetScreenSpacePosition());
+            // vertex.position += glm::floor(labelComponent.GetScreenSpacePosition());
             m_VertexData.push_back(vertex);
         }
     });
@@ -212,6 +202,76 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     renderPass.SetBindGroup(1, m_TextureBindGroup);
     renderPass.SetVertexBuffer(0, m_VertexBuffer);
     renderPass.Draw(m_VertexData.size());
+}
+
+void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<SpaceObjectComponent>();
+
+    std::unordered_map<size_t, std::vector<entt::entity>> groups;
+    view.each([this, &groups](const auto entity, const SpaceObjectComponent& component) {
+        size_t key = MakeOrbitalKey(component.GetSpaceObject());
+        groups[key].push_back(entity);
+    });
+
+    SpaceObjectGroupId groupId = 0;
+    for (auto& group : groups)
+    {
+        if (group.second.size() > 1)
+        {
+            for (const auto& entityHandle : group.second)
+            {
+                registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId);
+            }
+            Log::Info() << "Generated space object group " << groupId << " with " << group.second.size() << " objects.";
+            groupId++;
+        }
+    }
+}
+
+void SpaceObjectRenderSystem::GenerateLabels()
+{
+}
+
+/*
+MakeOrbitalKey generates a hash from a SpaceObject's orbital parameters.
+To be at the same position, objects need matching orbital elements:
+- Inclination, RAAN, Argument of Pericenter, Mean Motion: define the orbital plane and shape
+- Eccentricity: defines the orbital shape
+- Mean Anomaly: defines position along the orbit
+
+Note: We're comparing at face value without epoch propagation, so this works best
+for objects with the same epoch (like docked spacecraft sharing TLE data).
+*/
+size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
+{
+    // Quantize orbital elements:
+    // Angles: 0.01 degree precision (2 decimal places)
+    // Mean motion / eccentricity: 0.0001 precision (4 decimal places)
+    auto quantize2 = [](float v) { return static_cast<int32_t>(std::round(v * 100.0f)); };
+    auto quantize4 = [](float v) { return static_cast<int32_t>(std::round(v * 10000.0f)); };
+
+    const int32_t inc = quantize2(object.GetInclination());
+    const int32_t raan = quantize2(object.GetRightAscensionOfAscendingNode());
+    const int32_t aop = quantize2(object.GetArgumentOfPericenter());
+    const int32_t ma = quantize2(object.GetMeanAnomaly());
+    const int32_t mm = quantize4(object.GetMeanMotion());
+    const int32_t ecc = quantize4(object.GetEccentricity());
+
+    // Combine hashes using boost-style hash combining.
+    size_t hash = 0;
+    auto hashCombine = [&hash](int32_t v) {
+        hash ^= std::hash<int32_t>{}(v) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    };
+    hashCombine(inc);
+    hashCombine(raan);
+    hashCombine(aop);
+    hashCombine(ma);
+    hashCombine(mm);
+    hashCombine(ecc);
+
+    return hash;
 }
 
 } // namespace WingsOfSteel
