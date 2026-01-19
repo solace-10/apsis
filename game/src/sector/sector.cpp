@@ -123,7 +123,6 @@ void Sector::InitializeSpaceObjectCatalogue()
                 SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
                 spaceObjectComponent.AssignSpaceObject(spaceObject);
                 pEntity->AddComponent<TransformComponent>();
-                pEntity->AddComponent<LabelComponent>(spaceObject.GetObjectName());
             }
             else
             {
@@ -134,7 +133,6 @@ void Sector::InitializeSpaceObjectCatalogue()
         Log::Info() << "Added " << successfulEntries << " to space object catalogue.";
 
         SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
-        pSpaceObjectSystem->GenerateSpaceObjectGroups();
         pSpaceObjectSystem->GenerateLabels();
     });
 }

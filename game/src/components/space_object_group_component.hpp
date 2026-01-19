@@ -13,8 +13,9 @@ class SpaceObjectGroupComponent : public IComponent
 public:
     SpaceObjectGroupComponent() = default;
 
-    SpaceObjectGroupComponent(SpaceObjectGroupId groupId)
+    SpaceObjectGroupComponent(SpaceObjectGroupId groupId, bool isPrimaryElement)
         : m_GroupId(groupId)
+        , m_IsPrimaryElement(isPrimaryElement)
     {
     }
 
@@ -25,9 +26,11 @@ public:
     }
 
     SpaceObjectGroupId GetGroupId() const { return m_GroupId; }
+    bool IsPrimaryElement() const { return m_IsPrimaryElement; }
 
 private:
     SpaceObjectGroupId m_GroupId{ 0 };
+    bool m_IsPrimaryElement{ false };
 };
 
 REGISTER_COMPONENT(SpaceObjectGroupComponent, "space_object_group")

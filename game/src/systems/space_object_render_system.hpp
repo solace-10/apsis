@@ -23,12 +23,13 @@ public:
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
-    void GenerateSpaceObjectGroups();
     void GenerateLabels();
     void Render(wgpu::RenderPassEncoder& renderPass);
 
 private:
     void CreateRenderPipeline();
+    void GenerateSpaceObjectGroups();
+    void GenerateLabelsVertexData();
     size_t MakeOrbitalKey(const SpaceObject& object) const;
 
     static constexpr size_t kMaxLabels = 1024;
@@ -43,6 +44,7 @@ private:
     wgpu::BindGroupLayout m_TextureBindGroupLayout;
     wgpu::BindGroup m_TextureBindGroup;
     wgpu::Sampler m_Sampler;
+    std::vector<std::vector<entt::entity>> m_LabelGroups;
 };
 
 } // namespace WingsOfSteel

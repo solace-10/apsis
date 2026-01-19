@@ -23,6 +23,7 @@
 #include "components/space_object_group_component.hpp"
 #include "render/vertex_types.hpp"
 #include "resources/resource.fwd.hpp"
+#include "scene/entity.hpp"
 #include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
@@ -143,13 +144,6 @@ void SpaceObjectRenderSystem::Update(float delta)
     const uint32_t windowHeight = GetWindow()->GetHeight();
     view.each([this, &cameraComponent, windowWidth, windowHeight](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
         labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(transformComponent.GetTranslation(), windowWidth, windowHeight));
-
-        if (labelComponent.GetVertexData().empty())
-        {
-            // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
-            const std::string label = "\1" + labelComponent.GetText();
-            labelComponent.SetVertexData(m_pFont->Generate(label));
-        }
     });
 }
 
@@ -204,6 +198,12 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     renderPass.Draw(m_VertexData.size());
 }
 
+void SpaceObjectRenderSystem::GenerateLabels()
+{
+    GenerateSpaceObjectGroups();
+    GenerateLabelsVertexData();
+}
+
 void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
@@ -218,20 +218,60 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
     SpaceObjectGroupId groupId = 0;
     for (auto& group : groups)
     {
-        if (group.second.size() > 1)
+        if (group.second.size() == 1)
         {
-            for (const auto& entityHandle : group.second)
-            {
-                registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId);
-            }
-            Log::Info() << "Generated space object group " << groupId << " with " << group.second.size() << " objects.";
-            groupId++;
+            continue;
         }
+
+        // Create a new, empty group.
+        // As the groupId starts at 0 and increments monotonically, it can be used as the index for m_LabelGroups.
+        m_LabelGroups.push_back(std::vector<entt::entity>());
+
+        // For now, mark the first element in a group as the "primary element" for labeling purposes.
+        // This will likely come from a database at a latter stage.
+        bool isPrimaryElement = true;
+        for (const auto& entityHandle : group.second)
+        {
+            registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isPrimaryElement);
+            m_LabelGroups[groupId].push_back(entityHandle);
+            isPrimaryElement = false;
+        }
+        Log::Info() << "Generated space object group " << groupId << " with " << group.second.size() << " objects.";
+        groupId++;
     }
 }
 
-void SpaceObjectRenderSystem::GenerateLabels()
+void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 {
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<SpaceObjectComponent>();
+
+    view.each([this, &registry](const auto entityHandle, const SpaceObjectComponent& spaceObjectComponent) {
+        const SpaceObject& spaceObject = spaceObjectComponent.GetSpaceObject();
+
+        std::stringstream labelStream;
+
+        // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
+        SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
+        if (pSpaceObjectGroupComponent)
+        {
+            if (pSpaceObjectGroupComponent->IsPrimaryElement())
+            {
+                labelStream << "\1" << spaceObject.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+            }
+        }
+        else
+        {
+            labelStream << "\1" << spaceObject.GetObjectName();
+        }
+
+        const std::string label(labelStream.str());
+        if (!label.empty())
+        {
+            LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
+            labelComponent.SetVertexData(m_pFont->Generate(label));
+        }
+    });
 }
 
 /*
