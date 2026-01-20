@@ -9,6 +9,7 @@
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <render/rendersystem.hpp>
+#include <render/vertex_types.hpp>
 #include <render/window.hpp>
 #include <resources/resource_bitmap_font.hpp>
 #include <resources/resource_shader.hpp>
@@ -16,14 +17,12 @@
 #include <resources/resource_texture_2d.hpp>
 #include <scene/components/camera_component.hpp>
 #include <scene/components/transform_component.hpp>
+#include <scene/entity.hpp>
 #include <scene/scene.hpp>
 
 #include "components/label_component.hpp"
 #include "components/space_object_component.hpp"
 #include "components/space_object_group_component.hpp"
-#include "render/vertex_types.hpp"
-#include "resources/resource.fwd.hpp"
-#include "scene/entity.hpp"
 #include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
@@ -136,14 +135,45 @@ void SpaceObjectRenderSystem::Update(float delta)
         return;
     }
 
+    
+
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<LabelComponent, const TransformComponent>();
-
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
     view.each([this, &cameraComponent, windowWidth, windowHeight](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
-        labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(transformComponent.GetTranslation(), windowWidth, windowHeight));
+
+        const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
+        const glm::vec3 labelPosition = transformComponent.GetTranslation();
+
+        float radius = 6378.0f;
+        
+        // Check if a line segment between the label and the camera intersects the planet.
+        // If so, then this label is occluded.
+        bool isOccluded = false;
+        const glm::vec3 d(labelPosition - cameraPosition);
+        const float a = glm::dot(d, d);
+        const float b = 2.0f * glm::dot(labelPosition, d);
+        const float c = glm::dot(labelPosition, labelPosition) - radius * radius;
+        const float discriminant = b * b - 4.0f * a * c;
+
+        // If the discriminant is < 0.0f, then the line doesn't intersect the planet.
+        // We only need to do the more expensive calculations if we need to check the
+        // intersection of the line segment.
+        if (discriminant >= 0.0f)
+        {
+            const float sqrtDisc = std::sqrt(discriminant);
+            const float t1 = (-b - sqrtDisc) / (2.0f * a);
+            const float t2 = (-b + sqrtDisc) / (2.0f * a);
+            isOccluded = (t1 < 0.0f || t1 > 1.0f) && (t2 < 0.0f || t2 > 1.0f);
+        }
+        
+        labelComponent.SetOccluded(isOccluded);
+        if (!isOccluded)
+        {    
+            labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight));
+        }
     });
 }
 
@@ -176,11 +206,15 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     auto view = registry.view<LabelComponent>();
 
     view.each([this](const auto entity, const LabelComponent& labelComponent) {
+        if (labelComponent.IsOccluded())
+        {
+            return;
+        }
+              
         const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
         for (auto vertex : vertexData)
         {
             vertex.position += labelComponent.GetScreenSpacePosition();
-            // vertex.position += glm::floor(labelComponent.GetScreenSpacePosition());
             m_VertexData.push_back(vertex);
         }
     });

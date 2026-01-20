@@ -25,6 +25,7 @@ public:
     void ShowGrid(bool state);
 
     SpaceObjectCatalogue* GetSpaceObjectCatalogue() { return m_pSpaceObjectCatalogue.get(); }
+    EntitySharedPtr GetEarth() const { return m_pEarth; }
 
 private:
     void DrawCameraDebugUI();

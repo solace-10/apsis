@@ -32,11 +32,14 @@ public:
     const glm::vec2& GetScreenSpacePosition() const { return m_ScreenSpacePosition; }
     void SetVertexData(const std::vector<VertexP2C4UV>& vertexData) { m_VertexData = vertexData; }
     const std::vector<VertexP2C4UV>& GetVertexData() const { return m_VertexData; }
+    void SetOccluded(bool occluded) { m_IsOccluded = occluded; }
+    bool IsOccluded() const { return m_IsOccluded; }
 
 private:
     std::string m_Text{ "UNKNOWN" };
     glm::vec2 m_ScreenSpacePosition{ 0.0f };
     std::vector<VertexP2C4UV> m_VertexData;
+    bool m_IsOccluded{ true };
 };
 
 REGISTER_COMPONENT(LabelComponent, "label")
