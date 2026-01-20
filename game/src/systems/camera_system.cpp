@@ -1,5 +1,3 @@
-#include <numeric>
-
 #include <core/interpolation.hpp>
 #include <core/log.hpp>
 #include <pandora.hpp>
@@ -17,10 +15,6 @@
 namespace WingsOfSteel
 {
 
-CameraSystem::CameraSystem()
-{
-}
-
 CameraSystem::~CameraSystem()
 {
     InputSystem* pInputSystem = GetInputSystem();
@@ -29,12 +23,12 @@ CameraSystem::~CameraSystem()
         pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
         pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonReleasedToken);
         pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
+        pInputSystem->RemoveMouseWheelCallback(m_MouseWheelToken);
     }
 }
 
 void CameraSystem::Initialize(Scene* pScene)
 {
-    using namespace WingsOfSteel;
     m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
     m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
 
@@ -42,11 +36,14 @@ void CameraSystem::Initialize(Scene* pScene)
         m_InputPending = true;
         m_MouseDelta = mouseDelta;
     });
+
+    m_MouseWheelToken = GetInputSystem()->AddMouseWheelCallback([this](const glm::vec2& scroll) {
+        m_ScrollDelta += scroll.y;
+    });
 }
 
 void CameraSystem::Update(float delta)
 {
-    using namespace WingsOfSteel;
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera == nullptr)
     {
@@ -79,39 +76,74 @@ void CameraSystem::Update(float delta)
         }
         else if (pCamera->HasComponent<OrbitCameraComponent>())
         {
-            OrbitCameraComponent& orbitCameraComponent = pCamera->GetComponent<OrbitCameraComponent>();
+            OrbitCameraComponent& occ = pCamera->GetComponent<OrbitCameraComponent>();
+
             if (m_IsDragging && m_InputPending)
             {
-                const float sensitivity = 0.15f;
-                orbitCameraComponent.orbitAngle -= glm::radians(m_MouseDelta.x * sensitivity);
-                orbitCameraComponent.pitch += glm::radians(m_MouseDelta.y * sensitivity);
+                // Resolution-independent deltas, normalized by window height.
+                const float windowHeight = static_cast<float>(GetWindow()->GetHeight());
+                const float normalizedDeltaX = m_MouseDelta.x / windowHeight;
+                const float normalizedDeltaY = m_MouseDelta.y / windowHeight;
 
-                if (orbitCameraComponent.pitch < orbitCameraComponent.minimumPitch)
-                {
-                    orbitCameraComponent.pitch = orbitCameraComponent.minimumPitch;
-                }
-                else if (orbitCameraComponent.pitch > orbitCameraComponent.maximumPitch)
-                {
-                    orbitCameraComponent.pitch = orbitCameraComponent.maximumPitch;
-                }
+                // Calculate raw input velocity (radians per second)
+                const glm::vec2 rawInputVelocity(
+                    -normalizedDeltaX * occ.sensitivity / delta,
+                    normalizedDeltaY * occ.sensitivity / delta);
+
+                // Apply exponential moving average to smooth velocity
+                m_SmoothedInputVelocity = glm::mix(m_SmoothedInputVelocity, rawInputVelocity, m_InputSmoothingFactor);
+
+                // Apply smoothed velocity to wanted angles
+                occ.wantedOrbitAngle += m_SmoothedInputVelocity.x * delta;
+                occ.wantedPitch += m_SmoothedInputVelocity.y * delta;
+
+                // Store for momentum
+                m_OrbitAngleInputVelocity = m_SmoothedInputVelocity.x;
+                m_PitchInputVelocity = m_SmoothedInputVelocity.y;
+
                 m_InputPending = false;
             }
+            else
+            {
+                // Decay smoothed velocity when not dragging (momentum)
+                m_SmoothedInputVelocity *= m_MomentumDecay;
 
-            glm::vec3 position(
-                glm::cos(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch),
-                glm::sin(orbitCameraComponent.pitch),
-                glm::sin(orbitCameraComponent.orbitAngle) * glm::cos(orbitCameraComponent.pitch));
+                if (glm::length(m_SmoothedInputVelocity) > 0.001f)
+                {
+                    occ.wantedOrbitAngle += m_SmoothedInputVelocity.x * delta;
+                    occ.wantedPitch += m_SmoothedInputVelocity.y * delta;
+                }
+            }
+
+            if (std::abs(m_ScrollDelta) > 0.01f)
+            {
+                occ.wantedDistance -= m_ScrollDelta * occ.zoomSensitivity;
+                m_ScrollDelta = 0.0f;
+            }
+
+            occ.wantedPitch = glm::clamp(occ.wantedPitch, occ.minimumPitch, occ.maximumPitch);
+            occ.wantedDistance = glm::clamp(occ.wantedDistance, occ.minimumDistance, occ.maximumDistance);
+
+            DampSpring(occ.orbitAngle, occ.wantedOrbitAngle, occ.orbitAngleVelocity, occ.orbitAngleDamping, delta);
+            DampSpring(occ.pitch, occ.wantedPitch, occ.pitchVelocity, occ.pitchDamping, delta);
+            DampSpring(occ.distance, occ.wantedDistance, occ.distanceVelocity, occ.distanceDamping, delta);
+
+            const glm::vec3 position(
+                glm::cos(occ.orbitAngle) * glm::cos(occ.pitch),
+                glm::sin(occ.pitch),
+                glm::sin(occ.orbitAngle) * glm::cos(occ.pitch));
 
             CameraComponent& cameraComponent = pCamera->GetComponent<CameraComponent>();
-            cameraComponent.camera.LookAt(orbitCameraComponent.anchorPosition + position * orbitCameraComponent.distance, orbitCameraComponent.anchorPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+            cameraComponent.camera.LookAt(
+                occ.anchorPosition + position * occ.distance,
+                occ.anchorPosition,
+                glm::vec3(0.0f, 1.0f, 0.0f));
         }
     }
 }
 
-
 glm::vec3 CameraSystem::MouseToWorld(const glm::vec2& mousePos) const
 {
-    using namespace WingsOfSteel;
     EntitySharedPtr pCamera = GetActiveScene() ? GetActiveScene()->GetCamera() : nullptr;
     if (pCamera == nullptr || !pCamera->HasComponent<CameraComponent>())
     {

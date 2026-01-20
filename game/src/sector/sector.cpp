@@ -59,9 +59,14 @@ void Sector::Initialize()
     // Near/far planes for orbital viewing (kilometers)
     m_pCamera->AddComponent<CameraComponent>(70.0f, 10.0f, 200000.0f);
     OrbitCameraComponent& orbitCameraComponent = m_pCamera->AddComponent<OrbitCameraComponent>();
-    orbitCameraComponent.distance = 20000.0f; // ~3x Earth radius for full planet view
-    orbitCameraComponent.minimumDistance = 7000.0f; // Just above surface
+    orbitCameraComponent.distance = 30000.0f;
+    orbitCameraComponent.wantedDistance = 20000.0f;
+    orbitCameraComponent.minimumDistance = 8000.0f;
     orbitCameraComponent.maximumDistance = 100000.0f;
+    orbitCameraComponent.zoomSensitivity = 1000.0f;
+    orbitCameraComponent.sensitivity = 10.0f;
+    orbitCameraComponent.minimumPitch = -2.0f;
+    orbitCameraComponent.maximumPitch = 2.0f;
     SetCamera(m_pCamera);
 
     SpawnLight();
