@@ -126,7 +126,13 @@ void Sector::InitializeSpaceObjectCatalogue()
 
                 EntitySharedPtr pEntity = CreateEntity();
                 SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
+                // Temporary until this information comes from a database.
+                if (spaceObject.GetObjectName() == "ISS (ZARYA)" || spaceObject.GetObjectName() == "CSS (TIANHE)")
+                {
+                    spaceObject.FlagAsImportant();
+                }
                 spaceObjectComponent.AssignSpaceObject(spaceObject);
+                
                 pEntity->AddComponent<TransformComponent>();
             }
             else

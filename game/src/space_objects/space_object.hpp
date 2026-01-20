@@ -27,6 +27,8 @@ public:
     float GetArgumentOfPericenter() const { return m_ArgumentOfPericenter; }
     float GetMeanAnomaly() const { return m_MeanAnomaly; }
     uint32_t GetNoradCatalogueId() const { return m_NoradCatalogueId; }
+    bool IsImportant() const { return m_IsImportant; }
+    void FlagAsImportant() { m_IsImportant = true; }
 
 private:
     std::string m_ObjectName{ "UNKNOWN" };
@@ -39,6 +41,10 @@ private:
     float m_ArgumentOfPericenter{ 0.0f };
     float m_MeanAnomaly{ 0.0f };
     uint32_t m_NoradCatalogueId{ 0 };
+
+    // An object marked as important will have priority over other objects
+    // when displayed in a group.
+    bool m_IsImportant{ false };
 
     std::optional<uint32_t> m_ElementSetNumber{ 0 };
     std::optional<uint32_t> m_RevolutionsAtEpoch{ 0 };

@@ -21,9 +21,12 @@
 #include <scene/scene.hpp>
 
 #include "components/label_component.hpp"
+#include "components/planet_component.hpp"
 #include "components/space_object_component.hpp"
 #include "components/space_object_group_component.hpp"
+#include "sector/sector.hpp"
 #include "systems/space_object_render_system.hpp"
+#include "game.hpp"
 
 namespace WingsOfSteel
 {
@@ -48,15 +51,24 @@ void SpaceObjectRenderSystem::Initialize(Scene* pScene)
     };
     m_Sampler = device.CreateSampler(&samplerDesc);
 
+    // clang-format off
     // Create texture bind group layout
-    std::array<wgpu::BindGroupLayoutEntry, 2> layoutEntries = { { { .binding = 0,
-                                                                      .visibility = wgpu::ShaderStage::Fragment,
-                                                                      .sampler{ .type = wgpu::SamplerBindingType::Filtering } },
-        { .binding = 1,
+    std::array<wgpu::BindGroupLayoutEntry, 2> layoutEntries = {{
+        {
+            .binding = 0,
+            .visibility = wgpu::ShaderStage::Fragment,
+            .sampler{ .type = wgpu::SamplerBindingType::Filtering }
+        },
+        {
+            .binding = 1,
             .visibility = wgpu::ShaderStage::Fragment,
             .texture{
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D } } } };
+                .viewDimension = wgpu::TextureViewDimension::e2D
+            }
+        }
+    }};
+    // clang-format on
 
     wgpu::BindGroupLayoutDescriptor bindGroupLayoutDesc{
         .entryCount = layoutEntries.size(),
@@ -135,19 +147,26 @@ void SpaceObjectRenderSystem::Update(float delta)
         return;
     }
 
-    
+    EntitySharedPtr pEarth = Game::Get()->GetSector()->GetEarth();
+    if (!pEarth || !pEarth->HasComponent<PlanetComponent>())
+    {
+        return;
+    }
+
+    // To simplify label occlusion calculations, we assume Earth is a sphere and
+    // just use the semi-major radius.
+    const float planetRadius = pEarth->GetComponent<PlanetComponent>().semiMajorRadius;
+    const float planetRadiusSquared = planetRadius * planetRadius;
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<LabelComponent, const TransformComponent>();
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
-    view.each([this, &cameraComponent, windowWidth, windowHeight](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
 
         const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
-
-        float radius = 6378.0f;
         
         // Check if a line segment between the label and the camera intersects the planet.
         // If so, then this label is occluded.
@@ -155,7 +174,7 @@ void SpaceObjectRenderSystem::Update(float delta)
         const glm::vec3 d(labelPosition - cameraPosition);
         const float a = glm::dot(d, d);
         const float b = 2.0f * glm::dot(labelPosition, d);
-        const float c = glm::dot(labelPosition, labelPosition) - radius * radius;
+        const float c = glm::dot(labelPosition, labelPosition) - planetRadiusSquared;
         const float discriminant = b * b - 4.0f * a * c;
 
         // If the discriminant is < 0.0f, then the line doesn't intersect the planet.
@@ -261,16 +280,14 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
         // As the groupId starts at 0 and increments monotonically, it can be used as the index for m_LabelGroups.
         m_LabelGroups.push_back(std::vector<entt::entity>());
 
-        // For now, mark the first element in a group as the "primary element" for labeling purposes.
-        // This will likely come from a database at a latter stage.
-        bool isPrimaryElement = true;
+        Log::Info() << "Generating space object group " << groupId << " with " << group.second.size() << " objects.";
         for (const auto& entityHandle : group.second)
         {
-            registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isPrimaryElement);
+            const bool isImportant = registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().IsImportant();
+            Log::Info() << registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().GetObjectName() << ": " << isImportant;
+            registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isImportant);
             m_LabelGroups[groupId].push_back(entityHandle);
-            isPrimaryElement = false;
         }
-        Log::Info() << "Generated space object group " << groupId << " with " << group.second.size() << " objects.";
         groupId++;
     }
 }
