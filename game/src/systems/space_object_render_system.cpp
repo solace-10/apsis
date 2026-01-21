@@ -203,6 +203,13 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         return;
     }
 
+    if (m_LabelsDirty)
+    {
+        GenerateSpaceObjectGroups();
+        GenerateLabelsVertexData();
+        m_LabelsDirty = false;
+    }
+
     // Create texture bind group lazily once the font texture is available
     if (!m_TextureBindGroup)
     {
@@ -253,8 +260,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
 
 void SpaceObjectRenderSystem::GenerateLabels()
 {
-    GenerateSpaceObjectGroups();
-    GenerateLabelsVertexData();
+    m_LabelsDirty = true;
 }
 
 void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
@@ -284,7 +290,6 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
         for (const auto& entityHandle : group.second)
         {
             const bool isImportant = registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().IsImportant();
-            Log::Info() << registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().GetObjectName() << ": " << isImportant;
             registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isImportant);
             m_LabelGroups[groupId].push_back(entityHandle);
         }

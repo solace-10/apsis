@@ -45,6 +45,7 @@ private:
     wgpu::BindGroup m_TextureBindGroup;
     wgpu::Sampler m_Sampler;
     std::vector<std::vector<entt::entity>> m_LabelGroups;
+    bool m_LabelsDirty{ false };
 };
 
 } // namespace WingsOfSteel

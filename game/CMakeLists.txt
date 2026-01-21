@@ -28,7 +28,11 @@ elseif(TARGET_PLATFORM_WEB)
     )
 
     # Generate asset manifest using forge tool
+if(WIN32)
     set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge.exe")
+else()
+    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge")
+endif()
     set(MANIFEST_OUTPUT "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json")
 
     add_custom_command(
