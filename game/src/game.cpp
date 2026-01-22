@@ -46,11 +46,7 @@ void Game::Initialize()
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 
-#if defined(TARGET_PLATFORM_WEB)
-    GetInputSystem()->SetCursorMode(CursorMode::Locked);
-#elif defined(TARGET_PLATFORM_NATIVE)
     GetInputSystem()->SetCursorMode(CursorMode::Normal);
-#endif
 
     m_pSector = std::make_shared<Sector>();
     m_pSector->Initialize();

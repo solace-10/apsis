@@ -99,13 +99,6 @@
         e.preventDefault();
       }, false);
 
-      canvasElement.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        if (document.pointerLockElement !== canvasElement) {
-          canvasElement.requestPointerLock();
-        }
-      }, false);
-
       canvasElement.addEventListener("auxclick", (e) => {
         e.preventDefault();
       }, false);

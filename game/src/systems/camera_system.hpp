@@ -24,8 +24,8 @@ public:
 
 private:
 
-    InputCallbackToken m_RightMouseButtonPressedToken{ InputSystem::sInvalidInputCallbackToken };
-    InputCallbackToken m_RightMouseButtonReleasedToken{ InputSystem::sInvalidInputCallbackToken };
+    InputCallbackToken m_LeftMouseButtonPressedToken{ InputSystem::sInvalidInputCallbackToken };
+    InputCallbackToken m_LeftMouseButtonReleasedToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_MousePositionToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_MouseWheelToken{ InputSystem::sInvalidInputCallbackToken };
     bool m_IsDragging{ false };

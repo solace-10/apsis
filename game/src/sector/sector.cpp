@@ -1,3 +1,4 @@
+#include <glm/glm.hpp>
 #include <imgui.h>
 
 #include <core/log.hpp>
@@ -64,9 +65,9 @@ void Sector::Initialize()
     orbitCameraComponent.minimumDistance = 8000.0f;
     orbitCameraComponent.maximumDistance = 100000.0f;
     orbitCameraComponent.zoomSensitivity = 1000.0f;
-    orbitCameraComponent.sensitivity = 10.0f;
-    orbitCameraComponent.minimumPitch = -2.0f;
-    orbitCameraComponent.maximumPitch = 2.0f;
+    orbitCameraComponent.sensitivity = 6.0f;
+    orbitCameraComponent.minimumPitch = glm::radians(-80.0f);
+    orbitCameraComponent.maximumPitch = glm::radians(80.0f);
     SetCamera(m_pCamera);
 
     SpawnLight();
