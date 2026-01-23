@@ -12,3 +12,4 @@ game/bin/log.txt
 game/bin/manifest.json
 compile_commands.json
 *.blend?
+webapp/build/
