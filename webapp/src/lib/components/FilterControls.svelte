@@ -17,18 +17,18 @@
 	}
 </script>
 
-<div class="filter-panel" class:collapsed={!expanded}>
+<div class="filter-panel panel" class:collapsed={!expanded}>
 	<header class="panel-header">
 		<button class="toggle-btn" onclick={() => (expanded = !expanded)} aria-label="Toggle panel">
 			<span class="toggle-icon">{expanded ? '◀' : '▶'}</span>
 		</button>
 		{#if expanded}
-			<h2>Object Groups</h2>
+			<span class="panel-title">Object Groups</span>
 			<div class="header-actions">
-				<button class="action-btn" onclick={() => handleToggleAll(true)} title="Show all">
+				<button class="btn btn-sm" onclick={() => handleToggleAll(true)} title="Show all">
 					All
 				</button>
-				<button class="action-btn" onclick={() => handleToggleAll(false)} title="Hide all">
+				<button class="btn btn-sm" onclick={() => handleToggleAll(false)} title="Hide all">
 					None
 				</button>
 			</div>
@@ -36,7 +36,7 @@
 	</header>
 
 	{#if expanded}
-		<div class="panel-content">
+		<div class="panel-body panel-content">
 			{#each $groups as group (group.id)}
 				<label class="group-item">
 					<input
@@ -59,14 +59,6 @@
 		top: 1rem;
 		left: 1rem;
 		width: 260px;
-		background: rgba(20, 25, 35, 0.95);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		color: #fff;
-		font-family: system-ui, -apple-system, sans-serif;
-		font-size: 14px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(10px);
 		transition: width 0.2s ease;
 	}
 
@@ -74,40 +66,25 @@
 		width: auto;
 	}
 
-	.panel-header {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.collapsed .panel-header {
+	.filter-panel.collapsed .panel-header {
 		border-bottom: none;
 		padding: 0.75rem;
-	}
-
-	.panel-header h2 {
-		margin: 0;
-		font-size: 14px;
-		font-weight: 600;
-		flex: 1;
 	}
 
 	.toggle-btn {
 		background: none;
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--text-dim);
 		cursor: pointer;
 		padding: 0.25rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: color 0.2s;
+		transition: color 0.15s ease;
 	}
 
 	.toggle-btn:hover {
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.toggle-icon {
@@ -119,20 +96,25 @@
 		gap: 0.5rem;
 	}
 
-	.action-btn {
-		background: rgba(255, 255, 255, 0.1);
-		border: none;
-		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.7);
-		font-size: 11px;
+	.btn-sm {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
 		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--border-default);
+		border-radius: 3px;
+		background: transparent;
+		color: var(--text-secondary);
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.15s ease;
 	}
 
-	.action-btn:hover {
-		background: rgba(255, 255, 255, 0.2);
-		color: #fff;
+	.btn-sm:hover {
+		background: var(--bg-hover);
+		color: var(--text-primary);
+		border-color: var(--text-dim);
 	}
 
 	.panel-content {
@@ -146,19 +128,19 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.5rem;
-		border-radius: 4px;
+		border-radius: 3px;
 		cursor: pointer;
-		transition: background 0.2s;
+		transition: background 0.15s ease;
 	}
 
 	.group-item:hover {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-hover);
 	}
 
 	.group-item input[type='checkbox'] {
 		width: 16px;
 		height: 16px;
-		accent-color: #4a90d9;
+		accent-color: var(--accent-primary);
 		cursor: pointer;
 	}
 
@@ -175,11 +157,14 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
 	}
 
 	.group-count {
-		color: rgba(255, 255, 255, 0.5);
-		font-size: 12px;
+		font-family: var(--font-mono);
+		color: var(--text-dim);
+		font-size: 0.75rem;
 		font-variant-numeric: tabular-nums;
 	}
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import '../app.css';
 	import Canvas from '$lib/components/Canvas.svelte';
 	import InfoPanel from '$lib/components/InfoPanel.svelte';
 	import FilterControls from '$lib/components/FilterControls.svelte';
@@ -33,7 +34,7 @@
 		width: 100%;
 		height: 100%;
 		overflow: hidden;
-		background: #000;
+		background: var(--bg-deep);
 	}
 
 	.app {

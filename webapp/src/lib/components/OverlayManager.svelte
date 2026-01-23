@@ -40,11 +40,9 @@
 		display: flex;
 		gap: 0.25rem;
 		padding: 0.375rem;
-		background: rgba(20, 25, 35, 0.95);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(10px);
+		background: var(--bg-panel);
+		border: 1px solid var(--border-subtle);
+		border-radius: 4px;
 	}
 
 	.overlay-btn {
@@ -53,28 +51,30 @@
 		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
 		background: transparent;
-		border: none;
-		border-radius: 6px;
-		color: rgba(255, 255, 255, 0.6);
-		font-family: system-ui, -apple-system, sans-serif;
-		font-size: 13px;
+		border: 1px solid transparent;
+		border-radius: 3px;
+		color: var(--text-secondary);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.15s ease;
 	}
 
 	.overlay-btn:hover {
-		background: rgba(255, 255, 255, 0.1);
-		color: rgba(255, 255, 255, 0.9);
+		background: var(--bg-hover);
+		color: var(--text-primary);
 	}
 
 	.overlay-btn.active {
-		background: rgba(74, 144, 217, 0.3);
-		color: #fff;
+		background: var(--accent-primary-dim);
+		border-color: var(--accent-primary);
+		color: var(--accent-primary);
 	}
 
 	.icon {
 		font-size: 14px;
-		opacity: 0.8;
 	}
 
 	.label {
