@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { selectedObject, selectObject } from '$lib/stores/game';
 
+	type ViewMode = 'details' | 'orbital';
+	let viewMode: ViewMode = $state('details');
+
 	function formatNumber(value: number, decimals: number = 2): string {
 		return value.toFixed(decimals);
 	}
@@ -26,6 +29,10 @@
 	function handleClose() {
 		selectObject(null);
 	}
+
+	function setViewMode(mode: ViewMode) {
+		viewMode = mode;
+	}
 </script>
 
 {#if $selectedObject}
@@ -50,67 +57,77 @@
 				</div>
 			</div>
 
-			<div class="data-grid">
-				<div class="data-item">
-					<span class="data-label">Altitude</span>
-					<span class="data-value highlight">{formatNumber($selectedObject.altitude, 1)}<span class="data-unit">km</span></span>
-				</div>
-				<div class="data-item">
-					<span class="data-label">Velocity</span>
-					<span class="data-value">{formatNumber($selectedObject.velocity, 2)}<span class="data-unit">km/s</span></span>
-				</div>
-				<div class="data-item">
-					<span class="data-label">Latitude</span>
-					<span class="data-value">{formatNumber($selectedObject.latitude, 2)}°</span>
-				</div>
-				<div class="data-item">
-					<span class="data-label">Longitude</span>
-					<span class="data-value">{formatNumber($selectedObject.longitude, 2)}°</span>
-				</div>
-				<div class="data-item">
-					<span class="data-label">Inclination</span>
-					<span class="data-value">{formatNumber($selectedObject.inclination, 2)}°</span>
-				</div>
-				<div class="data-item">
-					<span class="data-label">Type</span>
-					<span class="data-value">{getObjectTypeLabel($selectedObject.objectType)}</span>
-				</div>
-			</div>
-
-			<div class="orbital-section">
-				<div class="section-title">Orbital Elements</div>
-				<div class="orbital-grid">
-					<div class="orbital-item">
-						<div class="orbital-label">Semi-Major</div>
-						<div class="orbital-value">{formatNumber($selectedObject.semiMajorAxis, 1)} km</div>
+			{#if viewMode === 'details'}
+				<div class="data-grid">
+					<div class="data-item">
+						<span class="data-label">Altitude</span>
+						<span class="data-value">{formatNumber($selectedObject.altitude, 1)}<span class="data-unit">km</span></span>
 					</div>
-					<div class="orbital-item">
-						<div class="orbital-label">Eccentricity</div>
-						<div class="orbital-value">{formatNumber($selectedObject.eccentricity, 6)}</div>
+					<div class="data-item">
+						<span class="data-label">Velocity</span>
+						<span class="data-value">{formatNumber($selectedObject.velocity, 2)}<span class="data-unit">km/s</span></span>
 					</div>
-					<div class="orbital-item">
-						<div class="orbital-label">Inclination</div>
-						<div class="orbital-value">{formatNumber($selectedObject.inclination, 2)}°</div>
+					<div class="data-item">
+						<span class="data-label">Latitude</span>
+						<span class="data-value">{formatNumber($selectedObject.latitude, 2)}°</span>
 					</div>
-					<div class="orbital-item">
-						<div class="orbital-label">RAAN</div>
-						<div class="orbital-value">{formatNumber($selectedObject.raan, 2)}°</div>
+					<div class="data-item">
+						<span class="data-label">Longitude</span>
+						<span class="data-value">{formatNumber($selectedObject.longitude, 2)}°</span>
 					</div>
-					<div class="orbital-item">
-						<div class="orbital-label">Arg. Perigee</div>
-						<div class="orbital-value">{formatNumber($selectedObject.argOfPerigee, 2)}°</div>
+					<div class="data-item">
+						<span class="data-label">Inclination</span>
+						<span class="data-value">{formatNumber($selectedObject.inclination, 2)}°</span>
 					</div>
-					<div class="orbital-item">
-						<div class="orbital-label">Mean Anomaly</div>
-						<div class="orbital-value">{formatNumber($selectedObject.meanAnomaly, 2)}°</div>
+					<div class="data-item">
+						<span class="data-label">Type</span>
+						<span class="data-value">{getObjectTypeLabel($selectedObject.objectType)}</span>
 					</div>
 				</div>
-			</div>
+				<!--
+				<div class="orbital-section">
+					<div class="section-title">Additional information</div>
+				</div>
+				-->
+			{:else}
+				<div class="orbital-section first">
+					<div class="data-grid">
+						<span class="data-label">Semi-Major</span>
+						<span class="data-value">{formatNumber($selectedObject.semiMajorAxis, 1)} km</span>
+					</div>
+					
+					<div class="orbital-grid">
+						<div class="orbital-item">
+							<div class="orbital-label">Semi-Major</div>
+							<div class="orbital-value">{formatNumber($selectedObject.semiMajorAxis, 1)} km</div>
+						</div>
+						<div class="orbital-item">
+							<div class="orbital-label">Eccentricity</div>
+							<div class="orbital-value">{formatNumber($selectedObject.eccentricity, 6)}</div>
+						</div>
+						<div class="orbital-item">
+							<div class="orbital-label">Inclination</div>
+							<div class="orbital-value">{formatNumber($selectedObject.inclination, 2)}°</div>
+						</div>
+						<div class="orbital-item">
+							<div class="orbital-label">RAAN</div>
+							<div class="orbital-value">{formatNumber($selectedObject.raan, 2)}°</div>
+						</div>
+						<div class="orbital-item">
+							<div class="orbital-label">Arg. Perigee</div>
+							<div class="orbital-value">{formatNumber($selectedObject.argOfPerigee, 2)}°</div>
+						</div>
+						<div class="orbital-item">
+							<div class="orbital-label">Mean Anomaly</div>
+							<div class="orbital-value">{formatNumber($selectedObject.meanAnomaly, 2)}°</div>
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<div class="btn-group">
-				<button class="btn btn-primary">Track</button>
-				<button class="btn">Predict</button>
-				<button class="btn">Details</button>
+				<button class="btn" class:btn-primary={viewMode === 'details'} onclick={() => setViewMode('details')}>Details</button>
+				<button class="btn" class:btn-primary={viewMode === 'orbital'} onclick={() => setViewMode('orbital')}>Orbit Mean Elements</button>
 			</div>
 		</div>
 	</div>
@@ -202,6 +219,12 @@
 		margin-top: 1.25rem;
 		padding-top: 1.25rem;
 		border-top: 1px solid var(--border-subtle);
+	}
+
+	.orbital-section.first {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: none;
 	}
 
 	.section-title {

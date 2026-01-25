@@ -10,9 +10,6 @@
 	onMount(() => {
 		// Initialize mock stores (will be replaced by real WASM bindings later)
 		initializeGame();
-
-		// Demo: select ISS to show the info panel
-		selectObject(1);
 	});
 </script>
 
