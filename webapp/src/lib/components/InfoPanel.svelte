@@ -60,6 +60,14 @@
 					<span class="data-value">{formatNumber($selectedObject.velocity, 2)}<span class="data-unit">km/s</span></span>
 				</div>
 				<div class="data-item">
+					<span class="data-label">Latitude</span>
+					<span class="data-value">{formatNumber($selectedObject.latitude, 2)}°</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Longitude</span>
+					<span class="data-value">{formatNumber($selectedObject.longitude, 2)}°</span>
+				</div>
+				<div class="data-item">
 					<span class="data-label">Inclination</span>
 					<span class="data-value">{formatNumber($selectedObject.inclination, 2)}°</span>
 				</div>
