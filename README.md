@@ -17,4 +17,4 @@ A space object tracking and visualisation application. Renders satellite (e.g. I
 
 ## License
 
-GPL-3.0
+*Orbis* is licensed under the GPLv3 License, see [LICENSE](LICENSE) for more information.
