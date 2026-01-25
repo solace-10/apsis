@@ -2,21 +2,19 @@
 <img src=".assets/screenshot.jpg"/>
 </div>
 
-# Building from source
+# Orbis
 
-## Windows
+> [!WARNING]
+> This project is a work in progress and not ready for general use.
 
-### Native
+A space object tracking and visualisation application. Renders satellite (e.g. ISS, Starlink, GPS, debris) based on data from [CelesTrak](https://celestrak.org).
 
-You need Visual Studio Code.
+## Project Structure
 
-### Web
+- `game/` - Main application (space object logic, rendering, components, systems)
+- `pandora/` - [C++20 game engine framework](https://codeberg.org/pedronunes/pandora/) (WebGPU, ECS, physics, resources)
+- `webapp/` - SvelteKit frontend for web deployment
 
-Ninja needs to be installed and in the PATH.
-Run `tools\scripts\setup_emscripten.bat` to install and activate the latest Emscripten SDK and make the cmake toolchain available.
+## License
 
-## Linux
-
-### Native
-
-sudo apt install clang clangd cmake libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglfw3-dev libx11-xcb-dev
+GPL-3.0
