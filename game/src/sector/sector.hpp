@@ -26,6 +26,8 @@ public:
 
     SpaceObjectCatalogue* GetSpaceObjectCatalogue() { return m_pSpaceObjectCatalogue.get(); }
     EntitySharedPtr GetEarth() const { return m_pEarth; }
+    EntitySharedPtr GetSelectedSpaceObject() const { return m_pSelectedSpaceObject.lock(); }
+    void SetSelectedSpaceObject(EntitySharedPtr pEntity);
 
 private:
     void DrawCameraDebugUI();
@@ -38,6 +40,7 @@ private:
     EntitySharedPtr m_pEarth;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
+    EntityWeakPtr m_pSelectedSpaceObject;
 };
 
 } // namespace WingsOfSteel

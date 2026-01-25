@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "core/smart_ptr.hpp"
 #include "scene/entity.hpp"
 #include "scene/scene.hpp"
@@ -8,6 +10,7 @@ namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Sector);
+class WebInterop;
 
 class Game
 {
@@ -27,6 +30,7 @@ private:
     void DrawImGuiMenuBar();
 
     SectorSharedPtr m_pSector;
+    std::unique_ptr<WebInterop> m_pWebInterop;
 };
 
 inline Sector* Game::GetSector()

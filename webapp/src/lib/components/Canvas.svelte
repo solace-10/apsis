@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { moduleLoading, moduleError } from '$lib/stores/game';
+	import { moduleLoading, moduleError, setupWasmCallbacks } from '$lib/stores/game';
 
 	let canvas: HTMLCanvasElement;
 	let statusText = $state('Downloading...');
 	let showOverlay = $state(true);
 
 	onMount(() => {
+		// Initialize C++ -> JS callbacks before loading WASM
+		setupWasmCallbacks();
 		// Set up the global Module object that Emscripten expects
 		const Module = {
 			print(...args: unknown[]) {

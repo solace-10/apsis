@@ -25,6 +25,7 @@ if(TARGET_PLATFORM_NATIVE)
 elseif(TARGET_PLATFORM_WEB)
     target_link_options(game PRIVATE
         "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/src/emscripten/shell.html"
+        "--bind" # Support for embind so we can interact with the frontend.
     )
 
     # Generate asset manifest using forge tool

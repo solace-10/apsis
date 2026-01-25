@@ -16,6 +16,10 @@
 #include "sector/sector.hpp"
 #include "systems/planet_render_system.hpp"
 
+#if defined(TARGET_PLATFORM_WEB)
+#include "emscripten/web_interop.hpp"
+#endif
+
 namespace WingsOfSteel
 {
 
@@ -37,6 +41,10 @@ Game* Game::Get()
 void Game::Initialize()
 {
     g_pGame = this;
+
+#if defined(TARGET_PLATFORM_WEB)
+    m_pWebInterop = std::make_unique<WebInterop>();
+#endif
 
     RenderSystem* pRenderSystem = GetRenderSystem();
     pRenderSystem->ClearRenderPasses();
@@ -60,6 +68,9 @@ void Game::Update(float delta)
 
 void Game::Shutdown()
 {
+#if defined(TARGET_PLATFORM_WEB)
+    m_pWebInterop.reset();
+#endif
 }
 
 // Called from ImGuiSystem::Update() to draw any menus in the menu bar.

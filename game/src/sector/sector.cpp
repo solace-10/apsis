@@ -28,7 +28,11 @@
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
-#include "systems/space_object_render_system.hpp"
+#include "systems/space_object_render_system.hpp"
+
+#if defined(TARGET_PLATFORM_WEB)
+#include "emscripten/web_interop.hpp"
+#endif
 
 namespace WingsOfSteel
 {
@@ -107,6 +111,16 @@ void Sector::Update(float delta)
     }
 
     DrawCameraDebugUI();
+
+#if defined(TARGET_PLATFORM_WEB)
+    if (EntitySharedPtr pSelected = m_pSelectedSpaceObject.lock())
+    {
+        if (WebInterop* pWebInterop = WebInterop::GetInstance())
+        {
+            pWebInterop->NotifySpaceObjectUpdated(&pSelected->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+        }
+    }
+#endif
 }
 
 void Sector::InitializeSpaceObjectCatalogue()
@@ -131,6 +145,11 @@ void Sector::InitializeSpaceObjectCatalogue()
                 if (spaceObject.GetObjectName() == "ISS (ZARYA)" || spaceObject.GetObjectName() == "CSS (TIANHE)")
                 {
                     spaceObject.FlagAsImportant();
+
+                    if (m_pSelectedSpaceObject.expired())
+                    {
+                        m_pSelectedSpaceObject = pEntity;
+                    }
                 }
                 spaceObjectComponent.AssignSpaceObject(spaceObject);
                 
@@ -200,6 +219,25 @@ void Sector::SpawnLight()
 
     AmbientLightComponent& ambientLightComponent = m_pLight->AddComponent<AmbientLightComponent>();
     ambientLightComponent.SetColor(0.0f, 0.0f, 0.0f);
+}
+
+void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
+{
+    m_pSelectedSpaceObject = pEntity;
+
+#if defined(TARGET_PLATFORM_WEB)
+    if (WebInterop* pWebInterop = WebInterop::GetInstance())
+    {
+        if (pEntity)
+        {
+            pWebInterop->NotifySpaceObjectSelected(&pEntity->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+        }
+        else
+        {
+            pWebInterop->NotifySpaceObjectDeselected();
+        }
+    }
+#endif
 }
 
 } // namespace WingsOfSteel

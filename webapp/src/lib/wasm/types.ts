@@ -3,6 +3,49 @@
  * These will be implemented via C++ embind later.
  */
 
+/**
+ * Raw interop data from C++ WebInterop callbacks.
+ * Field names match the C++ SpaceObjectInterop struct.
+ */
+export interface SpaceObjectInterop {
+	objectName: string;
+	objectId: string;
+	noradCatalogueId: number;
+	eccentricity: number;
+	inclination: number;
+	rightAscensionOfAscendingNode: number;
+	argumentOfPericenter: number;
+	meanAnomaly: number;
+	semiMajorAxis: number;
+	altitude: number;
+	velocity: number;
+	latitude: number;
+	longitude: number;
+}
+
+/**
+ * Convert raw interop data to SpaceObject.
+ */
+export function fromInterop(interop: SpaceObjectInterop): SpaceObject {
+	return {
+		id: interop.noradCatalogueId,
+		name: interop.objectName,
+		noradId: interop.noradCatalogueId,
+		objectType: 'satellite', // TODO: Add object type to interop
+		group: { id: 'unknown', name: 'Unknown', color: '#888888', visible: true, count: 0 },
+		semiMajorAxis: interop.semiMajorAxis,
+		eccentricity: interop.eccentricity,
+		inclination: interop.inclination,
+		raan: interop.rightAscensionOfAscendingNode,
+		argOfPerigee: interop.argumentOfPericenter,
+		meanAnomaly: interop.meanAnomaly,
+		altitude: interop.altitude,
+		velocity: interop.velocity,
+		latitude: interop.latitude,
+		longitude: interop.longitude
+	};
+}
+
 export interface SpaceObject {
 	id: number;
 	name: string;

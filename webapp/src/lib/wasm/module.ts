@@ -6,10 +6,65 @@
 import type {
 	SpaceObject,
 	SpaceObjectGroup,
-	SpaceObjectType,
 	OverlayState,
-	OrbisModule
+	OrbisModule,
+	SpaceObjectInterop
 } from './types';
+import { fromInterop } from './types';
+
+/**
+ * Callback type for space object selection.
+ */
+export type SpaceObjectCallback = (object: SpaceObject | null) => void;
+
+// Callbacks registered by the app
+let onSelectionChange: SpaceObjectCallback | null = null;
+let onObjectUpdate: SpaceObjectCallback | null = null;
+
+/**
+ * Register callbacks for space object updates from C++.
+ */
+export function registerCallbacks(
+	onSelected: SpaceObjectCallback,
+	onUpdated: SpaceObjectCallback
+): void {
+	onSelectionChange = onSelected;
+	onObjectUpdate = onUpdated;
+}
+
+/**
+ * Initialize the global orbisCallbacks object that C++ will call into.
+ * Must be called before WASM module loads.
+ */
+export function initializeCallbacks(): void {
+	interface OrbisCallbacks {
+		onSpaceObjectSelected: (interop: SpaceObjectInterop) => void;
+		onSpaceObjectDeselected: () => void;
+		onSpaceObjectUpdated: (interop: SpaceObjectInterop) => void;
+	}
+
+	const callbacks: OrbisCallbacks = {
+		onSpaceObjectSelected: (interop: SpaceObjectInterop) => {
+			const spaceObject = fromInterop(interop);
+			if (onSelectionChange) {
+				onSelectionChange(spaceObject);
+			}
+		},
+		onSpaceObjectDeselected: () => {
+			if (onSelectionChange) {
+				onSelectionChange(null);
+			}
+		},
+		onSpaceObjectUpdated: (interop: SpaceObjectInterop) => {
+			const spaceObject = fromInterop(interop);
+			if (onObjectUpdate) {
+				onObjectUpdate(spaceObject);
+			}
+		}
+	};
+
+	(window as unknown as { orbisCallbacks: OrbisCallbacks }).orbisCallbacks = callbacks;
+}
 
 // Mock data for development
 const mockGroups: SpaceObjectGroup[] = [

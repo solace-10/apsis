@@ -5,7 +5,7 @@
 
 import { writable, derived, type Readable } from 'svelte/store';
 import type { SpaceObject, SpaceObjectGroup, OverlayState, OrbisModule } from '$lib/wasm/types';
-import { getModule, onStateChange, loadModule } from '$lib/wasm/module';
+import { getModule, onStateChange, loadModule, registerCallbacks, initializeCallbacks } from '$lib/wasm/module';
 
 // Module instance store
 const moduleStore = writable<OrbisModule | null>(null);
@@ -36,6 +36,22 @@ function syncFromModule(module: OrbisModule): void {
 	selectedObjectStore.set(module.getSelectedObject());
 	groupsStore.set(module.getGroups());
 	overlayStore.set(module.getOverlayState());
+}
+
+/**
+ * Set up C++ -> JS callbacks for space object updates.
+ * Must be called before WASM module loads.
+ */
+export function setupWasmCallbacks(): void {
+	registerCallbacks(
+		(object: SpaceObject | null) => {
+			selectedObjectStore.set(object);
+		},
+		(object: SpaceObject | null) => {
+			selectedObjectStore.set(object);
+		}
+	);
+	initializeCallbacks();
 }
 
 /**
