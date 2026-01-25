@@ -28,7 +28,7 @@ export interface SpaceObjectInterop {
  */
 export function fromInterop(interop: SpaceObjectInterop): SpaceObject {
 	return {
-		id: interop.noradCatalogueId,
+		internationalDesignator: interop.objectId,
 		name: interop.objectName,
 		noradId: interop.noradCatalogueId,
 		objectType: 'satellite', // TODO: Add object type to interop
@@ -47,7 +47,7 @@ export function fromInterop(interop: SpaceObjectInterop): SpaceObject {
 }
 
 export interface SpaceObject {
-	id: number;
+	internationalDesignator: string;
 	name: string;
 	noradId: number;
 	objectType: SpaceObjectType;

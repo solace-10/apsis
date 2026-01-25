@@ -52,8 +52,7 @@ endif()
         LINK_DEPENDS "${MANIFEST_OUTPUT}"
     )
     add_custom_command(TARGET game POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.html ${CMAKE_CURRENT_LIST_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.js ${CMAKE_CURRENT_LIST_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.wasm ${CMAKE_CURRENT_LIST_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.js ${CMAKE_CURRENT_LIST_DIR}/../webapp/static
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:game>/$<TARGET_FILE_BASE_NAME:game>.wasm ${CMAKE_CURRENT_LIST_DIR}/../webapp/static
     )
 endif()
