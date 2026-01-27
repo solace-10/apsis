@@ -50,6 +50,7 @@ FIELD_MAPPING = {
     "COUNTRY_CODE": "country_code",
     "LAUNCH_DATE": "launch_date",
     "SITE": "launch_site",
+    "CREATION_DATE": "creation_date",
 }
 
 # Database columns in order for insert
