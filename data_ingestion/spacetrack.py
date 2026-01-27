@@ -58,6 +58,16 @@ DB_COLUMNS = list(FIELD_MAPPING.values())
 
 BATCH_SIZE = 1000
 
+GP_DATA_URL = (
+    "https://www.space-track.org/basicspacedata/query"
+    "/class/gp/EPOCH/>now-30/orderby/NORAD_CAT_ID,EPOCH/format/json"
+)
+ANALYST_DATA_URL = (
+    "https://www.space-track.org/basicspacedata/query"
+    "/class/gp/EPOCH/%3Enow-30/NORAD_CAT_ID/80000--89999"
+    "/orderby/NORAD_CAT_ID/format/json/emptyresult/show"
+)
+
 
 def connect_db():
     """Establish PostgreSQL connection using environment variables."""
@@ -77,7 +87,7 @@ def connect_db():
 
 
 def fetch_data():
-    """Fetch satellite data from the SpaceTrack API."""
+    """Fetch GP and analyst satellite data from the SpaceTrack API."""
     user = os.getenv("SPACETRACK_USER")
     password = os.getenv("SPACETRACK_PASSWORD")
     if not user or not password:
@@ -85,10 +95,6 @@ def fetch_data():
         sys.exit(1)
 
     login_url = "https://www.space-track.org/ajaxauth/login"
-    data_url = (
-        "https://www.space-track.org/basicspacedata/query"
-        "/class/gp/EPOCH/>now-30/orderby/NORAD_CAT_ID,EPOCH/format/json"
-    )
 
     session = requests.Session()
 
@@ -99,15 +105,23 @@ def fetch_data():
         sys.exit(1)
     logger.info("SpaceTrack login successful")
 
-    logger.info("Fetching satellite data...")
-    resp = session.get(data_url)
+    logger.info("Fetching GP data...")
+    resp = session.get(GP_DATA_URL)
     if resp.status_code != 200:
-        logger.error(f"SpaceTrack data request failed (HTTP {resp.status_code})")
+        logger.error(f"GP data request failed (HTTP {resp.status_code})")
         sys.exit(1)
+    gp_records = resp.json()
+    logger.info(f"Fetched {len(gp_records)} GP records")
 
-    records = resp.json()
-    logger.info(f"Fetched {len(records)} records from SpaceTrack")
-    return records
+    logger.info("Fetching analyst data...")
+    resp = session.get(ANALYST_DATA_URL)
+    if resp.status_code != 200:
+        logger.error(f"Analyst data request failed (HTTP {resp.status_code})")
+        sys.exit(1)
+    analyst_records = resp.json()
+    logger.info(f"Fetched {len(analyst_records)} analyst records")
+
+    return gp_records, analyst_records
 
 
 def transform_record(record):
@@ -157,36 +171,65 @@ def insert_batch(conn, records):
     return len(records)
 
 
+def insert_groups_batch(conn, ids, group):
+    """Insert group memberships into public.groups."""
+    if not ids:
+        return 0
+
+    unique_ids = list(set(ids))
+    records = [(norad_id, group) for norad_id in unique_ids]
+
+    query = """
+        INSERT INTO public.groups (norad_id, "group")
+        VALUES %s
+        ON CONFLICT (norad_id, "group") DO NOTHING
+    """
+
+    with conn.cursor() as cur:
+        execute_values(cur, query, records, page_size=BATCH_SIZE)
+    conn.commit()
+    logger.info(f"Inserted {len(records)} '{group}' group memberships")
+    return len(records)
+
+
+def process_records(conn, data, label):
+    """Transform and insert records in batches."""
+    total = len(data)
+    processed = 0
+    batch = []
+
+    for record in data:
+        row = transform_record(record)
+        batch.append(row)
+
+        if len(batch) >= BATCH_SIZE:
+            insert_batch(conn, batch)
+            processed += len(batch)
+            logger.info(f"{label}: Processed {processed}/{total} records")
+            batch = []
+
+    if batch:
+        insert_batch(conn, batch)
+        processed += len(batch)
+        logger.info(f"{label}: Processed {processed}/{total} records")
+
+    return processed
+
+
 def main():
     """Main ingestion process."""
-    data = fetch_data()
-    total_records = len(data)
+    gp_data, analyst_data = fetch_data()
 
-    # Connect to database
     conn = connect_db()
 
     try:
-        # Process records in batches
-        processed = 0
-        batch = []
+        gp_count = process_records(conn, gp_data, "GP")
+        analyst_count = process_records(conn, analyst_data, "Analyst")
 
-        for record in data:
-            row = transform_record(record)
-            batch.append(row)
+        analyst_ids = [record.get("NORAD_CAT_ID") for record in analyst_data if record.get("NORAD_CAT_ID")]
+        insert_groups_batch(conn, analyst_ids, "analyst")
 
-            if len(batch) >= BATCH_SIZE:
-                insert_batch(conn, batch)
-                processed += len(batch)
-                logger.info(f"Processed {processed}/{total_records} records")
-                batch = []
-
-        # Insert remaining records
-        if batch:
-            insert_batch(conn, batch)
-            processed += len(batch)
-            logger.info(f"Processed {processed}/{total_records} records")
-
-        logger.info(f"Ingestion complete. Total records processed: {processed}")
+        logger.info(f"Ingestion complete. GP: {gp_count}, Analyst: {analyst_count}")
 
     except psycopg2.Error as e:
         logger.error(f"Database error: {e}")
