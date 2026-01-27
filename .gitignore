@@ -3,6 +3,7 @@
 .claude/
 .vscode/settings.json
 build/
+data_ingestion/.env
 pandora/ext/
 game/assets/models/flagship/
 game/assets/wings_of_steel/
