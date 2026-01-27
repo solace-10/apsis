@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
 SpaceTrack data ingestion script.
-Ingests satellite data from SpaceTrack JSON and writes to PostgreSQL database.
+Fetches satellite data from the SpaceTrack API and writes to PostgreSQL database.
 """
 
-import json
 import logging
 import os
 import sys
-from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import execute_values
@@ -76,17 +75,38 @@ def connect_db():
         sys.exit(1)
 
 
-def load_json(filepath):
-    """Load JSON data from file."""
-    logger.info(f"Loading JSON from {filepath}")
-    try:
-        with open(filepath, "r") as f:
-            data = json.load(f)
-        logger.info(f"Loaded {len(data)} records from JSON")
-        return data
-    except (json.JSONDecodeError, IOError) as e:
-        logger.error(f"Failed to load JSON: {e}")
+def fetch_data():
+    """Fetch satellite data from the SpaceTrack API."""
+    user = os.getenv("SPACETRACK_USER")
+    password = os.getenv("SPACETRACK_PASSWORD")
+    if not user or not password:
+        logger.error("SPACETRACK_USER and SPACETRACK_PASSWORD must be set in .env")
         sys.exit(1)
+
+    login_url = "https://www.space-track.org/ajaxauth/login"
+    data_url = (
+        "https://www.space-track.org/basicspacedata/query"
+        "/class/gp/EPOCH/>now-30/orderby/NORAD_CAT_ID,EPOCH/format/json"
+    )
+
+    session = requests.Session()
+
+    logger.info("Logging in to SpaceTrack...")
+    resp = session.post(login_url, data={"identity": user, "password": password})
+    if resp.status_code != 200:
+        logger.error(f"SpaceTrack login failed (HTTP {resp.status_code})")
+        sys.exit(1)
+    logger.info("SpaceTrack login successful")
+
+    logger.info("Fetching satellite data...")
+    resp = session.get(data_url)
+    if resp.status_code != 200:
+        logger.error(f"SpaceTrack data request failed (HTTP {resp.status_code})")
+        sys.exit(1)
+
+    records = resp.json()
+    logger.info(f"Fetched {len(records)} records from SpaceTrack")
+    return records
 
 
 def transform_record(record):
@@ -138,16 +158,7 @@ def insert_batch(conn, records):
 
 def main():
     """Main ingestion process."""
-    # Determine JSON file path
-    script_dir = Path(__file__).parent
-    json_file = script_dir / "all.json"
-
-    if not json_file.exists():
-        logger.error(f"JSON file not found: {json_file}")
-        sys.exit(1)
-
-    # Load JSON data
-    data = load_json(json_file)
+    data = fetch_data()
     total_records = len(data)
 
     # Connect to database
