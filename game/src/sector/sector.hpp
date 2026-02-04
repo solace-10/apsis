@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_map>
+
+#include <entt/entt.hpp>
 #include <glm/vec3.hpp>
 
 #include <core/signal.hpp>
@@ -10,7 +13,6 @@ namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(Database);
-DECLARE_SMART_PTR(SpaceObjectCatalogue);
 
 DECLARE_SMART_PTR(Sector);
 class Sector : public Scene
@@ -26,25 +28,26 @@ public:
     void ShowGrid(bool state);
 
     Database* GetDatabase() { return m_pDatabase.get(); }
-    SpaceObjectCatalogue* GetSpaceObjectCatalogue() { return m_pSpaceObjectCatalogue.get(); }
     EntitySharedPtr GetEarth() const { return m_pEarth; }
     EntitySharedPtr GetSelectedSpaceObject() const { return m_pSelectedSpaceObject.lock(); }
     void SetSelectedSpaceObject(EntitySharedPtr pEntity);
+
+    EntitySharedPtr GetEntityByNoradId(uint32_t noradId) const;
 
 private:
     void DrawCameraDebugUI();
     void SpawnLight();
     void InitializeDatabase();
-    void InitializeSpaceObjectCatalogue();
+    void InitializeSpaceObjects();
 
     DatabaseUniquePtr m_pDatabase;
-    SpaceObjectCatalogueUniquePtr m_pSpaceObjectCatalogue;
     EntitySharedPtr m_pCamera;
     EntitySharedPtr m_pLight;
     EntitySharedPtr m_pEarth;
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
     EntityWeakPtr m_pSelectedSpaceObject;
+    std::unordered_map<uint32_t, EntitySharedPtr> m_NoradIdIndex;
 };
 
 } // namespace WingsOfSteel

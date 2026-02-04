@@ -7,7 +7,6 @@
 namespace WingsOfSteel
 {
 
-class SpaceObject;
 DECLARE_SMART_PTR(Entity);
 
 class WebInterop
@@ -18,9 +17,9 @@ public:
 
     static WebInterop* GetInstance();
 
-    void NotifySpaceObjectSelected(const SpaceObject* pSpaceObject);
+    void NotifySpaceObjectSelected(EntitySharedPtr pEntity);
     void NotifySpaceObjectDeselected();
-    void NotifySpaceObjectUpdated(const SpaceObject* pSpaceObject);
+    void NotifySpaceObjectUpdated(EntitySharedPtr pEntity);
 
 private:
     static WebInterop* s_pInstance;

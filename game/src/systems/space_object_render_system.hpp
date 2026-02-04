@@ -9,10 +9,10 @@
 #include <scene/entity.hpp>
 #include <scene/systems/system.hpp>
 
-#include "space_objects/space_object.hpp"
-
 namespace WingsOfSteel
 {
+
+class OrbitalElementsComponent;
 
 class SpaceObjectRenderSystem : public System
 {
@@ -30,7 +30,7 @@ private:
     void CreateRenderPipeline();
     void GenerateSpaceObjectGroups();
     void GenerateLabelsVertexData();
-    size_t MakeOrbitalKey(const SpaceObject& object) const;
+    size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;
 
     static constexpr size_t kMaxLabels = 1024;
     static constexpr size_t kVerticesPerQuad = 6;

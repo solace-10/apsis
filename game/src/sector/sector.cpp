@@ -16,14 +16,15 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/atmosphere_component.hpp"
+#include "components/metadata_component.hpp"
+#include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
-#include "components/space_object_component.hpp"
 #include "resources/resource.fwd.hpp"
 #include "sector/database.hpp"
 #include "sector/sector.hpp"
-#include "space_objects/space_object.hpp"
-#include "space_objects/space_object_catalogue.hpp"
+#include "space_objects/omm_deserializer.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
@@ -32,7 +33,7 @@
 
 #if defined(TARGET_PLATFORM_WEB)
 #include "emscripten/web_interop.hpp"
-#endif
+#endif
 
 namespace WingsOfSteel
 {
@@ -98,7 +99,7 @@ void Sector::Initialize()
     atmosphereComponent.numSamples = 5; // Ray march samples
 
     InitializeDatabase();
-    InitializeSpaceObjectCatalogue();
+    InitializeSpaceObjects();
 }
 
 void Sector::Update(float delta)
@@ -118,7 +119,7 @@ void Sector::Update(float delta)
     {
         if (WebInterop* pWebInterop = WebInterop::GetInstance())
         {
-            pWebInterop->NotifySpaceObjectUpdated(&pSelected->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+            pWebInterop->NotifySpaceObjectUpdated(pSelected);
         }
     }
 #endif
@@ -129,41 +130,46 @@ void Sector::InitializeDatabase()
     m_pDatabase = std::make_unique<Database>();
     m_pDatabase->GetAllObjects(
         [](const Json::Data& data) {},
-        [](const std::string& error) {}
-    );
+        [](const std::string& error) {});
 }
 
-void Sector::InitializeSpaceObjectCatalogue()
+void Sector::InitializeSpaceObjects()
 {
-    m_pSpaceObjectCatalogue = std::make_unique<SpaceObjectCatalogue>();
-
     GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
         ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
-        SpaceObjectCatalogue* pCatalogue = GetSpaceObjectCatalogue();
         size_t successfulEntries = 0;
         for (const Json::Data& data : pResourceDataStore->Data())
         {
-            SpaceObject spaceObject;
-            if (spaceObject.DeserializeOMM(data))
+            auto deserializedData = OMMDeserializer::Deserialize(data);
+            if (deserializedData.has_value())
             {
-                pCatalogue->Add(spaceObject);
-                successfulEntries++;
-
                 EntitySharedPtr pEntity = CreateEntity();
-                SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
+
+                // Add all three components
+                OrbitalElementsComponent& orbitalElements = pEntity->AddComponent<OrbitalElementsComponent>();
+                orbitalElements = deserializedData->orbitalElements;
+
+                MetadataComponent& metadata = pEntity->AddComponent<MetadataComponent>();
+                metadata = deserializedData->metadata;
+
                 // Temporary until this information comes from a database.
-                if (spaceObject.GetObjectName() == "ISS (ZARYA)" || spaceObject.GetObjectName() == "CSS (TIANHE)")
+                if (metadata.m_ObjectName == "ISS (ZARYA)" || metadata.m_ObjectName == "CSS (TIANHE)")
                 {
-                    spaceObject.FlagAsImportant();
+                    metadata.m_IsImportant = true;
 
                     if (m_pSelectedSpaceObject.expired())
                     {
                         m_pSelectedSpaceObject = pEntity;
                     }
                 }
-                spaceObjectComponent.AssignSpaceObject(spaceObject);
-                
+
+                pEntity->AddComponent<OrbitalStateComponent>();
                 pEntity->AddComponent<TransformComponent>();
+
+                // Index by NORAD ID for quick lookups
+                m_NoradIdIndex[metadata.m_NoradCatalogueId] = pEntity;
+
+                successfulEntries++;
             }
             else
             {
@@ -171,7 +177,7 @@ void Sector::InitializeSpaceObjectCatalogue()
             }
         }
 
-        Log::Info() << "Added " << successfulEntries << " to space object catalogue.";
+        Log::Info() << "Loaded " << successfulEntries << " space objects.";
 
         SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
         pSpaceObjectSystem->GenerateLabels();
@@ -240,7 +246,7 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
     {
         if (pEntity)
         {
-            pWebInterop->NotifySpaceObjectSelected(&pEntity->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+            pWebInterop->NotifySpaceObjectSelected(pEntity);
         }
         else
         {
@@ -248,6 +254,16 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
         }
     }
 #endif
+}
+
+EntitySharedPtr Sector::GetEntityByNoradId(uint32_t noradId) const
+{
+    auto it = m_NoradIdIndex.find(noradId);
+    if (it != m_NoradIdIndex.end())
+    {
+        return it->second;
+    }
+    return nullptr;
 }
 
 } // namespace WingsOfSteel

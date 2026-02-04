@@ -21,8 +21,9 @@
 #include <scene/scene.hpp>
 
 #include "components/label_component.hpp"
+#include "components/metadata_component.hpp"
+#include "components/orbital_elements_component.hpp"
 #include "components/planet_component.hpp"
-#include "components/space_object_component.hpp"
 #include "components/space_object_group_component.hpp"
 #include "sector/sector.hpp"
 #include "systems/space_object_render_system.hpp"
@@ -167,7 +168,7 @@ void SpaceObjectRenderSystem::Update(float delta)
 
         const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
-        
+
         // Check if a line segment between the label and the camera intersects the planet.
         // If so, then this label is occluded.
         bool isOccluded = false;
@@ -187,10 +188,10 @@ void SpaceObjectRenderSystem::Update(float delta)
             const float t2 = (-b + sqrtDisc) / (2.0f * a);
             isOccluded = (t1 < 0.0f || t1 > 1.0f) && (t2 < 0.0f || t2 > 1.0f);
         }
-        
+
         labelComponent.SetOccluded(isOccluded);
         if (!isOccluded)
-        {    
+        {
             labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight));
         }
     });
@@ -236,7 +237,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         {
             return;
         }
-              
+
         const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
         for (auto vertex : vertexData)
         {
@@ -266,11 +267,11 @@ void SpaceObjectRenderSystem::GenerateLabels()
 void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<SpaceObjectComponent>();
+    auto view = registry.view<OrbitalElementsComponent, MetadataComponent>();
 
     std::unordered_map<size_t, std::vector<entt::entity>> groups;
-    view.each([this, &groups](const auto entity, const SpaceObjectComponent& component) {
-        size_t key = MakeOrbitalKey(component.GetSpaceObject());
+    view.each([this, &groups](const auto entity, const OrbitalElementsComponent& orbitalElements, const MetadataComponent& metadata) {
+        size_t key = MakeOrbitalKey(orbitalElements);
         groups[key].push_back(entity);
     });
 
@@ -289,7 +290,7 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
         Log::Info() << "Generating space object group " << groupId << " with " << group.second.size() << " objects.";
         for (const auto& entityHandle : group.second)
         {
-            const bool isImportant = registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().IsImportant();
+            const bool isImportant = registry.get<MetadataComponent>(entityHandle).m_IsImportant;
             registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isImportant);
             m_LabelGroups[groupId].push_back(entityHandle);
         }
@@ -300,11 +301,9 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
 void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<SpaceObjectComponent>();
+    auto view = registry.view<MetadataComponent>();
 
-    view.each([this, &registry](const auto entityHandle, const SpaceObjectComponent& spaceObjectComponent) {
-        const SpaceObject& spaceObject = spaceObjectComponent.GetSpaceObject();
-
+    view.each([this, &registry](const auto entityHandle, const MetadataComponent& metadata) {
         std::stringstream labelStream;
 
         // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
@@ -313,12 +312,12 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
         {
             if (pSpaceObjectGroupComponent->IsPrimaryElement())
             {
-                labelStream << "\1" << spaceObject.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+                labelStream << "\1" << metadata.m_ObjectName << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
             }
         }
         else
         {
-            labelStream << "\1" << spaceObject.GetObjectName();
+            labelStream << "\1" << metadata.m_ObjectName;
         }
 
         const std::string label(labelStream.str());
@@ -331,7 +330,7 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 }
 
 /*
-MakeOrbitalKey generates a hash from a SpaceObject's orbital parameters.
+MakeOrbitalKey generates a hash from orbital parameters.
 To be at the same position, objects need matching orbital elements:
 - Inclination, RAAN, Argument of Pericenter, Mean Motion: define the orbital plane and shape
 - Eccentricity: defines the orbital shape
@@ -340,7 +339,7 @@ To be at the same position, objects need matching orbital elements:
 Note: We're comparing at face value without epoch propagation, so this works best
 for objects with the same epoch (like docked spacecraft sharing TLE data).
 */
-size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
+size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const
 {
     // Quantize orbital elements:
     // Angles: 0.01 degree precision (2 decimal places)
@@ -348,12 +347,12 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
     auto quantize2 = [](float v) { return static_cast<int32_t>(std::round(v * 100.0f)); };
     auto quantize4 = [](float v) { return static_cast<int32_t>(std::round(v * 10000.0f)); };
 
-    const int32_t inc = quantize2(object.GetInclination());
-    const int32_t raan = quantize2(object.GetRightAscensionOfAscendingNode());
-    const int32_t aop = quantize2(object.GetArgumentOfPericenter());
-    const int32_t ma = quantize2(object.GetMeanAnomaly());
-    const int32_t mm = quantize4(object.GetMeanMotion());
-    const int32_t ecc = quantize4(object.GetEccentricity());
+    const int32_t inc = quantize2(orbitalElements.m_Inclination);
+    const int32_t raan = quantize2(orbitalElements.m_RightAscensionOfAscendingNode);
+    const int32_t aop = quantize2(orbitalElements.m_ArgumentOfPericenter);
+    const int32_t ma = quantize2(orbitalElements.m_MeanAnomaly);
+    const int32_t mm = quantize4(orbitalElements.m_MeanMotion);
+    const int32_t ecc = quantize4(orbitalElements.m_Eccentricity);
 
     // Combine hashes using boost-style hash combining.
     size_t hash = 0;

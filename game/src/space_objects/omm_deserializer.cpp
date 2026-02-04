@@ -3,9 +3,12 @@
 #include <sstream>
 
 #include "core/serialization.hpp"
-#include "space_objects/space_object.hpp"
+#include "space_objects/omm_deserializer.hpp"
 
 namespace WingsOfSteel
+{
+
+namespace OMMDeserializer
 {
 
 namespace
@@ -44,15 +47,7 @@ std::chrono::system_clock::time_point ParseEpoch(const std::string& epochStr)
 
 } // anonymous namespace
 
-SpaceObject::SpaceObject()
-{
-}
-
-SpaceObject::~SpaceObject()
-{
-}
-
-bool SpaceObject::DeserializeOMM(const Json::Data& data)
+std::optional<DeserializedData> Deserialize(const Json::Data& data)
 {
     auto objectName = Json::TryDeserializeString(nullptr, data, "OBJECT_NAME");
     auto objectId = Json::TryDeserializeString(nullptr, data, "OBJECT_ID");
@@ -70,21 +65,28 @@ bool SpaceObject::DeserializeOMM(const Json::Data& data)
         !raOfAscNode.has_value() || !argOfPericenter.has_value() || !meanAnomaly.has_value() ||
         !noradCatId.has_value())
     {
-        return false;
+        return std::nullopt;
     }
 
-    m_ObjectName = objectName.value();
-    m_ObjectId = objectId.value();
-    m_Epoch = ParseEpoch(epoch.value());
-    m_MeanMotion = meanMotion.value();
-    m_Eccentricity = eccentricity.value();
-    m_Inclination = inclination.value();
-    m_RightAscensionOfAscendingNode = raOfAscNode.value();
-    m_ArgumentOfPericenter = argOfPericenter.value();
-    m_MeanAnomaly = meanAnomaly.value();
-    m_NoradCatalogueId = noradCatId.value();
+    DeserializedData result;
 
-    return true;
+    // Populate orbital elements
+    result.orbitalElements.m_Epoch = ParseEpoch(epoch.value());
+    result.orbitalElements.m_MeanMotion = meanMotion.value();
+    result.orbitalElements.m_Eccentricity = eccentricity.value();
+    result.orbitalElements.m_Inclination = inclination.value();
+    result.orbitalElements.m_RightAscensionOfAscendingNode = raOfAscNode.value();
+    result.orbitalElements.m_ArgumentOfPericenter = argOfPericenter.value();
+    result.orbitalElements.m_MeanAnomaly = meanAnomaly.value();
+
+    // Populate metadata
+    result.metadata.m_ObjectName = objectName.value();
+    result.metadata.m_ObjectId = objectId.value();
+    result.metadata.m_NoradCatalogueId = noradCatId.value();
+
+    return result;
 }
+
+} // namespace OMMDeserializer
 
 } // namespace WingsOfSteel

@@ -10,7 +10,8 @@
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 
-#include "components/space_object_component.hpp"
+#include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "systems/orbit_simulation_system.hpp"
 
 namespace WingsOfSteel
@@ -18,6 +19,9 @@ namespace WingsOfSteel
 
 // Earth's gravitational parameter (km³/s²)
 static constexpr double kMu = 398600.4418;
+
+// Earth's mean radius (km)
+static constexpr double kEarthMeanRadius = 6371.0;
 
 // Earth's angular velocity (rad/s)
 static constexpr double kEarthAngularVelocity = 7.2921159e-5;
@@ -33,36 +37,54 @@ OrbitSimulationSystem::~OrbitSimulationSystem()
 void OrbitSimulationSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<const SpaceObjectComponent, TransformComponent>();
+    auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
-    view.each([&registry](const SpaceObjectComponent& spaceObjectComponent, TransformComponent& transformComponent) {
-        const SpaceObject& spaceObject = spaceObjectComponent.GetSpaceObject();
-        const glm::dvec3 position = CalculateCartesianPosition(spaceObject); // Position is in km, in ECI coordinates
+    view.each([&registry](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+        const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
         transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(position.y, position.z, position.x));
+
+        // Update orbital state component
+        orbitalState.m_PositionECI = position;
+
+        // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
+        const double n = orbitalElements.m_MeanMotion * 2.0 * glm::pi<double>() / 86400.0;
+        orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
+
+        // Calculate altitude
+        const double r = glm::length(position);
+        orbitalState.m_Altitude = r - kEarthMeanRadius;
+
+        // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
+        orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
+
+        // Calculate lat/lon
+        const glm::dvec2 latLon = ECIToLatLon(position);
+        orbitalState.m_Latitude = latLon.x;
+        orbitalState.m_Longitude = latLon.y;
     });
 }
 
 // Calculate Cartesian position (in km) from Keplerian orbital elements
 // Propagates the position to the current system time
-glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const SpaceObject& spaceObject)
+glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements)
 {
     // Convert mean motion from rev/day to rad/s
-    const double n = spaceObject.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
+    const double n = orbitalElements.m_MeanMotion * 2.0 * glm::pi<double>() / 86400.0;
 
     // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
     const double a = std::cbrt(kMu / (n * n));
 
-    const double e = spaceObject.GetEccentricity();
+    const double e = orbitalElements.m_Eccentricity;
 
     // Convert angles from degrees to radians
-    const double i = glm::radians(static_cast<double>(spaceObject.GetInclination()));
-    const double omega = glm::radians(static_cast<double>(spaceObject.GetRightAscensionOfAscendingNode())); // RAAN (Ω)
-    const double w = glm::radians(static_cast<double>(spaceObject.GetArgumentOfPericenter())); // Argument of pericenter (ω)
-    const double M_epoch = glm::radians(static_cast<double>(spaceObject.GetMeanAnomaly()));
+    const double i = glm::radians(static_cast<double>(orbitalElements.m_Inclination));
+    const double omega = glm::radians(static_cast<double>(orbitalElements.m_RightAscensionOfAscendingNode)); // RAAN (Ω)
+    const double w = glm::radians(static_cast<double>(orbitalElements.m_ArgumentOfPericenter)); // Argument of pericenter (ω)
+    const double M_epoch = glm::radians(static_cast<double>(orbitalElements.m_MeanAnomaly));
 
     // Propagate mean anomaly to current time
     const auto now = std::chrono::system_clock::now();
-    const auto epoch = spaceObject.GetEpoch();
+    const auto epoch = orbitalElements.m_Epoch;
     const double deltaSeconds = std::chrono::duration<double>(now - epoch).count();
     double M = M_epoch + n * deltaSeconds;
 

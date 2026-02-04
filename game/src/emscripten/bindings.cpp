@@ -5,8 +5,6 @@
 
 #include <core/log.hpp>
 
-#include "space_objects/space_object.hpp"
-
 namespace WingsOfSteel
 {
 
@@ -20,20 +18,11 @@ struct SpaceObjectInterop
     float argumentOfPericenter{ 0.0f };
     float meanAnomaly{ 0.0f };
     uint32_t noradCatalogueId{ 0 };
-
-    static SpaceObjectInterop Create(const SpaceObject& spaceObject)
-    {
-        return SpaceObjectInterop{
-            .objectName = spaceObject.GetObjectName(),
-            .objectId = spaceObject.GetObjectId(),
-            .eccentricity = spaceObject.GetEccentricity(),
-            .inclination = spaceObject.GetInclination(),
-            .rightAscensionOfAscendingNode = spaceObject.GetRightAscensionOfAscendingNode(),
-            .argumentOfPericenter = spaceObject.GetArgumentOfPericenter(),
-            .meanAnomaly = spaceObject.GetMeanAnomaly(),
-            .noradCatalogueId = spaceObject.GetNoradCatalogueId()
-        };
-    }
+    float semiMajorAxis{ 0.0f };
+    float altitude{ 0.0f };
+    float velocity{ 0.0f };
+    float latitude{ 0.0f };
+    float longitude{ 0.0f };
 };
 
 EMSCRIPTEN_BINDINGS(orbis)
@@ -46,7 +35,12 @@ EMSCRIPTEN_BINDINGS(orbis)
         .field("rightAscensionOfAscendingNode", &SpaceObjectInterop::rightAscensionOfAscendingNode)
         .field("argumentOfPericenter", &SpaceObjectInterop::argumentOfPericenter)
         .field("meanAnomaly", &SpaceObjectInterop::meanAnomaly)
-        .field("noradCatalogueId", &SpaceObjectInterop::noradCatalogueId);
+        .field("noradCatalogueId", &SpaceObjectInterop::noradCatalogueId)
+        .field("semiMajorAxis", &SpaceObjectInterop::semiMajorAxis)
+        .field("altitude", &SpaceObjectInterop::altitude)
+        .field("velocity", &SpaceObjectInterop::velocity)
+        .field("latitude", &SpaceObjectInterop::latitude)
+        .field("longitude", &SpaceObjectInterop::longitude);
 }
 
 } // namespace WingsOfSteel
