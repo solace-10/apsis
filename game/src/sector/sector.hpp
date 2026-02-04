@@ -9,6 +9,7 @@
 namespace WingsOfSteel
 {
 
+DECLARE_SMART_PTR(Database);
 DECLARE_SMART_PTR(SpaceObjectCatalogue);
 
 DECLARE_SMART_PTR(Sector);
@@ -24,6 +25,7 @@ public:
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
 
+    Database* GetDatabase() { return m_pDatabase.get(); }
     SpaceObjectCatalogue* GetSpaceObjectCatalogue() { return m_pSpaceObjectCatalogue.get(); }
     EntitySharedPtr GetEarth() const { return m_pEarth; }
     EntitySharedPtr GetSelectedSpaceObject() const { return m_pSelectedSpaceObject.lock(); }
@@ -32,8 +34,10 @@ public:
 private:
     void DrawCameraDebugUI();
     void SpawnLight();
+    void InitializeDatabase();
     void InitializeSpaceObjectCatalogue();
 
+    DatabaseUniquePtr m_pDatabase;
     SpaceObjectCatalogueUniquePtr m_pSpaceObjectCatalogue;
     EntitySharedPtr m_pCamera;
     EntitySharedPtr m_pLight;

@@ -16,11 +16,11 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/atmosphere_component.hpp"
-#include "components/label_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/space_object_component.hpp"
 #include "resources/resource.fwd.hpp"
+#include "sector/database.hpp"
 #include "sector/sector.hpp"
 #include "space_objects/space_object.hpp"
 #include "space_objects/space_object_catalogue.hpp"
@@ -97,6 +97,7 @@ void Sector::Initialize()
     atmosphereComponent.scaleDepth = 0.25f; // Scale height
     atmosphereComponent.numSamples = 5; // Ray march samples
 
+    InitializeDatabase();
     InitializeSpaceObjectCatalogue();
 }
 
@@ -121,6 +122,15 @@ void Sector::Update(float delta)
         }
     }
 #endif
+}
+
+void Sector::InitializeDatabase()
+{
+    m_pDatabase = std::make_unique<Database>();
+    m_pDatabase->GetAllObjects(
+        [](const Json::Data& data) {},
+        [](const std::string& error) {}
+    );
 }
 
 void Sector::InitializeSpaceObjectCatalogue()

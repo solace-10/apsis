@@ -23,6 +23,12 @@ if [[ ! "$BUILD_TYPE" =~ ^(debug|release)$ ]]; then
     exit 1
 fi
 
+if [[ "$PLATFORM" == "web" ]]; then
+    set -a # automatically export all variables
+    source .env
+    set +a # disable auto-export
+fi
+
 PRESET="${BUILD_TYPE}-${PLATFORM}"
 
 echo "Configuring with preset: $PRESET"
