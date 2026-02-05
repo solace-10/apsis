@@ -62,7 +62,7 @@ def _get_objects(database_connection):
         if epoch and hasattr(epoch, 'isoformat'):
             epoch = epoch.isoformat()
         objects.append({
-            "norad_id": row[0],
+            "norad_id": int(row[0]),
             "name": row[1],
             "epoch": epoch,
             "mean_motion": float(row[3]) if row[3] else None,
@@ -89,7 +89,7 @@ def _get_explicit_groups(database_connection):
 
     groups = {}
     for row in rows:
-        norad_id = row[0]
+        norad_id = int(row[0])
         group_name = row[1]
         if group_name not in groups:
             groups[group_name] = []
@@ -103,5 +103,5 @@ def _get_debris_group(database_connection):
         WHERE object_type = 'DEBRIS'
     """)
 
-    groups = {"debris": [row[0] for row in rows]}
+    groups = {"debris": [int(row[0]) for row in rows]}
     return groups
