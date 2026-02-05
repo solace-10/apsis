@@ -58,7 +58,7 @@
 		position: fixed;
 		top: 1rem;
 		left: 1rem;
-		width: 260px;
+		width: 360px;
 		transition: width 0.2s ease;
 	}
 

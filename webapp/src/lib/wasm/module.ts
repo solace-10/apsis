@@ -68,14 +68,18 @@ export function initializeCallbacks(): void {
 
 // Mock data for development
 const mockGroups: SpaceObjectGroup[] = [
+	{ id: 'last30days', name: 'Last 30 days\' launches', color: '#CC6600', visible: true, count: 5 },
 	{ id: 'stations', name: 'Space Stations', color: '#FFD700', visible: true, count: 5 },
 	{ id: 'starlink', name: 'Starlink', color: '#4A90D9', visible: true, count: 5400 },
 	{ id: 'oneweb', name: 'OneWeb', color: '#7B68EE', visible: true, count: 634 },
 	{ id: 'gps', name: 'GPS', color: '#32CD32', visible: true, count: 31 },
-	{ id: 'glonass', name: 'GLONASS', color: '#FF6347', visible: true, count: 24 },
-	{ id: 'galileo', name: 'Galileo', color: '#00CED1', visible: true, count: 28 },
-	{ id: 'weather', name: 'Weather Satellites', color: '#87CEEB', visible: true, count: 42 },
-	{ id: 'debris', name: 'Debris', color: '#808080', visible: false, count: 23000 }
+	{ id: 'gnss', name: 'GNSS', color: '#FF6347', visible: true, count: 24 },
+	{ id: 'geo', name: 'Active geosynchronous', color: '#00CED1', visible: true, count: 28 },
+	{ id: 'science', name: 'Science', color: '#87CEEB', visible: true, count: 42 },
+	{ id: 'cosmos-1408-debris', name: 'Russian ASAT test debris', color: '#880040', visible: false, count: 23000 },
+	{ id: 'debris', name: 'Debris', color: '#808080', visible: false, count: 23000 },
+	{ id: 'analyst', name: 'Well-tracked analyst', color: '#404040', visible: false, count: 200 },
+	{ id: 'other', name: 'Other', color: '#DD8080', visible: false, count: 200 }
 ];
 
 const mockObjects: SpaceObject[] = [
