@@ -347,12 +347,12 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& o
     auto quantize2 = [](float v) { return static_cast<int32_t>(std::round(v * 100.0f)); };
     auto quantize4 = [](float v) { return static_cast<int32_t>(std::round(v * 10000.0f)); };
 
-    const int32_t inc = quantize2(orbitalElements.m_Inclination);
-    const int32_t raan = quantize2(orbitalElements.m_RightAscensionOfAscendingNode);
-    const int32_t aop = quantize2(orbitalElements.m_ArgumentOfPericenter);
-    const int32_t ma = quantize2(orbitalElements.m_MeanAnomaly);
-    const int32_t mm = quantize4(orbitalElements.m_MeanMotion);
-    const int32_t ecc = quantize4(orbitalElements.m_Eccentricity);
+    const int32_t inc = quantize2(orbitalElements.GetInclination());
+    const int32_t raan = quantize2(orbitalElements.GetRightAscensionOfAscendingNode());
+    const int32_t aop = quantize2(orbitalElements.GetArgumentOfPericenter());
+    const int32_t ma = quantize2(orbitalElements.GetMeanAnomaly());
+    const int32_t mm = quantize4(orbitalElements.GetMeanMotion());
+    const int32_t ecc = quantize4(orbitalElements.GetEccentricity());
 
     // Combine hashes using boost-style hash combining.
     size_t hash = 0;

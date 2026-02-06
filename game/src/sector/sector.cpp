@@ -2,6 +2,7 @@
 #include <imgui.h>
 
 #include <core/log.hpp>
+#include <core/serialization.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <resources/resource_data_store.hpp>
@@ -23,13 +24,14 @@
 #include "components/sector_camera_component.hpp"
 #include "resources/resource.fwd.hpp"
 #include "sector/database.hpp"
+#include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
-#include "space_objects/omm_deserializer.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_render_system.hpp"
+#include "game.hpp"
 
 #if defined(TARGET_PLATFORM_WEB)
 #include "emscripten/web_interop.hpp"
@@ -98,8 +100,8 @@ void Sector::Initialize()
     atmosphereComponent.scaleDepth = 0.25f; // Scale height
     atmosphereComponent.numSamples = 5; // Ray march samples
 
+    InitializeGroupFilters();
     InitializeDatabase();
-    InitializeSpaceObjects();
 }
 
 void Sector::Update(float delta)
@@ -129,12 +131,82 @@ void Sector::InitializeDatabase()
 {
     m_pDatabase = std::make_unique<Database>();
     m_pDatabase->GetAllObjects(
-        [](const Json::Data& data) {},
+        [](const Json::Data& data) {
+            Sector* pSector = Game::Get()->GetSector();
+            if (pSector)
+            {
+                pSector->InitializeSpaceObjects(data["objects"], data["groups"]);
+            }
+        },
         [](const std::string& error) {});
 }
 
-void Sector::InitializeSpaceObjects()
+void Sector::InitializeGroupFilters()
 {
+    m_pGroupFilters = std::make_unique<GroupFilters>();
+    m_pGroupFilters->RegisterGroupFilter("last30days", true);
+    m_pGroupFilters->RegisterGroupFilter("stations", true);
+    m_pGroupFilters->RegisterGroupFilter("starlink", false);
+    m_pGroupFilters->RegisterGroupFilter("oneweb", true);
+    m_pGroupFilters->RegisterGroupFilter("gps", true);
+    m_pGroupFilters->RegisterGroupFilter("gnss", false);
+    m_pGroupFilters->RegisterGroupFilter("geo", false);
+    m_pGroupFilters->RegisterGroupFilter("science", true);
+    m_pGroupFilters->RegisterGroupFilter("cosmos-1408-debris", false);
+    m_pGroupFilters->RegisterGroupFilter("debris", false);
+    m_pGroupFilters->RegisterGroupFilter("analyst", false);
+    m_pGroupFilters->RegisterGroupFilter("other", false);
+}
+
+void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::Data& groupsData)
+{
+    // Identify the highest NORAD Id so we can get pre-allocate a vector.
+    // Right now the Ids are always below <100k, but this will almost certainly change in the future.
+    // Alternatively we could start at 100k and then just double as necessary.
+    int32_t highestNoradId = 0;
+    for (const auto& objectData : objectsData)
+    {
+        const int32_t noradId = Json::DeserializeInteger(nullptr, objectData, "norad_id");
+        highestNoradId = glm::max(noradId, highestNoradId);
+    }
+
+    m_NoradIdIndex.resize(highestNoradId + 1);
+
+    Log::Info() << "Highest NORAD Id: " << highestNoradId;
+    for (const auto& objectData : objectsData)
+    {
+        EntitySharedPtr pEntity = CreateEntity();
+
+        OrbitalElementsComponent& orbitalElementsComponent = pEntity->AddComponent<OrbitalElementsComponent>();
+        orbitalElementsComponent.Deserialize(nullptr, objectData);
+
+        m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
+    }
+
+    Log::Info() << "Loaded " << objectsData.size() << " space objects.";
+
+    for (const std::string& groupFilterName : m_pGroupFilters->GetGroupFilterNames())
+    {
+        // The "other" group is dynamically generated at runtime and won't be part of the received data.
+        if (groupFilterName == "other")
+        {
+            continue;
+        }
+        
+        if (!groupsData.contains(groupFilterName))
+        {
+            Log::Warning() << "Data missing from expected group '" << groupFilterName << "'.";
+            continue;
+        }
+
+        const auto& ids = groupsData[groupFilterName];
+
+        GroupFilter* pGroupFilter = m_pGroupFilters->GetGroupFilter(groupFilterName);
+        pGroupFilter->SetCount(ids.size());
+        Log::Info() << "Group '" << pGroupFilter->GetName() << "': " << pGroupFilter->GetCount() << " objects.";
+    }
+    
+    /*
     GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
         ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
         size_t successfulEntries = 0;
@@ -182,6 +254,7 @@ void Sector::InitializeSpaceObjects()
         SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
         pSpaceObjectSystem->GenerateLabels();
     });
+    */
 }
 
 void Sector::ShowCameraDebugUI(bool state)
@@ -258,12 +331,14 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
 
 EntitySharedPtr Sector::GetEntityByNoradId(uint32_t noradId) const
 {
-    auto it = m_NoradIdIndex.find(noradId);
-    if (it != m_NoradIdIndex.end())
+    if (noradId >= m_NoradIdIndex.size())
     {
-        return it->second;
+        return nullptr;
     }
-    return nullptr;
+    else
+    {
+        return m_NoradIdIndex[noradId];
+    }
 }
 
 } // namespace WingsOfSteel

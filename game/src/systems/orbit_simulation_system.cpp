@@ -47,7 +47,7 @@ void OrbitSimulationSystem::Update(float delta)
         orbitalState.m_PositionECI = position;
 
         // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
-        const double n = orbitalElements.m_MeanMotion * 2.0 * glm::pi<double>() / 86400.0;
+        const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
         orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
 
         // Calculate altitude
@@ -69,22 +69,22 @@ void OrbitSimulationSystem::Update(float delta)
 glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements)
 {
     // Convert mean motion from rev/day to rad/s
-    const double n = orbitalElements.m_MeanMotion * 2.0 * glm::pi<double>() / 86400.0;
+    const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
 
     // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
     const double a = std::cbrt(kMu / (n * n));
 
-    const double e = orbitalElements.m_Eccentricity;
+    const double e = orbitalElements.GetEccentricity();
 
     // Convert angles from degrees to radians
-    const double i = glm::radians(static_cast<double>(orbitalElements.m_Inclination));
-    const double omega = glm::radians(static_cast<double>(orbitalElements.m_RightAscensionOfAscendingNode)); // RAAN (Ω)
-    const double w = glm::radians(static_cast<double>(orbitalElements.m_ArgumentOfPericenter)); // Argument of pericenter (ω)
-    const double M_epoch = glm::radians(static_cast<double>(orbitalElements.m_MeanAnomaly));
+    const double i = glm::radians(static_cast<double>(orbitalElements.GetInclination()));
+    const double omega = glm::radians(static_cast<double>(orbitalElements.GetRightAscensionOfAscendingNode())); // RAAN (Ω)
+    const double w = glm::radians(static_cast<double>(orbitalElements.GetArgumentOfPericenter())); // Argument of pericenter (ω)
+    const double M_epoch = glm::radians(static_cast<double>(orbitalElements.GetMeanAnomaly()));
 
     // Propagate mean anomaly to current time
     const auto now = std::chrono::system_clock::now();
-    const auto epoch = orbitalElements.m_Epoch;
+    const auto epoch = orbitalElements.GetEpoch();
     const double deltaSeconds = std::chrono::duration<double>(now - epoch).count();
     double M = M_epoch + n * deltaSeconds;
 

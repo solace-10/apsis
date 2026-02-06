@@ -1,9 +1,11 @@
 #pragma once
 
 #include <unordered_map>
+#include <vector>
 
 #include <entt/entt.hpp>
 #include <glm/vec3.hpp>
+#include <nlohmann/json.hpp>
 
 #include <core/signal.hpp>
 #include <core/smart_ptr.hpp>
@@ -12,7 +14,13 @@
 namespace WingsOfSteel
 {
 
+namespace Json
+{
+using Data = nlohmann::json;
+}
+
 DECLARE_SMART_PTR(Database);
+DECLARE_SMART_PTR(GroupFilters);
 
 DECLARE_SMART_PTR(Sector);
 class Sector : public Scene
@@ -23,6 +31,8 @@ public:
 
     void Initialize() override;
     void Update(float delta) override;
+
+    void InitializeSpaceObjects(const Json::Data& objectsData, const Json::Data& groupsData);
 
     void ShowCameraDebugUI(bool state);
     void ShowGrid(bool state);
@@ -38,7 +48,7 @@ private:
     void DrawCameraDebugUI();
     void SpawnLight();
     void InitializeDatabase();
-    void InitializeSpaceObjects();
+    void InitializeGroupFilters();
 
     DatabaseUniquePtr m_pDatabase;
     EntitySharedPtr m_pCamera;
@@ -47,7 +57,8 @@ private:
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
     EntityWeakPtr m_pSelectedSpaceObject;
-    std::unordered_map<uint32_t, EntitySharedPtr> m_NoradIdIndex;
+    std::vector<EntitySharedPtr> m_NoradIdIndex;
+    GroupFiltersUniquePtr m_pGroupFilters;
 };
 
 } // namespace WingsOfSteel
