@@ -15,7 +15,7 @@ public:
     GroupFilters() = default;
     ~GroupFilters() = default;
 
-    void RegisterGroupFilter(const std::string& name, bool enabled);
+    void RegisterGroupFilter(const std::string& name, const std::string& displayName, const std::string& color, bool enabled);
     std::vector<std::string> GetGroupFilterNames() const;
     GroupFilter* GetGroupFilter(const std::string& name);
     GroupFilter* GetGroupFilter(size_t index);

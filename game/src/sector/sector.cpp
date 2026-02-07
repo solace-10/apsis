@@ -158,18 +158,18 @@ void Sector::InitializeDatabase()
 void Sector::InitializeGroupFilters()
 {
     m_pGroupFilters = std::make_unique<GroupFilters>();
-    m_pGroupFilters->RegisterGroupFilter("last30days", true);
-    m_pGroupFilters->RegisterGroupFilter("stations", true);
-    m_pGroupFilters->RegisterGroupFilter("starlink", false);
-    m_pGroupFilters->RegisterGroupFilter("oneweb", true);
-    m_pGroupFilters->RegisterGroupFilter("gps", true);
-    m_pGroupFilters->RegisterGroupFilter("gnss", false);
-    m_pGroupFilters->RegisterGroupFilter("geo", false);
-    m_pGroupFilters->RegisterGroupFilter("science", true);
-    m_pGroupFilters->RegisterGroupFilter("cosmos-1408-debris", false);
-    m_pGroupFilters->RegisterGroupFilter("debris", false);
-    m_pGroupFilters->RegisterGroupFilter("analyst", false);
-    m_pGroupFilters->RegisterGroupFilter("other", false);
+    m_pGroupFilters->RegisterGroupFilter("last30days", "Last 30 days' launches", "#CC6600", true);
+    m_pGroupFilters->RegisterGroupFilter("stations", "Space Stations", "#FFD700", true);
+    m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#4A90D9", false);
+    m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#7B68EE", true);
+    m_pGroupFilters->RegisterGroupFilter("gps", "GPS", "#32CD32", true);
+    m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#FF6347", false);
+    m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#00CED1", false);
+    m_pGroupFilters->RegisterGroupFilter("science", "Science", "#87CEEB", true);
+    m_pGroupFilters->RegisterGroupFilter("cosmos-1408-debris", "Russian ASAT test debris", "#880040", false);
+    m_pGroupFilters->RegisterGroupFilter("debris", "Debris", "#808080", false);
+    m_pGroupFilters->RegisterGroupFilter("analyst", "Well-tracked analyst", "#404040", false);
+    m_pGroupFilters->RegisterGroupFilter("other", "Other", "#DD8080", false);
 }
 
 void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::Data& groupsData)
@@ -265,7 +265,14 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         pGroupFilter->SetCount(idsInGroup);
         Log::Info() << "Group '" << pGroupFilter->GetName() << "': " << pGroupFilter->GetCount() << " objects.";
     }
-    
+
+#if defined(TARGET_PLATFORM_WEB)
+    if (WebInterop* pWebInterop = WebInterop::GetInstance())
+    {
+        pWebInterop->NotifyGroupFiltersChanged(m_pGroupFilters.get());
+    }
+#endif
+
     /*
     GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
         ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);

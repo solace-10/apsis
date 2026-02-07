@@ -5,6 +5,8 @@
 
 #include <core/log.hpp>
 
+#include "emscripten/web_interop.hpp"
+
 namespace WingsOfSteel
 {
 
@@ -41,6 +43,8 @@ EMSCRIPTEN_BINDINGS(orbis)
         .field("velocity", &SpaceObjectInterop::velocity)
         .field("latitude", &SpaceObjectInterop::latitude)
         .field("longitude", &SpaceObjectInterop::longitude);
+
+    emscripten::function("setGroupFilterEnabled", &WebInterop::SetGroupFilterEnabled);
 }
 
 } // namespace WingsOfSteel

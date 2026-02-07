@@ -13,6 +13,9 @@
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
 #include "emscripten/web_interop.hpp"
+#include "game.hpp"
+#include "sector/group_filters.hpp"
+#include "sector/sector.hpp"
 
 namespace WingsOfSteel
 {
@@ -133,6 +136,75 @@ void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
     interop.set("longitude", static_cast<float>(orbitalState.m_Longitude));
 
     onUpdated(interop);
+}
+
+void WebInterop::NotifyGroupFiltersChanged(GroupFilters* pGroupFilters)
+{
+    if (!pGroupFilters)
+    {
+        return;
+    }
+
+    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    if (callbacks.isUndefined() || callbacks.isNull())
+    {
+        return;
+    }
+
+    emscripten::val onChanged = callbacks["onGroupFiltersChanged"];
+    if (onChanged.isUndefined())
+    {
+        return;
+    }
+
+    emscripten::val groupsArray = emscripten::val::array();
+    for (const std::string& name : pGroupFilters->GetGroupFilterNames())
+    {
+        GroupFilter* pFilter = pGroupFilters->GetGroupFilter(name);
+        if (!pFilter)
+        {
+            continue;
+        }
+
+        emscripten::val group = emscripten::val::object();
+        group.set("id", pFilter->GetName());
+        group.set("name", pFilter->GetDisplayName());
+        group.set("color", pFilter->GetColor());
+        group.set("visible", pFilter->IsEnabled());
+        group.set("count", pFilter->GetCount());
+        groupsArray.call<void>("push", group);
+    }
+
+    onChanged(groupsArray);
+}
+
+void WebInterop::SetGroupFilterEnabled(const std::string& groupId, bool enabled)
+{
+    Sector* pSector = Game::Get()->GetSector();
+    if (!pSector)
+    {
+        return;
+    }
+
+    GroupFilters* pGroupFilters = pSector->GetGroupFilters();
+    if (!pGroupFilters)
+    {
+        return;
+    }
+
+    GroupFilter* pFilter = pGroupFilters->GetGroupFilter(groupId);
+    if (!pFilter)
+    {
+        Log::Warning() << "SetGroupFilterEnabled: unknown group '" << groupId << "'.";
+        return;
+    }
+
+    pFilter->SetEnabled(enabled);
+
+    if (WebInterop* pWebInterop = GetInstance())
+    {
+        pWebInterop->NotifyGroupFiltersChanged(pGroupFilters);
+    }
 }
 
 } // namespace WingsOfSteel

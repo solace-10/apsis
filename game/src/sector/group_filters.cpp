@@ -6,10 +6,10 @@
 namespace WingsOfSteel
 {
 
-void GroupFilters::RegisterGroupFilter(const std::string& name, bool enabled)
+void GroupFilters::RegisterGroupFilter(const std::string& name, const std::string& displayName, const std::string& color, bool enabled)
 {
     const uint8_t index = static_cast<uint8_t>(m_GroupFilters.size());
-    GroupFilter groupFilter(name, enabled, index);
+    GroupFilter groupFilter(name, displayName, color, enabled, index);
     m_GroupFilters.push_back(std::move(groupFilter));
     m_NameToGroupFilterIndex[name] = index;
     

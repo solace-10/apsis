@@ -38,6 +38,7 @@ public:
     void ShowGrid(bool state);
 
     Database* GetDatabase() { return m_pDatabase.get(); }
+    GroupFilters* GetGroupFilters() { return m_pGroupFilters.get(); }
     EntitySharedPtr GetEarth() const { return m_pEarth; }
     EntitySharedPtr GetSelectedSpaceObject() const { return m_pSelectedSpaceObject.lock(); }
     void SetSelectedSpaceObject(EntitySharedPtr pEntity);

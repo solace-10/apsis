@@ -17,41 +17,43 @@
 	}
 </script>
 
-<div class="filter-panel panel" class:collapsed={!expanded}>
-	<header class="panel-header">
-		<button class="toggle-btn" onclick={() => (expanded = !expanded)} aria-label="Toggle panel">
-			<span class="toggle-icon">{expanded ? '◀' : '▶'}</span>
-		</button>
+{#if $groups.length > 0}
+	<div class="filter-panel panel" class:collapsed={!expanded}>
+		<header class="panel-header">
+			<button class="toggle-btn" onclick={() => (expanded = !expanded)} aria-label="Toggle panel">
+				<span class="toggle-icon">{expanded ? '◀' : '▶'}</span>
+			</button>
+			{#if expanded}
+				<span class="panel-title">Object Groups</span>
+				<div class="header-actions">
+					<button class="btn btn-sm" onclick={() => handleToggleAll(true)} title="Show all">
+						All
+					</button>
+					<button class="btn btn-sm" onclick={() => handleToggleAll(false)} title="Hide all">
+						None
+					</button>
+				</div>
+			{/if}
+		</header>
+
 		{#if expanded}
-			<span class="panel-title">Object Groups</span>
-			<div class="header-actions">
-				<button class="btn btn-sm" onclick={() => handleToggleAll(true)} title="Show all">
-					All
-				</button>
-				<button class="btn btn-sm" onclick={() => handleToggleAll(false)} title="Hide all">
-					None
-				</button>
+			<div class="panel-body panel-content">
+				{#each $groups as group (group.id)}
+					<label class="group-item">
+						<input
+							type="checkbox"
+							checked={group.visible}
+							onchange={() => toggleGroupVisibility(group.id)}
+						/>
+						<span class="group-color" style="--color: {group.color}"></span>
+						<span class="group-name">{group.name}</span>
+						<span class="group-count">{formatCount(group.count)}</span>
+					</label>
+				{/each}
 			</div>
 		{/if}
-	</header>
-
-	{#if expanded}
-		<div class="panel-body panel-content">
-			{#each $groups as group (group.id)}
-				<label class="group-item">
-					<input
-						type="checkbox"
-						checked={group.visible}
-						onchange={() => toggleGroupVisibility(group.id)}
-					/>
-					<span class="group-color" style="--color: {group.color}"></span>
-					<span class="group-name">{group.name}</span>
-					<span class="group-count">{formatCount(group.count)}</span>
-				</label>
-			{/each}
-		</div>
-	{/if}
-</div>
+	</div>
+{/if}
 
 <style>
 	.filter-panel {

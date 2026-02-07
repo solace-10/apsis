@@ -16,20 +16,24 @@ import { fromInterop } from './types';
  * Callback type for space object selection.
  */
 export type SpaceObjectCallback = (object: SpaceObject | null) => void;
+export type GroupFiltersCallback = (groups: SpaceObjectGroup[]) => void;
 
 // Callbacks registered by the app
 let onSelectionChange: SpaceObjectCallback | null = null;
 let onObjectUpdate: SpaceObjectCallback | null = null;
+let onGroupFiltersChange: GroupFiltersCallback | null = null;
 
 /**
  * Register callbacks for space object updates from C++.
  */
 export function registerCallbacks(
 	onSelected: SpaceObjectCallback,
-	onUpdated: SpaceObjectCallback
+	onUpdated: SpaceObjectCallback,
+	onGroupFilters?: GroupFiltersCallback
 ): void {
 	onSelectionChange = onSelected;
 	onObjectUpdate = onUpdated;
+	onGroupFiltersChange = onGroupFilters ?? null;
 }
 
 /**
@@ -41,6 +45,7 @@ export function initializeCallbacks(): void {
 		onSpaceObjectSelected: (interop: SpaceObjectInterop) => void;
 		onSpaceObjectDeselected: () => void;
 		onSpaceObjectUpdated: (interop: SpaceObjectInterop) => void;
+		onGroupFiltersChanged: (groups: SpaceObjectGroup[]) => void;
 	}
 
 	const callbacks: OrbisCallbacks = {
@@ -60,27 +65,19 @@ export function initializeCallbacks(): void {
 			if (onObjectUpdate) {
 				onObjectUpdate(spaceObject);
 			}
+		},
+		onGroupFiltersChanged: (groups: SpaceObjectGroup[]) => {
+			if (onGroupFiltersChange) {
+				onGroupFiltersChange(groups);
+			}
 		}
 	};
 
 	(window as unknown as { orbisCallbacks: OrbisCallbacks }).orbisCallbacks = callbacks;
 }
 
-// Mock data for development
-const mockGroups: SpaceObjectGroup[] = [
-	{ id: 'last30days', name: 'Last 30 days\' launches', color: '#CC6600', visible: true, count: 5 },
-	{ id: 'stations', name: 'Space Stations', color: '#FFD700', visible: true, count: 5 },
-	{ id: 'starlink', name: 'Starlink', color: '#4A90D9', visible: true, count: 5400 },
-	{ id: 'oneweb', name: 'OneWeb', color: '#7B68EE', visible: true, count: 634 },
-	{ id: 'gps', name: 'GPS', color: '#32CD32', visible: true, count: 31 },
-	{ id: 'gnss', name: 'GNSS', color: '#FF6347', visible: true, count: 24 },
-	{ id: 'geo', name: 'Active geosynchronous', color: '#00CED1', visible: true, count: 28 },
-	{ id: 'science', name: 'Science', color: '#87CEEB', visible: true, count: 42 },
-	{ id: 'cosmos-1408-debris', name: 'Russian ASAT test debris', color: '#880040', visible: false, count: 23000 },
-	{ id: 'debris', name: 'Debris', color: '#808080', visible: false, count: 23000 },
-	{ id: 'analyst', name: 'Well-tracked analyst', color: '#404040', visible: false, count: 200 },
-	{ id: 'other', name: 'Other', color: '#DD8080', visible: false, count: 200 }
-];
+// Groups are populated from C++ via onGroupFiltersChanged callback.
+const mockGroups: SpaceObjectGroup[] = [];
 
 const mockObjects: SpaceObject[] = [
 	{
@@ -260,6 +257,26 @@ export function onStateChange(callback: StateChangeCallback): () => void {
 			stateChangeCallbacks.splice(index, 1);
 		}
 	};
+}
+
+/**
+ * Call the C++ SetGroupFilterEnabled binding via emscripten.
+ * Falls back to mock module behavior if WASM is not loaded.
+ */
+export function callSetGroupFilterEnabled(groupId: string, enabled: boolean): void {
+	const wasmModule = (window as Record<string, unknown>).Module as
+		| { setGroupFilterEnabled?: (groupId: string, enabled: boolean) => void }
+		| undefined;
+	if (wasmModule?.setGroupFilterEnabled) {
+		wasmModule.setGroupFilterEnabled(groupId, enabled);
+	} else {
+		// Mock fallback
+		const group = mockGroups.find((g) => g.id === groupId);
+		if (group) {
+			group.visible = enabled;
+			notifyStateChange();
+		}
+	}
 }
 
 /**

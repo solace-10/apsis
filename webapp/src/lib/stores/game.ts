@@ -5,7 +5,14 @@
 
 import { writable, derived, type Readable } from 'svelte/store';
 import type { SpaceObject, SpaceObjectGroup, OverlayState, OrbisModule } from '$lib/wasm/types';
-import { getModule, onStateChange, loadModule, registerCallbacks, initializeCallbacks } from '$lib/wasm/module';
+import {
+	getModule,
+	onStateChange,
+	loadModule,
+	registerCallbacks,
+	initializeCallbacks,
+	callSetGroupFilterEnabled
+} from '$lib/wasm/module';
 
 // Module instance store
 const moduleStore = writable<OrbisModule | null>(null);
@@ -39,6 +46,13 @@ function syncFromModule(module: OrbisModule): void {
 }
 
 /**
+ * Update groups store from C++ interop data.
+ */
+export function setGroupsFromInterop(groups: SpaceObjectGroup[]): void {
+	groupsStore.set(groups);
+}
+
+/**
  * Set up C++ -> JS callbacks for space object updates.
  * Must be called before WASM module loads.
  */
@@ -49,6 +63,9 @@ export function setupWasmCallbacks(): void {
 		},
 		(object: SpaceObject | null) => {
 			selectedObjectStore.set(object);
+		},
+		(groups: SpaceObjectGroup[]) => {
+			setGroupsFromInterop(groups);
 		}
 	);
 	initializeCallbacks();
@@ -118,20 +135,21 @@ export function selectObject(id: number | null): void {
  * Toggle visibility of an object group.
  */
 export function toggleGroupVisibility(groupId: string): void {
-	const module = getModule();
-	const currentGroups = module.getGroups();
-	const group = currentGroups.find((g) => g.id === groupId);
-	if (group) {
-		module.setGroupVisibility(groupId, !group.visible);
-	}
+	let currentVisible = false;
+	groups.subscribe((g) => {
+		const group = g.find((gr) => gr.id === groupId);
+		if (group) {
+			currentVisible = group.visible;
+		}
+	})();
+	callSetGroupFilterEnabled(groupId, !currentVisible);
 }
 
 /**
  * Set visibility of an object group.
  */
 export function setGroupVisibility(groupId: string, visible: boolean): void {
-	const module = getModule();
-	module.setGroupVisibility(groupId, visible);
+	callSetGroupFilterEnabled(groupId, visible);
 }
 
 /**
