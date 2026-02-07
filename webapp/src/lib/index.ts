@@ -11,4 +11,4 @@ export * from './stores/game';
 export type * from './wasm/types';
 
 // WASM module
-export { getModule, loadModule, onStateChange } from './wasm/module';
+export { loadModule } from './wasm/module';

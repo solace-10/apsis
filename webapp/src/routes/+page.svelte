@@ -5,7 +5,7 @@
 	import InfoPanel from '$lib/components/InfoPanel.svelte';
 	import FilterControls from '$lib/components/FilterControls.svelte';
 	// import OverlayManager from '$lib/components/OverlayManager.svelte';
-	import { initializeGame, selectObject } from '$lib/stores/game';
+	import { initializeGame } from '$lib/stores/game';
 
 	onMount(() => {
 		// Initialize mock stores (will be replaced by real WASM bindings later)
