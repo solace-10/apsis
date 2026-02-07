@@ -151,6 +151,13 @@ void SpaceObjectRenderSystem::Update(float delta)
         return;
     }
 
+    if (m_LabelsDirty)
+    {
+        GenerateSpaceObjectGroups();
+        GenerateLabelsVertexData();
+        m_LabelsDirty = false;
+    }
+
     EntitySharedPtr pEarth = Game::Get()->GetSector()->GetEarth();
     if (!pEarth || !pEarth->HasComponent<PlanetComponent>())
     {
@@ -205,13 +212,6 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     if (GetActiveScene() == nullptr || !m_RenderPipeline || !m_pFont || !m_pFont->GetTexture())
     {
         return;
-    }
-
-    if (m_LabelsDirty)
-    {
-        GenerateSpaceObjectGroups();
-        GenerateLabelsVertexData();
-        m_LabelsDirty = false;
     }
 
     // Create texture bind group lazily once the font texture is available
