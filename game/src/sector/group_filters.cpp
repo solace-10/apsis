@@ -1,3 +1,6 @@
+#include <core/log.hpp>
+
+#include "components/metadata_component.hpp"
 #include "sector/group_filters.hpp"
 
 namespace WingsOfSteel
@@ -9,6 +12,11 @@ void GroupFilters::RegisterGroupFilter(const std::string& name, bool enabled)
     GroupFilter groupFilter(name, enabled, index);
     m_GroupFilters.push_back(std::move(groupFilter));
     m_NameToGroupFilterIndex[name] = index;
+    
+    if (m_GroupFilters.size() >= MetadataComponent::MaximumSupportedGroupFilters)
+    {
+        Log::Error() << "Number of group filters exceeds component capacity.";
+    }
 }
 
 std::vector<std::string> GroupFilters::GetGroupFilterNames() const

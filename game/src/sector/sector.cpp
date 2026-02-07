@@ -180,6 +180,8 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         OrbitalElementsComponent& orbitalElementsComponent = pEntity->AddComponent<OrbitalElementsComponent>();
         orbitalElementsComponent.Deserialize(nullptr, objectData);
 
+        pEntity->AddComponent<MetadataComponent>();
+
         m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
     }
 
@@ -199,10 +201,45 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
             continue;
         }
 
-        const auto& ids = groupsData[groupFilterName];
-
+        const auto& idsData = groupsData[groupFilterName];
         GroupFilter* pGroupFilter = m_pGroupFilters->GetGroupFilter(groupFilterName);
-        pGroupFilter->SetCount(ids.size());
+        size_t idsInGroup = 0;
+        for (const auto& idData : idsData)
+        {
+            if (!idData.is_number_integer())
+            {
+                Log::Warning() << "Invalid ID type in group data.";
+                continue;
+            }
+
+            const int32_t idFromData = idData.get<int32_t>();
+            size_t id = 0;
+            if (idFromData <= 0)
+            {
+                Log::Warning() << "Invalid ID in group data: " << idFromData;
+                continue;
+            }
+
+            id = static_cast<size_t>(idFromData);
+            if (id >= m_NoradIdIndex.size())
+            {
+                Log::Warning() << "ID in group data exceeds highest loaded Norad ID: " << id;
+                continue;
+            }
+
+            EntitySharedPtr pEntity = m_NoradIdIndex[id];
+            if (!pEntity)
+            {
+                Log::Warning() << "Data mismatch: group " << pGroupFilter->GetName() << " has object " << id << " which isn't in the loaded object data.";
+                continue;
+            }
+            
+            MetadataComponent& metadataComponent = pEntity->GetComponent<MetadataComponent>();
+            metadataComponent.AddToGroupFilter(pGroupFilter);
+            idsInGroup++;
+        }
+
+        pGroupFilter->SetCount(idsInGroup);
         Log::Info() << "Group '" << pGroupFilter->GetName() << "': " << pGroupFilter->GetCount() << " objects.";
     }
     
