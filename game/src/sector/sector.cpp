@@ -133,10 +133,24 @@ void Sector::InitializeDatabase()
     m_pDatabase->GetAllObjects(
         [](const Json::Data& data) {
             Sector* pSector = Game::Get()->GetSector();
-            if (pSector)
+            if (!pSector)
             {
-                pSector->InitializeSpaceObjects(data["objects"], data["groups"]);
+                return;
             }
+
+            if (!data.contains("objects") || !data["objects"].is_array())
+            {
+                Log::Error() << "Server response missing 'objects' array.";
+                return;
+            }
+
+            if (!data.contains("groups") || !data["groups"].is_object())
+            {
+                Log::Error() << "Server response missing 'groups' object.";
+                return;
+            }
+
+            pSector->InitializeSpaceObjects(data["objects"], data["groups"]);
         },
         [](const std::string& error) {});
 }
@@ -166,8 +180,13 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
     int32_t highestNoradId = 0;
     for (const auto& objectData : objectsData)
     {
-        const int32_t noradId = Json::DeserializeInteger(nullptr, objectData, "norad_id");
-        highestNoradId = glm::max(noradId, highestNoradId);
+        auto result = Json::TryDeserializeInteger(nullptr, objectData, "norad_id");
+        if (!result.has_value() || result.value() <= 0)
+        {
+            Log::Warning() << "Object with missing or invalid 'norad_id', skipping.";
+            continue;
+        }
+        highestNoradId = glm::max(result.value(), highestNoradId);
     }
 
     m_NoradIdIndex.resize(highestNoradId + 1);
@@ -197,40 +216,44 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         
         if (!groupsData.contains(groupFilterName))
         {
-            Log::Warning() << "Data missing from expected group '" << groupFilterName << "'.";
+            Log::Warning() << "Group '" << groupFilterName << "': no data found in server response.";
             continue;
         }
 
         const auto& idsData = groupsData[groupFilterName];
+        if (!idsData.is_array())
+        {
+            Log::Warning() << "Group '" << groupFilterName << "': expected array of NORAD IDs, got different type.";
+            continue;
+        }
         GroupFilter* pGroupFilter = m_pGroupFilters->GetGroupFilter(groupFilterName);
         size_t idsInGroup = 0;
         for (const auto& idData : idsData)
         {
             if (!idData.is_number_integer())
             {
-                Log::Warning() << "Invalid ID type in group data.";
+                Log::Warning() << "Group '" << groupFilterName << "': expected integer NORAD ID, got non-integer type.";
                 continue;
             }
 
             const int32_t idFromData = idData.get<int32_t>();
-            size_t id = 0;
             if (idFromData <= 0)
             {
-                Log::Warning() << "Invalid ID in group data: " << idFromData;
+                Log::Warning() << "Group '" << groupFilterName << "': invalid NORAD ID " << idFromData << ", expected positive integer.";
                 continue;
             }
 
-            id = static_cast<size_t>(idFromData);
+            const size_t id = static_cast<size_t>(idFromData);
             if (id >= m_NoradIdIndex.size())
             {
-                Log::Warning() << "ID in group data exceeds highest loaded Norad ID: " << id;
+                Log::Warning() << "Group '" << groupFilterName << "': NORAD ID " << id << " exceeds highest known ID (" << (m_NoradIdIndex.size() - 1) << ").";
                 continue;
             }
 
             EntitySharedPtr pEntity = m_NoradIdIndex[id];
             if (!pEntity)
             {
-                Log::Warning() << "Data mismatch: group " << pGroupFilter->GetName() << " has object " << id << " which isn't in the loaded object data.";
+                Log::Warning() << "Group '" << groupFilterName << "': NORAD ID " << id << " not found in loaded object data.";
                 continue;
             }
             
