@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -19,6 +20,10 @@ public:
     std::vector<std::string> GetGroupFilterNames() const;
     GroupFilter* GetGroupFilter(const std::string& name);
     GroupFilter* GetGroupFilter(size_t index);
+
+    static const size_t MaximumSupportedGroupFilters = 16;
+    using Mask = std::bitset<MaximumSupportedGroupFilters>;
+    Mask GetCurrentMask() const;
 
 private:
     std::vector<GroupFilter> m_GroupFilters;

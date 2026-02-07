@@ -16,6 +16,7 @@
 #include "game.hpp"
 #include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
+#include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -204,6 +205,12 @@ void WebInterop::SetGroupFilterEnabled(const std::string& groupId, bool enabled)
     if (WebInterop* pWebInterop = GetInstance())
     {
         pWebInterop->NotifyGroupFiltersChanged(pGroupFilters);
+    }
+
+    SpaceObjectRenderSystem* pSpaceObjectRenderSystem = pSector->GetSystem<SpaceObjectRenderSystem>();
+    if (pSpaceObjectRenderSystem)
+    {
+        pSpaceObjectRenderSystem->NotifyGroupFiltersChanged();
     }
 }
 

@@ -7,6 +7,7 @@
 #include <scene/components/icomponent.hpp>
 
 #include "sector/group_filter.hpp"
+#include "sector/group_filters.hpp"
 
 namespace WingsOfSteel
 {
@@ -26,13 +27,16 @@ public:
     uint32_t m_NoradCatalogueId{ 0 };
     bool m_IsImportant{ false };
 
-    static const size_t MaximumSupportedGroupFilters = 16;
     void AddToGroupFilter(GroupFilter* pGroupFilter);
     bool IsInGroupFilter(GroupFilter* pGroupFilter) const;
+    GroupFilters::Mask GetGroupFilterMask() const { return m_GroupFilters; }
+    void SetVisible(bool state) { m_Visible = state; }
+    bool IsVisible() const { return m_Visible; }
 
 private:
     // We keep a bitset of all the group filters the parent entity is part of.
-    std::bitset<MaximumSupportedGroupFilters> m_GroupFilters;
+    GroupFilters::Mask m_GroupFilters;
+    bool m_Visible{false};
 };
 
 inline void MetadataComponent::AddToGroupFilter(GroupFilter* pGroupFilter)

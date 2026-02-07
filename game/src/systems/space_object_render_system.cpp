@@ -23,8 +23,11 @@
 #include "components/label_component.hpp"
 #include "components/metadata_component.hpp"
 #include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/space_object_group_component.hpp"
+#include "sector/group_filter.hpp"
+#include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
 #include "systems/space_object_render_system.hpp"
 #include "game.hpp"
@@ -259,6 +262,29 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     renderPass.Draw(m_VertexData.size());
 }
 
+void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    registry.clear<OrbitalStateComponent>();
+    registry.clear<LabelComponent>();
+    registry.clear<SpaceObjectGroupComponent>();
+
+    Sector* pSector = Game::Get()->GetSector();
+    GroupFilters::Mask currentVisibleMask = pSector->GetGroupFilters()->GetCurrentMask();
+    
+    auto view = registry.view<MetadataComponent>();
+    view.each([&registry, &currentVisibleMask](const auto entityHandle, MetadataComponent& metadataComponent) {
+        const bool isVisible = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
+        metadataComponent.SetVisible(isVisible);
+
+        if (isVisible)
+        {        
+            registry.emplace<OrbitalStateComponent>(entityHandle);
+        }
+    });
+    GenerateLabels();
+}
+
 void SpaceObjectRenderSystem::GenerateLabels()
 {
     m_LabelsDirty = true;
@@ -270,7 +296,12 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
     auto view = registry.view<OrbitalElementsComponent, MetadataComponent>();
 
     std::unordered_map<size_t, std::vector<entt::entity>> groups;
-    view.each([this, &groups](const auto entity, const OrbitalElementsComponent& orbitalElements, const MetadataComponent& metadata) {
+    view.each([this, &groups](const auto entity, const OrbitalElementsComponent& orbitalElements, const MetadataComponent& metadataComponent) {
+        if (!metadataComponent.IsVisible())
+        {
+            return;
+        }
+              
         size_t key = MakeOrbitalKey(orbitalElements);
         groups[key].push_back(entity);
     });
@@ -303,9 +334,16 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<MetadataComponent>();
 
-    view.each([this, &registry](const auto entityHandle, const MetadataComponent& metadata) {
+    view.each([this, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
+
+        if (!metadataComponent.IsVisible())
+        {
+            return;
+        }
+              
         std::stringstream labelStream;
 
+        /*
         // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
         SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
         if (pSpaceObjectGroupComponent)
@@ -319,6 +357,9 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
         {
             labelStream << "\1" << metadata.m_ObjectName;
         }
+        */
+        
+        labelStream << "\1";
 
         const std::string label(labelStream.str());
         if (!label.empty())

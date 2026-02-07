@@ -200,6 +200,7 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         orbitalElementsComponent.Deserialize(nullptr, objectData);
 
         pEntity->AddComponent<MetadataComponent>();
+        pEntity->AddComponent<TransformComponent>();
 
         m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
     }
@@ -272,6 +273,12 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         pWebInterop->NotifyGroupFiltersChanged(m_pGroupFilters.get());
     }
 #endif
+
+    SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
+    if (pSpaceObjectSystem)
+    {
+        pSpaceObjectSystem->NotifyGroupFiltersChanged();
+    }
 
     /*
     GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
