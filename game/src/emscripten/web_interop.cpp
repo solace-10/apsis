@@ -170,7 +170,7 @@ void WebInterop::NotifyGroupFiltersChanged(GroupFilters* pGroupFilters)
         emscripten::val group = emscripten::val::object();
         group.set("id", pFilter->GetName());
         group.set("name", pFilter->GetDisplayName());
-        group.set("color", pFilter->GetColor());
+        group.set("color", pFilter->GetHexColor());
         group.set("visible", pFilter->IsEnabled());
         group.set("count", pFilter->GetCount());
         groupsArray.call<void>("push", group);
