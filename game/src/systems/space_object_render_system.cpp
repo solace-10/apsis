@@ -174,18 +174,28 @@ void SpaceObjectRenderSystem::Update(float delta)
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
-    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+    const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
+    const glm::vec3 cameraForward = glm::normalize(cameraComponent.camera.GetTarget() - cameraPosition);
 
-        const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
+    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
+        const glm::vec3 d(labelPosition - cameraPosition);
+
+        // Cull objects behind the camera. Without this check, perspective division by
+        // negative w mirrors their position and causes erratic screen-space movement.
+        if (glm::dot(d, cameraForward) <= 0.0f)
+        {
+            labelComponent.SetOccluded(true);
+            return;
+        }
 
         // Check if a line segment between the label and the camera intersects the planet.
         // If so, then this label is occluded.
         bool isOccluded = false;
-        const glm::vec3 d(labelPosition - cameraPosition);
         const float a = glm::dot(d, d);
-        const float b = 2.0f * glm::dot(labelPosition, d);
-        const float c = glm::dot(labelPosition, labelPosition) - planetRadiusSquared;
+        const float b = 2.0f * glm::dot(cameraPosition, d);
+        const float c = glm::dot(cameraPosition, cameraPosition) - planetRadiusSquared;
         const float discriminant = b * b - 4.0f * a * c;
 
         // If the discriminant is < 0.0f, then the line doesn't intersect the planet.
@@ -196,7 +206,7 @@ void SpaceObjectRenderSystem::Update(float delta)
             const float sqrtDisc = std::sqrt(discriminant);
             const float t1 = (-b - sqrtDisc) / (2.0f * a);
             const float t2 = (-b + sqrtDisc) / (2.0f * a);
-            isOccluded = (t1 < 0.0f || t1 > 1.0f) && (t2 < 0.0f || t2 > 1.0f);
+            isOccluded = (t1 >= 0.0f && t1 <= 1.0f) || (t2 >= 0.0f && t2 <= 1.0f);
         }
 
         labelComponent.SetOccluded(isOccluded);
