@@ -1,4 +1,5 @@
 #include <array>
+#include <bit>
 #include <cmath>
 
 #include <glm/glm.hpp>
@@ -281,10 +282,19 @@ void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
 
     Sector* pSector = Game::Get()->GetSector();
     GroupFilters::Mask currentVisibleMask = pSector->GetGroupFilters()->GetCurrentMask();
+
+    EntityHandle currentlySelectedEntityHandle = NullEntityHandle;
+    EntitySharedPtr pSelectedSpaceObject = pSector->GetSelectedSpaceObject();
+    if (pSelectedSpaceObject)
+    {
+        currentlySelectedEntityHandle = pSelectedSpaceObject->GetEntityHandle();
+    }
     
     auto view = registry.view<MetadataComponent>();
-    view.each([&registry, &currentVisibleMask](const auto entityHandle, MetadataComponent& metadataComponent) {
-        const bool isVisible = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
+    view.each([&registry, &currentVisibleMask, currentlySelectedEntityHandle](const EntityHandle entityHandle, MetadataComponent& metadataComponent) {
+        const bool isInVisibleGroupFilter = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
+        const bool isSelected = (currentlySelectedEntityHandle == entityHandle);
+        const bool isVisible = (isInVisibleGroupFilter || isSelected);
         metadataComponent.SetVisible(isVisible);
 
         if (isVisible)
@@ -374,8 +384,10 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
         const std::string label(labelStream.str());
         if (!label.empty())
         {
+            const glm::vec4 labelColor(GetSpaceObjectColor(metadataComponent).AsVec3(), 1.0f);
+            
             LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
-            labelComponent.SetVertexData(m_pFont->Generate(label));
+            labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
         }
     });
 }
@@ -418,6 +430,25 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& o
     hashCombine(ecc);
 
     return hash;
+}
+
+// Calculate the color of the space object based on the most important group filter it belongs to.
+const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(const MetadataComponent& metadataComponent) const
+{
+    GroupFilters::Mask mask = metadataComponent.GetGroupFilterMask();
+    auto bits = mask.to_ullong();
+    int lsb = std::countr_zero(bits);
+
+    GroupFilter* pGroupFilter = Game::Get()->GetSector()->GetGroupFilters()->GetGroupFilter(lsb);
+    if (pGroupFilter)
+    {
+        return pGroupFilter->GetColor();
+    }
+    else
+    {
+        static const Color sNoGroupColor(Color::Red);
+        return sNoGroupColor;
+    }
 }
 
 } // namespace WingsOfSteel

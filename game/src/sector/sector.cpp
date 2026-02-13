@@ -162,7 +162,7 @@ void Sector::InitializeGroupFilters()
     m_pGroupFilters->RegisterGroupFilter("stations", "Space Stations", "#FFD700", true);
     m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#4A90D9", false);
     m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#7B68EE", true);
-    m_pGroupFilters->RegisterGroupFilter("gps", "GPS", "#32CD32", true);
+    m_pGroupFilters->RegisterGroupFilter("gps-ops", "GPS", "#32CD32", true);
     m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#FF6347", false);
     m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#00CED1", false);
     m_pGroupFilters->RegisterGroupFilter("science", "Science", "#87CEEB", true);
@@ -280,55 +280,11 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         pSpaceObjectSystem->NotifyGroupFiltersChanged();
     }
 
-    /*
-    GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
-        ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
-        size_t successfulEntries = 0;
-        for (const Json::Data& data : pResourceDataStore->Data())
-        {
-            auto deserializedData = OMMDeserializer::Deserialize(data);
-            if (deserializedData.has_value())
-            {
-                EntitySharedPtr pEntity = CreateEntity();
-
-                // Add all three components
-                OrbitalElementsComponent& orbitalElements = pEntity->AddComponent<OrbitalElementsComponent>();
-                orbitalElements = deserializedData->orbitalElements;
-
-                MetadataComponent& metadata = pEntity->AddComponent<MetadataComponent>();
-                metadata = deserializedData->metadata;
-
-                // Temporary until this information comes from a database.
-                if (metadata.m_ObjectName == "ISS (ZARYA)" || metadata.m_ObjectName == "CSS (TIANHE)")
-                {
-                    metadata.m_IsImportant = true;
-
-                    if (m_pSelectedSpaceObject.expired())
-                    {
-                        m_pSelectedSpaceObject = pEntity;
-                    }
-                }
-
-                pEntity->AddComponent<OrbitalStateComponent>();
-                pEntity->AddComponent<TransformComponent>();
-
-                // Index by NORAD ID for quick lookups
-                m_NoradIdIndex[metadata.m_NoradCatalogueId] = pEntity;
-
-                successfulEntries++;
-            }
-            else
-            {
-                Log::Warning() << "Failed to deserialize OMM from " << pResourceDataStore->GetPath();
-            }
-        }
-
-        Log::Info() << "Loaded " << successfulEntries << " space objects.";
-
-        SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
-        pSpaceObjectSystem->GenerateLabels();
-    });
-    */
+    const uint32_t hubbleNoradId = 20580;
+    if (m_NoradIdIndex[hubbleNoradId])
+    {
+        SetSelectedSpaceObject(m_NoradIdIndex[hubbleNoradId]);
+    }
 }
 
 void Sector::ShowCameraDebugUI(bool state)
