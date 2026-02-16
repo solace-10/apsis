@@ -50,6 +50,7 @@ private:
     void SpawnLight();
     void InitializeDatabase();
     void InitializeGroupFilters();
+    void InitializeOtherGroupFilter();
 
     DatabaseUniquePtr m_pDatabase;
     EntitySharedPtr m_pCamera;

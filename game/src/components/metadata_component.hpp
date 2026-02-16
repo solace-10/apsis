@@ -20,6 +20,8 @@ public:
 
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
+        m_ObjectName = Json::DeserializeString(pContext, json, "name");
+        m_NoradCatalogueId = Json::DeserializeUnsignedInteger(pContext, json, "norad_id");
     }
 
     std::string m_ObjectName{ "UNKNOWN" };

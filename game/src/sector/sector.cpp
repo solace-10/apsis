@@ -166,7 +166,7 @@ void Sector::InitializeGroupFilters()
     m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#FF6347", false);
     m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#00CED1", false);
     m_pGroupFilters->RegisterGroupFilter("science", "Science", "#87CEEB", true);
-    m_pGroupFilters->RegisterGroupFilter("cosmos-1408-debris", "Russian ASAT test debris", "#880040", false);
+    m_pGroupFilters->RegisterGroupFilter("fengyun-1c-debris", "Chinese ASAT test debris", "#880040", false);
     m_pGroupFilters->RegisterGroupFilter("debris", "Debris", "#808080", false);
     m_pGroupFilters->RegisterGroupFilter("analyst", "Well-tracked analyst", "#404040", false);
     m_pGroupFilters->RegisterGroupFilter("other", "Other", "#DD8080", false);
@@ -199,7 +199,9 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         OrbitalElementsComponent& orbitalElementsComponent = pEntity->AddComponent<OrbitalElementsComponent>();
         orbitalElementsComponent.Deserialize(nullptr, objectData);
 
-        pEntity->AddComponent<MetadataComponent>();
+        MetadataComponent& metadataComponent = pEntity->AddComponent<MetadataComponent>();
+        metadataComponent.Deserialize(nullptr, objectData);
+        
         pEntity->AddComponent<TransformComponent>();
 
         m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
@@ -267,6 +269,8 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         Log::Info() << "Group '" << pGroupFilter->GetName() << "': " << pGroupFilter->GetCount() << " objects.";
     }
 
+    InitializeOtherGroupFilter();
+
 #if defined(TARGET_PLATFORM_WEB)
     if (WebInterop* pWebInterop = WebInterop::GetInstance())
     {
@@ -285,6 +289,34 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
     {
         SetSelectedSpaceObject(m_NoradIdIndex[hubbleNoradId]);
     }
+}
+
+void Sector::InitializeOtherGroupFilter()
+{
+    GroupFilter* pOtherGroupFilter = m_pGroupFilters->GetGroupFilter("other");
+    if (!pOtherGroupFilter)
+    {
+        Log::Error() << "Missing 'other' group filter.";
+        return;
+    }
+
+    uint32_t count = 0;
+    for (EntitySharedPtr pEntity : m_NoradIdIndex)
+    {
+        if (!pEntity)
+        {
+            continue;
+        }
+
+        MetadataComponent& metadataComponent = pEntity->GetComponent<MetadataComponent>();
+        if (metadataComponent.GetGroupFilterMask() == 0)
+        {
+            metadataComponent.AddToGroupFilter(pOtherGroupFilter);
+            count++;
+        }
+    }
+
+    pOtherGroupFilter->SetCount(count);
 }
 
 void Sector::ShowCameraDebugUI(bool state)
