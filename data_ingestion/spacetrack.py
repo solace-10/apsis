@@ -139,10 +139,10 @@ def transform_record(record):
 def deduplicate_batch(records):
     """Remove duplicates from batch, keeping the last occurrence (most recent data)."""
     seen = {}
+    norad_id_idx = DB_COLUMNS.index("norad_id")
     for record in records:
-        # First element is the 'id' field
-        object_id = record[0]
-        seen[object_id] = record
+        norad_id = record[norad_id_idx]
+        seen[norad_id] = record
     return list(seen.values())
 
 
@@ -155,14 +155,14 @@ def insert_batch(conn, records):
     records = deduplicate_batch(records)
 
     columns = ", ".join(DB_COLUMNS)
-    # Build the SET clause for ON CONFLICT UPDATE (exclude 'id' which is the conflict key)
-    update_columns = [col for col in DB_COLUMNS if col != "id"]
+    # Build the SET clause for ON CONFLICT UPDATE (exclude 'norad_id' which is the conflict key)
+    update_columns = [col for col in DB_COLUMNS if col != "norad_id"]
     update_set = ", ".join([f"{col} = EXCLUDED.{col}" for col in update_columns])
 
     query = f"""
         INSERT INTO public.objects ({columns})
         VALUES %s
-        ON CONFLICT (id) DO UPDATE SET {update_set}
+        ON CONFLICT (norad_id) DO UPDATE SET {update_set}
     """
 
     with conn.cursor() as cur:
@@ -190,6 +190,15 @@ def insert_groups_batch(conn, ids, group):
     conn.commit()
     logger.info(f"Inserted {len(records)} '{group}' group memberships")
     return len(records)
+
+
+def clear_analyst_objects(conn):
+    """Remove all analyst objects from public.objects and public.groups."""
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM public.groups WHERE \"group\" = 'analyst'")
+        cur.execute("DELETE FROM public.objects WHERE norad_id::int BETWEEN 80000 AND 89999")
+    conn.commit()
+    logger.info("Cleared analyst objects")
 
 
 def process_records(conn, data, label):
@@ -223,6 +232,8 @@ def main():
     conn = connect_db()
 
     try:
+        clear_analyst_objects(conn)
+
         gp_count = process_records(conn, gp_data, "GP")
         analyst_count = process_records(conn, analyst_data, "Analyst")
 
