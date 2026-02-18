@@ -28,9 +28,6 @@ load_dotenv()
 FIELD_MAPPING = {
     "OBJECT_ID": "id",
     "OBJECT_NAME": "name",
-    "REF_FRAME": "reference_frame",
-    "TIME_SYSTEM": "time_system",
-    "MEAN_ELEMENT_THEORY": "mean_element_theory",
     "EPOCH": "epoch",
     "MEAN_MOTION": "mean_motion",
     "ECCENTRICITY": "eccentricity",
