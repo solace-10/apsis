@@ -16,20 +16,24 @@ import { fromInterop } from './types';
  * Callback type for space object selection.
  */
 export type SpaceObjectCallback = (object: SpaceObject | null) => void;
+export type GroupFiltersCallback = (groups: SpaceObjectGroup[]) => void;
 
 // Callbacks registered by the app
 let onSelectionChange: SpaceObjectCallback | null = null;
 let onObjectUpdate: SpaceObjectCallback | null = null;
+let onGroupFiltersChange: GroupFiltersCallback | null = null;
 
 /**
  * Register callbacks for space object updates from C++.
  */
 export function registerCallbacks(
 	onSelected: SpaceObjectCallback,
-	onUpdated: SpaceObjectCallback
+	onUpdated: SpaceObjectCallback,
+	onGroupFilters?: GroupFiltersCallback
 ): void {
 	onSelectionChange = onSelected;
 	onObjectUpdate = onUpdated;
+	onGroupFiltersChange = onGroupFilters ?? null;
 }
 
 /**
@@ -41,6 +45,7 @@ export function initializeCallbacks(): void {
 		onSpaceObjectSelected: (interop: SpaceObjectInterop) => void;
 		onSpaceObjectDeselected: () => void;
 		onSpaceObjectUpdated: (interop: SpaceObjectInterop) => void;
+		onGroupFiltersChanged: (groups: SpaceObjectGroup[]) => void;
 	}
 
 	const callbacks: OrbisCallbacks = {
@@ -60,113 +65,17 @@ export function initializeCallbacks(): void {
 			if (onObjectUpdate) {
 				onObjectUpdate(spaceObject);
 			}
+		},
+		onGroupFiltersChanged: (groups: SpaceObjectGroup[]) => {
+			if (onGroupFiltersChange) {
+				onGroupFiltersChange(groups);
+			}
 		}
 	};
 
 	(window as unknown as { orbisCallbacks: OrbisCallbacks }).orbisCallbacks = callbacks;
 }
 
-// Mock data for development
-const mockGroups: SpaceObjectGroup[] = [
-	{ id: 'stations', name: 'Space Stations', color: '#FFD700', visible: true, count: 5 },
-	{ id: 'starlink', name: 'Starlink', color: '#4A90D9', visible: true, count: 5400 },
-	{ id: 'oneweb', name: 'OneWeb', color: '#7B68EE', visible: true, count: 634 },
-	{ id: 'gps', name: 'GPS', color: '#32CD32', visible: true, count: 31 },
-	{ id: 'glonass', name: 'GLONASS', color: '#FF6347', visible: true, count: 24 },
-	{ id: 'galileo', name: 'Galileo', color: '#00CED1', visible: true, count: 28 },
-	{ id: 'weather', name: 'Weather Satellites', color: '#87CEEB', visible: true, count: 42 },
-	{ id: 'debris', name: 'Debris', color: '#808080', visible: false, count: 23000 }
-];
-
-const mockObjects: SpaceObject[] = [
-	{
-		id: 1,
-		name: 'ISS (ZARYA)',
-		noradId: 25544,
-		objectType: 'space_station',
-		group: mockGroups[0],
-		semiMajorAxis: 6798,
-		eccentricity: 0.0001,
-		inclination: 51.64,
-		raan: 247.5,
-		argOfPerigee: 130.5,
-		meanAnomaly: 45.2,
-		altitude: 420,
-		velocity: 7.66,
-		latitude: 32.5,
-		longitude: -95.2
-	},
-	{
-		id: 2,
-		name: 'TIANGONG',
-		noradId: 48274,
-		objectType: 'space_station',
-		group: mockGroups[0],
-		semiMajorAxis: 6780,
-		eccentricity: 0.0002,
-		inclination: 41.47,
-		raan: 180.2,
-		argOfPerigee: 95.3,
-		meanAnomaly: 120.8,
-		altitude: 390,
-		velocity: 7.68,
-		latitude: -15.3,
-		longitude: 45.7
-	},
-	{
-		id: 3,
-		name: 'STARLINK-1234',
-		noradId: 44238,
-		objectType: 'satellite',
-		group: mockGroups[1],
-		semiMajorAxis: 6921,
-		eccentricity: 0.0001,
-		inclination: 53.0,
-		raan: 120.3,
-		argOfPerigee: 90.0,
-		meanAnomaly: 270.5,
-		altitude: 550,
-		velocity: 7.59,
-		latitude: 45.2,
-		longitude: -120.8
-	},
-	{
-		id: 4,
-		name: 'NAVSTAR 78 (USA 304)',
-		noradId: 48859,
-		objectType: 'satellite',
-		group: mockGroups[3],
-		semiMajorAxis: 26560,
-		eccentricity: 0.01,
-		inclination: 55.0,
-		raan: 60.0,
-		argOfPerigee: 45.0,
-		meanAnomaly: 180.0,
-		altitude: 20200,
-		velocity: 3.87,
-		latitude: 22.1,
-		longitude: 78.4
-	},
-	{
-		id: 5,
-		name: 'COSMOS 2251 DEB',
-		noradId: 34427,
-		objectType: 'debris',
-		group: mockGroups[7],
-		semiMajorAxis: 7150,
-		eccentricity: 0.02,
-		inclination: 74.0,
-		raan: 300.0,
-		argOfPerigee: 200.0,
-		meanAnomaly: 90.0,
-		altitude: 780,
-		velocity: 7.45,
-		latitude: 68.5,
-		longitude: -30.2
-	}
-];
-
-let selectedObjectId: number | null = null;
 let overlayState: OverlayState = {
 	grid: false,
 	atmosphere: true,
@@ -190,38 +99,8 @@ function notifyStateChange(): void {
  * Replace with actual WASM module when C++ embind bindings are ready.
  */
 export const mockModule: OrbisModule = {
-	getSpaceObjects(): SpaceObject[] {
-		return mockObjects;
-	},
-
-	getSpaceObjectById(id: number): SpaceObject | null {
-		return mockObjects.find((obj) => obj.id === id) ?? null;
-	},
-
-	getGroups(): SpaceObjectGroup[] {
-		return mockGroups;
-	},
-
-	getSelectedObject(): SpaceObject | null {
-		if (selectedObjectId === null) return null;
-		return mockObjects.find((obj) => obj.id === selectedObjectId) ?? null;
-	},
-
 	getOverlayState(): OverlayState {
 		return { ...overlayState };
-	},
-
-	selectObject(id: number | null): void {
-		selectedObjectId = id;
-		notifyStateChange();
-	},
-
-	setGroupVisibility(groupId: string, visible: boolean): void {
-		const group = mockGroups.find((g) => g.id === groupId);
-		if (group) {
-			group.visible = visible;
-			notifyStateChange();
-		}
 	},
 
 	setOverlay(overlay: keyof OverlayState, enabled: boolean): void {
@@ -230,12 +109,10 @@ export const mockModule: OrbisModule = {
 	},
 
 	setTimeScale(_scale: number): void {
-		// Mock: does nothing
 		notifyStateChange();
 	},
 
 	initCanvas(_canvas: HTMLCanvasElement): void {
-		// Mock: would initialize WebGPU context
 		console.log('[Mock] Canvas initialized');
 	},
 
@@ -256,6 +133,18 @@ export function onStateChange(callback: StateChangeCallback): () => void {
 			stateChangeCallbacks.splice(index, 1);
 		}
 	};
+}
+
+/**
+ * Call the C++ SetGroupFilterEnabled binding via emscripten.
+ */
+export function callSetGroupFilterEnabled(groupId: string, enabled: boolean): void {
+	const wasmModule = (window as Record<string, unknown>).Module as
+		| { setGroupFilterEnabled?: (groupId: string, enabled: boolean) => void }
+		| undefined;
+	if (wasmModule?.setGroupFilterEnabled) {
+		wasmModule.setGroupFilterEnabled(groupId, enabled);
+	}
 }
 
 /**

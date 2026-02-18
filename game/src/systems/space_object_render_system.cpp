@@ -1,4 +1,5 @@
 #include <array>
+#include <bit>
 #include <cmath>
 
 #include <glm/glm.hpp>
@@ -21,9 +22,13 @@
 #include <scene/scene.hpp>
 
 #include "components/label_component.hpp"
+#include "components/metadata_component.hpp"
+#include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
-#include "components/space_object_component.hpp"
 #include "components/space_object_group_component.hpp"
+#include "sector/group_filter.hpp"
+#include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
 #include "systems/space_object_render_system.hpp"
 #include "game.hpp"
@@ -147,6 +152,13 @@ void SpaceObjectRenderSystem::Update(float delta)
         return;
     }
 
+    if (m_LabelsDirty)
+    {
+        GenerateSpaceObjectGroups();
+        GenerateLabelsVertexData();
+        m_LabelsDirty = false;
+    }
+
     EntitySharedPtr pEarth = Game::Get()->GetSector()->GetEarth();
     if (!pEarth || !pEarth->HasComponent<PlanetComponent>())
     {
@@ -163,18 +175,28 @@ void SpaceObjectRenderSystem::Update(float delta)
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
-    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+    const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
+    const glm::vec3 cameraForward = glm::normalize(cameraComponent.camera.GetTarget() - cameraPosition);
 
-        const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
+    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
-        
+        const glm::vec3 d(labelPosition - cameraPosition);
+
+        // Cull objects behind the camera. Without this check, perspective division by
+        // negative w mirrors their position and causes erratic screen-space movement.
+        if (glm::dot(d, cameraForward) <= 0.0f)
+        {
+            labelComponent.SetOccluded(true);
+            return;
+        }
+
         // Check if a line segment between the label and the camera intersects the planet.
         // If so, then this label is occluded.
         bool isOccluded = false;
-        const glm::vec3 d(labelPosition - cameraPosition);
         const float a = glm::dot(d, d);
-        const float b = 2.0f * glm::dot(labelPosition, d);
-        const float c = glm::dot(labelPosition, labelPosition) - planetRadiusSquared;
+        const float b = 2.0f * glm::dot(cameraPosition, d);
+        const float c = glm::dot(cameraPosition, cameraPosition) - planetRadiusSquared;
         const float discriminant = b * b - 4.0f * a * c;
 
         // If the discriminant is < 0.0f, then the line doesn't intersect the planet.
@@ -185,12 +207,12 @@ void SpaceObjectRenderSystem::Update(float delta)
             const float sqrtDisc = std::sqrt(discriminant);
             const float t1 = (-b - sqrtDisc) / (2.0f * a);
             const float t2 = (-b + sqrtDisc) / (2.0f * a);
-            isOccluded = (t1 < 0.0f || t1 > 1.0f) && (t2 < 0.0f || t2 > 1.0f);
+            isOccluded = (t1 >= 0.0f && t1 <= 1.0f) || (t2 >= 0.0f && t2 <= 1.0f);
         }
-        
+
         labelComponent.SetOccluded(isOccluded);
         if (!isOccluded)
-        {    
+        {
             labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight));
         }
     });
@@ -201,13 +223,6 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     if (GetActiveScene() == nullptr || !m_RenderPipeline || !m_pFont || !m_pFont->GetTexture())
     {
         return;
-    }
-
-    if (m_LabelsDirty)
-    {
-        GenerateSpaceObjectGroups();
-        GenerateLabelsVertexData();
-        m_LabelsDirty = false;
     }
 
     // Create texture bind group lazily once the font texture is available
@@ -236,7 +251,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         {
             return;
         }
-              
+
         const std::vector<VertexP2C4UV>& vertexData = labelComponent.GetVertexData();
         for (auto vertex : vertexData)
         {
@@ -258,6 +273,38 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     renderPass.Draw(m_VertexData.size());
 }
 
+void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    registry.clear<OrbitalStateComponent>();
+    registry.clear<LabelComponent>();
+    registry.clear<SpaceObjectGroupComponent>();
+
+    Sector* pSector = Game::Get()->GetSector();
+    GroupFilters::Mask currentVisibleMask = pSector->GetGroupFilters()->GetCurrentMask();
+
+    EntityHandle currentlySelectedEntityHandle = NullEntityHandle;
+    EntitySharedPtr pSelectedSpaceObject = pSector->GetSelectedSpaceObject();
+    if (pSelectedSpaceObject)
+    {
+        currentlySelectedEntityHandle = pSelectedSpaceObject->GetEntityHandle();
+    }
+    
+    auto view = registry.view<MetadataComponent>();
+    view.each([&registry, &currentVisibleMask, currentlySelectedEntityHandle](const EntityHandle entityHandle, MetadataComponent& metadataComponent) {
+        const bool isInVisibleGroupFilter = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
+        const bool isSelected = (currentlySelectedEntityHandle == entityHandle);
+        const bool isVisible = (isInVisibleGroupFilter || isSelected);
+        metadataComponent.SetVisible(isVisible);
+
+        if (isVisible)
+        {        
+            registry.emplace<OrbitalStateComponent>(entityHandle);
+        }
+    });
+    GenerateLabels();
+}
+
 void SpaceObjectRenderSystem::GenerateLabels()
 {
     m_LabelsDirty = true;
@@ -266,11 +313,16 @@ void SpaceObjectRenderSystem::GenerateLabels()
 void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<SpaceObjectComponent>();
+    auto view = registry.view<OrbitalElementsComponent, MetadataComponent>();
 
     std::unordered_map<size_t, std::vector<entt::entity>> groups;
-    view.each([this, &groups](const auto entity, const SpaceObjectComponent& component) {
-        size_t key = MakeOrbitalKey(component.GetSpaceObject());
+    view.each([this, &groups](const auto entity, const OrbitalElementsComponent& orbitalElements, const MetadataComponent& metadataComponent) {
+        if (!metadataComponent.IsVisible())
+        {
+            return;
+        }
+              
+        size_t key = MakeOrbitalKey(orbitalElements);
         groups[key].push_back(entity);
     });
 
@@ -289,7 +341,7 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
         Log::Info() << "Generating space object group " << groupId << " with " << group.second.size() << " objects.";
         for (const auto& entityHandle : group.second)
         {
-            const bool isImportant = registry.get<SpaceObjectComponent>(entityHandle).GetSpaceObject().IsImportant();
+            const bool isImportant = registry.get<MetadataComponent>(entityHandle).m_IsImportant;
             registry.emplace<SpaceObjectGroupComponent>(entityHandle, groupId, isImportant);
             m_LabelGroups[groupId].push_back(entityHandle);
         }
@@ -300,38 +352,48 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
 void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<SpaceObjectComponent>();
+    auto view = registry.view<MetadataComponent>();
 
-    view.each([this, &registry](const auto entityHandle, const SpaceObjectComponent& spaceObjectComponent) {
-        const SpaceObject& spaceObject = spaceObjectComponent.GetSpaceObject();
+    view.each([this, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
 
+        if (!metadataComponent.IsVisible())
+        {
+            return;
+        }
+              
         std::stringstream labelStream;
 
+        /*
         // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
         SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
         if (pSpaceObjectGroupComponent)
         {
             if (pSpaceObjectGroupComponent->IsPrimaryElement())
             {
-                labelStream << "\1" << spaceObject.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+                labelStream << "\1" << metadata.m_ObjectName << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
             }
         }
         else
         {
-            labelStream << "\1" << spaceObject.GetObjectName();
+            labelStream << "\1" << metadata.m_ObjectName;
         }
+        */
+        
+        labelStream << "\1";
 
         const std::string label(labelStream.str());
         if (!label.empty())
         {
+            const glm::vec4 labelColor(GetSpaceObjectColor(metadataComponent).AsVec3(), 1.0f);
+            
             LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
-            labelComponent.SetVertexData(m_pFont->Generate(label));
+            labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
         }
     });
 }
 
 /*
-MakeOrbitalKey generates a hash from a SpaceObject's orbital parameters.
+MakeOrbitalKey generates a hash from orbital parameters.
 To be at the same position, objects need matching orbital elements:
 - Inclination, RAAN, Argument of Pericenter, Mean Motion: define the orbital plane and shape
 - Eccentricity: defines the orbital shape
@@ -340,7 +402,7 @@ To be at the same position, objects need matching orbital elements:
 Note: We're comparing at face value without epoch propagation, so this works best
 for objects with the same epoch (like docked spacecraft sharing TLE data).
 */
-size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
+size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const
 {
     // Quantize orbital elements:
     // Angles: 0.01 degree precision (2 decimal places)
@@ -348,12 +410,12 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
     auto quantize2 = [](float v) { return static_cast<int32_t>(std::round(v * 100.0f)); };
     auto quantize4 = [](float v) { return static_cast<int32_t>(std::round(v * 10000.0f)); };
 
-    const int32_t inc = quantize2(object.GetInclination());
-    const int32_t raan = quantize2(object.GetRightAscensionOfAscendingNode());
-    const int32_t aop = quantize2(object.GetArgumentOfPericenter());
-    const int32_t ma = quantize2(object.GetMeanAnomaly());
-    const int32_t mm = quantize4(object.GetMeanMotion());
-    const int32_t ecc = quantize4(object.GetEccentricity());
+    const int32_t inc = quantize2(orbitalElements.GetInclination());
+    const int32_t raan = quantize2(orbitalElements.GetRightAscensionOfAscendingNode());
+    const int32_t aop = quantize2(orbitalElements.GetArgumentOfPericenter());
+    const int32_t ma = quantize2(orbitalElements.GetMeanAnomaly());
+    const int32_t mm = quantize4(orbitalElements.GetMeanMotion());
+    const int32_t ecc = quantize4(orbitalElements.GetEccentricity());
 
     // Combine hashes using boost-style hash combining.
     size_t hash = 0;
@@ -368,6 +430,25 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const SpaceObject& object) const
     hashCombine(ecc);
 
     return hash;
+}
+
+// Calculate the color of the space object based on the most important group filter it belongs to.
+const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(const MetadataComponent& metadataComponent) const
+{
+    GroupFilters::Mask mask = metadataComponent.GetGroupFilterMask();
+    auto bits = mask.to_ullong();
+    int lsb = std::countr_zero(bits);
+
+    GroupFilter* pGroupFilter = Game::Get()->GetSector()->GetGroupFilters()->GetGroupFilter(lsb);
+    if (pGroupFilter)
+    {
+        return pGroupFilter->GetColor();
+    }
+    else
+    {
+        static const Color sNoGroupColor(Color::Red);
+        return sNoGroupColor;
+    }
 }
 
 } // namespace WingsOfSteel

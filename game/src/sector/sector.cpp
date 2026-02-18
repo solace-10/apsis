@@ -2,6 +2,7 @@
 #include <imgui.h>
 
 #include <core/log.hpp>
+#include <core/serialization.hpp>
 #include <pandora.hpp>
 #include <render/debug_render.hpp>
 #include <resources/resource_data_store.hpp>
@@ -16,23 +17,25 @@
 #include <scene/systems/physics_simulation_system.hpp>
 
 #include "components/atmosphere_component.hpp"
-#include "components/label_component.hpp"
+#include "components/metadata_component.hpp"
+#include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
-#include "components/space_object_component.hpp"
 #include "resources/resource.fwd.hpp"
+#include "sector/database.hpp"
+#include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
-#include "space_objects/space_object.hpp"
-#include "space_objects/space_object_catalogue.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_render_system.hpp"
+#include "game.hpp"
 
 #if defined(TARGET_PLATFORM_WEB)
 #include "emscripten/web_interop.hpp"
-#endif
+#endif
 
 namespace WingsOfSteel
 {
@@ -97,7 +100,8 @@ void Sector::Initialize()
     atmosphereComponent.scaleDepth = 0.25f; // Scale height
     atmosphereComponent.numSamples = 5; // Ray march samples
 
-    InitializeSpaceObjectCatalogue();
+    InitializeGroupFilters();
+    InitializeDatabase();
 }
 
 void Sector::Update(float delta)
@@ -117,55 +121,202 @@ void Sector::Update(float delta)
     {
         if (WebInterop* pWebInterop = WebInterop::GetInstance())
         {
-            pWebInterop->NotifySpaceObjectUpdated(&pSelected->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+            pWebInterop->NotifySpaceObjectUpdated(pSelected);
         }
     }
 #endif
 }
 
-void Sector::InitializeSpaceObjectCatalogue()
+void Sector::InitializeDatabase()
 {
-    m_pSpaceObjectCatalogue = std::make_unique<SpaceObjectCatalogue>();
+    m_pDatabase = std::make_unique<Database>();
+    m_pDatabase->GetAllObjects(
+        [](const Json::Data& data) {
+            Sector* pSector = Game::Get()->GetSector();
+            if (!pSector)
+            {
+                return;
+            }
 
-    GetResourceSystem()->RequestResource("/celestrak/stations.json", [this](ResourceSharedPtr pResource) {
-        ResourceDataStoreSharedPtr pResourceDataStore = std::dynamic_pointer_cast<ResourceDataStore>(pResource);
-        SpaceObjectCatalogue* pCatalogue = GetSpaceObjectCatalogue();
-        size_t successfulEntries = 0;
-        for (const Json::Data& data : pResourceDataStore->Data())
+            if (!data.contains("objects") || !data["objects"].is_array())
+            {
+                Log::Error() << "Server response missing 'objects' array.";
+                return;
+            }
+
+            if (!data.contains("groups") || !data["groups"].is_object())
+            {
+                Log::Error() << "Server response missing 'groups' object.";
+                return;
+            }
+
+            pSector->InitializeSpaceObjects(data["objects"], data["groups"]);
+        },
+        [](const std::string& error) {});
+}
+
+void Sector::InitializeGroupFilters()
+{
+    m_pGroupFilters = std::make_unique<GroupFilters>();
+    m_pGroupFilters->RegisterGroupFilter("last-30-days", "Last 30 days' launches", "#CC6600", true);
+    m_pGroupFilters->RegisterGroupFilter("stations", "Space Stations", "#FFD700", true);
+    m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#4A90D9", false);
+    m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#7B68EE", true);
+    m_pGroupFilters->RegisterGroupFilter("gps-ops", "GPS", "#32CD32", true);
+    m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#FF6347", false);
+    m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#00CED1", false);
+    m_pGroupFilters->RegisterGroupFilter("science", "Science", "#87CEEB", true);
+    m_pGroupFilters->RegisterGroupFilter("fengyun-1c-debris", "Chinese ASAT test debris", "#880040", false);
+    m_pGroupFilters->RegisterGroupFilter("debris", "Debris", "#808080", false);
+    m_pGroupFilters->RegisterGroupFilter("analyst", "Well-tracked analyst", "#404040", false);
+    m_pGroupFilters->RegisterGroupFilter("other", "Other", "#DD8080", false);
+}
+
+void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::Data& groupsData)
+{
+    // Identify the highest NORAD Id so we can get pre-allocate a vector.
+    // Right now the Ids are always below <100k, but this will almost certainly change in the future.
+    // Alternatively we could start at 100k and then just double as necessary.
+    int32_t highestNoradId = 0;
+    for (const auto& objectData : objectsData)
+    {
+        auto result = Json::TryDeserializeInteger(nullptr, objectData, "norad_id");
+        if (!result.has_value() || result.value() <= 0)
         {
-            SpaceObject spaceObject;
-            if (spaceObject.DeserializeOMM(data))
-            {
-                pCatalogue->Add(spaceObject);
-                successfulEntries++;
+            Log::Warning() << "Object with missing or invalid 'norad_id', skipping.";
+            continue;
+        }
+        highestNoradId = glm::max(result.value(), highestNoradId);
+    }
 
-                EntitySharedPtr pEntity = CreateEntity();
-                SpaceObjectComponent& spaceObjectComponent = pEntity->AddComponent<SpaceObjectComponent>();
-                // Temporary until this information comes from a database.
-                if (spaceObject.GetObjectName() == "ISS (ZARYA)" || spaceObject.GetObjectName() == "CSS (TIANHE)")
-                {
-                    spaceObject.FlagAsImportant();
+    m_NoradIdIndex.resize(highestNoradId + 1);
 
-                    if (m_pSelectedSpaceObject.expired())
-                    {
-                        m_pSelectedSpaceObject = pEntity;
-                    }
-                }
-                spaceObjectComponent.AssignSpaceObject(spaceObject);
-                
-                pEntity->AddComponent<TransformComponent>();
-            }
-            else
-            {
-                Log::Warning() << "Failed to deserialize OMM from " << pResourceDataStore->GetPath();
-            }
+    Log::Info() << "Highest NORAD Id: " << highestNoradId;
+    for (const auto& objectData : objectsData)
+    {
+        EntitySharedPtr pEntity = CreateEntity();
+
+        OrbitalElementsComponent& orbitalElementsComponent = pEntity->AddComponent<OrbitalElementsComponent>();
+        orbitalElementsComponent.Deserialize(nullptr, objectData);
+
+        MetadataComponent& metadataComponent = pEntity->AddComponent<MetadataComponent>();
+        metadataComponent.Deserialize(nullptr, objectData);
+        
+        pEntity->AddComponent<TransformComponent>();
+
+        m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
+    }
+
+    Log::Info() << "Loaded " << objectsData.size() << " space objects.";
+
+    for (const std::string& groupFilterName : m_pGroupFilters->GetGroupFilterNames())
+    {
+        // The "other" group is dynamically generated at runtime and won't be part of the received data.
+        if (groupFilterName == "other")
+        {
+            continue;
+        }
+        
+        if (!groupsData.contains(groupFilterName))
+        {
+            Log::Warning() << "Group '" << groupFilterName << "': no data found in server response.";
+            continue;
         }
 
-        Log::Info() << "Added " << successfulEntries << " to space object catalogue.";
+        const auto& idsData = groupsData[groupFilterName];
+        if (!idsData.is_array())
+        {
+            Log::Warning() << "Group '" << groupFilterName << "': expected array of NORAD IDs, got different type.";
+            continue;
+        }
+        GroupFilter* pGroupFilter = m_pGroupFilters->GetGroupFilter(groupFilterName);
+        size_t idsInGroup = 0;
+        for (const auto& idData : idsData)
+        {
+            if (!idData.is_number_integer())
+            {
+                Log::Warning() << "Group '" << groupFilterName << "': expected integer NORAD ID, got non-integer type.";
+                continue;
+            }
 
-        SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
-        pSpaceObjectSystem->GenerateLabels();
-    });
+            const int32_t idFromData = idData.get<int32_t>();
+            if (idFromData <= 0)
+            {
+                Log::Warning() << "Group '" << groupFilterName << "': invalid NORAD ID " << idFromData << ", expected positive integer.";
+                continue;
+            }
+
+            const size_t id = static_cast<size_t>(idFromData);
+            if (id >= m_NoradIdIndex.size())
+            {
+                Log::Warning() << "Group '" << groupFilterName << "': NORAD ID " << id << " exceeds highest known ID (" << (m_NoradIdIndex.size() - 1) << ").";
+                continue;
+            }
+
+            EntitySharedPtr pEntity = m_NoradIdIndex[id];
+            if (!pEntity)
+            {
+                Log::Warning() << "Group '" << groupFilterName << "': NORAD ID " << id << " not found in loaded object data.";
+                continue;
+            }
+            
+            MetadataComponent& metadataComponent = pEntity->GetComponent<MetadataComponent>();
+            metadataComponent.AddToGroupFilter(pGroupFilter);
+            idsInGroup++;
+        }
+
+        pGroupFilter->SetCount(idsInGroup);
+        Log::Info() << "Group '" << pGroupFilter->GetName() << "': " << pGroupFilter->GetCount() << " objects.";
+    }
+
+    InitializeOtherGroupFilter();
+
+#if defined(TARGET_PLATFORM_WEB)
+    if (WebInterop* pWebInterop = WebInterop::GetInstance())
+    {
+        pWebInterop->NotifyGroupFiltersChanged(m_pGroupFilters.get());
+    }
+#endif
+
+    SpaceObjectRenderSystem* pSpaceObjectSystem = GetSystem<SpaceObjectRenderSystem>();
+    if (pSpaceObjectSystem)
+    {
+        pSpaceObjectSystem->NotifyGroupFiltersChanged();
+    }
+
+    const uint32_t hubbleNoradId = 20580;
+    if (m_NoradIdIndex[hubbleNoradId])
+    {
+        SetSelectedSpaceObject(m_NoradIdIndex[hubbleNoradId]);
+    }
+}
+
+void Sector::InitializeOtherGroupFilter()
+{
+    GroupFilter* pOtherGroupFilter = m_pGroupFilters->GetGroupFilter("other");
+    if (!pOtherGroupFilter)
+    {
+        Log::Error() << "Missing 'other' group filter.";
+        return;
+    }
+
+    uint32_t count = 0;
+    for (EntitySharedPtr pEntity : m_NoradIdIndex)
+    {
+        if (!pEntity)
+        {
+            continue;
+        }
+
+        MetadataComponent& metadataComponent = pEntity->GetComponent<MetadataComponent>();
+        if (metadataComponent.GetGroupFilterMask() == 0)
+        {
+            metadataComponent.AddToGroupFilter(pOtherGroupFilter);
+            count++;
+        }
+    }
+
+    pOtherGroupFilter->SetCount(count);
 }
 
 void Sector::ShowCameraDebugUI(bool state)
@@ -230,7 +381,7 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
     {
         if (pEntity)
         {
-            pWebInterop->NotifySpaceObjectSelected(&pEntity->GetComponent<SpaceObjectComponent>().GetSpaceObject());
+            pWebInterop->NotifySpaceObjectSelected(pEntity);
         }
         else
         {
@@ -238,6 +389,18 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
         }
     }
 #endif
+}
+
+EntitySharedPtr Sector::GetEntityByNoradId(uint32_t noradId) const
+{
+    if (noradId >= m_NoradIdIndex.size())
+    {
+        return nullptr;
+    }
+    else
+    {
+        return m_NoradIdIndex[noradId];
+    }
 }
 
 } // namespace WingsOfSteel
