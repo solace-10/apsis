@@ -158,7 +158,7 @@ void Sector::InitializeDatabase()
 void Sector::InitializeGroupFilters()
 {
     m_pGroupFilters = std::make_unique<GroupFilters>();
-    m_pGroupFilters->RegisterGroupFilter("last30days", "Last 30 days' launches", "#CC6600", true);
+    m_pGroupFilters->RegisterGroupFilter("last-30-days", "Last 30 days' launches", "#CC6600", true);
     m_pGroupFilters->RegisterGroupFilter("stations", "Space Stations", "#FFD700", true);
     m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#4A90D9", false);
     m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#7B68EE", true);

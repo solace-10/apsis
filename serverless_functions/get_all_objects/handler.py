@@ -75,7 +75,7 @@ def _get_objects(database_connection):
     return objects
 
 def _get_groups(database_connection):
-    groups = _get_explicit_groups(database_connection) | _get_debris_group(database_connection)
+    groups = _get_explicit_groups(database_connection) | _get_debris_group(database_connection) | _get_last_30_days_launches_group(database_connection)
     return groups
 
 def _get_explicit_groups(database_connection):
@@ -104,4 +104,14 @@ def _get_debris_group(database_connection):
     """)
 
     groups = {"debris": [int(row[0]) for row in rows]}
+    return groups
+
+def _get_last_30_days_launches_group(database_connection):
+    rows = database_connection.run("""
+        SELECT norad_id
+        FROM public.objects
+        WHERE launch_date >= CURRENT_DATE - INTERVAL '30 days'
+    """)
+
+    groups = {"last-30-days": [int(row[0]) for row in rows]}
     return groups
