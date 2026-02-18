@@ -198,6 +198,17 @@ def clear_analyst_objects(conn):
     logger.info("Cleared analyst objects")
 
 
+def clear_stale_objects(conn):
+    """Delete objects where creation_date is more than 3 days in the past."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM public.objects WHERE creation_date < NOW() - INTERVAL '3 days'"
+        )
+        deleted = cur.rowcount
+    conn.commit()
+    logger.info(f"Cleared {deleted} stale objects")
+
+
 def process_records(conn, data, label):
     """Transform and insert records in batches."""
     total = len(data)
@@ -229,7 +240,14 @@ def main():
     conn = connect_db()
 
     try:
+        """
+        Well-tracked analyst objects are rather volatile - they don't get updated every time, and their
+        creation_date can be several days in the past. So we remove them from the table with every ingestion,
+        then trim the stale objects (objects with creation dates older than 3 days), and finally add all the
+        analyst objects again.  
+        """
         clear_analyst_objects(conn)
+        clear_stale_objects(conn)
 
         gp_count = process_records(conn, gp_data, "GP")
         analyst_count = process_records(conn, analyst_data, "Analyst")
