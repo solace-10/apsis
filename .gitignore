@@ -1,6 +1,7 @@
 .cache/
 .clangd
 .claude/
+.env
 .vscode/settings.json
 build/
 data_ingestion/.env
