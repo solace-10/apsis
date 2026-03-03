@@ -106,15 +106,9 @@ export interface GameState {
  */
 export interface OrbisModule {
 	// Query functions
-	getSpaceObjects(): SpaceObject[];
-	getSpaceObjectById(id: number): SpaceObject | null;
-	getGroups(): SpaceObjectGroup[];
-	getSelectedObject(): SpaceObject | null;
 	getOverlayState(): OverlayState;
 
 	// Mutation functions
-	selectObject(id: number | null): void;
-	setGroupVisibility(groupId: string, visible: boolean): void;
 	setOverlay(overlay: keyof OverlayState, enabled: boolean): void;
 	setTimeScale(scale: number): void;
 

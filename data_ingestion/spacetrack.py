@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
 SpaceTrack data ingestion script.
-Ingests satellite data from SpaceTrack JSON and writes to PostgreSQL database.
+Fetches satellite data from the SpaceTrack API and writes to PostgreSQL database.
 """
 
-import json
 import logging
 import os
 import sys
-from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import execute_values
@@ -29,9 +28,6 @@ load_dotenv()
 FIELD_MAPPING = {
     "OBJECT_ID": "id",
     "OBJECT_NAME": "name",
-    "REF_FRAME": "reference_frame",
-    "TIME_SYSTEM": "time_system",
-    "MEAN_ELEMENT_THEORY": "mean_element_theory",
     "EPOCH": "epoch",
     "MEAN_MOTION": "mean_motion",
     "ECCENTRICITY": "eccentricity",
@@ -51,12 +47,23 @@ FIELD_MAPPING = {
     "COUNTRY_CODE": "country_code",
     "LAUNCH_DATE": "launch_date",
     "SITE": "launch_site",
+    "CREATION_DATE": "creation_date",
 }
 
 # Database columns in order for insert
 DB_COLUMNS = list(FIELD_MAPPING.values())
 
 BATCH_SIZE = 1000
+
+GP_DATA_URL = (
+    "https://www.space-track.org/basicspacedata/query"
+    "/class/gp/EPOCH/>now-30/orderby/NORAD_CAT_ID,EPOCH/format/json"
+)
+ANALYST_DATA_URL = (
+    "https://www.space-track.org/basicspacedata/query"
+    "/class/gp/EPOCH/%3Enow-30/NORAD_CAT_ID/80000--89999"
+    "/orderby/NORAD_CAT_ID/format/json/emptyresult/show"
+)
 
 
 def connect_db():
@@ -76,17 +83,42 @@ def connect_db():
         sys.exit(1)
 
 
-def load_json(filepath):
-    """Load JSON data from file."""
-    logger.info(f"Loading JSON from {filepath}")
-    try:
-        with open(filepath, "r") as f:
-            data = json.load(f)
-        logger.info(f"Loaded {len(data)} records from JSON")
-        return data
-    except (json.JSONDecodeError, IOError) as e:
-        logger.error(f"Failed to load JSON: {e}")
+def fetch_data():
+    """Fetch GP and analyst satellite data from the SpaceTrack API."""
+    user = os.getenv("SPACETRACK_USER")
+    password = os.getenv("SPACETRACK_PASSWORD")
+    if not user or not password:
+        logger.error("SPACETRACK_USER and SPACETRACK_PASSWORD must be set in .env")
         sys.exit(1)
+
+    login_url = "https://www.space-track.org/ajaxauth/login"
+
+    session = requests.Session()
+
+    logger.info("Logging in to SpaceTrack...")
+    resp = session.post(login_url, data={"identity": user, "password": password})
+    if resp.status_code != 200:
+        logger.error(f"SpaceTrack login failed (HTTP {resp.status_code})")
+        sys.exit(1)
+    logger.info("SpaceTrack login successful")
+
+    logger.info("Fetching GP data...")
+    resp = session.get(GP_DATA_URL)
+    if resp.status_code != 200:
+        logger.error(f"GP data request failed (HTTP {resp.status_code})")
+        sys.exit(1)
+    gp_records = resp.json()
+    logger.info(f"Fetched {len(gp_records)} GP records")
+
+    logger.info("Fetching analyst data...")
+    resp = session.get(ANALYST_DATA_URL)
+    if resp.status_code != 200:
+        logger.error(f"Analyst data request failed (HTTP {resp.status_code})")
+        sys.exit(1)
+    analyst_records = resp.json()
+    logger.info(f"Fetched {len(analyst_records)} analyst records")
+
+    return gp_records, analyst_records
 
 
 def transform_record(record):
@@ -104,10 +136,10 @@ def transform_record(record):
 def deduplicate_batch(records):
     """Remove duplicates from batch, keeping the last occurrence (most recent data)."""
     seen = {}
+    norad_id_idx = DB_COLUMNS.index("norad_id")
     for record in records:
-        # First element is the 'id' field
-        object_id = record[0]
-        seen[object_id] = record
+        norad_id = record[norad_id_idx]
+        seen[norad_id] = record
     return list(seen.values())
 
 
@@ -120,14 +152,14 @@ def insert_batch(conn, records):
     records = deduplicate_batch(records)
 
     columns = ", ".join(DB_COLUMNS)
-    # Build the SET clause for ON CONFLICT UPDATE (exclude 'id' which is the conflict key)
-    update_columns = [col for col in DB_COLUMNS if col != "id"]
+    # Build the SET clause for ON CONFLICT UPDATE (exclude 'norad_id' which is the conflict key)
+    update_columns = [col for col in DB_COLUMNS if col != "norad_id"]
     update_set = ", ".join([f"{col} = EXCLUDED.{col}" for col in update_columns])
 
     query = f"""
         INSERT INTO public.objects ({columns})
         VALUES %s
-        ON CONFLICT (id) DO UPDATE SET {update_set}
+        ON CONFLICT (norad_id) DO UPDATE SET {update_set}
     """
 
     with conn.cursor() as cur:
@@ -136,45 +168,94 @@ def insert_batch(conn, records):
     return len(records)
 
 
+def insert_groups_batch(conn, ids, group):
+    """Insert group memberships into public.groups."""
+    if not ids:
+        return 0
+
+    unique_ids = list(set(ids))
+    records = [(norad_id, group) for norad_id in unique_ids]
+
+    query = """
+        INSERT INTO public.groups (norad_id, "group")
+        VALUES %s
+        ON CONFLICT (norad_id, "group") DO NOTHING
+    """
+
+    with conn.cursor() as cur:
+        execute_values(cur, query, records, page_size=BATCH_SIZE)
+    conn.commit()
+    logger.info(f"Inserted {len(records)} '{group}' group memberships")
+    return len(records)
+
+
+def clear_analyst_objects(conn):
+    """Remove all analyst objects from public.objects and public.groups."""
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM public.groups WHERE \"group\" = 'analyst'")
+        cur.execute("DELETE FROM public.objects WHERE norad_id::int BETWEEN 80000 AND 89999")
+    conn.commit()
+    logger.info("Cleared analyst objects")
+
+
+def clear_stale_objects(conn):
+    """Delete objects where creation_date is more than 3 days in the past."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM public.objects WHERE creation_date < NOW() - INTERVAL '3 days'"
+        )
+        deleted = cur.rowcount
+    conn.commit()
+    logger.info(f"Cleared {deleted} stale objects")
+
+
+def process_records(conn, data, label):
+    """Transform and insert records in batches."""
+    total = len(data)
+    processed = 0
+    batch = []
+
+    for record in data:
+        row = transform_record(record)
+        batch.append(row)
+
+        if len(batch) >= BATCH_SIZE:
+            insert_batch(conn, batch)
+            processed += len(batch)
+            logger.info(f"{label}: Processed {processed}/{total} records")
+            batch = []
+
+    if batch:
+        insert_batch(conn, batch)
+        processed += len(batch)
+        logger.info(f"{label}: Processed {processed}/{total} records")
+
+    return processed
+
+
 def main():
     """Main ingestion process."""
-    # Determine JSON file path
-    script_dir = Path(__file__).parent
-    json_file = script_dir / "all.json"
+    gp_data, analyst_data = fetch_data()
 
-    if not json_file.exists():
-        logger.error(f"JSON file not found: {json_file}")
-        sys.exit(1)
-
-    # Load JSON data
-    data = load_json(json_file)
-    total_records = len(data)
-
-    # Connect to database
     conn = connect_db()
 
     try:
-        # Process records in batches
-        processed = 0
-        batch = []
+        """
+        Well-tracked analyst objects are rather volatile - they don't get updated every time, and their
+        creation_date can be several days in the past. So we remove them from the table with every ingestion,
+        then trim the stale objects (objects with creation dates older than 3 days), and finally add all the
+        analyst objects again.  
+        """
+        clear_analyst_objects(conn)
+        clear_stale_objects(conn)
 
-        for record in data:
-            row = transform_record(record)
-            batch.append(row)
+        gp_count = process_records(conn, gp_data, "GP")
+        analyst_count = process_records(conn, analyst_data, "Analyst")
 
-            if len(batch) >= BATCH_SIZE:
-                insert_batch(conn, batch)
-                processed += len(batch)
-                logger.info(f"Processed {processed}/{total_records} records")
-                batch = []
+        analyst_ids = [record.get("NORAD_CAT_ID") for record in analyst_data if record.get("NORAD_CAT_ID")]
+        insert_groups_batch(conn, analyst_ids, "analyst")
 
-        # Insert remaining records
-        if batch:
-            insert_batch(conn, batch)
-            processed += len(batch)
-            logger.info(f"Processed {processed}/{total_records} records")
-
-        logger.info(f"Ingestion complete. Total records processed: {processed}")
+        logger.info(f"Ingestion complete. GP: {gp_count}, Analyst: {analyst_count}")
 
     except psycopg2.Error as e:
         logger.error(f"Database error: {e}")

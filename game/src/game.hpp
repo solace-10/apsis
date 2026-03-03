@@ -30,7 +30,10 @@ private:
     void DrawImGuiMenuBar();
 
     SectorSharedPtr m_pSector;
+
+#if defined(TARGET_PLATFORM_WEB)
     std::unique_ptr<WebInterop> m_pWebInterop;
+#endif
 };
 
 inline Sector* Game::GetSector()

@@ -1,0 +1,10 @@
+serverless_functions/get_all_objects/dateutil/
+serverless_functions/get_all_objects/pg8000-1.31.5.dist-info/
+serverless_functions/get_all_objects/pg8000/
+serverless_functions/get_all_objects/python_dateutil-2.9.0.post0.dist-info/
+serverless_functions/get_all_objects/scramp-1.4.8.dist-info/
+serverless_functions/get_all_objects/scramp/
+serverless_functions/get_all_objects/__pycache__/
+serverless_functions/get_all_objects/six-1.17.0.dist-info/
+serverless_functions/get_all_objects/asn1crypto-1.5.1.dist-info/
+serverless_functions/get_all_objects/asn1crypto/

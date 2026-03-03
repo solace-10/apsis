@@ -7,19 +7,19 @@
 #include <glm/gtc/constants.hpp>
 
 #include <core/log.hpp>
+#include <scene/entity.hpp>
 
+#include "components/metadata_component.hpp"
+#include "components/orbital_elements_component.hpp"
+#include "components/orbital_state_component.hpp"
 #include "emscripten/web_interop.hpp"
-#include "space_objects/space_object.hpp"
-#include "systems/orbit_simulation_system.hpp"
+#include "game.hpp"
+#include "sector/group_filters.hpp"
+#include "sector/sector.hpp"
+#include "systems/space_object_render_system.hpp"
 
 namespace WingsOfSteel
 {
-
-// Earth's gravitational parameter (km³/s²)
-static constexpr double kMu = 398600.4418;
-
-// Earth's mean radius (km)
-static constexpr double kEarthMeanRadius = 6371.0;
 
 WebInterop* WebInterop::s_pInstance = nullptr;
 
@@ -39,9 +39,9 @@ WebInterop* WebInterop::GetInstance()
     return s_pInstance;
 }
 
-void WebInterop::NotifySpaceObjectSelected(const SpaceObject* pSpaceObject)
+void WebInterop::NotifySpaceObjectSelected(EntitySharedPtr pEntity)
 {
-    if (pSpaceObject == nullptr)
+    if (!pEntity)
     {
         NotifySpaceObjectDeselected();
         return;
@@ -59,33 +59,24 @@ void WebInterop::NotifySpaceObjectSelected(const SpaceObject* pSpaceObject)
         return;
     }
 
-    // Calculate current position and derived values
-    const glm::dvec3 position = OrbitSimulationSystem::CalculateCartesianPosition(*pSpaceObject);
-    const double altitude = glm::length(position) - kEarthMeanRadius;
-
-    // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
-    const double n = pSpaceObject->GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
-    const double semiMajorAxis = std::cbrt(kMu / (n * n));
-    const double r = glm::length(position);
-    const double velocity = std::sqrt(kMu * (2.0 / r - 1.0 / semiMajorAxis));
-
-    // Get lat/lon
-    const glm::dvec2 latLon = OrbitSimulationSystem::ECIToLatLon(position);
+    const MetadataComponent& metadata = pEntity->GetComponent<MetadataComponent>();
+    const OrbitalElementsComponent& orbitalElements = pEntity->GetComponent<OrbitalElementsComponent>();
+    const OrbitalStateComponent& orbitalState = pEntity->GetComponent<OrbitalStateComponent>();
 
     emscripten::val interop = emscripten::val::object();
-    interop.set("objectName", pSpaceObject->GetObjectName());
-    interop.set("objectId", pSpaceObject->GetObjectId());
-    interop.set("noradCatalogueId", pSpaceObject->GetNoradCatalogueId());
-    interop.set("eccentricity", pSpaceObject->GetEccentricity());
-    interop.set("inclination", pSpaceObject->GetInclination());
-    interop.set("rightAscensionOfAscendingNode", pSpaceObject->GetRightAscensionOfAscendingNode());
-    interop.set("argumentOfPericenter", pSpaceObject->GetArgumentOfPericenter());
-    interop.set("meanAnomaly", pSpaceObject->GetMeanAnomaly());
-    interop.set("semiMajorAxis", static_cast<float>(semiMajorAxis));
-    interop.set("altitude", static_cast<float>(altitude));
-    interop.set("velocity", static_cast<float>(velocity));
-    interop.set("latitude", static_cast<float>(latLon.x));
-    interop.set("longitude", static_cast<float>(latLon.y));
+    interop.set("objectName", metadata.m_ObjectName);
+    interop.set("objectId", metadata.m_ObjectId);
+    interop.set("noradCatalogueId", metadata.m_NoradCatalogueId);
+    interop.set("eccentricity", orbitalElements.GetEccentricity());
+    interop.set("inclination", orbitalElements.GetInclination());
+    interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());
+    interop.set("argumentOfPericenter", orbitalElements.GetArgumentOfPericenter());
+    interop.set("meanAnomaly", orbitalElements.GetMeanAnomaly());
+    interop.set("semiMajorAxis", static_cast<float>(orbitalState.m_SemiMajorAxis));
+    interop.set("altitude", static_cast<float>(orbitalState.m_Altitude));
+    interop.set("velocity", static_cast<float>(orbitalState.m_Velocity));
+    interop.set("latitude", static_cast<float>(orbitalState.m_Latitude));
+    interop.set("longitude", static_cast<float>(orbitalState.m_Longitude));
 
     onSelected(interop);
 }
@@ -107,9 +98,9 @@ void WebInterop::NotifySpaceObjectDeselected()
     onDeselected();
 }
 
-void WebInterop::NotifySpaceObjectUpdated(const SpaceObject* pSpaceObject)
+void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
 {
-    if (pSpaceObject == nullptr)
+    if (!pEntity)
     {
         return;
     }
@@ -126,35 +117,101 @@ void WebInterop::NotifySpaceObjectUpdated(const SpaceObject* pSpaceObject)
         return;
     }
 
-    // Calculate current position and derived values
-    const glm::dvec3 position = OrbitSimulationSystem::CalculateCartesianPosition(*pSpaceObject);
-    const double altitude = glm::length(position) - kEarthMeanRadius;
-
-    // Calculate velocity from vis-viva equation
-    const double n = pSpaceObject->GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
-    const double semiMajorAxis = std::cbrt(kMu / (n * n));
-    const double r = glm::length(position);
-    const double velocity = std::sqrt(kMu * (2.0 / r - 1.0 / semiMajorAxis));
-
-    // Get lat/lon
-    const glm::dvec2 latLon = OrbitSimulationSystem::ECIToLatLon(position);
+    const MetadataComponent& metadata = pEntity->GetComponent<MetadataComponent>();
+    const OrbitalElementsComponent& orbitalElements = pEntity->GetComponent<OrbitalElementsComponent>();
+    const OrbitalStateComponent& orbitalState = pEntity->GetComponent<OrbitalStateComponent>();
 
     emscripten::val interop = emscripten::val::object();
-    interop.set("objectName", pSpaceObject->GetObjectName());
-    interop.set("objectId", pSpaceObject->GetObjectId());
-    interop.set("noradCatalogueId", pSpaceObject->GetNoradCatalogueId());
-    interop.set("eccentricity", pSpaceObject->GetEccentricity());
-    interop.set("inclination", pSpaceObject->GetInclination());
-    interop.set("rightAscensionOfAscendingNode", pSpaceObject->GetRightAscensionOfAscendingNode());
-    interop.set("argumentOfPericenter", pSpaceObject->GetArgumentOfPericenter());
-    interop.set("meanAnomaly", pSpaceObject->GetMeanAnomaly());
-    interop.set("semiMajorAxis", static_cast<float>(semiMajorAxis));
-    interop.set("altitude", static_cast<float>(altitude));
-    interop.set("velocity", static_cast<float>(velocity));
-    interop.set("latitude", static_cast<float>(latLon.x));
-    interop.set("longitude", static_cast<float>(latLon.y));
+    interop.set("objectName", metadata.m_ObjectName);
+    interop.set("objectId", metadata.m_ObjectId);
+    interop.set("noradCatalogueId", metadata.m_NoradCatalogueId);
+    interop.set("eccentricity", orbitalElements.GetEccentricity());
+    interop.set("inclination", orbitalElements.GetInclination());
+    interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());
+    interop.set("argumentOfPericenter", orbitalElements.GetArgumentOfPericenter());
+    interop.set("meanAnomaly", orbitalElements.GetMeanAnomaly());
+    interop.set("semiMajorAxis", static_cast<float>(orbitalState.m_SemiMajorAxis));
+    interop.set("altitude", static_cast<float>(orbitalState.m_Altitude));
+    interop.set("velocity", static_cast<float>(orbitalState.m_Velocity));
+    interop.set("latitude", static_cast<float>(orbitalState.m_Latitude));
+    interop.set("longitude", static_cast<float>(orbitalState.m_Longitude));
 
     onUpdated(interop);
+}
+
+void WebInterop::NotifyGroupFiltersChanged(GroupFilters* pGroupFilters)
+{
+    if (!pGroupFilters)
+    {
+        return;
+    }
+
+    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    if (callbacks.isUndefined() || callbacks.isNull())
+    {
+        return;
+    }
+
+    emscripten::val onChanged = callbacks["onGroupFiltersChanged"];
+    if (onChanged.isUndefined())
+    {
+        return;
+    }
+
+    emscripten::val groupsArray = emscripten::val::array();
+    for (const std::string& name : pGroupFilters->GetGroupFilterNames())
+    {
+        GroupFilter* pFilter = pGroupFilters->GetGroupFilter(name);
+        if (!pFilter)
+        {
+            continue;
+        }
+
+        emscripten::val group = emscripten::val::object();
+        group.set("id", pFilter->GetName());
+        group.set("name", pFilter->GetDisplayName());
+        group.set("color", pFilter->GetHexColor());
+        group.set("visible", pFilter->IsEnabled());
+        group.set("count", pFilter->GetCount());
+        groupsArray.call<void>("push", group);
+    }
+
+    onChanged(groupsArray);
+}
+
+void WebInterop::SetGroupFilterEnabled(const std::string& groupId, bool enabled)
+{
+    Sector* pSector = Game::Get()->GetSector();
+    if (!pSector)
+    {
+        return;
+    }
+
+    GroupFilters* pGroupFilters = pSector->GetGroupFilters();
+    if (!pGroupFilters)
+    {
+        return;
+    }
+
+    GroupFilter* pFilter = pGroupFilters->GetGroupFilter(groupId);
+    if (!pFilter)
+    {
+        Log::Warning() << "SetGroupFilterEnabled: unknown group '" << groupId << "'.";
+        return;
+    }
+
+    pFilter->SetEnabled(enabled);
+
+    if (WebInterop* pWebInterop = GetInstance())
+    {
+        pWebInterop->NotifyGroupFiltersChanged(pGroupFilters);
+    }
+
+    SpaceObjectRenderSystem* pSpaceObjectRenderSystem = pSector->GetSystem<SpaceObjectRenderSystem>();
+    if (pSpaceObjectRenderSystem)
+    {
+        pSpaceObjectRenderSystem->NotifyGroupFiltersChanged();
+    }
 }
 
 } // namespace WingsOfSteel

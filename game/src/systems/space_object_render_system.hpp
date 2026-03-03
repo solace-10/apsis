@@ -4,15 +4,18 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <core/color.hpp>
 #include <render/vertex_types.hpp>
 #include <resources/resource.fwd.hpp>
 #include <scene/entity.hpp>
 #include <scene/systems/system.hpp>
 
-#include "space_objects/space_object.hpp"
+#include "components/metadata_component.hpp"
 
 namespace WingsOfSteel
 {
+
+class OrbitalElementsComponent;
 
 class SpaceObjectRenderSystem : public System
 {
@@ -25,14 +28,16 @@ public:
 
     void GenerateLabels();
     void Render(wgpu::RenderPassEncoder& renderPass);
+    void NotifyGroupFiltersChanged();
 
 private:
     void CreateRenderPipeline();
     void GenerateSpaceObjectGroups();
     void GenerateLabelsVertexData();
-    size_t MakeOrbitalKey(const SpaceObject& object) const;
+    size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;
+    const Color& GetSpaceObjectColor(const MetadataComponent& metadataComponent) const;
 
-    static constexpr size_t kMaxLabels = 1024;
+    static constexpr size_t kMaxLabels = 65536;
     static constexpr size_t kVerticesPerQuad = 6;
     static constexpr float kQuadHalfSize = 10.0f;
 
