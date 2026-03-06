@@ -20,8 +20,8 @@ CameraSystem::~CameraSystem()
     InputSystem* pInputSystem = GetInputSystem();
     if (pInputSystem)
     {
-        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonPressedToken);
-        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonReleasedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonReleasedToken);
         pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
         pInputSystem->RemoveMouseWheelCallback(m_MouseWheelToken);
     }
@@ -29,8 +29,8 @@ CameraSystem::~CameraSystem()
 
 void CameraSystem::Initialize(Scene* pScene)
 {
-    m_LeftMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Left, MouseAction::Pressed);
-    m_LeftMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Left, MouseAction::Released);
+    m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
+    m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
 
     m_MousePositionToken = GetInputSystem()->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) {
         m_InputPending = true;

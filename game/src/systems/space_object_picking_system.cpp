@@ -1,0 +1,96 @@
+#include <pandora.hpp>
+
+#include "components/label_component.hpp"
+#include "components/metadata_component.hpp"
+#include "game.hpp"
+#include "sector/sector.hpp"
+#include "systems/space_object_picking_system.hpp"
+
+namespace WingsOfSteel
+{
+
+SpaceObjectPickingSystem::~SpaceObjectPickingSystem()
+{
+    InputSystem* pInputSystem = GetInputSystem();
+    if (pInputSystem)
+    {
+        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonPressedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonReleasedToken);
+        pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
+    }
+}
+
+void SpaceObjectPickingSystem::Initialize(Scene* pScene)
+{
+    m_LeftMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback(
+        [this]() {
+            m_PressPosition = m_CurrentMousePosition;
+        },
+        MouseButton::Left, MouseAction::Pressed);
+
+    m_LeftMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback(
+        [this]() {
+            if (m_PressPosition.has_value())
+            {
+                const glm::vec2 delta = m_CurrentMousePosition - m_PressPosition.value();
+                const float displacementSquared = glm::dot(delta, delta);
+                if (displacementSquared < kDragThresholdPixels * kDragThresholdPixels)
+                {
+                    PerformPick(m_CurrentMousePosition);
+                }
+                m_PressPosition.reset();
+            }
+        },
+        MouseButton::Left, MouseAction::Released);
+
+    m_MousePositionToken = GetInputSystem()->AddMousePositionCallback(
+        [this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) {
+            m_CurrentMousePosition = mousePosition;
+        });
+}
+
+void SpaceObjectPickingSystem::Update(float delta)
+{
+}
+
+void SpaceObjectPickingSystem::PerformPick(const glm::vec2& screenPos)
+{
+    Sector* pSector = Game::Get()->GetSector();
+    if (!pSector)
+    {
+        return;
+    }
+
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<LabelComponent, MetadataComponent>();
+
+    const float pickRadiusSquared = kPickRadiusPixels * kPickRadiusPixels;
+    float closestDistanceSquared = pickRadiusSquared;
+    EntityHandle closestEntity = NullEntityHandle;
+
+    view.each([&](const EntityHandle entityHandle, const LabelComponent& labelComponent, const MetadataComponent& metadataComponent) {
+        if (labelComponent.IsOccluded())
+        {
+            return;
+        }
+
+        const glm::vec2 delta = labelComponent.GetScreenSpacePosition() - screenPos;
+        const float distanceSquared = glm::dot(delta, delta);
+        if (distanceSquared < closestDistanceSquared)
+        {
+            closestDistanceSquared = distanceSquared;
+            closestEntity = entityHandle;
+        }
+    });
+
+    if (closestEntity != NullEntityHandle)
+    {
+        pSector->SetSelectedSpaceObject(GetActiveScene()->GetEntity(closestEntity));
+    }
+    else
+    {
+        pSector->SetSelectedSpaceObject(nullptr);
+    }
+}
+
+} // namespace WingsOfSteel

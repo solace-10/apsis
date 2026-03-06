@@ -214,6 +214,8 @@ void SpaceObjectRenderSystem::Update(float delta)
         if (!isOccluded)
         {
             labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight));
+
+            GetDebugRender()->Circle(labelPosition, -cameraForward, Color::White, 10, 8);
         }
     });
 }
@@ -228,10 +230,20 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     // Create texture bind group lazily once the font texture is available
     if (!m_TextureBindGroup)
     {
-        std::array<wgpu::BindGroupEntry, 2> entries = { { { .binding = 0,
-                                                              .sampler = m_Sampler },
-            { .binding = 1,
-                .textureView = m_pFont->GetTexture()->GetTextureView() } } };
+        // clang-format off
+        std::array<wgpu::BindGroupEntry, 2> entries = {
+            {
+                {
+                    .binding = 0,
+                    .sampler = m_Sampler
+                },
+                {
+                    .binding = 1,
+                    .textureView = m_pFont->GetTexture()->GetTextureView()
+                }
+            }
+        };
+        // clang-format on
 
         wgpu::BindGroupDescriptor bindGroupDesc{
             .layout = m_TextureBindGroupLayout,

@@ -30,6 +30,7 @@
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
+#include "systems/space_object_picking_system.hpp"
 #include "systems/space_object_render_system.hpp"
 #include "game.hpp"
 
@@ -57,6 +58,7 @@ void Sector::Initialize()
     AddSystem<PlanetRenderSystem>();
     AddSystem<OrbitSimulationSystem>();
     AddSystem<SpaceObjectRenderSystem>();
+    AddSystem<SpaceObjectPickingSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
