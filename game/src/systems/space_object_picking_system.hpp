@@ -23,7 +23,6 @@ private:
     void PerformPick(const glm::vec2& screenPos);
 
     static constexpr float kPickRadiusPixels = 16.0f;
-    static constexpr float kDragThresholdPixels = 4.0f;
 
     InputCallbackToken m_LeftMouseButtonPressedToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_LeftMouseButtonReleasedToken{ InputSystem::sInvalidInputCallbackToken };

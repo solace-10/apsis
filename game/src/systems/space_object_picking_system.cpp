@@ -6,6 +6,7 @@
 #include "components/mouse_picking_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
+#include "systems/camera_system.hpp"
 #include "systems/space_object_picking_system.hpp"
 
 namespace WingsOfSteel
@@ -36,7 +37,8 @@ void SpaceObjectPickingSystem::Initialize(Scene* pScene)
             {
                 const glm::vec2 delta = m_CurrentMousePosition - m_PressPosition.value();
                 const float displacementSquared = glm::dot(delta, delta);
-                if (displacementSquared < kDragThresholdPixels * kDragThresholdPixels)
+                const float dragDeadzoneSquared = CameraSystem::GetDragDeadzone() * CameraSystem::GetDragDeadzone();
+                if (displacementSquared < dragDeadzoneSquared)
                 {
                     PerformPick(m_CurrentMousePosition);
                 }

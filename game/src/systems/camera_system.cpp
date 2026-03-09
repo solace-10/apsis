@@ -20,8 +20,8 @@ CameraSystem::~CameraSystem()
     InputSystem* pInputSystem = GetInputSystem();
     if (pInputSystem)
     {
-        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonPressedToken);
-        pInputSystem->RemoveMouseButtonCallback(m_RightMouseButtonReleasedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonPressedToken);
+        pInputSystem->RemoveMouseButtonCallback(m_LeftMouseButtonReleasedToken);
         pInputSystem->RemoveMousePositionCallback(m_MousePositionToken);
         pInputSystem->RemoveMouseWheelCallback(m_MouseWheelToken);
     }
@@ -29,10 +29,22 @@ CameraSystem::~CameraSystem()
 
 void CameraSystem::Initialize(Scene* pScene)
 {
-    m_RightMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = true; }, MouseButton::Right, MouseAction::Pressed);
-    m_RightMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback([this]() { m_IsDragging = false; }, MouseButton::Right, MouseAction::Released);
+    m_LeftMouseButtonPressedToken = GetInputSystem()->AddMouseButtonCallback(
+        [this]() {
+            m_IsButtonHeld = true;
+            m_PressPosition = m_CurrentMousePosition;
+        },
+        MouseButton::Left, MouseAction::Pressed);
+
+    m_LeftMouseButtonReleasedToken = GetInputSystem()->AddMouseButtonCallback(
+        [this]() {
+            m_IsButtonHeld = false;
+            m_IsDragging = false;
+        },
+        MouseButton::Left, MouseAction::Released);
 
     m_MousePositionToken = GetInputSystem()->AddMousePositionCallback([this](const glm::vec2& mousePosition, const glm::vec2& mouseDelta) {
+        m_CurrentMousePosition = mousePosition;
         m_InputPending = true;
         m_MouseDelta = mouseDelta;
     });
@@ -77,6 +89,17 @@ void CameraSystem::Update(float delta)
         else if (pCamera->HasComponent<OrbitCameraComponent>())
         {
             OrbitCameraComponent& occ = pCamera->GetComponent<OrbitCameraComponent>();
+
+            if (m_IsButtonHeld && !m_IsDragging && m_InputPending)
+            {
+                const glm::vec2 displacement = m_CurrentMousePosition - m_PressPosition;
+                const float displacementSquared = glm::dot(displacement, displacement);
+                const float dragDeadzoneSquared = GetDragDeadzone() * GetDragDeadzone();
+                if (displacementSquared >= dragDeadzoneSquared)
+                {
+                    m_IsDragging = true;
+                }
+            }
 
             if (m_IsDragging && m_InputPending)
             {
