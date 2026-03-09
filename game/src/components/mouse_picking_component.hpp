@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 #include <scene/components/component_factory.hpp>
 #include <scene/components/icomponent.hpp>
@@ -18,13 +18,13 @@ public:
     {
     }
 
-    void SetScreenSpacePosition(const glm::vec2& position) { m_ScreenSpacePosition = position; }
-    const glm::vec2& GetScreenSpacePosition() const { return m_ScreenSpacePosition; }
+    void SetScreenSpacePosition(const glm::vec3& position) { m_ScreenSpacePosition = position; }
+    const glm::vec3& GetScreenSpacePosition() const { return m_ScreenSpacePosition; }
     void SetEnabled(bool isEnabled) { m_IsEnabled = isEnabled; }
     bool IsEnabled() const { return m_IsEnabled; }
 
 private:
-    glm::vec2 m_ScreenSpacePosition{ 0.0f };
+    glm::vec3 m_ScreenSpacePosition{ 0.0f };
     bool m_IsEnabled{ true };
 };
 

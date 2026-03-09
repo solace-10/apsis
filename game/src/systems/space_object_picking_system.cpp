@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <pandora.hpp>
 
 #include "components/metadata_component.hpp"
@@ -65,23 +67,40 @@ void SpaceObjectPickingSystem::PerformPick(const glm::vec2& screenPos)
     auto view = registry.view<MousePickingComponent, MetadataComponent>();
 
     const float pickRadiusSquared = kPickRadiusPixels * kPickRadiusPixels;
-    float closestDistanceSquared = pickRadiusSquared;
-    EntityHandle closestEntity = NullEntityHandle;
 
+    struct PickingData
+    {
+        EntityHandle entity;
+        float z;  
+    };
+
+    std::vector<PickingData> entitiesInRadius;
+    
     view.each([&](const EntityHandle entityHandle, const MousePickingComponent& mousePickingComponent, const MetadataComponent& metadataComponent) {
         if (!mousePickingComponent.IsEnabled())
         {
             return;
         }
 
-        const glm::vec2 delta = mousePickingComponent.GetScreenSpacePosition() - screenPos;
+        const glm::vec3 screenSpacePosition = mousePickingComponent.GetScreenSpacePosition();
+        const glm::vec2 delta = glm::vec2(screenSpacePosition.x, screenSpacePosition.y) - screenPos;
         const float distanceSquared = glm::dot(delta, delta);
-        if (distanceSquared < closestDistanceSquared)
+        if (distanceSquared < pickRadiusSquared)
         {
-            closestDistanceSquared = distanceSquared;
-            closestEntity = entityHandle;
+            entitiesInRadius.push_back({entityHandle, screenSpacePosition.z});
         }
     });
+
+    EntityHandle closestEntity = NullEntityHandle;
+    float closestDistance = 1.0f;
+    for (auto& pickingData : entitiesInRadius)
+    {
+        if (pickingData.z <= closestDistance)
+        {
+            closestEntity = pickingData.entity;
+            closestDistance = pickingData.z;
+        }
+    }
 
     if (closestEntity != NullEntityHandle)
     {
