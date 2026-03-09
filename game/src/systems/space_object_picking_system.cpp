@@ -1,7 +1,7 @@
 #include <pandora.hpp>
 
-#include "components/label_component.hpp"
 #include "components/metadata_component.hpp"
+#include "components/mouse_picking_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "systems/space_object_picking_system.hpp"
@@ -62,19 +62,19 @@ void SpaceObjectPickingSystem::PerformPick(const glm::vec2& screenPos)
     }
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<LabelComponent, MetadataComponent>();
+    auto view = registry.view<MousePickingComponent, MetadataComponent>();
 
     const float pickRadiusSquared = kPickRadiusPixels * kPickRadiusPixels;
     float closestDistanceSquared = pickRadiusSquared;
     EntityHandle closestEntity = NullEntityHandle;
 
-    view.each([&](const EntityHandle entityHandle, const LabelComponent& labelComponent, const MetadataComponent& metadataComponent) {
-        if (labelComponent.IsOccluded())
+    view.each([&](const EntityHandle entityHandle, const MousePickingComponent& mousePickingComponent, const MetadataComponent& metadataComponent) {
+        if (!mousePickingComponent.IsEnabled())
         {
             return;
         }
 
-        const glm::vec2 delta = labelComponent.GetScreenSpacePosition() - screenPos;
+        const glm::vec2 delta = mousePickingComponent.GetScreenSpacePosition() - screenPos;
         const float distanceSquared = glm::dot(delta, delta);
         if (distanceSquared < closestDistanceSquared)
         {

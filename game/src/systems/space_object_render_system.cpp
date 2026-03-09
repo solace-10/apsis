@@ -8,7 +8,6 @@
 
 #include <core/color.hpp>
 #include <pandora.hpp>
-#include <render/debug_render.hpp>
 #include <render/rendersystem.hpp>
 #include <render/vertex_types.hpp>
 #include <render/window.hpp>
@@ -23,6 +22,7 @@
 
 #include "components/label_component.hpp"
 #include "components/metadata_component.hpp"
+#include "components/mouse_picking_component.hpp"
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
@@ -171,14 +171,14 @@ void SpaceObjectRenderSystem::Update(float delta)
     const float planetRadiusSquared = planetRadius * planetRadius;
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<LabelComponent, const TransformComponent>();
+    auto view = registry.view<LabelComponent, MousePickingComponent, const TransformComponent>();
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
     const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
     const glm::vec3 cameraForward = glm::normalize(cameraComponent.camera.GetTarget() - cameraPosition);
 
-    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, const TransformComponent& transformComponent) {
+    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, MousePickingComponent& mousePickingComponent, const TransformComponent& transformComponent) {
 
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
         const glm::vec3 d(labelPosition - cameraPosition);
@@ -188,6 +188,7 @@ void SpaceObjectRenderSystem::Update(float delta)
         if (glm::dot(d, cameraForward) <= 0.0f)
         {
             labelComponent.SetOccluded(true);
+            mousePickingComponent.SetEnabled(false);
             return;
         }
 
@@ -211,11 +212,14 @@ void SpaceObjectRenderSystem::Update(float delta)
         }
 
         labelComponent.SetOccluded(isOccluded);
+        mousePickingComponent.SetEnabled(!isOccluded);
         if (!isOccluded)
         {
-            labelComponent.SetScreenSpacePosition(cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight));
-
-            GetDebugRender()->Circle(labelPosition, -cameraForward, Color::White, 10, 8);
+            // The marker offset is used to centre the marker's character with the satellite's position in screenspace.
+            const glm::vec3 markerOffset(8.0f, 10.0f, 0.0f);
+            const glm::vec3 screenSpacePosition = cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight);
+            labelComponent.SetScreenSpacePosition(screenSpacePosition - markerOffset);
+            mousePickingComponent.SetScreenSpacePosition(screenSpacePosition);
         }
     });
 }
@@ -288,9 +292,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
 void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    registry.clear<OrbitalStateComponent>();
-    registry.clear<LabelComponent>();
-    registry.clear<SpaceObjectGroupComponent>();
+    registry.clear<OrbitalStateComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>();
 
     Sector* pSector = Game::Get()->GetSector();
     GroupFilters::Mask currentVisibleMask = pSector->GetGroupFilters()->GetCurrentMask();
@@ -400,6 +402,8 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
             
             LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
             labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
+
+            registry.emplace<MousePickingComponent>(entityHandle);
         }
     });
 }
