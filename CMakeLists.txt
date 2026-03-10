@@ -18,13 +18,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # older versions which are no longer supported by modern CMake.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-add_custom_target(setup_compile_commands ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
-            "${CMAKE_BINARY_DIR}/compile_commands.json"
-            "${CMAKE_SOURCE_DIR}/compile_commands.json"
-    DEPENDS "${CMAKE_BINARY_DIR}/compile_commands.json"
-    COMMENT "Copying compile_commands.json for clangd integration..."
-)
+if(EMSCRIPTEN)
+    add_custom_target(setup_compile_commands ALL)
+else()
+    add_custom_target(setup_compile_commands ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_BINARY_DIR}/compile_commands.json"
+                "${CMAKE_SOURCE_DIR}/compile_commands.json"
+        DEPENDS "${CMAKE_BINARY_DIR}/compile_commands.json"
+        COMMENT "Copying compile_commands.json for clangd integration..."
+    )
+endif()
 
 add_subdirectory("pandora")
 add_subdirectory("game")

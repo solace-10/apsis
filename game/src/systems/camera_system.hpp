@@ -22,15 +22,19 @@ public:
     // Returns: world space position on the XZ plane, or (0,0,0) if no active camera or no intersection
     glm::vec3 MouseToWorld(const glm::vec2& mousePos) const;
 
-private:
+    static float GetDragDeadzone() { return 4.0f; }
 
+private:
     InputCallbackToken m_LeftMouseButtonPressedToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_LeftMouseButtonReleasedToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_MousePositionToken{ InputSystem::sInvalidInputCallbackToken };
     InputCallbackToken m_MouseWheelToken{ InputSystem::sInvalidInputCallbackToken };
+    bool m_IsButtonHeld{ false };
     bool m_IsDragging{ false };
     bool m_InputPending{ false };
     glm::vec2 m_MouseDelta{ 0.0f, 0.0f };
+    glm::vec2 m_PressPosition{ 0.0f, 0.0f };
+    glm::vec2 m_CurrentMousePosition{ 0.0f, 0.0f };
     float m_ScrollDelta{ 0.0f };
 
     // Smoothed input velocities (radians per second)

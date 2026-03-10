@@ -19,10 +19,8 @@
 #include "components/atmosphere_component.hpp"
 #include "components/metadata_component.hpp"
 #include "components/orbital_elements_component.hpp"
-#include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
-#include "resources/resource.fwd.hpp"
 #include "sector/database.hpp"
 #include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
@@ -30,6 +28,7 @@
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
+#include "systems/space_object_picking_system.hpp"
 #include "systems/space_object_render_system.hpp"
 #include "game.hpp"
 
@@ -57,6 +56,7 @@ void Sector::Initialize()
     AddSystem<PlanetRenderSystem>();
     AddSystem<OrbitSimulationSystem>();
     AddSystem<SpaceObjectRenderSystem>();
+    AddSystem<SpaceObjectPickingSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
