@@ -2,6 +2,8 @@
 Scaleway serverless function to retrieve all space objects and their groups from the database.
 """
 
+import base64
+import gzip
 import json
 import os
 
@@ -24,10 +26,16 @@ def handle(event, context):
             "groups": _get_groups(database_connection)
         }
 
+        body = gzip.compress(json.dumps(response).encode("utf-8"))
+
         return {
             "statusCode": 200,
-            "headers": {"Content-Type": ["application/json"]},
-            "body": json.dumps(response),
+            "headers": {
+                "Content-Type": ["application/json"],
+                "Content-Encoding": ["gzip"],
+            },
+            "body": base64.b64encode(body).decode("utf-8"),
+            "isBase64Encoded": True,
         }
 
     except pg8000.Error as e:
