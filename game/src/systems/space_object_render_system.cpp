@@ -27,11 +27,11 @@
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/space_object_group_component.hpp"
+#include "game.hpp"
 #include "sector/group_filter.hpp"
 #include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
 #include "systems/space_object_render_system.hpp"
-#include "game.hpp"
 
 namespace WingsOfSteel
 {
@@ -86,13 +86,6 @@ void SpaceObjectRenderSystem::Initialize(Scene* pScene)
         CreateRenderPipeline();
     });
 
-    wgpu::BufferDescriptor bufferDescriptor{
-        .label = "Label vertex buffer",
-        .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
-        .size = kMaxLabels * kVerticesPerQuad * sizeof(VertexP2C4UV)
-    };
-    m_VertexBuffer = device.CreateBuffer(&bufferDescriptor);
-    m_VertexData.reserve(kMaxLabels * kVerticesPerQuad);
 
     GetResourceSystem()->RequestResource("/bitmap_fonts/SupplyMonoBitmap.fnt", [this](ResourceSharedPtr pResource) {
         m_pFont = std::dynamic_pointer_cast<ResourceBitmapFont>(pResource);
@@ -145,6 +138,27 @@ void SpaceObjectRenderSystem::CreateRenderPipeline()
     m_RenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
+// Ensures the labels vertex buffer is reallocated if we would write more data to it than it had been allocated for.
+void SpaceObjectRenderSystem::EnsureLabelsVertexBuffer()
+{
+    const size_t currentSize = m_LabelsVertexData.size() * sizeof(VertexP2C4UV);
+    if (currentSize <= m_LabelsVertexBufferSize)
+    {
+        return;
+    }
+
+    m_LabelsVertexBufferSize = currentSize * 2;
+    Log::Info() << "Reallocated labels vertex buffer to " << m_LabelsVertexBufferSize << " bytes.";
+
+    wgpu::BufferDescriptor bufferDescriptor{
+        .label = "Labels vertex buffer",
+        .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Vertex,
+        .size = m_LabelsVertexBufferSize
+    };
+
+    m_LabelsVertexBuffer = GetRenderSystem()->GetDevice().CreateBuffer(&bufferDescriptor);
+}
+
 void SpaceObjectRenderSystem::Update(float delta)
 {
     if (GetActiveScene() == nullptr || GetActiveScene()->GetCamera() == nullptr || !m_pFont)
@@ -179,7 +193,6 @@ void SpaceObjectRenderSystem::Update(float delta)
     const glm::vec3 cameraForward = glm::normalize(cameraComponent.camera.GetTarget() - cameraPosition);
 
     view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, MousePickingComponent& mousePickingComponent, const TransformComponent& transformComponent) {
-
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
         const glm::vec3 d(labelPosition - cameraPosition);
 
@@ -257,7 +270,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         m_TextureBindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDesc);
     }
 
-    m_VertexData.clear();
+    m_LabelsVertexData.clear();
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<LabelComponent>();
@@ -272,21 +285,37 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
         for (auto vertex : vertexData)
         {
             vertex.position += labelComponent.GetScreenSpacePosition();
-            m_VertexData.push_back(vertex);
+            m_LabelsVertexData.push_back(vertex);
         }
     });
 
-    if (m_VertexData.empty())
+    if (m_LabelsVertexData.empty())
     {
         return;
     }
 
-    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_VertexBuffer, 0, m_VertexData.data(), m_VertexData.size() * sizeof(VertexP2C4UV));
+    EnsureLabelsVertexBuffer();
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(m_LabelsVertexBuffer, 0, m_LabelsVertexData.data(), m_LabelsVertexData.size() * sizeof(VertexP2C4UV));
 
     renderPass.SetPipeline(m_RenderPipeline);
     renderPass.SetBindGroup(1, m_TextureBindGroup);
-    renderPass.SetVertexBuffer(0, m_VertexBuffer);
-    renderPass.Draw(m_VertexData.size());
+    renderPass.SetVertexBuffer(0, m_LabelsVertexBuffer);
+    renderPass.Draw(m_LabelsVertexData.size());
+}
+
+bool SpaceObjectRenderSystem::ShouldDisplayFullLabels() const
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<MetadataComponent>();
+
+    uint32_t totalVisibleObjects = 0;
+    view.each([&totalVisibleObjects](const auto entity, const MetadataComponent& metadataComponent) {
+        if (metadataComponent.IsVisible())
+        {
+            totalVisibleObjects++;
+        }
+    });
+    return (totalVisibleObjects <= 100);
 }
 
 void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
@@ -303,7 +332,7 @@ void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
     {
         currentlySelectedEntityHandle = pSelectedSpaceObject->GetEntityHandle();
     }
-    
+
     auto view = registry.view<MetadataComponent>();
     view.each([&registry, &currentVisibleMask, currentlySelectedEntityHandle](const EntityHandle entityHandle, MetadataComponent& metadataComponent) {
         const bool isInVisibleGroupFilter = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
@@ -312,7 +341,7 @@ void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
         metadataComponent.SetVisible(isVisible);
 
         if (isVisible)
-        {        
+        {
             registry.emplace<OrbitalStateComponent>(entityHandle);
         }
     });
@@ -335,7 +364,7 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
         {
             return;
         }
-              
+
         size_t key = MakeOrbitalKey(orbitalElements);
         groups[key].push_back(entity);
     });
@@ -363,48 +392,48 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
     }
 }
 
+// If `generateFullLabel` is true, then we'll render the location marker, the object's name and (if used) the size of the group.
 void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<MetadataComponent>();
 
-    view.each([this, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
-
+    const bool generateFullLabels = ShouldDisplayFullLabels();
+    view.each([this, generateFullLabels, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
         if (!metadataComponent.IsVisible())
         {
             return;
         }
-              
+
         std::stringstream labelStream;
 
-        /*
         // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
-        SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
-        if (pSpaceObjectGroupComponent)
+        if (generateFullLabels)
         {
-            if (pSpaceObjectGroupComponent->IsPrimaryElement())
+            SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
+            if (pSpaceObjectGroupComponent)
             {
-                labelStream << "\1" << metadata.m_ObjectName << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+                if (pSpaceObjectGroupComponent->IsPrimaryElement())
+                {
+                    labelStream << "\1" << metadataComponent.m_ObjectName << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+                }
+            }
+            else
+            {
+                labelStream << "\1" << metadataComponent.m_ObjectName;
             }
         }
         else
         {
-            labelStream << "\1" << metadata.m_ObjectName;
+            labelStream << "\1";
         }
-        */
-        
-        labelStream << "\1";
 
         const std::string label(labelStream.str());
-        if (!label.empty())
-        {
-            const glm::vec4 labelColor(GetSpaceObjectColor(metadataComponent).AsVec3(), 1.0f);
-            
-            LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
-            labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
+        const glm::vec4 labelColor(GetSpaceObjectColor(metadataComponent).AsVec3(), 1.0f);
+        LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
+        labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
 
-            registry.emplace<MousePickingComponent>(entityHandle);
-        }
+        registry.emplace<MousePickingComponent>(entityHandle);
     });
 }
 

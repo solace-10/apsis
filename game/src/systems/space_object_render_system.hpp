@@ -32,8 +32,10 @@ public:
 
 private:
     void CreateRenderPipeline();
+    void EnsureLabelsVertexBuffer();
     void GenerateSpaceObjectGroups();
     void GenerateLabelsVertexData();
+    bool ShouldDisplayFullLabels() const;
     size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;
     const Color& GetSpaceObjectColor(const MetadataComponent& metadataComponent) const;
 
@@ -44,8 +46,9 @@ private:
     ResourceShaderSharedPtr m_pShader;
     ResourceBitmapFontSharedPtr m_pFont;
     wgpu::RenderPipeline m_RenderPipeline;
-    wgpu::Buffer m_VertexBuffer;
-    std::vector<VertexP2C4UV> m_VertexData;
+    wgpu::Buffer m_LabelsVertexBuffer;
+    size_t m_LabelsVertexBufferSize{ 0 };
+    std::vector<VertexP2C4UV> m_LabelsVertexData;
     wgpu::BindGroupLayout m_TextureBindGroupLayout;
     wgpu::BindGroup m_TextureBindGroup;
     wgpu::Sampler m_Sampler;
