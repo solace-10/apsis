@@ -8,6 +8,7 @@ with group names into the PostgreSQL database.
 import logging
 import os
 import sys
+import time
 from datetime import date
 
 import requests
@@ -31,6 +32,17 @@ load_dotenv()
 BATCH_SIZE = 1000
 
 CELESTRAK_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=json"
+
+GROUPS = [
+    "stations",
+    "starlink",
+    "oneweb",
+    "gps-ops",
+    "gnss",
+    "geo",
+    "science",
+    "fengyun-1c-debris",
+]
 
 HEALTHCHECK_ENDPOINT = "https://hc-ping.com/06649829-a983-4e3d-b0ea-1b7257e6fd1f"
 
@@ -103,24 +115,22 @@ def main():
     hc = HealthCheck(HEALTHCHECK_ENDPOINT)
     hc.start()
 
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <group>")
-        print(f"Example: {sys.argv[0]} stations")
-        sys.exit(1)
-
-    group = sys.argv[1]
-    records = fetch_group(group)
-
-    norad_ids = [
-        record.get("NORAD_CAT_ID")
-        for record in records
-        if record.get("NORAD_CAT_ID")
-    ]
-
     conn = connect_db()
     try:
         clear_stale_groups(conn)
-        insert_groups_batch(conn, norad_ids, group)
+
+        for i, group in enumerate(GROUPS):
+            if i > 0:
+                time.sleep(5)
+
+            records = fetch_group(group)
+            norad_ids = [
+                record.get("NORAD_CAT_ID")
+                for record in records
+                if record.get("NORAD_CAT_ID")
+            ]
+            insert_groups_batch(conn, norad_ids, group)
+
         logger.info("Ingestion complete")
         hc.success()
     except psycopg2.Error as e:
