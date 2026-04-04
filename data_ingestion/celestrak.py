@@ -8,6 +8,7 @@ with group names into the PostgreSQL database.
 import logging
 import os
 import sys
+from datetime import date
 
 import requests
 from dotenv import load_dotenv
@@ -70,12 +71,13 @@ def insert_groups_batch(conn, ids, group):
         return 0
 
     unique_ids = list(set(ids))
-    records = [(norad_id, group) for norad_id in unique_ids]
+    today = date.today()
+    records = [(norad_id, group, today) for norad_id in unique_ids]
 
     query = """
-        INSERT INTO public.groups (norad_id, "group")
+        INSERT INTO public.groups (norad_id, "group", creation_date)
         VALUES %s
-        ON CONFLICT (norad_id, "group") DO NOTHING
+        ON CONFLICT (norad_id, "group") DO UPDATE SET creation_date = EXCLUDED.creation_date
     """
 
     with conn.cursor() as cur:
@@ -83,6 +85,17 @@ def insert_groups_batch(conn, ids, group):
     conn.commit()
     logger.info(f"Inserted {len(records)} '{group}' group memberships")
     return len(records)
+
+
+def clear_stale_groups(conn):
+    """Delete group memberships where creation_date is more than 3 days in the past."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM public.groups WHERE creation_date < NOW() - INTERVAL '3 days'"
+        )
+        deleted = cur.rowcount
+    conn.commit()
+    logger.info(f"Cleared {deleted} stale group memberships")
 
 
 def main():
@@ -106,6 +119,7 @@ def main():
 
     conn = connect_db()
     try:
+        clear_stale_groups(conn)
         insert_groups_batch(conn, norad_ids, group)
         logger.info("Ingestion complete")
         hc.success()

@@ -7,6 +7,7 @@ Fetches satellite data from the SpaceTrack API and writes to PostgreSQL database
 import logging
 import os
 import sys
+from datetime import date
 
 import requests
 from dotenv import load_dotenv
@@ -177,12 +178,13 @@ def insert_groups_batch(conn, ids, group):
         return 0
 
     unique_ids = list(set(ids))
-    records = [(norad_id, group) for norad_id in unique_ids]
+    today = date.today()
+    records = [(norad_id, group, today) for norad_id in unique_ids]
 
     query = """
-        INSERT INTO public.groups (norad_id, "group")
+        INSERT INTO public.groups (norad_id, "group", creation_date)
         VALUES %s
-        ON CONFLICT (norad_id, "group") DO NOTHING
+        ON CONFLICT (norad_id, "group") DO UPDATE SET creation_date = EXCLUDED.creation_date
     """
 
     with conn.cursor() as cur:
