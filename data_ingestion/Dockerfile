@@ -5,6 +5,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY spacetrack.py celestrak.py ./
+COPY celestrak.py healthcheck.py spacetrack.py ./
 
 ENTRYPOINT ["python"]

@@ -14,10 +14,6 @@ public:
     MousePickingComponent() = default;
     ~MousePickingComponent() = default;
 
-    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
-    {
-    }
-
     void SetScreenSpacePosition(const glm::vec3& position) { m_ScreenSpacePosition = position; }
     const glm::vec3& GetScreenSpacePosition() const { return m_ScreenSpacePosition; }
     void SetEnabled(bool isEnabled) { m_IsEnabled = isEnabled; }

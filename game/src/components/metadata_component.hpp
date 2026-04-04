@@ -38,7 +38,7 @@ public:
 private:
     // We keep a bitset of all the group filters the parent entity is part of.
     GroupFilters::Mask m_GroupFilters;
-    bool m_Visible{false};
+    bool m_Visible{ false };
 };
 
 inline void MetadataComponent::AddToGroupFilter(GroupFilter* pGroupFilter)
