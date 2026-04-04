@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import execute_values
 
+from healthcheck import HealthCheck
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -65,6 +67,7 @@ ANALYST_DATA_URL = (
     "/orderby/NORAD_CAT_ID/format/json/emptyresult/show"
 )
 
+HEALTHCHECK_ENDPOINT = "https://hc-ping.com/3d1ac17f-dd1f-46c5-b12d-4570bb56c5de"
 
 def connect_db():
     """Establish PostgreSQL connection using environment variables."""
@@ -235,6 +238,9 @@ def process_records(conn, data, label):
 
 def main():
     """Main ingestion process."""
+    hc = HealthCheck(HEALTHCHECK_ENDPOINT)
+    hc.start()
+
     gp_data, analyst_data = fetch_data()
 
     conn = connect_db()
@@ -256,10 +262,12 @@ def main():
         insert_groups_batch(conn, analyst_ids, "analyst")
 
         logger.info(f"Ingestion complete. GP: {gp_count}, Analyst: {analyst_count}")
+        hc.success()
 
     except psycopg2.Error as e:
         logger.error(f"Database error: {e}")
         conn.rollback()
+        hc.fail()
         sys.exit(1)
     finally:
         conn.close()
