@@ -64,9 +64,9 @@ void WebInterop::NotifySpaceObjectSelected(EntitySharedPtr pEntity)
     const OrbitalStateComponent& orbitalState = pEntity->GetComponent<OrbitalStateComponent>();
 
     emscripten::val interop = emscripten::val::object();
-    interop.set("objectName", metadata.m_ObjectName);
-    interop.set("objectId", metadata.m_ObjectId);
-    interop.set("noradCatalogueId", metadata.m_NoradCatalogueId);
+    interop.set("objectName", metadata.GetObjectName());
+    interop.set("objectId", metadata.GetObjectId());
+    interop.set("noradCatalogueId", metadata.GetNoradCatalogueId());
     interop.set("eccentricity", orbitalElements.GetEccentricity());
     interop.set("inclination", orbitalElements.GetInclination());
     interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());
@@ -122,9 +122,9 @@ void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
     const OrbitalStateComponent& orbitalState = pEntity->GetComponent<OrbitalStateComponent>();
 
     emscripten::val interop = emscripten::val::object();
-    interop.set("objectName", metadata.m_ObjectName);
-    interop.set("objectId", metadata.m_ObjectId);
-    interop.set("noradCatalogueId", metadata.m_NoradCatalogueId);
+    interop.set("objectName", metadata.GetObjectName());
+    interop.set("objectId", metadata.GetObjectId());
+    interop.set("noradCatalogueId", metadata.GetNoradCatalogueId());
     interop.set("eccentricity", orbitalElements.GetEccentricity());
     interop.set("inclination", orbitalElements.GetInclination());
     interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());

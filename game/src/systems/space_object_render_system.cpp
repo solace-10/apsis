@@ -415,12 +415,12 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
             {
                 if (pSpaceObjectGroupComponent->IsPrimaryElement())
                 {
-                    labelStream << "\1" << metadataComponent.m_ObjectName << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
+                    labelStream << "\1" << metadataComponent.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
                 }
             }
             else
             {
-                labelStream << "\1" << metadataComponent.m_ObjectName;
+                labelStream << "\1" << metadataComponent.GetObjectName();
             }
         }
         else

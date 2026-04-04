@@ -52,6 +52,7 @@ def handle(event, context):
 def _get_objects(database_connection):
     rows = database_connection.run("""
         SELECT
+            id,
             norad_id,
             name,
             epoch,
@@ -66,19 +67,20 @@ def _get_objects(database_connection):
 
     objects = []
     for row in rows:
-        epoch = row[2]
+        epoch = row[3]
         if epoch and hasattr(epoch, 'isoformat'):
             epoch = epoch.isoformat()
         objects.append({
-            "norad_id": int(row[0]),
-            "name": row[1],
+            "id": row[0],
+            "norad_id": int(row[1]),
+            "name": row[2],
             "epoch": epoch,
-            "mean_motion": float(row[3]) if row[3] else None,
-            "eccentricity": float(row[4]) if row[4] else None,
-            "inclination": float(row[5]) if row[5] else None,
-            "raan": float(row[6]) if row[6] else None,
-            "arg_of_pericenter": float(row[7]) if row[7] else None,
-            "mean_anomaly": float(row[8]) if row[8] else None,
+            "mean_motion": float(row[4]) if row[4] else None,
+            "eccentricity": float(row[5]) if row[5] else None,
+            "inclination": float(row[6]) if row[6] else None,
+            "raan": float(row[7]) if row[7] else None,
+            "arg_of_pericenter": float(row[8]) if row[8] else None,
+            "mean_anomaly": float(row[9]) if row[9] else None,
         })
     return objects
 
