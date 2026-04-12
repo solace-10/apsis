@@ -1,0 +1,30 @@
+service: scaleway-rust
+configValidationMode: off
+provider:
+  name: scaleway
+  runtime: rust185
+  # Global Environment variables - used in every functions
+  env:
+    test: test
+useDotenv: true
+
+plugins:
+  - serverless-scaleway-functions
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!.gitignore"
+    - "!.git/**"
+    - "!target/**"
+    - "!.serverless/**"
+
+functions:
+  # Note: function names for deployment can't use underscores (it will error during deployment)
+  get-object-metadata:
+    # handler is just the name of the exported handler function
+    handler: handler_get_object_metadata
+    # description: ""
+    # Local environment variables - used only in given function
+    env:
+      local: local
