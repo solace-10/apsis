@@ -21,13 +21,15 @@ public:
     void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
     {
         m_ObjectName = Json::DeserializeString(pContext, json, "name");
+        m_ObjectId = Json::DeserializeString(pContext, json, "id");
         m_NoradCatalogueId = Json::DeserializeUnsignedInteger(pContext, json, "norad_id");
     }
 
-    std::string m_ObjectName{ "UNKNOWN" };
-    std::string m_ObjectId{ "0" };
-    uint32_t m_NoradCatalogueId{ 0 };
     bool m_IsImportant{ false };
+
+    const std::string& GetObjectName() const { return m_ObjectName; }
+    const std::string& GetObjectId() const { return m_ObjectId; }
+    uint32_t GetNoradCatalogueId() const { return m_NoradCatalogueId; }
 
     void AddToGroupFilter(GroupFilter* pGroupFilter);
     bool IsInGroupFilter(GroupFilter* pGroupFilter) const;
@@ -36,6 +38,10 @@ public:
     bool IsVisible() const { return m_Visible; }
 
 private:
+    std::string m_ObjectName{ "UNKNOWN" };
+    std::string m_ObjectId{ "0" };
+    uint32_t m_NoradCatalogueId{ 0 };
+
     // We keep a bitset of all the group filters the parent entity is part of.
     GroupFilters::Mask m_GroupFilters;
     bool m_Visible{ false };

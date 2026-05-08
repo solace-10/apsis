@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Orbis (Wings of Steel) is a cross-platform space object tracking and visualization application. It renders satellite orbits (ISS, Starlink, GPS, debris) with interactive controls. The project consists of a C++20 game engine (Pandora), the main application (game), and a web frontend (webapp).
+Orbis (Wings of Steel) is a cross-platform space object tracking and visualization application. It renders satellite orbits (ISS, Starlink, GPS, debris) with interactive controls. The project consists of a C++20 game engine (Pandora), the main application (game), a web frontend (webapp), and a Python data ingestion pipeline.
 
 ## Build Commands
 
@@ -43,6 +43,7 @@ Format with clang-format (WebKit-based): `clang-format -i path/to/file.cpp`
 - `game/` - Main application (components, systems, rendering, space object logic)
 - `pandora/` - Core engine library (rendering, ECS, physics, resources, input, VFS)
 - `webapp/` - SvelteKit + TypeScript frontend for web deployment
+- `data_ingestion/` - Python scripts for fetching space object data (Celestrak, SpaceTrack) into PostgreSQL, runs in Docker
 
 ## Code Style
 
