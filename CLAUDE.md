@@ -26,7 +26,6 @@ cmake --build build/debug-web --target game       # Web
 ```bash
 cd webapp
 npm install
-npm run copy-wasm    # Copy compiled WASM from game build
 npm run dev          # Development server
 npm run build        # Production build
 ```
