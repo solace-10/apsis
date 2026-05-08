@@ -4,9 +4,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"copy-wasm": "cp ../game/bin/game.js ../game/bin/game.wasm static/",
 		"dev": "vite dev",
-		"build": "npm run copy-wasm && vite build",
+		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
