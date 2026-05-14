@@ -1,12 +1,11 @@
-use axum::extract::Path;
 use axum::{body::Body, extract::Request, response::Response};
 use chrono::{NaiveDate, NaiveDateTime};
-use http::StatusCode;
+use http::{Method, StatusCode};
 use serde::Serialize;
 use sqlx::Connection;
 use std::collections::HashMap;
 
-type GroupCollection = HashMap<String, Vec<String>>;
+type GroupCollection = HashMap<String, Vec<i32>>;
 
 struct DatabaseConfig {
     host: String,
@@ -25,7 +24,7 @@ struct AllObjectsResponse {
 #[derive(Serialize, sqlx::FromRow)]
 struct ObjectEntry {
     id: String,
-    norad_id: String,
+    norad_id: i32,
     name: String,
     epoch: NaiveDateTime,
     mean_motion: f64,
@@ -45,29 +44,60 @@ struct ObjectMetadata {
     launch_site: String,
 }
 
-pub async fn handler_get_object_metadata(
-    Path(id): Path<String>,
-    _req: Request<Body>,
-) -> Response<Body> {
+fn cors(builder: http::response::Builder) -> http::response::Builder {
+    builder
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        .header("Access-Control-Allow-Headers", "*")
+}
+
+fn preflight() -> Response<Body> {
+    cors(Response::builder().status(StatusCode::NO_CONTENT))
+        .body(Body::empty())
+        .unwrap()
+}
+
+pub async fn handler_get_object_metadata(req: Request<Body>) -> Response<Body> {
+    if req.method() == Method::OPTIONS {
+        return preflight();
+    }
+
+    let id = req
+        .uri()
+        .path()
+        .trim_start_matches('/')
+        .split('/')
+        .next_back()
+        .unwrap_or("")
+        .to_string();
     println!("handler_get_object_metadata id: {}", id);
+
+    if id.is_empty() {
+        return cors(Response::builder().status(StatusCode::BAD_REQUEST))
+            .body(Body::from("missing id in path"))
+            .unwrap();
+    }
+
     match get_object_metadata(id).await {
         Ok(val) => {
             let body = serde_json::to_string_pretty(&val).unwrap();
 
-            Response::builder()
-                .status(StatusCode::OK)
+            cors(Response::builder().status(StatusCode::OK))
                 .header("Content-type", "text/json")
                 .body(Body::from(body))
                 .unwrap()
         }
-        Err(e) => Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
+        Err(e) => cors(Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR))
             .body(Body::from(e.to_string()))
             .unwrap(),
     }
 }
 
-pub async fn handler_get_all_objects(_req: Request<Body>) -> Response<Body> {
+pub async fn handler_get_all_objects(req: Request<Body>) -> Response<Body> {
+    if req.method() == Method::OPTIONS {
+        return preflight();
+    }
+
     let all_objects_response: Result<AllObjectsResponse, sqlx::Error> = async {
         let database_config = get_database_config();
         let database_address = get_database_address(&database_config);
@@ -81,14 +111,12 @@ pub async fn handler_get_all_objects(_req: Request<Body>) -> Response<Body> {
     match all_objects_response {
         Ok(val) => {
             let body = serde_json::to_string_pretty(&val).unwrap();
-            Response::builder()
-                .status(StatusCode::OK)
+            cors(Response::builder().status(StatusCode::OK))
                 .header("Content-type", "text/json")
                 .body(Body::from(body))
                 .unwrap()
         }
-        Err(e) => Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
+        Err(e) => cors(Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR))
             .body(Body::from(e.to_string()))
             .unwrap(),
     }
@@ -128,7 +156,7 @@ async fn get_explicit_groups(
     groups: &mut GroupCollection,
 ) -> Result<(), sqlx::Error> {
     let entry_pairs =
-        sqlx::query_as::<_, (String, String)>(r#"SELECT norad_id, "group" FROM public.groups"#)
+        sqlx::query_as::<_, (i32, String)>(r#"SELECT norad_id, "group" FROM public.groups"#)
             .fetch_all(conn)
             .await?;
 
@@ -143,7 +171,7 @@ async fn get_debris_group(
     conn: &mut sqlx::PgConnection,
     groups: &mut GroupCollection,
 ) -> Result<(), sqlx::Error> {
-    let entries: Vec<String> =
+    let entries: Vec<i32> =
         sqlx::query_scalar(r#"SELECT norad_id FROM public.objects WHERE object_type = 'DEBRIS'"#)
             .fetch_all(conn)
             .await?;
@@ -157,7 +185,7 @@ async fn get_last_30_days_launches_group(
     conn: &mut sqlx::PgConnection,
     groups: &mut GroupCollection,
 ) -> Result<(), sqlx::Error> {
-    let entries: Vec<String> =
+    let entries: Vec<i32> =
         sqlx::query_scalar(r#"SELECT norad_id FROM public.objects WHERE launch_date >= CURRENT_DATE - INTERVAL '30 days'"#)
             .fetch_all(conn)
             .await?;

@@ -13,7 +13,7 @@ namespace WingsOfSteel
 
 Database::Database()
 {
-    m_GetAllObjectsEndpoint = "https://nsorbisfunctionsnspcxszg-get-all-objects.functions.fnc.fr-par.scw.cloud";
+    m_GetAllObjectsEndpoint = "https://scalewayrust3ybx3whw-fct-get-all-objects.functions.fnc.fr-par.scw.cloud";
 
 #if defined(TARGET_PLATFORM_NATIVE)
     m_pImpl = std::make_unique<Private::DatabaseNative>(*this);

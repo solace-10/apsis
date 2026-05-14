@@ -7,8 +7,6 @@ __pycache__/
 build/
 data_ingestion/.env
 pandora/ext/
-game/assets/models/flagship/
-game/assets/wings_of_steel/
 game/bin/game*
 game/bin/imgui.ini
 game/bin/log.txt

@@ -1,6 +1,2 @@
 .env
-Cargo.lock
-node_modules/
-package-lock.json
-.serverless/
 target/

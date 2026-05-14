@@ -4,10 +4,11 @@ use axum::{Router, routing::any};
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let app = Router::new()
         .route("/get_all_objects", any(handler::handler_get_all_objects))
         .route(
-            "/get_object_metadata/{id}",
+            "/get_object_metadata/{*id}",
             any(handler::handler_get_object_metadata),
         );
     let addr = "0.0.0.0:8080";
