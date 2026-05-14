@@ -1,11 +1,11 @@
 __pycache__/
+venv/
 .cache/
 .clangd
 .claude/
 .env
 .vscode/settings.json
 build/
-data_ingestion/.env
 pandora/ext/
 game/bin/game*
 game/bin/imgui.ini
