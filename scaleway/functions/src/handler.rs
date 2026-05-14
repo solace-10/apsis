@@ -80,7 +80,7 @@ pub async fn handler_get_object_metadata(req: Request<Body>) -> Response<Body> {
 
     match get_object_metadata(id).await {
         Ok(val) => {
-            let body = serde_json::to_string_pretty(&val).unwrap();
+            let body = serde_json::to_string(&val).unwrap();
 
             cors(Response::builder().status(StatusCode::OK))
                 .header("Content-type", "text/json")
@@ -110,7 +110,7 @@ pub async fn handler_get_all_objects(req: Request<Body>) -> Response<Body> {
 
     match all_objects_response {
         Ok(val) => {
-            let body = serde_json::to_string_pretty(&val).unwrap();
+            let body = serde_json::to_string(&val).unwrap();
             cors(Response::builder().status(StatusCode::OK))
                 .header("Content-type", "text/json")
                 .body(Body::from(body))
