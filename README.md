@@ -20,6 +20,12 @@ A space object tracking and visualisation application. **Orbis** renders satelli
 - `pandora/` - [C++20 game engine framework](https://codeberg.org/pedronunes/pandora/) (WebGPU, ECS, physics, resources)
 - `webapp/` - SvelteKit frontend for web deployment
 
+## Credits
+
+- [Space-Track](https://www.space-track.org): authoritative source for orbital data.
+- [CelesTrack](https://celestrak.org): my thanks to Professor T. S. Kelso for grouping the orbital data and making it accessible to the public.
+- Madoc Glasssmith: for his assistance with setting up this project's database and authoring SQL queries.
+
 ## License
 
 **Orbis** is licensed under the GPLv3 License, see [LICENSE](LICENSE) for more information.
