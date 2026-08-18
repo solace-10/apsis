@@ -7,6 +7,7 @@ venv/
 .vscode/settings.json
 build/
 pandora/ext/
+.forge-cache/
 game/bin/game*
 game/bin/imgui.ini
 game/bin/log.txt

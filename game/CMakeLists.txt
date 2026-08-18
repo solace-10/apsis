@@ -47,6 +47,9 @@ endif()
     add_custom_target(generate_manifest DEPENDS "${MANIFEST_OUTPUT}")
     add_dependencies(game generate_manifest)
 
+    # Assets have to be compiled before they can be hashed into the manifest.
+    add_dependencies(generate_manifest forge_compile_assets)
+
     set_target_properties(game PROPERTIES
         SUFFIX ".html"
         LINK_DEPENDS "${MANIFEST_OUTPUT}"
