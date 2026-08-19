@@ -35,6 +35,7 @@ private:
     void CreateTextureBindGroupLayout();
     void CreateAtmosphereBindGroupLayout();
     void CreateTextureBindGroup(PlanetComponent& planetComponent);
+    void OnTextureLoaded();
     void InitializeAtmosphereComponent(AtmosphereComponent& atmosphereComponent);
     void UpdateAtmosphereUniforms(AtmosphereComponent& atmosphereComponent, PlanetComponent& planetComponent);
     void HandleShaderInjection();
@@ -44,6 +45,7 @@ private:
     ResourceShaderSharedPtr m_pAtmosphereShader;
     ResourceTexture2DSharedPtr m_pEarthTexture;
     ResourceTexture2DSharedPtr m_pEarthNightTexture;
+    ResourceTexture2DSharedPtr m_pEarthSpecularTexture;
     wgpu::RenderPipeline m_RenderPipeline;
     wgpu::RenderPipeline m_WireframePipeline;
     wgpu::RenderPipeline m_AtmospherePipeline;

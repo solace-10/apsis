@@ -5,11 +5,12 @@ struct VertexInput
     @location(2) uv: vec2f
 };
 
-struct VertexOutput 
+struct VertexOutput
 {
     @builtin(position) position: vec4f,
     @location(0) worldNormal: vec3f,
-    @location(1) uv: vec2f
+    @location(1) uv: vec2f,
+    @location(2) worldPos: vec3f
 };
 
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
@@ -17,6 +18,7 @@ struct VertexOutput
 @group(1) @binding(0) var textureSampler: sampler;
 @group(1) @binding(1) var colorTexture: texture_2d<f32>;
 @group(1) @binding(2) var nightTexture: texture_2d<f32>;
+@group(1) @binding(3) var specularTexture: texture_2d<f32>;
 
 // The band of dot(N, L) over which city lights fade. They are fully out by the
 // time a point is facing the sun at all, and reach full strength a little past
@@ -51,12 +53,42 @@ const kNightIntensity: f32 = 1.0;
 // decision, which is fine as long as it is made here and deliberately.
 const kNightAmbient = vec3f(0.0, 0.0, 0.0);
 
+// Ocean specular. The specular map is a single channel land/sea mask - 1 over
+// water, 0 over land - so the highlight is confined to water without needing to
+// know anything else about the surface.
+//
+// kOceanF0 is the reflectance of a water/air interface at normal incidence.
+// 0.02 is the physical value: water is a poor mirror seen face on, which is why
+// the glint only really appears as the geometry turns away.
+const kOceanF0: f32 = 0.02;
+
+// The Schlick exponent that carries reflectance from F0 up towards 1 at grazing
+// angles. 5.0 is the physical value; lowering it broadens the glint across more
+// of the disc, which is the main dial for making the effect obvious rather than
+// merely correct.
+const kOceanFresnelPower: f32 = 5.0;
+
+// How tight the sun's reflection is. Higher is a smaller, harder highlight - a
+// glassier sea - and lower spreads it into the choppier smear a real ocean gives.
+const kOceanShininess: f32 = 100.0;
+
+// Overall strength, applied last, for when the physical result is not the result
+// that looks right.
+const kOceanSpecularIntensity: f32 = 1.0;
+
+// How sharply the highlight is cut off at the terminator. Nothing reflects a sun
+// that has set, and this keeps the ocean from glinting on the night side at all.
+const kOceanSunCutoff: f32 = 0.05;
+
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
     out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * vec4f(in.position, 1.0);
     out.worldNormal = in.normal;
     out.uv = in.uv;
+    // The mesh is built in world space and drawn without a model transform, so
+    // the incoming position is already what the view vector needs.
+    out.worldPos = in.position;
     return out;
 }
 
@@ -86,7 +118,24 @@ fn linearToSrgb(linear: vec3f) -> vec3f
     let nightEmissive = max(nightColor - kNightBlackPoint, vec3f(0.0));
     let nightFactor = 1.0 - smoothstep(kNightFadeIn, kNightFadeOut, NdotL);
 
+    // Sun glint off water. The half vector formulation puts the Fresnel term on
+    // the microfacets actually reflecting towards the camera, rather than on the
+    // surface normal, which is what makes the highlight brighten and spread as it
+    // approaches the limb instead of just sitting where the sun is.
+    let V = normalize(uGlobalUniforms.cameraPosition.xyz - in.worldPos);
+    let H = normalize(L + V);
+    let VdotH = max(dot(V, H), 0.0);
+    let NdotH = max(dot(N, H), 0.0);
+
+    let fresnel = kOceanF0 + (1.0 - kOceanF0) * pow(1.0 - VdotH, kOceanFresnelPower);
+    let oceanMask = textureSample(specularTexture, textureSampler, in.uv).r;
+    let sunVisibility = smoothstep(0.0, kOceanSunCutoff, NdotL);
+    let oceanSpecular = lightColor * pow(NdotH, kOceanShininess) * fresnel
+        * oceanMask * kOceanSpecularIntensity * sunVisibility;
+    let oceanColorContribution = vec3(0.001, 0.005, 0.012) * oceanMask * sunVisibility;
+
     let finalColor = litColor
+        + oceanSpecular + oceanColorContribution
         + baseColor * kNightAmbient * nightFactor
         + nightEmissive * kNightIntensity * nightFactor;
 

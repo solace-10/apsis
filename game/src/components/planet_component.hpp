@@ -41,6 +41,7 @@ public:
     // Textures for the planet surface
     ResourceTexture2DSharedPtr colorTexture;
     ResourceTexture2DSharedPtr nightTexture;
+    ResourceTexture2DSharedPtr specularTexture;
     wgpu::BindGroup textureBindGroup;
 
     bool initialized{ false };
