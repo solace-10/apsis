@@ -1,0 +1,7 @@
+{
+    "source": "textures/8k_earth_nightmap.jpg",
+    "destination": "textures/earth_night.ktx2",
+    "usage": "color",
+    "encoding": "uastc",
+    "zstd": 18
+}

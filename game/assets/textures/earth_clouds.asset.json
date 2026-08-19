@@ -1,0 +1,7 @@
+{
+    "source": "textures/8k_earth_clouds.jpg",
+    "destination": "textures/earth_clouds.ktx2",
+    "usage": "color",
+    "encoding": "uastc",
+    "zstd": 18
+}

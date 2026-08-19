@@ -1,0 +1,7 @@
+{
+    "source": "textures/8k_earth_specular_map.png",
+    "destination": "textures/earth_specular.ktx2",
+    "usage": "linear",
+    "encoding": "uastc",
+    "zstd": 18
+}

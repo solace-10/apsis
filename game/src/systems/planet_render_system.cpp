@@ -75,7 +75,7 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_AtmosphereInitialized = true;
     });
 
-    GetResourceSystem()->RequestResource("/textures/8081_earthmap4k.jpg", [this](ResourceSharedPtr pResource) {
+    GetResourceSystem()->RequestResource("/textures/earth_color.ktx2", [this](ResourceSharedPtr pResource) {
         m_pEarthTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
         m_TextureInitialized = true;
     });
