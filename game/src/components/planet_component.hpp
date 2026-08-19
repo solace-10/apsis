@@ -42,6 +42,7 @@ public:
     ResourceTexture2DSharedPtr colorTexture;
     ResourceTexture2DSharedPtr nightTexture;
     ResourceTexture2DSharedPtr specularTexture;
+    ResourceTexture2DSharedPtr normalTexture;
     wgpu::BindGroup textureBindGroup;
 
     bool initialized{ false };

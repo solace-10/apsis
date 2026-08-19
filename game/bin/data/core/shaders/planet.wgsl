@@ -19,6 +19,7 @@ struct VertexOutput
 @group(1) @binding(1) var colorTexture: texture_2d<f32>;
 @group(1) @binding(2) var nightTexture: texture_2d<f32>;
 @group(1) @binding(3) var specularTexture: texture_2d<f32>;
+@group(1) @binding(4) var normalTexture: texture_2d<f32>;
 
 // The band of dot(N, L) over which city lights fade. They are fully out by the
 // time a point is facing the sun at all, and reach full strength a little past
@@ -80,6 +81,9 @@ const kOceanSpecularIntensity: f32 = 1.0;
 // that has set, and this keeps the ocean from glinting on the night side at all.
 const kOceanSunCutoff: f32 = 0.05;
 
+// Relief strength.
+const kNormalStrength: f32 = 1.0;
+
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
@@ -90,6 +94,34 @@ const kOceanSunCutoff: f32 = 0.05;
     // the incoming position is already what the view vector needs.
     out.worldPos = in.position;
     return out;
+}
+
+// Rebuilds a world space normal from the two channel tangent space map.
+//
+// Z is not stored. The map keeps only X and Y and Z is recovered from them,
+// which saves a channel and guarantees a unit normal rather than trusting one.
+// The clamp is belt and braces: this map's X and Y never exceed 0.30, so the
+// argument stays near 1, but scaling by kNormalStrength can push it past.
+//
+// The basis is taken from the sphere's own parameterization rather than screen
+// space derivatives, which is both cheaper and exact. The mesh builds uv as
+// u = 0.5 - atan2(z, x) / 2pi and v = 0.5 - asin(y) / pi, so +u runs along
+// cross(polar, N) and +v runs south - and south is the direction this map's
+// green channel is measured in, so no flip is needed.
+fn perturbNormal(Ngeom: vec3f, uv: vec2f) -> vec3f
+{
+    let packed = textureSample(normalTexture, textureSampler, uv).rg;
+    let xy = (packed * 2.0 - 1.0) * kNormalStrength;
+    let z = sqrt(clamp(1.0 - dot(xy, xy), 0.0, 1.0));
+
+    // cross(polar, N) vanishes at the poles, where longitude is degenerate and
+    // any tangent will do.
+    let polar = vec3f(0.0, 1.0, 0.0);
+    let tangentSource = select(polar, vec3f(1.0, 0.0, 0.0), abs(Ngeom.y) > 0.999);
+    let T = normalize(cross(tangentSource, Ngeom));
+    let B = cross(T, Ngeom);
+
+    return normalize(xy.x * T + xy.y * B + z * Ngeom);
 }
 
 // Convert linear color to sRGB (gamma correction)
@@ -104,9 +136,16 @@ fn linearToSrgb(linear: vec3f) -> vec3f
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
 {
     let baseColor = textureSample(colorTexture, textureSampler, in.uv).rgb;
-    let N = normalize(in.worldNormal);
+
+    // Two normals, deliberately. The mapped one shades the surface; the geometric
+    // one decides where the terminator falls. Driving the day/night split from
+    // relief would let a mountain range switch the city lights on and give the
+    // terminator a ragged edge that tracks topography rather than the sun.
+    let Ngeom = normalize(in.worldNormal);
+    let N = perturbNormal(Ngeom, in.uv);
     let L = normalize(uGlobalUniforms.directionalLightDirection.xyz);
     let NdotL = dot(N, L);
+    let NdotLGeom = dot(Ngeom, L);
     let diffuse = max(NdotL, 0.0);
     let lightColor = uGlobalUniforms.directionalLightColor.rgb;
     let ambient = uGlobalUniforms.ambientLightColor.rgb;
@@ -116,7 +155,7 @@ fn linearToSrgb(linear: vec3f) -> vec3f
     // them by the light would switch them off exactly where they should be seen.
     let nightColor = textureSample(nightTexture, textureSampler, in.uv).rgb;
     let nightEmissive = max(nightColor - kNightBlackPoint, vec3f(0.0));
-    let nightFactor = 1.0 - smoothstep(kNightFadeIn, kNightFadeOut, NdotL);
+    let nightFactor = 1.0 - smoothstep(kNightFadeIn, kNightFadeOut, NdotLGeom);
 
     // Sun glint off water. The half vector formulation puts the Fresnel term on
     // the microfacets actually reflecting towards the camera, rather than on the
@@ -129,7 +168,7 @@ fn linearToSrgb(linear: vec3f) -> vec3f
 
     let fresnel = kOceanF0 + (1.0 - kOceanF0) * pow(1.0 - VdotH, kOceanFresnelPower);
     let oceanMask = textureSample(specularTexture, textureSampler, in.uv).r;
-    let sunVisibility = smoothstep(0.0, kOceanSunCutoff, NdotL);
+    let sunVisibility = smoothstep(0.0, kOceanSunCutoff, NdotLGeom);
     let oceanSpecular = lightColor * pow(NdotH, kOceanShininess) * fresnel
         * oceanMask * kOceanSpecularIntensity * sunVisibility;
     let oceanColorContribution = vec3(0.001, 0.005, 0.012) * oceanMask * sunVisibility;

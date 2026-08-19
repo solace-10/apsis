@@ -17,6 +17,11 @@
 namespace WingsOfSteel
 {
 
+// Textures the planet shader samples, in binding order after the sampler at 0:
+// colour, night lights, ocean mask, normals. The layout and the bind group are
+// both built from this, so they cannot disagree about how many there are.
+static constexpr size_t kPlanetTextureCount = 4;
+
 // Must match AtmosphereUniforms in atmosphere.wgsl
 // Sean O'Neil's atmospheric scattering parameters
 // Total size: 96 bytes (6 x 16-byte aligned blocks)
@@ -92,11 +97,16 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_pEarthSpecularTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
         OnTextureLoaded();
     });
+
+    GetResourceSystem()->RequestResource("/textures/earth_normal.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthNormalTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        OnTextureLoaded();
+    });
 }
 
 void PlanetRenderSystem::OnTextureLoaded()
 {
-    m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture && m_pEarthSpecularTexture);
+    m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture && m_pEarthSpecularTexture && m_pEarthNormalTexture);
 }
 
 PlanetRenderSystem::~PlanetRenderSystem()
@@ -366,16 +376,23 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
     };
     m_TextureSampler = device.CreateSampler(&samplerDesc);
 
-    // Bind group layout: sampler at 0, colour at 1, night lights at 2, ocean mask at 3
-    std::array<wgpu::BindGroupLayoutEntry, 4> entries = { { { .binding = 0,
-                                                                .visibility = wgpu::ShaderStage::Fragment,
-                                                                .sampler = { .type = wgpu::SamplerBindingType::Filtering } },
-        { .binding = 1,
+    // Sampler at 0, then one texture per binding: colour, night lights, ocean mask
+    // and normals. They differ only by index, so they are filled in rather than
+    // spelled out - a hand written entry that silently keeps binding 0 is a
+    // validation error a long way from its cause.
+    std::array<wgpu::BindGroupLayoutEntry, kPlanetTextureCount + 1> entries{};
+    entries[0] = { .binding = 0,
+        .visibility = wgpu::ShaderStage::Fragment,
+        .sampler = { .type = wgpu::SamplerBindingType::Filtering } };
+
+    for (uint32_t i = 1; i < entries.size(); i++)
+    {
+        entries[i] = { .binding = i,
             .visibility = wgpu::ShaderStage::Fragment,
             .texture = {
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D } },
-        { .binding = 2, .visibility = wgpu::ShaderStage::Fragment, .texture = { .sampleType = wgpu::TextureSampleType::Float, .viewDimension = wgpu::TextureViewDimension::e2D } }, { .binding = 3, .visibility = wgpu::ShaderStage::Fragment, .texture = { .sampleType = wgpu::TextureSampleType::Float, .viewDimension = wgpu::TextureViewDimension::e2D } } } };
+                .viewDimension = wgpu::TextureViewDimension::e2D } };
+    }
 
     wgpu::BindGroupLayoutDescriptor layoutDesc{
         .label = "Planet texture bind group layout",
@@ -387,7 +404,7 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
 
 void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent)
 {
-    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_pEarthSpecularTexture || !m_TextureBindGroupLayout)
+    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_pEarthSpecularTexture || !m_pEarthNormalTexture || !m_TextureBindGroupLayout)
     {
         return;
     }
@@ -398,15 +415,21 @@ void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent
     planetComponent.colorTexture = m_pEarthTexture;
     planetComponent.nightTexture = m_pEarthNightTexture;
     planetComponent.specularTexture = m_pEarthSpecularTexture;
+    planetComponent.normalTexture = m_pEarthNormalTexture;
 
-    std::array<wgpu::BindGroupEntry, 4> entries = { { { .binding = 0,
-                                                          .sampler = m_TextureSampler },
-        { .binding = 1,
-            .textureView = m_pEarthTexture->GetTextureView() },
-        { .binding = 2,
-            .textureView = m_pEarthNightTexture->GetTextureView() },
-        { .binding = 3,
-            .textureView = m_pEarthSpecularTexture->GetTextureView() } } };
+    const std::array<wgpu::TextureView, kPlanetTextureCount> textureViews = {
+        m_pEarthTexture->GetTextureView(),
+        m_pEarthNightTexture->GetTextureView(),
+        m_pEarthSpecularTexture->GetTextureView(),
+        m_pEarthNormalTexture->GetTextureView()
+    };
+
+    std::array<wgpu::BindGroupEntry, kPlanetTextureCount + 1> entries{};
+    entries[0] = { .binding = 0, .sampler = m_TextureSampler };
+    for (uint32_t i = 0; i < textureViews.size(); i++)
+    {
+        entries[i + 1] = { .binding = i + 1, .textureView = textureViews[i] };
+    }
 
     wgpu::BindGroupDescriptor bindGroupDesc{
         .label = "Planet texture bind group",
