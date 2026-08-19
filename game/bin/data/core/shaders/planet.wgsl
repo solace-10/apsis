@@ -16,6 +16,19 @@ struct VertexOutput
 
 @group(1) @binding(0) var textureSampler: sampler;
 @group(1) @binding(1) var colorTexture: texture_2d<f32>;
+@group(1) @binding(2) var nightTexture: texture_2d<f32>;
+
+// The band of dot(N, L) over which city lights fade. They are fully out by the
+// time a point is facing the sun at all, and reach full strength a little past
+// the terminator - roughly where twilight gives way to night, since cities are
+// not visible against a sky that is still lit.
+const kNightFadeIn: f32 = -0.25;
+const kNightFadeOut: f32 = 0.0;
+
+// Scales the night map as it is added. The map is authored to be used directly:
+// its mean linear luminance is 0.004 and only 0.15% of it is above 0.2, so the
+// dark side stays dark and only the city cores read as bright.
+const kNightIntensity: f32 = 1.0;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -40,10 +53,18 @@ fn linearToSrgb(linear: vec3f) -> vec3f
     let baseColor = textureSample(colorTexture, textureSampler, in.uv).rgb;
     let N = normalize(in.worldNormal);
     let L = normalize(uGlobalUniforms.directionalLightDirection.xyz);
-    let diffuse = max(dot(N, L), 0.0);
+    let NdotL = dot(N, L);
+    let diffuse = max(NdotL, 0.0);
     let lightColor = uGlobalUniforms.directionalLightColor.rgb;
     let ambient = uGlobalUniforms.ambientLightColor.rgb;
-    let finalColor = baseColor * (ambient + lightColor * diffuse);
+    let litColor = baseColor * (ambient + lightColor * diffuse);
+
+    // City lights are emissive, so they are added rather than lit - multiplying
+    // them by the light would switch them off exactly where they should be seen.
+    let nightColor = textureSample(nightTexture, textureSampler, in.uv).rgb;
+    let nightFactor = 1.0 - smoothstep(kNightFadeIn, kNightFadeOut, NdotL);
+    let finalColor = litColor + nightColor * kNightIntensity * nightFactor;
+
     // Apply gamma correction since swap chain is BGRA8Unorm (not sRGB)
     return vec4f(linearToSrgb(finalColor), 1.0);
 }

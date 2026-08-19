@@ -46,7 +46,7 @@ struct AtmosphereUniformData
 
     // Block 5: vec4 aligned
     float fSamples; // Number of samples as float
-    float fAtmosphereHeight; // Atmosphere thickness for vertex expansion 
+    float fAtmosphereHeight; // Atmosphere thickness for vertex expansion
     float _padding0;
     float _padding1;
 };
@@ -75,9 +75,17 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_AtmosphereInitialized = true;
     });
 
+    // The bind group needs every texture at once, and the resources arrive in
+    // whatever order they finish loading, so each callback re-tests the set
+    // rather than assuming it is the last to arrive.
     GetResourceSystem()->RequestResource("/textures/earth_color.ktx2", [this](ResourceSharedPtr pResource) {
         m_pEarthTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
-        m_TextureInitialized = true;
+        m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture);
+    });
+
+    GetResourceSystem()->RequestResource("/textures/earth_night.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthNightTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture);
     });
 }
 
@@ -348,15 +356,16 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
     };
     m_TextureSampler = device.CreateSampler(&samplerDesc);
 
-    // Bind group layout for texture: sampler at 0, texture at 1
-    std::array<wgpu::BindGroupLayoutEntry, 2> entries = { { { .binding = 0,
+    // Bind group layout for texture: sampler at 0, colour at 1, night lights at 2
+    std::array<wgpu::BindGroupLayoutEntry, 3> entries = { { { .binding = 0,
                                                                 .visibility = wgpu::ShaderStage::Fragment,
                                                                 .sampler = { .type = wgpu::SamplerBindingType::Filtering } },
         { .binding = 1,
             .visibility = wgpu::ShaderStage::Fragment,
             .texture = {
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D } } } };
+                .viewDimension = wgpu::TextureViewDimension::e2D } },
+        { .binding = 2, .visibility = wgpu::ShaderStage::Fragment, .texture = { .sampleType = wgpu::TextureSampleType::Float, .viewDimension = wgpu::TextureViewDimension::e2D } } } };
 
     wgpu::BindGroupLayoutDescriptor layoutDesc{
         .label = "Planet texture bind group layout",
@@ -368,20 +377,23 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
 
 void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent)
 {
-    if (!m_pEarthTexture || !m_TextureBindGroupLayout)
+    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_TextureBindGroupLayout)
     {
         return;
     }
 
     wgpu::Device device = GetRenderSystem()->GetDevice();
 
-    // Store reference to texture in the component
+    // Store references to the textures in the component
     planetComponent.colorTexture = m_pEarthTexture;
+    planetComponent.nightTexture = m_pEarthNightTexture;
 
-    std::array<wgpu::BindGroupEntry, 2> entries = { { { .binding = 0,
+    std::array<wgpu::BindGroupEntry, 3> entries = { { { .binding = 0,
                                                           .sampler = m_TextureSampler },
         { .binding = 1,
-            .textureView = m_pEarthTexture->GetTextureView() } } };
+            .textureView = m_pEarthTexture->GetTextureView() },
+        { .binding = 2,
+            .textureView = m_pEarthNightTexture->GetTextureView() } } };
 
     wgpu::BindGroupDescriptor bindGroupDesc{
         .label = "Planet texture bind group",

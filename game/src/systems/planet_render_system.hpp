@@ -43,6 +43,7 @@ private:
     ResourceShaderSharedPtr m_pWireframeShader;
     ResourceShaderSharedPtr m_pAtmosphereShader;
     ResourceTexture2DSharedPtr m_pEarthTexture;
+    ResourceTexture2DSharedPtr m_pEarthNightTexture;
     wgpu::RenderPipeline m_RenderPipeline;
     wgpu::RenderPipeline m_WireframePipeline;
     wgpu::RenderPipeline m_AtmospherePipeline;
