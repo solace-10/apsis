@@ -447,11 +447,18 @@ void PlanetRenderSystem::CreateAtmospherePipeline()
         return;
     }
 
-    // Alpha blending for transparent atmosphere
+    // Premultiplied alpha, because in-scattered light is added rather than laid
+    // over: the atmosphere's colour goes on at full strength and its alpha only
+    // says how much of the planet behind it survives.
+    //
+    // SrcAlpha was wrong twice over. The shader derives alpha from the colour's
+    // own luminance, so scaling the colour by it squared the dimness of anything
+    // faint - a band at 0.02 luminance came through at roughly a twenty-fifth of
+    // its strength - and that is exactly where the reddened terminator lives.
     wgpu::BlendState blendState{
         .color = {
             .operation = wgpu::BlendOperation::Add,
-            .srcFactor = wgpu::BlendFactor::SrcAlpha,
+            .srcFactor = wgpu::BlendFactor::One,
             .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha },
         .alpha = { .operation = wgpu::BlendOperation::Add, .srcFactor = wgpu::BlendFactor::One, .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha }
     };
