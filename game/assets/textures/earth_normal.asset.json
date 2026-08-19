@@ -1,6 +1,5 @@
 {
     "source": "textures/8k_earth_normal_map.png",
     "destination": "textures/earth_normal.ktx2",
-    "usage": "normal",
-    "zstd": 18
+    "usage": "normal"
 }
