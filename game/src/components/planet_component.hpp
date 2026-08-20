@@ -38,8 +38,11 @@ public:
     wgpu::Buffer wireframeVertexBuffer;
     uint32_t wireframeVertexCount{ 0 };
 
-    // Texture for the planet surface
+    // Textures for the planet surface
     ResourceTexture2DSharedPtr colorTexture;
+    ResourceTexture2DSharedPtr nightTexture;
+    ResourceTexture2DSharedPtr specularTexture;
+    ResourceTexture2DSharedPtr normalTexture;
     wgpu::BindGroup textureBindGroup;
 
     bool initialized{ false };

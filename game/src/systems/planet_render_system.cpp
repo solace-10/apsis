@@ -17,6 +17,11 @@
 namespace WingsOfSteel
 {
 
+// Textures the planet shader samples, in binding order after the sampler at 0:
+// colour, night lights, ocean mask, normals. The layout and the bind group are
+// both built from this, so they cannot disagree about how many there are.
+static constexpr size_t kPlanetTextureCount = 4;
+
 // Must match AtmosphereUniforms in atmosphere.wgsl
 // Sean O'Neil's atmospheric scattering parameters
 // Total size: 96 bytes (6 x 16-byte aligned blocks)
@@ -46,7 +51,7 @@ struct AtmosphereUniformData
 
     // Block 5: vec4 aligned
     float fSamples; // Number of samples as float
-    float fAtmosphereHeight; // Atmosphere thickness for vertex expansion 
+    float fAtmosphereHeight; // Atmosphere thickness for vertex expansion
     float _padding0;
     float _padding1;
 };
@@ -75,10 +80,33 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_AtmosphereInitialized = true;
     });
 
+    // The bind group needs every texture at once, and the resources arrive in
+    // whatever order they finish loading, so each callback re-tests the set
+    // rather than assuming it is the last to arrive.
     GetResourceSystem()->RequestResource("/textures/earth_color.ktx2", [this](ResourceSharedPtr pResource) {
         m_pEarthTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
-        m_TextureInitialized = true;
+        OnTextureLoaded();
     });
+
+    GetResourceSystem()->RequestResource("/textures/earth_night.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthNightTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        OnTextureLoaded();
+    });
+
+    GetResourceSystem()->RequestResource("/textures/earth_specular.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthSpecularTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        OnTextureLoaded();
+    });
+
+    GetResourceSystem()->RequestResource("/textures/earth_normal.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthNormalTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        OnTextureLoaded();
+    });
+}
+
+void PlanetRenderSystem::OnTextureLoaded()
+{
+    m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture && m_pEarthSpecularTexture && m_pEarthNormalTexture);
 }
 
 PlanetRenderSystem::~PlanetRenderSystem()
@@ -348,15 +376,23 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
     };
     m_TextureSampler = device.CreateSampler(&samplerDesc);
 
-    // Bind group layout for texture: sampler at 0, texture at 1
-    std::array<wgpu::BindGroupLayoutEntry, 2> entries = { { { .binding = 0,
-                                                                .visibility = wgpu::ShaderStage::Fragment,
-                                                                .sampler = { .type = wgpu::SamplerBindingType::Filtering } },
-        { .binding = 1,
+    // Sampler at 0, then one texture per binding: colour, night lights, ocean mask
+    // and normals. They differ only by index, so they are filled in rather than
+    // spelled out - a hand written entry that silently keeps binding 0 is a
+    // validation error a long way from its cause.
+    std::array<wgpu::BindGroupLayoutEntry, kPlanetTextureCount + 1> entries{};
+    entries[0] = { .binding = 0,
+        .visibility = wgpu::ShaderStage::Fragment,
+        .sampler = { .type = wgpu::SamplerBindingType::Filtering } };
+
+    for (uint32_t i = 1; i < entries.size(); i++)
+    {
+        entries[i] = { .binding = i,
             .visibility = wgpu::ShaderStage::Fragment,
             .texture = {
                 .sampleType = wgpu::TextureSampleType::Float,
-                .viewDimension = wgpu::TextureViewDimension::e2D } } } };
+                .viewDimension = wgpu::TextureViewDimension::e2D } };
+    }
 
     wgpu::BindGroupLayoutDescriptor layoutDesc{
         .label = "Planet texture bind group layout",
@@ -368,20 +404,32 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
 
 void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent)
 {
-    if (!m_pEarthTexture || !m_TextureBindGroupLayout)
+    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_pEarthSpecularTexture || !m_pEarthNormalTexture || !m_TextureBindGroupLayout)
     {
         return;
     }
 
     wgpu::Device device = GetRenderSystem()->GetDevice();
 
-    // Store reference to texture in the component
+    // Store references to the textures in the component
     planetComponent.colorTexture = m_pEarthTexture;
+    planetComponent.nightTexture = m_pEarthNightTexture;
+    planetComponent.specularTexture = m_pEarthSpecularTexture;
+    planetComponent.normalTexture = m_pEarthNormalTexture;
 
-    std::array<wgpu::BindGroupEntry, 2> entries = { { { .binding = 0,
-                                                          .sampler = m_TextureSampler },
-        { .binding = 1,
-            .textureView = m_pEarthTexture->GetTextureView() } } };
+    const std::array<wgpu::TextureView, kPlanetTextureCount> textureViews = {
+        m_pEarthTexture->GetTextureView(),
+        m_pEarthNightTexture->GetTextureView(),
+        m_pEarthSpecularTexture->GetTextureView(),
+        m_pEarthNormalTexture->GetTextureView()
+    };
+
+    std::array<wgpu::BindGroupEntry, kPlanetTextureCount + 1> entries{};
+    entries[0] = { .binding = 0, .sampler = m_TextureSampler };
+    for (uint32_t i = 0; i < textureViews.size(); i++)
+    {
+        entries[i + 1] = { .binding = i + 1, .textureView = textureViews[i] };
+    }
 
     wgpu::BindGroupDescriptor bindGroupDesc{
         .label = "Planet texture bind group",
@@ -399,11 +447,18 @@ void PlanetRenderSystem::CreateAtmospherePipeline()
         return;
     }
 
-    // Alpha blending for transparent atmosphere
+    // Premultiplied alpha, because in-scattered light is added rather than laid
+    // over: the atmosphere's colour goes on at full strength and its alpha only
+    // says how much of the planet behind it survives.
+    //
+    // SrcAlpha was wrong twice over. The shader derives alpha from the colour's
+    // own luminance, so scaling the colour by it squared the dimness of anything
+    // faint - a band at 0.02 luminance came through at roughly a twenty-fifth of
+    // its strength - and that is exactly where the reddened terminator lives.
     wgpu::BlendState blendState{
         .color = {
             .operation = wgpu::BlendOperation::Add,
-            .srcFactor = wgpu::BlendFactor::SrcAlpha,
+            .srcFactor = wgpu::BlendFactor::One,
             .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha },
         .alpha = { .operation = wgpu::BlendOperation::Add, .srcFactor = wgpu::BlendFactor::One, .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha }
     };

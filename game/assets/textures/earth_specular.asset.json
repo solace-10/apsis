@@ -1,6 +1,5 @@
 {
     "source": "textures/8k_earth_specular_map.png",
     "destination": "textures/earth_specular.ktx2",
-    "usage": "mask",
-    "zstd": 18
+    "usage": "mask"
 }

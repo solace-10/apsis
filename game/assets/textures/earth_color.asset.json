@@ -1,7 +1,5 @@
 {
     "source": "textures/8k_earth_color_map.jpg",
     "destination": "textures/earth_color.ktx2",
-    "usage": "color",
-    "encoding": "uastc",
-    "zstd": 18
+    "usage": "color"
 }

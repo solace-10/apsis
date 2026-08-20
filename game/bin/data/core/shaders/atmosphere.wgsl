@@ -45,12 +45,70 @@ struct AtmosphereUniforms
 @group(0) @binding(0) var<uniform> uGlobalUniforms: GlobalUniforms;
 @group(1) @binding(0) var<uniform> uAtmosphere: AtmosphereUniforms;
 
+// Fades scattering out across the terminator. Off, and superseded by the shadow
+// test below - but kept, because what it was masking is now known and it is worth
+// having the record next to the switch.
+//
+// It was hiding a blue veil across the whole night side. O'Neil's model has no
+// occlusion test: scale() approximates optical depth along the light ray, which
+// is a different question from whether that ray is blocked. scale() does return
+// 45 for a sample over the night side, but it is multiplied by fDepth, which is
+// exp(-4) at the top of the shell, so a high sample sitting in full shadow kept
+// 59% of its blue. Summed across the disc, that was the veil.
+//
+// The fade suppressed it by light angle alone, which cannot tell a shadowed
+// sample from a merely grazing one, so it took the sunset with it. Warm limb
+// colour needs fScatter around 6 to 10, because Rayleigh's 1/lambda^4 biases
+// scattering 3.5x towards blue and extinction has to overcome that before red
+// wins - putting the band at fLightAngle between roughly -0.05 and -0.1, exactly
+// where this fade multiplies by 0.32 and 0.16.
+//
+// getLightVisibility asks the occlusion question directly, so it removes the veil
+// without touching the band. This should not need to come back.
+const kEnableTerminatorFade: bool = false;
+
+// Softness of the shadow edge, as a fraction of the planet radius. The sun is
+// half a degree wide rather than a point, so the umbra has a real penumbra; this
+// also stops the boundary aliasing into a hard line along the terminator.
+const kShadowSoftness: f32 = 0.01;
+
 // O'Neil's scale function - approximates optical depth integral
 // Input fCos should be clamped to valid range
 fn scale(fCos: f32) -> f32 
 {
     let x = 1.0 - fCos;
     return uAtmosphere.fScaleDepth * exp(-0.00287 + x * (0.459 + x * (3.83 + x * (-6.80 + x * 5.25))));
+}
+
+// How much sunlight reaches a point: 0 deep inside the planet's shadow, 1 outside
+// it, with a soft edge between.
+//
+// For a directional light the umbra is a cylinder of the planet's radius pointing
+// away from the sun, so this is a side test plus a distance from the shadow axis.
+// The common case - anything sunward of the terminator plane - returns before the
+// square root.
+//
+// This is what separates a shadowed sample from a grazing one, which is the
+// distinction the old terminator fade could not make. A sample low over the night
+// side but only just past the terminator sits on the boundary rather than inside
+// it, and keeps its long, reddened light path. A sample high above the night side
+// is genuinely lit, which is the twilight arc that photographs of the limb show.
+fn getLightVisibility(v3Point: vec3f, v3LightDir: vec3f) -> f32
+{
+    // How far past the terminator plane this point can travel before the planet
+    // rises over its horizon: sqrt(r^2 - R^2), which is zero at the surface and
+    // grows with altitude. That single term is what keeps the upper atmosphere
+    // lit above the night side and gives the twilight arc its shape.
+    let fHorizon = sqrt(max(0.0, dot(v3Point, v3Point) - uAtmosphere.fInnerRadius2));
+    let fAxisDistance = dot(v3Point, v3LightDir);
+    let fSoftness = uAtmosphere.fInnerRadius * kShadowSoftness;
+
+    // Measured along the light axis rather than perpendicular to it. Both express
+    // the same cylinder, but the transition happens along this axis, so softening
+    // the perpendicular distance instead fades only the night side of the boundary
+    // and leaves a step at the terminator plane - at the surface, where the
+    // perpendicular distance equals R exactly, that step was 1.0 to 0.5.
+    return smoothstep(-fHorizon - fSoftness, -fHorizon + fSoftness, fAxisDistance);
 }
 
 // Ray-sphere intersection - returns distance to near intersection (entering the sphere)
@@ -90,7 +148,18 @@ fn getFarIntersection(v3Pos: vec3f, v3Ray: vec3f, fRadius2: f32) -> f32
     return out;
 }
 
-fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32 
+// Convert linear color to sRGB (gamma correction)
+// Duplicated from planet.wgsl: the swap chain is BGRA8Unorm, so every shader
+// writing to it has to encode its own gamma.
+fn linearToSrgb(linear: vec3f) -> vec3f
+{
+    let cutoff = linear < vec3f(0.0031308);
+    let higher = vec3f(1.055) * pow(linear, vec3f(1.0/2.4)) - vec3f(0.055);
+    let lower = linear * vec3f(12.92);
+    return select(higher, lower, cutoff);
+}
+
+fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
 {
     let fCos2 = fCos * fCos;
     return 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos2) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);
@@ -155,16 +224,26 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
         // Smooth terminator falloff - fade scattering as we move into the night side
         // fLightAngle of 0 = terminator, negative = night side
         // Fade from full (1.0) at terminatorStart to zero at terminatorEnd
-        let terminatorStart = 0.2;  // Start fading slightly before terminator (~12 degrees)
-        let terminatorEnd = -0.2;   // Fully dark past terminator (~12 degrees into night)
-        let terminatorFade = smoothstep(terminatorEnd, terminatorStart, fLightAngle);
-        
+        var terminatorFade = 1.0;
+        if (kEnableTerminatorFade)
+        {
+            let terminatorStart = 0.2;  // Start fading slightly before terminator (~12 degrees)
+            let terminatorEnd = -0.2;   // Fully dark past terminator (~12 degrees into night)
+            terminatorFade = smoothstep(terminatorEnd, terminatorStart, fLightAngle);
+        }
+
         // Attenuation due to out-scattering along the path
         let v3Attenuate = exp(-fScatter * (uAtmosphere.v3InvWavelength * uAtmosphere.fKr4PI + uAtmosphere.fKm4PI));
         
+        // Samples the planet is standing in front of receive no sunlight, so they
+        // scatter none. Without this the night side keeps a blue veil, because the
+        // optical depth approximation alone never gets large enough at altitude to
+        // extinguish it.
+        let fLightVisibility = getLightVisibility(v3SamplePoint, v3LightDir);
+
         // Accumulate: density * attenuation * path_segment_length * scale_factor
         // The scale factor normalizes the path length to atmosphere thickness units
-        v3FrontColor = v3FrontColor + v3Attenuate * fDepth * fSampleLength * uAtmosphere.fScale * terminatorFade;
+        v3FrontColor = v3FrontColor + v3Attenuate * fDepth * fSampleLength * uAtmosphere.fScale * terminatorFade * fLightVisibility;
         v3SamplePoint = v3SamplePoint + v3SampleRay;
     }
 
@@ -178,8 +257,16 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
     let mie = getMiePhase(fCos, uAtmosphere.g, uAtmosphere.g2) * v3MieColor;
     
     var color = v3RayleighColor + mie;
+
+    // Alpha is how much of the planet behind is hidden, not a scale on the colour
+    // - the blend is premultiplied, so the scattering adds at full strength.
     let luminance = dot(color, vec3f(0.299, 0.587, 0.114));
     let alpha = clamp(luminance * 2.0, 0.0, 1.0);
 
-    return vec4f(color, alpha);
+    // Gamma, without which everything faint disappears. The encoding lifts dim
+    // values far more than bright ones: 0.02 linear belongs at 0.149 and 0.80 at
+    // 0.91, so writing linear left the reddened terminator band about thirteen
+    // times too dark while the blue limb looked close enough to pass. That is why
+    // the atmosphere seemed to work everywhere except where it was interesting.
+    return vec4f(linearToSrgb(color), alpha);
 }
