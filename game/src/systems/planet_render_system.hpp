@@ -47,6 +47,7 @@ private:
     ResourceTexture2DSharedPtr m_pEarthNightTexture;
     ResourceTexture2DSharedPtr m_pEarthSpecularTexture;
     ResourceTexture2DSharedPtr m_pEarthNormalTexture;
+    ResourceTexture2DSharedPtr m_pEarthCloudsTexture;
     wgpu::RenderPipeline m_RenderPipeline;
     wgpu::RenderPipeline m_WireframePipeline;
     wgpu::RenderPipeline m_AtmospherePipeline;

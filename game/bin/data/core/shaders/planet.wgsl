@@ -20,6 +20,7 @@ struct VertexOutput
 @group(1) @binding(2) var nightTexture: texture_2d<f32>;
 @group(1) @binding(3) var specularTexture: texture_2d<f32>;
 @group(1) @binding(4) var normalTexture: texture_2d<f32>;
+@group(1) @binding(5) var cloudsTexture: texture_2d<f32>;
 
 // The band of dot(N, L) over which city lights fade. They are fully out by the
 // time a point is facing the sun at all, and reach full strength a little past
@@ -83,6 +84,21 @@ const kOceanSunCutoff: f32 = 0.05;
 
 // Relief strength.
 const kNormalStrength: f32 = 1.0;
+
+// How fast the cloud deck drifts, in uv per second.
+// The current value is significantly faster than in reality.
+const kCloudScrollSpeed: f32 = 0.001;
+
+// Overall opacity of the deck.
+const kCloudOpacity: f32 = 1.0;
+
+// Cloud albedo.
+const kCloudTint = vec3f(1.0, 1.0, 1.0);
+
+// Lifts the cloud terminator past the ground one. Cloud tops are kilometres up,
+// so they hold the sun for a while after the surface underneath has lost it,
+// and the deck should not end on the same hard line the ground does.
+const kCloudTerminatorLift: f32 = 0.15;
 
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
@@ -173,10 +189,25 @@ fn linearToSrgb(linear: vec3f) -> vec3f
         * oceanMask * kOceanSpecularIntensity * sunVisibility;
     let oceanColorContribution = vec3(0.001, 0.005, 0.012) * oceanMask * sunVisibility;
 
-    let finalColor = litColor
+    let cloudScroll = fract(uGlobalUniforms.time * kCloudScrollSpeed);
+    let cloudUv = in.uv - vec2f(cloudScroll, 0.0);
+    let cloudAlpha = textureSample(cloudsTexture, textureSampler, cloudUv).r * kCloudOpacity;
+
+    // Clouds are lit from the geometric normal, not the mapped one: the clouds float
+    // above the planetary relief.
+    let cloudDiffuse = max((NdotLGeom + kCloudTerminatorLift) / (1.0 + kCloudTerminatorLift), 0.0);
+    let cloudColor = kCloudTint * (ambient + lightColor * cloudDiffuse) * cloudAlpha;
+
+    // An over operator, written out because the surface contributions are
+    // accumulated rather than carried as one value. Everything below the deck is
+    // attenuated by it, city lights included - an overcast city is not visible from
+    // orbit, and letting the lights through would read as clouds glowing at night.
+    let surfaceColor = litColor
         + oceanSpecular + oceanColorContribution
         + baseColor * kNightAmbient * nightFactor
         + nightEmissive * kNightIntensity * nightFactor;
+
+    let finalColor = surfaceColor * (1.0 - cloudAlpha) + cloudColor;
 
     // Apply gamma correction since swap chain is BGRA8Unorm (not sRGB)
     return vec4f(linearToSrgb(finalColor), 1.0);
