@@ -18,9 +18,10 @@ namespace WingsOfSteel
 {
 
 // Textures the planet shader samples, in binding order after the sampler at 0:
-// colour, night lights, ocean mask, normals. The layout and the bind group are
-// both built from this, so they cannot disagree about how many there are.
-static constexpr size_t kPlanetTextureCount = 4;
+// colour, night lights, ocean mask, normals, cloud coverage. The layout and the
+// bind group are both built from this, so they cannot disagree about how many
+// there are.
+static constexpr size_t kPlanetTextureCount = 5;
 
 // Must match AtmosphereUniforms in atmosphere.wgsl
 // Sean O'Neil's atmospheric scattering parameters
@@ -102,11 +103,16 @@ PlanetRenderSystem::PlanetRenderSystem()
         m_pEarthNormalTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
         OnTextureLoaded();
     });
+
+    GetResourceSystem()->RequestResource("/textures/earth_clouds.ktx2", [this](ResourceSharedPtr pResource) {
+        m_pEarthCloudsTexture = std::dynamic_pointer_cast<ResourceTexture2D>(pResource);
+        OnTextureLoaded();
+    });
 }
 
 void PlanetRenderSystem::OnTextureLoaded()
 {
-    m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture && m_pEarthSpecularTexture && m_pEarthNormalTexture);
+    m_TextureInitialized = (m_pEarthTexture && m_pEarthNightTexture && m_pEarthSpecularTexture && m_pEarthNormalTexture && m_pEarthCloudsTexture);
 }
 
 PlanetRenderSystem::~PlanetRenderSystem()
@@ -376,8 +382,8 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
     };
     m_TextureSampler = device.CreateSampler(&samplerDesc);
 
-    // Sampler at 0, then one texture per binding: colour, night lights, ocean mask
-    // and normals. They differ only by index, so they are filled in rather than
+    // Sampler at 0, then one texture per binding: colour, night lights, ocean mask,
+    // normals and cloud coverage. They differ only by index, so they are filled in rather than
     // spelled out - a hand written entry that silently keeps binding 0 is a
     // validation error a long way from its cause.
     std::array<wgpu::BindGroupLayoutEntry, kPlanetTextureCount + 1> entries{};
@@ -404,7 +410,7 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
 
 void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent)
 {
-    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_pEarthSpecularTexture || !m_pEarthNormalTexture || !m_TextureBindGroupLayout)
+    if (!m_pEarthTexture || !m_pEarthNightTexture || !m_pEarthSpecularTexture || !m_pEarthNormalTexture || !m_pEarthCloudsTexture || !m_TextureBindGroupLayout)
     {
         return;
     }
@@ -416,12 +422,14 @@ void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent
     planetComponent.nightTexture = m_pEarthNightTexture;
     planetComponent.specularTexture = m_pEarthSpecularTexture;
     planetComponent.normalTexture = m_pEarthNormalTexture;
+    planetComponent.cloudsTexture = m_pEarthCloudsTexture;
 
     const std::array<wgpu::TextureView, kPlanetTextureCount> textureViews = {
         m_pEarthTexture->GetTextureView(),
         m_pEarthNightTexture->GetTextureView(),
         m_pEarthSpecularTexture->GetTextureView(),
-        m_pEarthNormalTexture->GetTextureView()
+        m_pEarthNormalTexture->GetTextureView(),
+        m_pEarthCloudsTexture->GetTextureView()
     };
 
     std::array<wgpu::BindGroupEntry, kPlanetTextureCount + 1> entries{};
