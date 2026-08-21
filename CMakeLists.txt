@@ -33,6 +33,13 @@ else()
 endif()
 
 add_subdirectory("pandora")
+
+# The presets configure with -Wno-dev/-Wno-deprecated so that pandora's vendored dependencies stop
+# burying anything actionable; this puts the warnings back for the code we own. It has to sit
+# between the two add_subdirectory calls - see pandora/cmake/shared/Diagnostics.cmake. game/tests,
+# added at the bottom, inherits this state.
+pandora_enable_project_diagnostics()
+
 add_subdirectory("game")
 
 # Tests are native-only: they cover logic that is platform-independent, so running them through

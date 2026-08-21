@@ -9,7 +9,11 @@
         {
             "name": "core",
             "hidden": true,
-            "binaryDir": "build/${presetName}"
+            "binaryDir": "build/${presetName}",
+            "warnings": {
+                "dev": false,
+                "deprecated": false
+            }
         },
         {
             "name": "native",
