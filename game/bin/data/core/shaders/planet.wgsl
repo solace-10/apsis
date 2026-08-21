@@ -21,6 +21,7 @@ struct VertexOutput
 @group(1) @binding(3) var specularTexture: texture_2d<f32>;
 @group(1) @binding(4) var normalTexture: texture_2d<f32>;
 @group(1) @binding(5) var cloudsTexture: texture_2d<f32>;
+@group(1) @binding(6) var<uniform> uModelMatrix: mat4x4<f32>;
 
 // The band of dot(N, L) over which city lights fade. They are fully out by the
 // time a point is facing the sun at all, and reach full strength a little past
@@ -103,12 +104,17 @@ const kCloudTerminatorLift: f32 = 0.15;
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
-    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * vec4f(in.position, 1.0);
-    out.worldNormal = in.normal;
+
+    // The model matrix carries the planet's spin - the mesh is built about the
+    // origin with its prime meridian on +X, and this is what puts that meridian
+    // at the current sidereal time. It is a rigid rotation, so the normal takes
+    // the same matrix as the position and needs no inverse transpose.
+    let worldPos = (uModelMatrix * vec4f(in.position, 1.0)).xyz;
+
+    out.position = uGlobalUniforms.projectionMatrix * uGlobalUniforms.viewMatrix * vec4f(worldPos, 1.0);
+    out.worldNormal = (uModelMatrix * vec4f(in.normal, 0.0)).xyz;
     out.uv = in.uv;
-    // The mesh is built in world space and drawn without a model transform, so
-    // the incoming position is already what the view vector needs.
-    out.worldPos = in.position;
+    out.worldPos = worldPos;
     return out;
 }
 

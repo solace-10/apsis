@@ -84,6 +84,11 @@ void Sector::Initialize()
     constexpr float kEarthSemiMinorRadius = 6356.752f; // Polar radius
 
     m_pEarth = CreateEntity();
+
+    // Orientation is owned by OrbitSimulationSystem, which drives it from GMST so
+    // that the surface and the satellites over it agree on where the ground is.
+    m_pEarth->AddComponent<TransformComponent>();
+
     PlanetComponent& planetComponent = m_pEarth->AddComponent<PlanetComponent>();
     planetComponent.semiMajorRadius = kEarthSemiMajorRadius;
     planetComponent.semiMinorRadius = kEarthSemiMinorRadius;

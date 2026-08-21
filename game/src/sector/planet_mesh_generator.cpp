@@ -4,12 +4,12 @@
 #include <cmath>
 #include <vector>
 
-#include <glm/gtc/constants.hpp>
 #include <pandora.hpp>
 #include <render/rendersystem.hpp>
 #include <render/vertex_types.hpp>
 
 #include "components/planet_component.hpp"
+#include "space/earth_frame.hpp"
 
 namespace WingsOfSteel
 {
@@ -135,13 +135,11 @@ void PlanetMeshGenerator::GenerateSubdivisions(
                     spheroidPos.y / semiMinorRadiusSq,
                     spheroidPos.z / semiMajorRadiusSq));
 
-                // Compute spherical UV coordinates (equirectangular projection)
-                // U: longitude mapped to [0, 1], V: latitude mapped to [0, 1]
-                // Negate atan2 to flip texture horizontally to match expected orientation
-                float uvU = 0.5f - std::atan2(dir.z, dir.x) / (2.0f * glm::pi<float>());
-                float uvV = 0.5f - std::asin(glm::clamp(dir.y, -1.0f, 1.0f)) / glm::pi<float>();
-
-                vertices.push_back({ spheroidPos, normal, glm::vec2(uvU, uvV) });
+                // Equirectangular projection. Shared with the frame maths rather than spelled
+                // out here, because the planet's model matrix has to undo exactly the offset this
+                // mapping builds in - and the two drifting apart is invisible until satellites
+                // stop appearing over the right ground.
+                vertices.push_back({ spheroidPos, normal, DirectionToSurfaceUV(dir) });
             }
         }
 

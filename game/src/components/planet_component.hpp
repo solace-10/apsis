@@ -38,6 +38,11 @@ public:
     wgpu::Buffer wireframeVertexBuffer;
     uint32_t wireframeVertexCount{ 0 };
 
+    // Model matrix for the mesh, uploaded from the entity's TransformComponent.
+    // The mesh itself is built about the origin, so this only ever carries the
+    // planet's rotation.
+    wgpu::Buffer transformBuffer;
+
     // Textures for the planet surface
     ResourceTexture2DSharedPtr colorTexture;
     ResourceTexture2DSharedPtr nightTexture;

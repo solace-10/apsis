@@ -12,6 +12,8 @@
 
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
+#include "components/planet_component.hpp"
+#include "space/earth_frame.hpp"
 #include "systems/orbit_simulation_system.hpp"
 
 namespace WingsOfSteel
@@ -37,11 +39,20 @@ OrbitSimulationSystem::~OrbitSimulationSystem()
 void OrbitSimulationSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
+
+    // One GMST for the whole frame, shared by the planet's orientation and by every
+    // ground track. Sampling the clock per satellite would put objects resolved early
+    // in the frame in a fractionally different frame to those resolved late, and -
+    // far more importantly - in a different frame to the planet they are drawn over.
+    const double gmst = CalculateGMST(std::chrono::system_clock::now());
+
+    OrientPlanets(registry, gmst);
+
     auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
-    view.each([&registry](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+    view.each([&registry, gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
         const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(position.y, position.z, position.x));
+        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
 
         // Update orbital state component
         orbitalState.m_PositionECI = position;
@@ -58,9 +69,27 @@ void OrbitSimulationSystem::Update(float delta)
         orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
 
         // Calculate lat/lon
-        const glm::dvec2 latLon = ECIToLatLon(position);
+        const glm::dvec2 latLon = ECIToLatLon(position, gmst);
         orbitalState.m_Latitude = latLon.x;
         orbitalState.m_Longitude = latLon.y;
+    });
+}
+
+// Turns every planet mesh so that its prime meridian sits at the current Greenwich
+// Mean Sidereal Time, which is what puts a satellite over the ground it is
+// actually above. CalculatePlanetRotation() carries the reasoning behind the
+// angle; this is only the ECS plumbing for it.
+//
+// Only the surface needs this. A rotation about the polar axis maps the oblate
+// spheroid exactly onto itself, so the atmosphere shell and the wireframe overlay
+// carry no longitude to be wrong about and are deliberately left in world space.
+void OrbitSimulationSystem::OrientPlanets(entt::registry& registry, double gmst)
+{
+    const glm::mat4 rotation(CalculatePlanetRotation(gmst));
+
+    auto view = registry.view<const PlanetComponent, TransformComponent>();
+    view.each([&rotation](const PlanetComponent&, TransformComponent& transformComponent) {
+        transformComponent.transform = rotation;
     });
 }
 
@@ -129,57 +158,6 @@ glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const OrbitalElemen
         + y_pf * (cos_w * sin_i);
 
     return glm::dvec3(x, y, z);
-}
-
-// Calculate Greenwich Mean Sidereal Time (GMST) in radians.
-// Based on the current UTC time.
-double OrbitSimulationSystem::CalculateGMST()
-{
-    const auto now = std::chrono::system_clock::now();
-    const auto duration = now.time_since_epoch();
-
-    // Convert to days since J2000.0 epoch (January 1, 2000, 12:00 TT)
-    // J2000.0 in Unix time is 946728000 seconds (2000-01-01 12:00:00 UTC approximately)
-    constexpr double kJ2000UnixSeconds = 946728000.0;
-    const double secondsSinceJ2000 = std::chrono::duration<double>(duration).count() - kJ2000UnixSeconds;
-    const double daysSinceJ2000 = secondsSinceJ2000 / 86400.0;
-
-    // GMST at J2000.0 is approximately 280.46061837 degrees
-    // Earth rotates approximately 360.98564736629 degrees per day
-    double gmstDegrees = 280.46061837 + 360.98564736629 * daysSinceJ2000;
-
-    // Normalize to [0, 360)
-    gmstDegrees = std::fmod(gmstDegrees, 360.0);
-    if (gmstDegrees < 0.0)
-    {
-        gmstDegrees += 360.0;
-    }
-
-    return glm::radians(gmstDegrees);
-}
-
-// Convert ECI coordinates to latitude and longitude (in degrees)
-// Returns: x = latitude, y = longitude
-glm::dvec2 OrbitSimulationSystem::ECIToLatLon(const glm::dvec3& eciPosition)
-{
-    const double gmst = CalculateGMST();
-
-    // Convert ECI to ECEF by rotating around Z-axis by -GMST
-    const double cosGmst = std::cos(gmst);
-    const double sinGmst = std::sin(gmst);
-
-    const double xEcef = eciPosition.x * cosGmst + eciPosition.y * sinGmst;
-    const double yEcef = -eciPosition.x * sinGmst + eciPosition.y * cosGmst;
-    const double zEcef = eciPosition.z;
-
-    // Calculate longitude (in radians, then convert to degrees)
-    const double longitude = std::atan2(yEcef, xEcef);
-
-    // Calculate geocentric latitude (in radians, then convert to degrees)
-    const double r_xy = std::sqrt(xEcef * xEcef + yEcef * yEcef);
-    const double latitude = std::atan2(zEcef, r_xy);
-
-    return glm::dvec2(glm::degrees(latitude), glm::degrees(longitude));
 }
 
 // Solve Kepler's equation: M = E - e*sin(E)

@@ -4,10 +4,12 @@
 #include <cmath>
 
 #include <glm/gtc/constants.hpp>
+#include <glm/mat4x4.hpp>
 #include <pandora.hpp>
 #include <render/rendersystem.hpp>
 #include <render/window.hpp>
 #include <resources/resource_system.hpp>
+#include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
 
 #include "components/atmosphere_component.hpp"
@@ -22,6 +24,11 @@ namespace WingsOfSteel
 // bind group are both built from this, so they cannot disagree about how many
 // there are.
 static constexpr size_t kPlanetTextureCount = 5;
+
+// The planet's model matrix, bound after the textures. It sits in this group
+// rather than alongside the global uniforms because it is per planet, and the
+// vertex stage is the only thing that reads it.
+static constexpr uint32_t kPlanetTransformBinding = kPlanetTextureCount + 1;
 
 // Must match AtmosphereUniforms in atmosphere.wgsl
 // Sean O'Neil's atmospheric scattering parameters
@@ -178,7 +185,8 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     // Render solid mesh
     if (m_Initialized && m_RenderPipeline)
     {
-        view.each([this, &renderPass](const auto entity, PlanetComponent& planetComponent) {
+        auto orientedView = registry.view<PlanetComponent, const TransformComponent>();
+        orientedView.each([this, &renderPass](const auto entity, PlanetComponent& planetComponent, const TransformComponent& transformComponent) {
             if (!planetComponent.initialized || !planetComponent.vertexBuffer || !planetComponent.indexBuffer)
             {
                 return;
@@ -189,6 +197,9 @@ void PlanetRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
             {
                 return;
             }
+
+            GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(
+                planetComponent.transformBuffer, 0, &transformComponent.transform, sizeof(glm::mat4));
 
             renderPass.SetPipeline(m_RenderPipeline);
             renderPass.SetBindGroup(1, planetComponent.textureBindGroup);
@@ -386,12 +397,12 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
     // normals and cloud coverage. They differ only by index, so they are filled in rather than
     // spelled out - a hand written entry that silently keeps binding 0 is a
     // validation error a long way from its cause.
-    std::array<wgpu::BindGroupLayoutEntry, kPlanetTextureCount + 1> entries{};
+    std::array<wgpu::BindGroupLayoutEntry, kPlanetTextureCount + 2> entries{};
     entries[0] = { .binding = 0,
         .visibility = wgpu::ShaderStage::Fragment,
         .sampler = { .type = wgpu::SamplerBindingType::Filtering } };
 
-    for (uint32_t i = 1; i < entries.size(); i++)
+    for (uint32_t i = 1; i <= kPlanetTextureCount; i++)
     {
         entries[i] = { .binding = i,
             .visibility = wgpu::ShaderStage::Fragment,
@@ -399,6 +410,10 @@ void PlanetRenderSystem::CreateTextureBindGroupLayout()
                 .sampleType = wgpu::TextureSampleType::Float,
                 .viewDimension = wgpu::TextureViewDimension::e2D } };
     }
+
+    entries[kPlanetTransformBinding] = { .binding = kPlanetTransformBinding,
+        .visibility = wgpu::ShaderStage::Vertex,
+        .buffer = { .type = wgpu::BufferBindingType::Uniform, .minBindingSize = sizeof(glm::mat4) } };
 
     wgpu::BindGroupLayoutDescriptor layoutDesc{
         .label = "Planet texture bind group layout",
@@ -432,12 +447,22 @@ void PlanetRenderSystem::CreateTextureBindGroup(PlanetComponent& planetComponent
         m_pEarthCloudsTexture->GetTextureView()
     };
 
-    std::array<wgpu::BindGroupEntry, kPlanetTextureCount + 1> entries{};
+    wgpu::BufferDescriptor transformBufferDesc{
+        .label = "Planet transform buffer",
+        .usage = wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst,
+        .size = sizeof(glm::mat4)
+    };
+    planetComponent.transformBuffer = device.CreateBuffer(&transformBufferDesc);
+
+    std::array<wgpu::BindGroupEntry, kPlanetTextureCount + 2> entries{};
     entries[0] = { .binding = 0, .sampler = m_TextureSampler };
     for (uint32_t i = 0; i < textureViews.size(); i++)
     {
         entries[i + 1] = { .binding = i + 1, .textureView = textureViews[i] };
     }
+    entries[kPlanetTransformBinding] = { .binding = kPlanetTransformBinding,
+        .buffer = planetComponent.transformBuffer,
+        .size = sizeof(glm::mat4) };
 
     wgpu::BindGroupDescriptor bindGroupDesc{
         .label = "Planet texture bind group",
