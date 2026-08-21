@@ -139,7 +139,7 @@ void PlanetMeshGenerator::GenerateSubdivisions(
                 // out here, because the planet's model matrix has to undo exactly the offset this
                 // mapping builds in - and the two drifting apart is invisible until satellites
                 // stop appearing over the right ground.
-                vertices.push_back({ spheroidPos, normal, DirectionToSurfaceUV(dir) });
+                vertices.push_back({ spheroidPos, normal, DirectionToSurfaceUV(dir, semiMajorRadius, semiMinorRadius) });
             }
         }
 

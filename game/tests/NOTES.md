@@ -4,20 +4,38 @@ Behaviour the tests pin down but which may not be what we actually want, and kno
 names the test that records the current behaviour, so changing the code means changing a test on
 purpose rather than discovering a surprise.
 
-## Latitude is geocentric, not geodetic
+## Three latitudes, and the one the code speaks
 
-`ECIToLatLon()` returns the angle at the centre of the Earth, `atan2(z, r_xy)`. Every tracking site
-reports geodetic latitude, which is the angle a plumb line makes with the equatorial plane, and on
-an oblate planet the two differ by up to ~0.19 degrees — around 21 km near 45 degrees.
+An oblate planet has three different answers to "how far north is this point?", and all three are
+reachable from code that is already in this repository:
 
-The planet is *drawn* as a WGS84 ellipsoid (`Sector::Initialize()` sets a distinct semi-minor
-radius), so the readout and the mesh disagree about what latitude means. Only the readout is
-affected: the 3D position is computed in Cartesian ECI throughout and never round-trips through a
-latitude.
+- **Geodetic** — the angle the ellipsoid's surface normal makes with the equatorial plane. What
+  WGS84, GPS and every tracking site report, and what equirectangular surface maps are laid out in.
+- **Geocentric** — the angle subtended at the centre, `atan2(z, r_xy)`. What falls out of Cartesian
+  coordinates for free, and so the one reached for by accident. Up to 0.192 degrees from geodetic —
+  around 21 km of ground — near 45 degrees.
+- **Reduced** — `asin(dir.y)` for the direction the mesh generator projects a cube vertex onto,
+  because the vertex it places is `(dir.x*a, dir.y*b, dir.z*a)`. Sits almost exactly midway between
+  the other two; sampling the surface map with it shifts coastlines about 10.7 km polewards.
 
-- Recorded by: `A satellite is drawn over the ground it is reported to be over`
-  (earth_frame_tests.cpp), which asserts the latitude is invariant under the planet's spin — true of
-  both conventions, so it pins the axis of rotation without taking a side on this.
+Everything the user sees is geodetic. `ECIToGeodetic()` solves for it with Bowring's closed form
+plus two turns of the exact fixed point, and `DirectionToSurfaceUV()` converts from reduced before
+computing v. Geocentric latitude appears only inside the tests, as the thing being measured against.
+
+The same solve returns altitude above the ellipsoid rather than above a mean sphere. A 6371 km mean
+radius is off by +7.1 km at the equator and -14.2 km at the poles, so an inclined orbit's reported
+height would swing 21 km twice an orbit.
+
+- Recorded by: `Geodetic latitude differs from geocentric by the flattening`, `The surface mapping is
+  linear in geodetic latitude`, `Altitude is measured from the ellipsoid, not a mean sphere`, and
+  `Geodetic and ECEF round trip at every altitude we track` (earth_frame_tests.cpp).
+
+## No second, geocentric sub-satellite point
+
+`OrbitalStateComponent` holds one latitude, not one per convention. Longitude is identical either
+way, so a second pair would add a field obliged to equal its neighbour with nothing relating them —
+the same shape as the bug in `[1]`. A ground track wants a position rather than a latitude anyway:
+`GeodeticToECEF(lat, lon, 0)` is that point, and cannot be read in the wrong convention.
 
 ## The quarter turn in the planet's rotation is a convention, not physics
 
@@ -52,5 +70,5 @@ Known gaps, in rough order of how much they'd be worth:
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. That is
   WGSL running on a GPU, so the suite cannot see it. The check is visual.
 - **`CalculateGMST()` uses UTC where the series wants UT1.** Unix time ignores leap seconds, so the
-  argument can be up to a second out — under a hundredth of a degree, and far below the geodetic
-  discrepancy above. Recorded here so it is a known approximation rather than a latent surprise.
+  argument can be up to a second out — under a hundredth of a degree, and so far below
+  anything else in this file. Recorded here so it is a known approximation rather than a latent surprise.

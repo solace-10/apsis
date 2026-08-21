@@ -22,9 +22,6 @@ namespace WingsOfSteel
 // Earth's gravitational parameter (km³/s²)
 static constexpr double kMu = 398600.4418;
 
-// Earth's mean radius (km)
-static constexpr double kEarthMeanRadius = 6371.0;
-
 // Earth's angular velocity (rad/s)
 static constexpr double kEarthAngularVelocity = 7.2921159e-5;
 
@@ -61,17 +58,15 @@ void OrbitSimulationSystem::Update(float delta)
         const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
         orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
 
-        // Calculate altitude
         const double r = glm::length(position);
-        orbitalState.m_Altitude = r - kEarthMeanRadius;
 
         // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
         orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
 
-        // Calculate lat/lon
-        const glm::dvec2 latLon = ECIToLatLon(position, gmst);
-        orbitalState.m_Latitude = latLon.x;
-        orbitalState.m_Longitude = latLon.y;
+        const glm::dvec3 geodetic = ECIToGeodetic(position, gmst);
+        orbitalState.m_Latitude = geodetic.x;
+        orbitalState.m_Longitude = geodetic.y;
+        orbitalState.m_Altitude = geodetic.z;
     });
 }
 

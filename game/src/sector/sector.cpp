@@ -21,16 +21,17 @@
 #include "components/orbital_elements_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "game.hpp"
 #include "sector/database.hpp"
 #include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
+#include "space/earth_frame.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_simulation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_picking_system.hpp"
 #include "systems/space_object_render_system.hpp"
-#include "game.hpp"
 
 #if defined(TARGET_PLATFORM_WEB)
 #include "emscripten/web_interop.hpp"
@@ -79,14 +80,10 @@ void Sector::Initialize()
 
     SpawnLight();
 
-    // Earth's WGS84 ellipsoid dimensions in kilometers
-    constexpr float kEarthSemiMajorRadius = 6378.137f; // Equatorial radius
-    constexpr float kEarthSemiMinorRadius = 6356.752f; // Polar radius
+    constexpr float kEarthSemiMajorRadius = static_cast<float>(kEarthSemiMajorAxis); // Equatorial radius
+    constexpr float kEarthSemiMinorRadius = static_cast<float>(kEarthSemiMinorAxis); // Polar radius
 
     m_pEarth = CreateEntity();
-
-    // Orientation is owned by OrbitSimulationSystem, which drives it from GMST so
-    // that the surface and the satellites over it agree on where the ground is.
     m_pEarth->AddComponent<TransformComponent>();
 
     PlanetComponent& planetComponent = m_pEarth->AddComponent<PlanetComponent>();

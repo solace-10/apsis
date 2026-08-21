@@ -47,32 +47,104 @@ glm::dvec3 WorldToECI(const glm::dvec3& worldPosition)
     return glm::dvec3(worldPosition.z, worldPosition.x, worldPosition.y);
 }
 
-glm::dvec2 ECIToLatLon(const glm::dvec3& eciPosition, double gmst)
+glm::dvec3 ECIToECEF(const glm::dvec3& eciPosition, double gmst)
 {
-    // ECI to ECEF is a rotation about the spin axis by -GMST. This is the correct pairing for TEME,
-    // which is the frame the OMM mean elements are actually expressed in.
+    // ECEF - Earth-Centered, Earth-Fixed - shares its origin and spin axis with ECI and differs
+    // only by how far the planet has turned, so this is a rotation about z by -GMST.
     const double cosGmst = std::cos(gmst);
     const double sinGmst = std::sin(gmst);
 
-    const double xEcef = eciPosition.x * cosGmst + eciPosition.y * sinGmst;
-    const double yEcef = -eciPosition.x * sinGmst + eciPosition.y * cosGmst;
-    const double zEcef = eciPosition.z;
-
-    const double longitude = std::atan2(yEcef, xEcef);
-
-    const double r_xy = std::sqrt(xEcef * xEcef + yEcef * yEcef);
-    const double latitude = std::atan2(zEcef, r_xy);
-
-    return glm::dvec2(glm::degrees(latitude), glm::degrees(longitude));
+    return glm::dvec3(
+        eciPosition.x * cosGmst + eciPosition.y * sinGmst,
+        -eciPosition.x * sinGmst + eciPosition.y * cosGmst,
+        eciPosition.z);
 }
 
-glm::vec2 DirectionToSurfaceUV(const glm::vec3& direction)
+glm::dvec3 ECEFToECI(const glm::dvec3& ecefPosition, double gmst)
+{
+    return ECIToECEF(ecefPosition, -gmst);
+}
+
+glm::dvec3 ECEFToGeodetic(const glm::dvec3& ecefPosition)
+{
+    const double p = std::sqrt(ecefPosition.x * ecefPosition.x + ecefPosition.y * ecefPosition.y);
+    const double z = ecefPosition.z;
+
+    // Bowring's closed form. Latitude appears on both sides of the exact relation, and this is the
+    // standard way to get a seed good enough that the iteration below is a formality: it is already
+    // sub-millimetre for anything near the surface, and only starts to drift at altitudes far above
+    // where we track anything.
+    constexpr double kEccentricityPrimeSq = kEarthEccentricitySq / (1.0 - kEarthEccentricitySq);
+    const double theta = std::atan2(z * kEarthSemiMajorAxis, p * kEarthSemiMinorAxis);
+    const double sinTheta = std::sin(theta);
+    const double cosTheta = std::cos(theta);
+
+    double latitude = std::atan2(
+        z + kEccentricityPrimeSq * kEarthSemiMinorAxis * sinTheta * sinTheta * sinTheta,
+        p - kEarthEccentricitySq * kEarthSemiMajorAxis * cosTheta * cosTheta * cosTheta);
+
+    // Two turns of the exact fixed point, which costs a handful of nanoseconds and removes any
+    // question of how the seed behaves out at geostationary altitudes.
+    for (int i = 0; i < 2; i++)
+    {
+        const double sinLatitude = std::sin(latitude);
+        const double primeVerticalRadius = kEarthSemiMajorAxis / std::sqrt(1.0 - kEarthEccentricitySq * sinLatitude * sinLatitude);
+        latitude = std::atan2(z + kEarthEccentricitySq * primeVerticalRadius * sinLatitude, p);
+    }
+
+    const double sinLatitude = std::sin(latitude);
+    const double cosLatitude = std::cos(latitude);
+
+    // Not p/cos(latitude) - N, which is the form usually quoted but blows up at the poles. This one
+    // is the same quantity rearranged so that nothing is divided by a vanishing cosine.
+    const double altitude = p * cosLatitude + z * sinLatitude - kEarthSemiMajorAxis * std::sqrt(1.0 - kEarthEccentricitySq * sinLatitude * sinLatitude);
+
+    return glm::dvec3(
+        glm::degrees(latitude),
+        glm::degrees(std::atan2(ecefPosition.y, ecefPosition.x)),
+        altitude);
+}
+
+glm::dvec3 GeodeticToECEF(const glm::dvec3& geodetic)
+{
+    const double latitude = glm::radians(geodetic.x);
+    const double longitude = glm::radians(geodetic.y);
+    const double altitude = geodetic.z;
+
+    const double sinLatitude = std::sin(latitude);
+    const double cosLatitude = std::cos(latitude);
+
+    // The radius of curvature in the prime vertical: the distance from the point to where its
+    // surface normal crosses the spin axis. On a sphere this would just be the radius, and the
+    // whole geodetic/geocentric distinction would go away with it.
+    const double primeVerticalRadius = kEarthSemiMajorAxis / std::sqrt(1.0 - kEarthEccentricitySq * sinLatitude * sinLatitude);
+
+    return glm::dvec3(
+        (primeVerticalRadius + altitude) * cosLatitude * std::cos(longitude),
+        (primeVerticalRadius + altitude) * cosLatitude * std::sin(longitude),
+        (primeVerticalRadius * (1.0 - kEarthEccentricitySq) + altitude) * sinLatitude);
+}
+
+glm::dvec3 ECIToGeodetic(const glm::dvec3& eciPosition, double gmst)
+{
+    return ECEFToGeodetic(ECIToECEF(eciPosition, gmst));
+}
+
+glm::vec2 DirectionToSurfaceUV(const glm::vec3& direction, float semiMajorRadius, float semiMinorRadius)
 {
     // The negated atan2 is what makes east run the same way the planet turns. Azimuth atan2(z, x)
     // measures from +X towards +Z, which is the opposite sense to a positive rotation about +Y, so
     // without the flip the map would come out mirrored.
     const float u = 0.5f - std::atan2(direction.z, direction.x) / (2.0f * glm::pi<float>());
-    const float v = 0.5f - std::asin(glm::clamp(direction.y, -1.0f, 1.0f)) / glm::pi<float>();
+
+    // asin(direction.y) would be the reduced latitude of the vertex the mesh generator places for
+    // this direction, and the map is drawn in geodetic. tan(geodetic) = (a/b) * tan(reduced), which
+    // is this atan2 with the radii used as the scale factor - and degenerates to asin(direction.y)
+    // for a sphere, where a == b.
+    const float radiusXZ = std::sqrt(direction.x * direction.x + direction.z * direction.z);
+    const float latitude = std::atan2(semiMajorRadius * direction.y, semiMinorRadius * radiusXZ);
+    const float v = 0.5f - latitude / glm::pi<float>();
+
     return glm::vec2(u, v);
 }
 
