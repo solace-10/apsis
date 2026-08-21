@@ -22,9 +22,6 @@ namespace WingsOfSteel
 // Earth's gravitational parameter (km³/s²)
 static constexpr double kMu = 398600.4418;
 
-// Earth's angular velocity (rad/s)
-static constexpr double kEarthAngularVelocity = 7.2921159e-5;
-
 OrbitSimulationSystem::OrbitSimulationSystem()
 {
 }

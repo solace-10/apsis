@@ -125,11 +125,17 @@ const kCloudTerminatorLift: f32 = 0.15;
 // The clamp is belt and braces: this map's X and Y never exceed 0.30, so the
 // argument stays near 1, but scaling by kNormalStrength can push it past.
 //
-// The basis is taken from the sphere's own parameterization rather than screen
-// space derivatives, which is both cheaper and exact. The mesh builds uv as
-// u = 0.5 - atan2(z, x) / 2pi and v = 0.5 - asin(y) / pi, so +u runs along
-// cross(polar, N) and +v runs south - and south is the direction this map's
-// green channel is measured in, so no flip is needed.
+// The basis is taken from the surface's own parameterization rather than screen
+// space derivatives, which is both cheaper and exact. DirectionToSurfaceUV() in
+// game/src/space/earth_frame.cpp builds uv as u = 0.5 - atan2(z, x) / 2pi and
+// v = 0.5 - latitude / pi, where latitude is geodetic - so +u runs along
+// cross(polar, N) and +v runs south, and south is the direction this map's green
+// channel is measured in, so no flip is needed.
+//
+// Only the sense of v matters here, not its exact form: the ellipsoid's normal
+// carries the same 1/a^2 on x and z, so cross(polar, N) is parallel to (z, 0, -x)
+// on the spheroid just as it is on a sphere, and any mapping that runs south
+// monotonically gives the same basis.
 fn perturbNormal(Ngeom: vec3f, uv: vec2f) -> vec3f
 {
     let packed = textureSample(normalTexture, textureSampler, uv).rg;
