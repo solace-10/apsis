@@ -88,7 +88,7 @@ const kNormalStrength: f32 = 1.0;
 
 // How fast the cloud deck drifts, in uv per second.
 // The current value is significantly faster than in reality.
-const kCloudScrollSpeed: f32 = 0.001;
+const kCloudScrollSpeed: f32 = 0.00025;
 
 // Overall opacity of the deck.
 const kCloudOpacity: f32 = 1.0;
