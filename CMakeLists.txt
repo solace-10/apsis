@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.22) # CMake version check
+# 3.24 for $<LINK_LIBRARY:WHOLE_ARCHIVE>, which game/CMakeLists.txt needs to keep translation units
+# that exist only for their static initialisers - see the comment on the game target there.
+cmake_minimum_required(VERSION 3.24)
 project(app)                         # Create project "app"
 set(CMAKE_CXX_STANDARD 20)           # Enable C++20 standardq
 
@@ -32,3 +34,12 @@ endif()
 
 add_subdirectory("pandora")
 add_subdirectory("game")
+
+# Tests are native-only: they cover logic that is platform-independent, so running them through
+# emscripten would cost a node harness and buy nothing. The `tests` target is configured but is not
+# in the build presets' target lists, so a normal build doesn't pay for it - run ./scripts/test.sh.
+option(ORBIS_BUILD_TESTS "Build the test suite (native only)." ON)
+if(TARGET_PLATFORM_NATIVE AND ORBIS_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory("game/tests")
+endif()

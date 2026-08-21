@@ -86,7 +86,20 @@ npm run build        # Production build
 
 ## Testing
 
-No test framework. Verify changes by building successfully and running the application.
+Catch2 + CTest, native-only. Run with `./scripts/test.sh` (accepts ctest arguments, e.g.
+`./scripts/test.sh -R earth_frame`). The suite is always built Debug, because `PANDORA_ASSERT`
+compiles out under NDEBUG.
+
+Tests live in `game/tests/` and link `game_lib` — `game/` is built as a static library plus a
+thin `main.cpp` executable, so anything in the game is reachable from a test without maintaining
+a second list of which sources are testable. `game/tests/NOTES.md` records behaviour the tests
+deliberately pin, and the known gaps.
+
+Note that `game` links `game_lib` with `WHOLE_ARCHIVE`: a translation unit that exists only for a
+static initialiser (`src/emscripten/bindings.cpp`) is otherwise dropped by the linker, silently.
+
+Not everything is covered — building successfully and running the application is still the check
+for rendering and engine-entangled changes.
 
 ## Formatting
 
