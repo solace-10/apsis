@@ -29,6 +29,37 @@ struct VertexOutput
 
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f
 {
-    let texColor = textureSample(uTexture, uSampler, in.uv);
-    return vec4f(in.color.rgb, texColor.a);
+    let texelSize = 1.0 / vec2f(textureDimensions(uTexture, 0));
+    let glyphAlpha = textureSample(uTexture, uSampler, in.uv).a;
+
+    // Dilate the glyph by one texel to form the outline. The bitmap font has one texel
+    // of padding around every glyph, so this stays within the glyph's own quad and can
+    // never pick up a neighbouring glyph from the atlas.
+    //
+    // A cross rather than a full 3x3: at this font size the diagonal taps thicken the
+    // strokes enough to start closing the counters of characters such as '6' and 'A',
+    // and the atlas is anti-aliased, so the axis-aligned taps already cover diagonal
+    // edges well enough.
+    const kOutlineOffsets = array<vec2f, 4>(
+        vec2f(-1.0, 0.0),
+        vec2f(1.0, 0.0),
+        vec2f(0.0, -1.0),
+        vec2f(0.0, 1.0)
+    );
+
+    var dilated = glyphAlpha;
+    for (var i = 0; i < 4; i++)
+    {
+        let offset = kOutlineOffsets[i] * texelSize;
+        dilated = max(dilated, textureSample(uTexture, uSampler, in.uv + offset).a);
+    }
+
+    // Source-over composite of the glyph on top of the outline.
+    let outlineColor = vec3f(0.0);
+    let outlineAlpha = dilated * (1.0 - glyphAlpha);
+    let alpha = glyphAlpha + outlineAlpha;
+    // Guarded against a zero divide: fully transparent fragments would otherwise
+    // produce a NaN colour, which survives the blend as NaN rather than as nothing.
+    let rgb = (in.color.rgb * glyphAlpha + outlineColor * outlineAlpha) / max(alpha, 0.00001);
+    return vec4f(rgb, alpha);
 }
