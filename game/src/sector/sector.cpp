@@ -56,13 +56,16 @@ void Sector::Initialize()
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlanetRenderSystem>();
     AddSystem<OrbitSimulationSystem>();
-    AddSystem<SpaceObjectRenderSystem>();
     AddSystem<SpaceObjectPickingSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
     // otherwise the camera and debug rendering will be offset by a frame.
     AddSystem<CameraSystem>();
     AddSystem<DebugRenderSystem>();
+
+    // SpaceObjectRenderSystem projects the space objects into screen space, so it has to run after
+    // CameraSystem has moved the camera for this frame.
+    AddSystem<SpaceObjectRenderSystem>();
 
     m_pCamera = CreateEntity();
     // Near/far planes for orbital viewing (kilometers)
