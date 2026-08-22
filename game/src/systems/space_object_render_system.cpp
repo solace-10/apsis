@@ -86,7 +86,6 @@ void SpaceObjectRenderSystem::Initialize(Scene* pScene)
         CreateRenderPipeline();
     });
 
-
     GetResourceSystem()->RequestResource("/bitmap_fonts/SupplyMonoBitmap.fnt", [this](ResourceSharedPtr pResource) {
         m_pFont = std::dynamic_pointer_cast<ResourceBitmapFont>(pResource);
     });
@@ -398,8 +397,16 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<MetadataComponent>();
 
+    EntityHandle currentlySelectedEntityHandle = NullEntityHandle;
+    EntitySharedPtr pCurrentlySelectedSpaceObject = Game::Get()->GetSector()->GetSelectedSpaceObject();
+    if (pCurrentlySelectedSpaceObject)
+    {
+        currentlySelectedEntityHandle = pCurrentlySelectedSpaceObject->GetEntityHandle();
+    }
+
+    const GroupFilters::Mask currentMask = Game::Get()->GetSector()->GetGroupFilters()->GetCurrentMask();
     const bool generateFullLabels = ShouldDisplayFullLabels();
-    view.each([this, generateFullLabels, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
+    view.each([this, currentlySelectedEntityHandle, currentMask, generateFullLabels, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
         if (!metadataComponent.IsVisible())
         {
             return;
@@ -429,7 +436,8 @@ void SpaceObjectRenderSystem::GenerateLabelsVertexData()
         }
 
         const std::string label(labelStream.str());
-        const glm::vec4 labelColor(GetSpaceObjectColor(metadataComponent).AsVec3(), 1.0f);
+        const bool isCurrentlySelected = (currentlySelectedEntityHandle == entityHandle);
+        const glm::vec4 labelColor(GetSpaceObjectColor(isCurrentlySelected, currentMask, metadataComponent).AsVec3(), 1.0f);
         LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
         labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
 
@@ -478,9 +486,20 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& o
 }
 
 // Calculate the color of the space object based on the most important group filter it belongs to.
-const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(const MetadataComponent& metadataComponent) const
+const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(bool isCurrentlySelected, const GroupFilters::Mask& currentMask, const MetadataComponent& metadataComponent) const
 {
     GroupFilters::Mask mask = metadataComponent.GetGroupFilterMask();
+
+    // If the set of groups defined by the UI (`currentMask`) is non-empty, we need to filter this
+    // object's group against it.
+    // This makes it so that if an object is part of two groups (e.g. `starlink` and `last-30-days`)
+    // but the user only has `starlink` selected, then they'll get that group's colour rather than
+    // the higher-priority `last-30-days`.
+    if (!isCurrentlySelected && currentMask.any())
+    {
+        mask &= currentMask;
+    }
+
     auto bits = mask.to_ullong();
     int lsb = std::countr_zero(bits);
 

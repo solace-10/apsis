@@ -11,6 +11,7 @@
 #include <scene/systems/system.hpp>
 
 #include "components/metadata_component.hpp"
+#include "sector/group_filter.hpp"
 
 namespace WingsOfSteel
 {
@@ -37,7 +38,7 @@ private:
     void GenerateLabelsVertexData();
     bool ShouldDisplayFullLabels() const;
     size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;
-    const Color& GetSpaceObjectColor(const MetadataComponent& metadataComponent) const;
+    const Color& GetSpaceObjectColor(bool isCurrentlySelected, const GroupFilters::Mask& currentMask, const MetadataComponent& metadataComponent) const;
 
     static constexpr size_t kMaxLabels = 65536;
     static constexpr size_t kVerticesPerQuad = 6;
