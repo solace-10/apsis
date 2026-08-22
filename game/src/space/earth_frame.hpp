@@ -32,6 +32,24 @@ inline constexpr double kEarthEccentricitySq = kEarthFlattening * (2.0 - kEarthF
 // orientation, and so that the result can be checked against a known epoch.
 double CalculateGMST(std::chrono::system_clock::time_point when);
 
+// Unit vector from the Earth towards the Sun, in the same ECI frame the orbital positions are
+// expressed in.
+//
+// The Astronomical Almanac's low precision series, which is good to about a hundredth of a
+// degree between 1950 and 2050 - a fortieth of the Sun's own angular radius, and four orders of
+// magnitude better than the two-body propagation the satellites get.
+//
+// The result is referred to the mean equinox of date, which is what GMST is measured from and
+// therefore the frame that pairs with ECIToECEF() - the same choice, and for the same reason,
+// as the TEME positions documented below.
+//
+// A direction, not a position. Neither consumer wants the distance: the light is directional,
+// and the parallax between the Earth's centre and the camera at its 100,000 km limit is 0.038
+// degrees, an eighth of the disc's radius.
+//
+// Takes the instant rather than reading the clock, for the same reasons CalculateGMST() does.
+glm::dvec3 CalculateSunDirectionECI(std::chrono::system_clock::time_point when);
+
 // The planet's model matrix: what turns a mesh built about the origin so that its prime meridian
 // sits at the given sidereal time.
 //

@@ -33,6 +33,46 @@ double WrapDegrees(double degrees)
     return degrees < 0.0 ? degrees + 180.0 : degrees - 180.0;
 }
 
+// A UTC instant, spelled out. The sun cases below are checked against published ephemerides and
+// against what the sky actually does on a given afternoon, so the dates have to be legible.
+std::chrono::system_clock::time_point Utc(int year, unsigned month, unsigned day, int hour, int minute = 0)
+{
+    const std::chrono::year_month_day date{ std::chrono::year{ year }, std::chrono::month{ month }, std::chrono::day{ day } };
+    return std::chrono::sys_days{ date } + std::chrono::hours{ hour } + std::chrono::minutes{ minute };
+}
+
+// The outward normal of the WGS84 ellipsoid at a point on the ground, in ECEF - which way is up
+// for someone standing there. Composed out of GeodeticToECEF() rather than restated in closed
+// form, for the same reason ModelToECEF() is.
+glm::dvec3 GeodeticUp(double latitudeDegrees, double longitudeDegrees)
+{
+    return glm::normalize(
+        GeodeticToECEF(glm::dvec3(latitudeDegrees, longitudeDegrees, 1.0))
+        - GeodeticToECEF(glm::dvec3(latitudeDegrees, longitudeDegrees, 0.0)));
+}
+
+// How high the Sun stands above the horizon at a point on the ground, in degrees. Negative is
+// night. Geometric, so it takes no account of refraction or of the Sun's own radius - both worth
+// about half a degree at the horizon and nothing at all further up.
+double SolarElevationAt(std::chrono::system_clock::time_point when, double latitudeDegrees, double longitudeDegrees)
+{
+    const glm::dvec3 sunECEF = ECIToECEF(CalculateSunDirectionECI(when), CalculateGMST(when));
+    return glm::degrees(std::asin(glm::dot(GeodeticUp(latitudeDegrees, longitudeDegrees), sunECEF)));
+}
+
+// The point on the ground the Sun is directly over, as (latitude, longitude) in degrees.
+//
+// The Sun is at the zenith where the ellipsoid's normal points straight at it, and geodetic
+// latitude is by definition the angle that normal makes with the equator - so the declination is
+// the latitude and there is no ellipsoid to solve. ECIToGeodetic() is the wrong tool here: it
+// locates the point *at* the coordinates it is handed, and a unit vector is a point 6,377 km
+// underneath Greenwich.
+glm::dvec2 SubSolarPoint(std::chrono::system_clock::time_point when)
+{
+    const glm::dvec3 sunECEF = ECIToECEF(CalculateSunDirectionECI(when), CalculateGMST(when));
+    return glm::dvec2(glm::degrees(std::asin(sunECEF.z)), glm::degrees(std::atan2(sunECEF.y, sunECEF.x)));
+}
+
 // The unit direction the planet mesh generator projects a cube vertex onto, parameterised the way
 // the mesh actually parameterises it: by reduced latitude, since the vertex it places is
 // (dir.x*a, dir.y*b, dir.z*a) and so dir.y is sin(reduced), not sin(geodetic).
@@ -108,6 +148,97 @@ TEST_CASE("GMST stays within one turn", "[space][earth_frame]")
         const double gmst = CalculateGMST(UnixSeconds(kJ2000UnixSeconds + days * 86400.0));
         REQUIRE(gmst >= 0.0);
         REQUIRE(gmst < 2.0 * glm::pi<double>());
+    }
+}
+
+TEST_CASE("The sun's declination follows the obliquity through the year", "[space][earth_frame]")
+{
+    // The seasons, which is the coarsest thing a sun can be wrong about. Drop the obliquity term
+    // and the declination is flat at zero all year; run the ecliptic longitude backwards and the
+    // solstices swap.
+    REQUIRE_THAT(SubSolarPoint(Utc(2026, 6, 21, 12)).x, WithinAbs(23.44, 0.02));
+    REQUIRE_THAT(SubSolarPoint(Utc(2026, 12, 21, 12)).x, WithinAbs(-23.44, 0.02));
+
+    // The equinoxes fall at 14:46 UTC in March 2026 and 17:05 UTC in September, so noon on either
+    // day is a few hours short of the crossing and the declination has not quite reached zero.
+    REQUIRE_THAT(SubSolarPoint(Utc(2026, 3, 20, 12)).x, WithinAbs(0.0, 0.1));
+    REQUIRE_THAT(SubSolarPoint(Utc(2026, 9, 23, 12)).x, WithinAbs(0.0, 0.25));
+
+    // And nothing anywhere in the year leaves the band the tilt allows.
+    for (int day = 0; day < 366; day++)
+    {
+        const double declination = SubSolarPoint(Utc(2026, 1, 1, 12) + std::chrono::hours{ 24 * day }).x;
+        INFO("day " << day << " of 2026, declination " << declination);
+        REQUIRE(std::abs(declination) <= 23.44);
+    }
+}
+
+TEST_CASE("The sub-solar point runs under the Greenwich meridian at noon", "[space][earth_frame]")
+{
+    // What ties the Sun to the Earth's rotation, and so the one that fails if either series has
+    // the wrong epoch, the wrong rate or the wrong sign: get any of that wrong and the Sun stops
+    // being overhead at local noon.
+    //
+    // Not exactly zero. A sundial runs up to a quarter of an hour early or late against a clock
+    // over the course of a year - the equation of time, which comes out of the eccentricity of
+    // the orbit and the tilt of the ecliptic, and which is bounded by a little over four degrees
+    // of longitude.
+    for (int day = 0; day < 366; day++)
+    {
+        const double longitude = SubSolarPoint(Utc(2026, 1, 1, 12) + std::chrono::hours{ 24 * day }).y;
+        INFO("day " << day << " of 2026, longitude " << longitude);
+        REQUIRE(std::abs(longitude) < 4.2);
+    }
+
+    // And it tracks the clock through the day: fifteen degrees of longitude an hour, westwards.
+    const double atNoon = SubSolarPoint(Utc(2026, 8, 22, 12)).y;
+    const double atOne = SubSolarPoint(Utc(2026, 8, 22, 13)).y;
+    REQUIRE_THAT(WrapDegrees(atOne - atNoon), WithinAbs(-15.0, 0.02));
+}
+
+TEST_CASE("The sun is up over the UK in the middle of the afternoon", "[space][earth_frame]")
+{
+    // The regression this material exists for. The scene used to light the planet from a fixed
+    // angle, which put the terminator wherever those two numbers happened to fall - and left the
+    // UK in the dark at two o'clock on a summer afternoon.
+    constexpr double kLondonLatitude = 51.5;
+    constexpr double kLondonLongitude = -0.13;
+
+    // 2pm BST, 22 August 2026.
+    REQUIRE_THAT(SolarElevationAt(Utc(2026, 8, 22, 13), kLondonLatitude, kLondonLongitude), WithinAbs(48.5, 0.2));
+
+    // Three in the morning of the same day, which had better not be.
+    REQUIRE(SolarElevationAt(Utc(2026, 8, 22, 2), kLondonLatitude, kLondonLongitude) < 0.0);
+
+    // Local noon at the two solstices. These are 90 - latitude, plus and minus the obliquity, so
+    // between them they pin that the tilt is applied in the right sense at the right end of the
+    // year rather than merely being present.
+    REQUIRE_THAT(SolarElevationAt(Utc(2026, 6, 21, 12), kLondonLatitude, kLondonLongitude), WithinAbs(61.9, 0.2));
+    REQUIRE_THAT(SolarElevationAt(Utc(2026, 12, 21, 12), kLondonLatitude, kLondonLongitude), WithinAbs(15.1, 0.2));
+
+    // Half the planet is in night at any instant, and at this one it is the half with Sydney in
+    // it - which is what would fail if the longitude came out mirrored.
+    REQUIRE(SolarElevationAt(Utc(2026, 8, 22, 13), -33.87, 151.21) < 0.0);
+}
+
+TEST_CASE("The sun direction shares its axes with the orbits", "[space][earth_frame]")
+{
+    // At the March equinox the Sun is on the vernal equinox itself, which is ECI +X by
+    // definition - and ECIToWorld() puts that on world +Z. This is what pins that the direction
+    // the scene is lit from is stated on the same axes as the satellites are drawn on, rather
+    // than a quarter turn away from them.
+    const glm::dvec3 atEquinox = ECIToWorld(CalculateSunDirectionECI(Utc(2026, 3, 20, 12)));
+    REQUIRE_THAT(atEquinox.x, WithinAbs(0.0, 0.01));
+    REQUIRE_THAT(atEquinox.y, WithinAbs(0.0, 0.01));
+    REQUIRE_THAT(atEquinox.z, WithinAbs(1.0, 0.01));
+
+    // The series rotates the unit vector (cos, sin, 0), so it comes out unit length without a
+    // normalize. Callers hand it straight to a shader as a light direction; this is what says
+    // they may.
+    for (unsigned month = 1; month <= 12; month++)
+    {
+        INFO("month " << month);
+        REQUIRE_THAT(glm::length(CalculateSunDirectionECI(Utc(2026, month, 15, 6))), WithinAbs(1.0, 1e-12));
     }
 }
 

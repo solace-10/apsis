@@ -50,6 +50,27 @@ hold when GMST is 90 degrees.
 
 - Recorded by: `An unrotated planet sits at a sidereal time of 90 degrees` (earth_frame_tests.cpp).
 
+## The sun direction is stated in the mean equinox of date
+
+`CalculateSunDirectionECI()` returns the Sun referred to the mean equinox of date, not to J2000.
+That is deliberate, and it is the same choice `ECIToECEF()` already makes: GMST is measured from
+the equinox of date, so pairing it with a J2000 direction would smear the sub-solar point by the
+accumulated precession — about 0.36 degrees by 2026, and growing 50 arcseconds a year.
+
+The series itself is the Astronomical Almanac's low precision one, good to roughly 0.01 degrees
+between 1950 and 2050. Two approximations sit under that and are both far smaller than it: the
+argument is UT where the series wants TT, worth 0.0008 degrees, and the ecliptic latitude is taken
+as zero rather than the arcsecond or so of it the Moon and planets induce.
+
+- Recorded by: `The sun's declination follows the obliquity through the year`, `The sub-solar point
+  runs under the Greenwich meridian at noon`, `The sun is up over the UK in the middle of the
+  afternoon`, `The sun direction shares its axes with the orbits` (earth_frame_tests.cpp).
+
+The last of these is the one worth keeping honest. The direction is handed to the renderer through
+`ECIToWorld()` and ends up as `GlobalUniforms::directionalLightDirection`, from which both the
+planet's terminator and the sun disc are drawn — so a quarter turn lost between the two frames
+would show up as the Sun visibly not being where the daylight is.
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
@@ -68,7 +89,10 @@ Known gaps, in rough order of how much they'd be worth:
   `CalculateGMST()` now does — would both fix it and make the propagation testable deterministically.
 - **Nothing pins the shader side.** `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. That is
-  WGSL running on a GPU, so the suite cannot see it. The check is visual.
+  WGSL running on a GPU, so the suite cannot see it. The check is visual. `sun.wgsl` is in the same
+  position and adds a second thing to look at: the disc is built from the same light direction the
+  terminator is, so a screenshot showing the Sun off to one side of the daylight would mean the
+  billboard's camera basis is wrong rather than the ephemeris.
 - **`CalculateGMST()` uses UTC where the series wants UT1.** Unix time ignores leap seconds, so the
   argument can be up to a second out — under a hundredth of a degree, and so far below
   anything else in this file. Recorded here so it is a known approximation rather than a latent surprise.

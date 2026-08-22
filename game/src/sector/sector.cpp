@@ -32,6 +32,7 @@
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_picking_system.hpp"
 #include "systems/space_object_render_system.hpp"
+#include "systems/sun_system.hpp"
 
 #if defined(TARGET_PLATFORM_WEB)
 #include "emscripten/web_interop.hpp"
@@ -56,6 +57,7 @@ void Sector::Initialize()
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlanetRenderSystem>();
     AddSystem<OrbitSimulationSystem>();
+    AddSystem<SunSystem>();
     AddSystem<SpaceObjectPickingSystem>();
 
     // Make sure these systems are added after everything else that might modify transforms,
@@ -368,9 +370,10 @@ void Sector::SpawnLight()
 {
     m_pLight = CreateEntity();
 
+    // No direction is set here. SunSystem overwrites it every frame with where the Sun actually
+    // is, which is the whole point of the light; anything set here would only be seen on the
+    // first frame.
     DirectionalLightComponent& directionalLightComponent = m_pLight->AddComponent<DirectionalLightComponent>();
-    directionalLightComponent.SetAngle(226.0f);
-    directionalLightComponent.SetPitch(40.0f);
     directionalLightComponent.SetColor(1.0f, 0.96f, 0.90f); // Approximation for the sun (type G star at a temperature of 5778K)
 
     AmbientLightComponent& ambientLightComponent = m_pLight->AddComponent<AmbientLightComponent>();

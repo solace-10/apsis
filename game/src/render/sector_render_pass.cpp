@@ -8,6 +8,7 @@
 #include <scene/systems/model_render_system.hpp>
 
 #include "systems/planet_render_system.hpp"
+#include "systems/sun_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -49,6 +50,16 @@ void SectorRenderPass::Render(wgpu::CommandEncoder& encoder)
     Scene* pScene = GetActiveScene();
     if (pScene)
     {
+        // First, as a sky element. The depth buffer has just been cleared, so nothing rejects it;
+        // the planet is drawn afterwards and, being opaque, covers the disc wherever the Earth is
+        // in front of it, and the atmosphere then blends over what is left so the Sun reddens
+        // correctly as it approaches the limb.
+        SunSystem* pSunSystem = pScene->GetSystem<SunSystem>();
+        if (pSunSystem)
+        {
+            pSunSystem->Render(renderPass);
+        }
+
         LandscapeRenderSystem* pLandscapeRenderSystem = pScene->GetSystem<LandscapeRenderSystem>();
         if (pLandscapeRenderSystem)
         {

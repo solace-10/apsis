@@ -8,14 +8,27 @@
 namespace WingsOfSteel
 {
 
+namespace
+{
+
+    // Days since J2000.0 - JD 2451545.0, which is 2000-01-01 12:00, Unix 946728000. Both series
+    // below are polynomials in this, so it is stated once rather than twice.
+    //
+    // Unix time is close enough to the UT1 these series want: it ignores leap seconds, so it can be
+    // up to a second out, which moves GMST by well under a hundredth of a degree and the Sun by
+    // four ten-thousandths of one.
+    double DaysSinceJ2000(std::chrono::system_clock::time_point when)
+    {
+        constexpr double kJ2000UnixSeconds = 946728000.0;
+        const double secondsSinceJ2000 = std::chrono::duration<double>(when.time_since_epoch()).count() - kJ2000UnixSeconds;
+        return secondsSinceJ2000 / 86400.0;
+    }
+
+} // namespace
+
 double CalculateGMST(std::chrono::system_clock::time_point when)
 {
-    // Days since J2000.0, which for the UT1 form of this series is JD 2451545.0 - that is
-    // 2000-01-01 12:00, Unix 946728000. Unix time is close enough to UT1 for this: it ignores leap
-    // seconds, so it can be up to a second out, which is well under a hundredth of a degree.
-    constexpr double kJ2000UnixSeconds = 946728000.0;
-    const double secondsSinceJ2000 = std::chrono::duration<double>(when.time_since_epoch()).count() - kJ2000UnixSeconds;
-    const double daysSinceJ2000 = secondsSinceJ2000 / 86400.0;
+    const double daysSinceJ2000 = DaysSinceJ2000(when);
 
     // GMST at J2000.0, and the rate: a sidereal day is shorter than a solar one, hence the excess
     // over 360 degrees per day.
@@ -28,6 +41,39 @@ double CalculateGMST(std::chrono::system_clock::time_point when)
     }
 
     return glm::radians(gmstDegrees);
+}
+
+glm::dvec3 CalculateSunDirectionECI(std::chrono::system_clock::time_point when)
+{
+    const double daysSinceJ2000 = DaysSinceJ2000(when);
+
+    // Where the Sun would be if the Earth's orbit were circular, and how far round that orbit the
+    // Earth has come since perihelion. Both advance by very slightly less than a degree a day -
+    // the mean longitude by a full turn a tropical year, the anomaly by a full turn an anomalistic
+    // one, and the two differ because the perihelion itself precesses.
+    const double meanLongitude = glm::radians(280.460 + 0.9856474 * daysSinceJ2000);
+    const double meanAnomaly = glm::radians(357.528 + 0.9856003 * daysSinceJ2000);
+
+    // The equation of the centre, truncated to two terms: where the Sun actually is along the
+    // ecliptic, given that the orbit is an ellipse and the Earth does not travel it at a constant
+    // rate. The first term is the eccentricity to first order, the second its square.
+    const double eclipticLongitude = meanLongitude
+        + glm::radians(1.915) * std::sin(meanAnomaly)
+        + glm::radians(0.020) * std::sin(2.0 * meanAnomaly);
+
+    // The tilt of the ecliptic to the equator, which is the whole reason there are seasons. It
+    // is what carries the Sun's declination between +/-23.44 degrees over a year.
+    const double obliquity = glm::radians(23.439 - 0.0000004 * daysSinceJ2000);
+
+    // Ecliptic to equatorial is a rotation about the shared x axis, which the vernal equinox lies
+    // along; with the Sun's ecliptic latitude taken as zero it collapses to this. No normalize:
+    // a rotation of the unit vector (cos, sin, 0) is already one.
+    const double sinLongitude = std::sin(eclipticLongitude);
+
+    return glm::dvec3(
+        std::cos(eclipticLongitude),
+        std::cos(obliquity) * sinLongitude,
+        std::sin(obliquity) * sinLongitude);
 }
 
 glm::dmat4 CalculatePlanetRotation(double gmst)
