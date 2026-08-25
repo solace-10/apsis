@@ -25,7 +25,14 @@ public:
 
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
-    void Render(wgpu::RenderPassEncoder& renderPass);
+
+    // Two draws, at opposite ends of the sector pass. The disc goes first and is depth tested,
+    // so the planet drawn afterwards covers it exactly. The glare goes last, after the
+    // atmosphere, with the depth test off - it is scattering in the observer's eye rather than
+    // an object in the scene, so it must not be cut along the planet's silhouette. sun.wgsl
+    // fades it against the limb instead.
+    void RenderDisc(wgpu::RenderPassEncoder& renderPass);
+    void RenderGlare(wgpu::RenderPassEncoder& renderPass);
 
     // While this is set the light is rewritten every frame, which means the Angle and Pitch
     // sliders in the engine's Lighting window have no lasting effect. Clearing it hands the
@@ -34,11 +41,13 @@ public:
     void SetTrackingRealSun(bool state) { m_TrackRealSun = state; }
 
 private:
-    void CreateRenderPipeline();
+    void CreateRenderPipelines();
+    wgpu::RenderPipeline CreateRenderPipeline(const char* pLabel, const char* pFragmentEntryPoint, wgpu::CompareFunction depthCompare);
     void HandleShaderInjection();
 
     ResourceShaderSharedPtr m_pShader;
-    wgpu::RenderPipeline m_RenderPipeline;
+    wgpu::RenderPipeline m_DiscPipeline;
+    wgpu::RenderPipeline m_GlarePipeline;
     std::optional<SignalId> m_ShaderInjectionSignalId;
     bool m_TrackRealSun{ true };
 };

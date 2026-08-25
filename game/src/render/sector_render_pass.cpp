@@ -50,14 +50,15 @@ void SectorRenderPass::Render(wgpu::CommandEncoder& encoder)
     Scene* pScene = GetActiveScene();
     if (pScene)
     {
-        // First, as a sky element. The depth buffer has just been cleared, so nothing rejects it;
-        // the planet is drawn afterwards and, being opaque, covers the disc wherever the Earth is
-        // in front of it, and the atmosphere then blends over what is left so the Sun reddens
-        // correctly as it approaches the limb.
+        // The Sun's disc first, as a sky element. The depth buffer has just been cleared, so
+        // nothing rejects it; the planet is drawn afterwards and, being opaque, covers the disc
+        // wherever the Earth is in front of it, and the atmosphere then blends over what is left
+        // so the Sun reddens correctly as it approaches the limb. Its glare goes last - see
+        // below.
         SunSystem* pSunSystem = pScene->GetSystem<SunSystem>();
         if (pSunSystem)
         {
-            pSunSystem->Render(renderPass);
+            pSunSystem->RenderDisc(renderPass);
         }
 
         LandscapeRenderSystem* pLandscapeRenderSystem = pScene->GetSystem<LandscapeRenderSystem>();
@@ -76,6 +77,15 @@ void SectorRenderPass::Render(wgpu::CommandEncoder& encoder)
         if (pPlanetRenderSystem)
         {
             pPlanetRenderSystem->Render(renderPass);
+        }
+
+        // Last, over everything including the atmosphere. Glare is scattering in the observer's
+        // eye and lens rather than an object out in the scene, so it belongs in front of what it
+        // is scattered by - and must not be cut along the planet's silhouette the way the disc
+        // itself correctly is.
+        if (pSunSystem)
+        {
+            pSunSystem->RenderGlare(renderPass);
         }
     }
 

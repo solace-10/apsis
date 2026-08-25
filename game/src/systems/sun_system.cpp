@@ -24,7 +24,7 @@ SunSystem::SunSystem()
 {
     GetResourceSystem()->RequestResource("/shaders/sun.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
-        CreateRenderPipeline();
+        CreateRenderPipelines();
         HandleShaderInjection();
     });
 }
@@ -59,33 +59,49 @@ void SunSystem::Update(float delta)
     });
 }
 
-void SunSystem::Render(wgpu::RenderPassEncoder& renderPass)
+void SunSystem::RenderDisc(wgpu::RenderPassEncoder& renderPass)
 {
-    if (!m_RenderPipeline)
+    if (m_DiscPipeline)
     {
-        return;
+        renderPass.SetPipeline(m_DiscPipeline);
+        renderPass.Draw(kSunVertexCount);
     }
-
-    renderPass.SetPipeline(m_RenderPipeline);
-    renderPass.Draw(kSunVertexCount);
 }
 
-void SunSystem::CreateRenderPipeline()
+void SunSystem::RenderGlare(wgpu::RenderPassEncoder& renderPass)
+{
+    if (m_GlarePipeline)
+    {
+        renderPass.SetPipeline(m_GlarePipeline);
+        renderPass.Draw(kSunVertexCount);
+    }
+}
+
+void SunSystem::CreateRenderPipelines()
+{
+    // The disc is depth tested and the glare is not; everything else about the two is identical,
+    // down to sharing a vertex stage and a quad. sun.wgsl carries the reasoning.
+    m_DiscPipeline = CreateRenderPipeline("Sun disc render pipeline", "discMain", wgpu::CompareFunction::Less);
+    m_GlarePipeline = CreateRenderPipeline("Sun glare render pipeline", "aureoleMain", wgpu::CompareFunction::Always);
+}
+
+wgpu::RenderPipeline SunSystem::CreateRenderPipeline(const char* pLabel, const char* pFragmentEntryPoint, wgpu::CompareFunction depthCompare)
 {
     if (!m_pShader)
     {
-        return;
+        return nullptr;
     }
 
-    // Premultiplied alpha, matching the atmosphere: the shader multiplies the Sun's colour by
-    // its own coverage, so the colour goes on at full strength and the alpha only says how much
-    // of what is behind survives.
+    // Additive, not the premultiplied alpha the atmosphere uses. Both give the same result over
+    // the black of space, but the glare is drawn over the planet's lit limb as well, and a light
+    // source must never darken what is behind it - which any blend that scales the destination
+    // will do wherever the destination is the brighter of the two.
     wgpu::BlendState blendState{
         .color = {
             .operation = wgpu::BlendOperation::Add,
             .srcFactor = wgpu::BlendFactor::One,
-            .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha },
-        .alpha = { .operation = wgpu::BlendOperation::Add, .srcFactor = wgpu::BlendFactor::One, .dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha }
+            .dstFactor = wgpu::BlendFactor::One },
+        .alpha = { .operation = wgpu::BlendOperation::Add, .srcFactor = wgpu::BlendFactor::One, .dstFactor = wgpu::BlendFactor::One }
     };
 
     wgpu::ColorTargetState colorTargetState{
@@ -96,6 +112,7 @@ void SunSystem::CreateRenderPipeline()
 
     wgpu::FragmentState fragmentState{
         .module = m_pShader->GetShaderModule(),
+        .entryPoint = pFragmentEntryPoint,
         .targetCount = 1,
         .targets = &colorTargetState
     };
@@ -111,20 +128,21 @@ void SunSystem::CreateRenderPipeline()
     };
     wgpu::PipelineLayout pipelineLayout = GetRenderSystem()->GetDevice().CreatePipelineLayout(&pipelineLayoutDescriptor);
 
-    // Tested but not written. The Sun is drawn before anything else in the sector pass, so the
-    // test never rejects anything today; keeping it as Less rather than Always means the Earth
-    // still eclipses the disc if that order is ever changed.
+    // Never written to, by either pass. Always is how a pipeline in a pass that has a depth
+    // attachment says it does not want the test - the attachment's format still has to be
+    // declared or the pipeline is not compatible with the pass.
     wgpu::DepthStencilState depthState{
         .format = wgpu::TextureFormat::Depth32Float,
         .depthWriteEnabled = false,
-        .depthCompare = wgpu::CompareFunction::Less
+        .depthCompare = depthCompare
     };
 
     wgpu::RenderPipelineDescriptor descriptor{
-        .label = "Sun render pipeline",
+        .label = pLabel,
         .layout = pipelineLayout,
         .vertex = {
             .module = m_pShader->GetShaderModule(),
+            .entryPoint = "vertexMain",
             .bufferCount = 0,
             .buffers = nullptr },
         // No culling: the quad is built from the camera's own axes, so which way it is wound
@@ -135,7 +153,7 @@ void SunSystem::CreateRenderPipeline()
         .fragment = &fragmentState
     };
 
-    m_RenderPipeline = GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
+    return GetRenderSystem()->GetDevice().CreateRenderPipeline(&descriptor);
 }
 
 void SunSystem::HandleShaderInjection()
@@ -146,7 +164,7 @@ void SunSystem::HandleShaderInjection()
             [this](ResourceShader* pResourceShader) {
                 if (m_pShader.get() == pResourceShader)
                 {
-                    CreateRenderPipeline();
+                    CreateRenderPipelines();
                 }
             });
     }
