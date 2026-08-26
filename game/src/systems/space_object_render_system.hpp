@@ -36,13 +36,19 @@ private:
     void EnsureLabelsVertexBuffer();
     void GenerateSpaceObjectGroups();
     void GenerateLabelsVertexData();
-    bool ShouldDisplayFullLabels() const;
+    void GenerateLabelVertexData(EntityHandle entityHandle, const MetadataComponent& metadataComponent, const GroupFilters::Mask& currentMask);
+    void RegenerateLabel(EntityHandle entityHandle);
+    void UpdateHoveredSpaceObject(EntityHandle hoveredEntityHandle);
+    void UpdateSelectedSpaceObject();
+    bool ShouldDisplayAllLabels() const;
+    bool ShouldDisplayFullLabel(EntityHandle entityHandle) const;
     size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;
     const Color& GetSpaceObjectColor(bool isCurrentlySelected, const GroupFilters::Mask& currentMask, const MetadataComponent& metadataComponent) const;
 
     static constexpr size_t kMaxLabels = 65536;
     static constexpr size_t kVerticesPerQuad = 6;
     static constexpr float kQuadHalfSize = 10.0f;
+    static constexpr float kHoverRadiusPixels = 16.0f;
 
     ResourceShaderSharedPtr m_pShader;
     ResourceBitmapFontSharedPtr m_pFont;
@@ -55,6 +61,9 @@ private:
     wgpu::Sampler m_Sampler;
     std::vector<std::vector<entt::entity>> m_LabelGroups;
     bool m_LabelsDirty{ false };
+    EntityHandle m_HoveredEntityHandle{ NullEntityHandle };
+    EntityHandle m_SelectedEntityHandle{ NullEntityHandle };
+    bool m_DisplayAllLabels{ false };
 };
 
 } // namespace WingsOfSteel
