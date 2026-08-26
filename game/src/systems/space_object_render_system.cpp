@@ -1,12 +1,15 @@
 #include <array>
 #include <bit>
 #include <cmath>
+#include <optional>
+#include <sstream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <core/color.hpp>
+#include <input/input_system.hpp>
 #include <pandora.hpp>
 #include <render/rendersystem.hpp>
 #include <render/vertex_types.hpp>
@@ -165,6 +168,10 @@ void SpaceObjectRenderSystem::Update(float delta)
         return;
     }
 
+    // Polled rather than pushed from Sector::SetSelectedSpaceObject(), as the selection can change
+    // before any labels exist. Done before the rebuild below so a rebuild sees the current selection.
+    UpdateSelectedSpaceObject();
+
     if (m_LabelsDirty)
     {
         GenerateSpaceObjectGroups();
@@ -191,7 +198,15 @@ void SpaceObjectRenderSystem::Update(float delta)
     const glm::vec3 cameraPosition = cameraComponent.camera.GetPosition();
     const glm::vec3 cameraForward = glm::normalize(cameraComponent.camera.GetTarget() - cameraPosition);
 
-    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward](LabelComponent& labelComponent, MousePickingComponent& mousePickingComponent, const TransformComponent& transformComponent) {
+    // The object under the cursor is resolved as part of this pass, as it already projects every
+    // space object into screen space. Doing it here rather than in a pass of its own also means the
+    // hovered label is generated from this frame's positions, rather than lagging behind by a frame.
+    const std::optional<glm::vec2> cursorPosition = GetInputSystem()->GetCursorPosition();
+    const float hoverRadiusSquared = kHoverRadiusPixels * kHoverRadiusPixels;
+    EntityHandle hoveredEntityHandle = NullEntityHandle;
+    float hoveredDepth = 1.0f;
+
+    view.each([this, &cameraComponent, windowWidth, windowHeight, planetRadiusSquared, &cameraPosition, &cameraForward, &cursorPosition, hoverRadiusSquared, &hoveredEntityHandle, &hoveredDepth](const EntityHandle entityHandle, LabelComponent& labelComponent, MousePickingComponent& mousePickingComponent, const TransformComponent& transformComponent) {
         const glm::vec3 labelPosition = transformComponent.GetTranslation();
         const glm::vec3 d(labelPosition - cameraPosition);
 
@@ -232,8 +247,21 @@ void SpaceObjectRenderSystem::Update(float delta)
             const glm::vec3 screenSpacePosition = cameraComponent.camera.WorldToScreen(labelPosition, windowWidth, windowHeight);
             labelComponent.SetScreenSpacePosition(screenSpacePosition - markerOffset);
             mousePickingComponent.SetScreenSpacePosition(screenSpacePosition);
+
+            if (cursorPosition.has_value())
+            {
+                const glm::vec2 delta = glm::vec2(screenSpacePosition.x, screenSpacePosition.y) - cursorPosition.value();
+                const float distanceSquared = glm::dot(delta, delta);
+                if (distanceSquared < hoverRadiusSquared && screenSpacePosition.z <= hoveredDepth)
+                {
+                    hoveredEntityHandle = entityHandle;
+                    hoveredDepth = screenSpacePosition.z;
+                }
+            }
         }
     });
+
+    UpdateHoveredSpaceObject(hoveredEntityHandle);
 }
 
 void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
@@ -302,7 +330,8 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     renderPass.Draw(m_LabelsVertexData.size());
 }
 
-bool SpaceObjectRenderSystem::ShouldDisplayFullLabels() const
+// Whether every visible object gets a named label, rather than just a location marker.
+bool SpaceObjectRenderSystem::ShouldDisplayAllLabels() const
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<MetadataComponent>();
@@ -317,10 +346,18 @@ bool SpaceObjectRenderSystem::ShouldDisplayFullLabels() const
     return (totalVisibleObjects <= 100);
 }
 
+// An object gets its name alongside its location marker when all labels are being displayed, or
+// when it is the one the cursor is over or the one that is selected.
+bool SpaceObjectRenderSystem::ShouldDisplayFullLabel(EntityHandle entityHandle) const
+{
+    return m_DisplayAllLabels || entityHandle == m_HoveredEntityHandle || entityHandle == m_SelectedEntityHandle;
+}
+
 void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
     registry.clear<OrbitalStateComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>();
+    m_HoveredEntityHandle = NullEntityHandle;
 
     Sector* pSector = Game::Get()->GetSector();
     GroupFilters::Mask currentVisibleMask = pSector->GetGroupFilters()->GetCurrentMask();
@@ -357,6 +394,10 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<OrbitalElementsComponent, MetadataComponent>();
 
+    // The group ids handed out below restart from 0 on every call and are used to index
+    // m_LabelGroups, so the previous run's groups have to go.
+    m_LabelGroups.clear();
+
     std::unordered_map<size_t, std::vector<entt::entity>> groups;
     view.each([this, &groups](const auto entity, const OrbitalElementsComponent& orbitalElements, const MetadataComponent& metadataComponent) {
         if (!metadataComponent.IsVisible())
@@ -391,58 +432,125 @@ void SpaceObjectRenderSystem::GenerateSpaceObjectGroups()
     }
 }
 
-// If `generateFullLabel` is true, then we'll render the location marker, the object's name and (if used) the size of the group.
 void SpaceObjectRenderSystem::GenerateLabelsVertexData()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
     auto view = registry.view<MetadataComponent>();
 
-    EntityHandle currentlySelectedEntityHandle = NullEntityHandle;
-    EntitySharedPtr pCurrentlySelectedSpaceObject = Game::Get()->GetSector()->GetSelectedSpaceObject();
-    if (pCurrentlySelectedSpaceObject)
-    {
-        currentlySelectedEntityHandle = pCurrentlySelectedSpaceObject->GetEntityHandle();
-    }
-
     const GroupFilters::Mask currentMask = Game::Get()->GetSector()->GetGroupFilters()->GetCurrentMask();
-    const bool generateFullLabels = ShouldDisplayFullLabels();
-    view.each([this, currentlySelectedEntityHandle, currentMask, generateFullLabels, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
+
+    // Cached so that regenerating an individual label doesn't have to count the visible objects
+    // all over again.
+    m_DisplayAllLabels = ShouldDisplayAllLabels();
+
+    view.each([this, currentMask, &registry](const auto entityHandle, const MetadataComponent& metadataComponent) {
         if (!metadataComponent.IsVisible())
         {
             return;
         }
 
-        std::stringstream labelStream;
+        GenerateLabelVertexData(entityHandle, metadataComponent, currentMask);
+        registry.emplace<MousePickingComponent>(entityHandle);
+    });
+}
 
-        // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
-        if (generateFullLabels)
+// Builds the label for a single space object. Used both by the bulk regeneration and when a single
+// label changes, so an object's label is the same either way. A full label is the location marker,
+// the object's name and (if used) the size of the group; otherwise it is just the location marker.
+void SpaceObjectRenderSystem::GenerateLabelVertexData(EntityHandle entityHandle, const MetadataComponent& metadataComponent, const GroupFilters::Mask& currentMask)
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+
+    std::stringstream labelStream;
+
+    // We've manually added to the font a "target" square using the usually unprintable code "0x1" (Start Of Heading).
+    if (ShouldDisplayFullLabel(entityHandle))
+    {
+        SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
+        if (pSpaceObjectGroupComponent)
         {
-            SpaceObjectGroupComponent* pSpaceObjectGroupComponent = registry.try_get<SpaceObjectGroupComponent>(entityHandle);
-            if (pSpaceObjectGroupComponent)
+            if (pSpaceObjectGroupComponent->IsPrimaryElement())
             {
-                if (pSpaceObjectGroupComponent->IsPrimaryElement())
-                {
-                    labelStream << "\1" << metadataComponent.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
-                }
-            }
-            else
-            {
-                labelStream << "\1" << metadataComponent.GetObjectName();
+                labelStream << "\1" << metadataComponent.GetObjectName() << " (" << m_LabelGroups[pSpaceObjectGroupComponent->GetGroupId()].size() << ")";
             }
         }
         else
         {
-            labelStream << "\1";
+            labelStream << "\1" << metadataComponent.GetObjectName();
         }
+    }
+    else
+    {
+        labelStream << "\1";
+    }
 
-        const std::string label(labelStream.str());
-        const bool isCurrentlySelected = (currentlySelectedEntityHandle == entityHandle);
-        const glm::vec4 labelColor(GetSpaceObjectColor(isCurrentlySelected, currentMask, metadataComponent).AsVec3(), 1.0f);
-        LabelComponent& labelComponent = registry.emplace<LabelComponent>(entityHandle, label);
-        labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
+    const std::string label(labelStream.str());
+    const bool isCurrentlySelected = (entityHandle == m_SelectedEntityHandle);
+    const glm::vec4 labelColor(GetSpaceObjectColor(isCurrentlySelected, currentMask, metadataComponent).AsVec3(), 1.0f);
 
-        registry.emplace<MousePickingComponent>(entityHandle);
-    });
+    // The component is updated in place rather than replaced: its screen space position and
+    // occlusion state are maintained by Update() and resetting them here would make the label
+    // flicker for a frame when only its text changes.
+    LabelComponent& labelComponent = registry.get_or_emplace<LabelComponent>(entityHandle);
+    labelComponent.SetText(label);
+    labelComponent.SetVertexData(m_pFont->Generate(label, labelColor));
+}
+
+// Rebuilds a single object's label from the current state. Tolerates a handle that has no label,
+// which happens when the selection outlives the group filter change that cleared the labels.
+void SpaceObjectRenderSystem::RegenerateLabel(EntityHandle entityHandle)
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    if (!registry.valid(entityHandle) || !registry.all_of<LabelComponent, MetadataComponent>(entityHandle))
+    {
+        return;
+    }
+
+    const GroupFilters::Mask currentMask = Game::Get()->GetSector()->GetGroupFilters()->GetCurrentMask();
+    GenerateLabelVertexData(entityHandle, registry.get<MetadataComponent>(entityHandle), currentMask);
+}
+
+// Shows the full label for the object under the cursor. Only the labels of the objects entering and
+// leaving the hover are regenerated, so this doesn't pay for a rebuild of every object's label.
+void SpaceObjectRenderSystem::UpdateHoveredSpaceObject(EntityHandle hoveredEntityHandle)
+{
+    if (hoveredEntityHandle == m_HoveredEntityHandle)
+    {
+        return;
+    }
+
+    const EntityHandle previouslyHoveredEntityHandle = m_HoveredEntityHandle;
+    m_HoveredEntityHandle = hoveredEntityHandle;
+
+    // Both labels are regenerated only after the handle has been updated, so that each one is built
+    // from the new state: the object being left may still be the selected one, in which case it
+    // keeps its full label rather than dropping back to a marker.
+    RegenerateLabel(previouslyHoveredEntityHandle);
+    RegenerateLabel(hoveredEntityHandle);
+}
+
+// Shows the full label for the selected object, for as long as it stays selected.
+void SpaceObjectRenderSystem::UpdateSelectedSpaceObject()
+{
+    EntityHandle selectedEntityHandle = NullEntityHandle;
+    EntitySharedPtr pSelectedSpaceObject = Game::Get()->GetSector()->GetSelectedSpaceObject();
+    if (pSelectedSpaceObject)
+    {
+        selectedEntityHandle = pSelectedSpaceObject->GetEntityHandle();
+    }
+
+    if (selectedEntityHandle == m_SelectedEntityHandle)
+    {
+        return;
+    }
+
+    const EntityHandle previouslySelectedEntityHandle = m_SelectedEntityHandle;
+    m_SelectedEntityHandle = selectedEntityHandle;
+
+    // As with the hover, the deselected object may still be the hovered one and keep its full label.
+    // The labels also carry the selection colour, so both of them change appearance here.
+    RegenerateLabel(previouslySelectedEntityHandle);
+    RegenerateLabel(selectedEntityHandle);
 }
 
 /*
