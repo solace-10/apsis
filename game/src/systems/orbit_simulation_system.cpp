@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <cmath>
 
@@ -5,7 +6,10 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <core/assert.hpp>
 #include <pandora.hpp>
+#include <render/rendersystem.hpp>
+#include <resources/resource_system.hpp>
 #include <scene/components/debug_render_component.hpp>
 #include <scene/components/transform_component.hpp>
 #include <scene/scene.hpp>
@@ -19,6 +23,23 @@
 namespace WingsOfSteel
 {
 
+struct OrbitalElementsInput
+{
+    float meanMotion;
+    float eccentricity;
+    float inclination;
+    float raan;
+    float argumentOfPericenter;
+    float meanAnomaly;
+    float padding[2];
+};
+
+struct OrbitalElementsOutput
+{
+    glm::vec3 position;
+    float padding;
+};
+
 // Earth's gravitational parameter (km³/s²)
 static constexpr double kMu = 398600.4418;
 
@@ -30,8 +51,90 @@ OrbitSimulationSystem::~OrbitSimulationSystem()
 {
 }
 
+void OrbitSimulationSystem::Initialize(Scene* pScene)
+{
+    GetResourceSystem()->RequestResource("/shaders/sgp4.wgsl", [this](ResourceSharedPtr pResource) {
+        m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
+        CreateComputePipeline();
+        // HandleShaderInjection();
+        m_Initialized = true;
+    });
+}
+
+void OrbitSimulationSystem::CreateComputePipeline()
+{
+    if (!m_pShader)
+    {
+        Log::Error() << "Trying to create a compute pipeline without the shader being loaded.";
+        return;
+    }
+
+
+    wgpu::ComputePipelineDescriptor computePipelineDescriptor{
+        .label = "SGP4 compute pipeline",
+        .compute = { .module = m_pShader->GetShaderModule() }
+    };
+
+    m_ComputePipeline = GetRenderSystem()->GetDevice().CreateComputePipeline(&computePipelineDescriptor);
+}
+
+void OrbitSimulationSystem::CreateStorageBuffers(size_t numOrbitalElements)
+{
+    PANDORA_ASSERT(numOrbitalElements > 0);
+    wgpu::Device& device = GetRenderSystem()->GetDevice();
+    
+    wgpu::BufferDescriptor inputBufferDescriptor = {
+        .label = "SGP4 orbital elements buffer",
+        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst,
+        .size = numOrbitalElements * sizeof(OrbitalElementsInput)
+    };
+    m_OrbitalElementsBuffer = device.CreateBuffer(&inputBufferDescriptor);
+
+    wgpu::BufferDescriptor propagatedPositionsBufferDescriptor = {
+        .label = "SGP4 propagated positions buffer",
+        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc,
+        .size = numOrbitalElements * sizeof(OrbitalElementsOutput)
+    };
+    m_PropagatedPositionsBuffer = device.CreateBuffer(&propagatedPositionsBufferDescriptor);
+
+    wgpu::BufferDescriptor readbackBufferDescriptor = {
+        .label = "SGP4 propagated positions readback buffer",
+        .usage = wgpu::BufferUsage::MapRead | wgpu::BufferUsage::CopyDst,
+        .size = numOrbitalElements * sizeof(OrbitalElementsOutput)
+    };
+    m_PropagatedPositionsReadbackBuffer = device.CreateBuffer(&readbackBufferDescriptor);
+
+    // clang-format off
+    std::array<wgpu::BindGroupEntry, 2> entries = {
+        {
+            {
+                .binding = 0,
+                .buffer = m_OrbitalElementsBuffer
+            },
+            {
+                .binding = 1,
+                .buffer = m_PropagatedPositionsBuffer
+            }
+        }
+    };
+
+    // clang-format on
+    wgpu::BindGroupDescriptor bindGroupDescriptor {
+        .label = "SGP4 bind group",
+        .layout = m_ComputePipeline.GetBindGroupLayout(0), // Automatically generated.
+        .entryCount = entries.size(),
+        .entries = entries.data()
+    };
+    m_BindGroup = device.CreateBindGroup(&bindGroupDescriptor);
+}
+
 void OrbitSimulationSystem::Update(float delta)
 {
+    if (!m_Initialized)
+    {
+        return;
+    }
+    
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
     // One GMST for the whole frame, shared by the planet's orientation and by every
@@ -42,29 +145,43 @@ void OrbitSimulationSystem::Update(float delta)
 
     OrientPlanets(registry, gmst);
 
-    auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
+    if (m_UseSGP4)
+    {
+        // The number of orbital elements is not know when the application initializes,
+        // so the storage buffers need to be rebuilt when those become available.
+        const size_t numOrbitalElements = registry.storage<OrbitalElementsComponent>().size();
+        if (numOrbitalElements != m_NumOrbitalElements)
+        {
+            CreateStorageBuffers(numOrbitalElements);
+            m_NumOrbitalElements = numOrbitalElements;
+        }
+    }
+    else
+    {
+        auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
-    view.each([&registry, gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
-        const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
+        view.each([&registry, gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+            const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
+            transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
 
-        // Update orbital state component
-        orbitalState.m_PositionECI = position;
+            // Update orbital state component
+            orbitalState.m_PositionECI = position;
 
-        // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
-        const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
-        orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
+            // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
+            const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
+            orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
 
-        const double r = glm::length(position);
+            const double r = glm::length(position);
 
-        // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
-        orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
+            // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
+            orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
 
-        const glm::dvec3 geodetic = ECIToGeodetic(position, gmst);
-        orbitalState.m_Latitude = geodetic.x;
-        orbitalState.m_Longitude = geodetic.y;
-        orbitalState.m_Altitude = geodetic.z;
-    });
+            const glm::dvec3 geodetic = ECIToGeodetic(position, gmst);
+            orbitalState.m_Latitude = geodetic.x;
+            orbitalState.m_Longitude = geodetic.y;
+            orbitalState.m_Altitude = geodetic.z;
+        });
+    }
 }
 
 // Turns every planet mesh so that its prime meridian sits at the current Greenwich
