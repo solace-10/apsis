@@ -27,7 +27,7 @@ struct SpaceObjectInterop
     float longitude{ 0.0f };
 };
 
-EMSCRIPTEN_BINDINGS(orbis)
+EMSCRIPTEN_BINDINGS(apsis)
 {
     emscripten::value_object<SpaceObjectInterop>("SpaceObject")
         .field("objectName", &SpaceObjectInterop::objectName)

@@ -47,7 +47,7 @@ void WebInterop::NotifySpaceObjectSelected(EntitySharedPtr pEntity)
         return;
     }
 
-    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    emscripten::val callbacks = emscripten::val::global("apsisCallbacks");
     if (callbacks.isUndefined() || callbacks.isNull())
     {
         return;
@@ -83,7 +83,7 @@ void WebInterop::NotifySpaceObjectSelected(EntitySharedPtr pEntity)
 
 void WebInterop::NotifySpaceObjectDeselected()
 {
-    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    emscripten::val callbacks = emscripten::val::global("apsisCallbacks");
     if (callbacks.isUndefined() || callbacks.isNull())
     {
         return;
@@ -105,7 +105,7 @@ void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
         return;
     }
 
-    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    emscripten::val callbacks = emscripten::val::global("apsisCallbacks");
     if (callbacks.isUndefined() || callbacks.isNull())
     {
         return;
@@ -146,7 +146,7 @@ void WebInterop::NotifyGroupFiltersChanged(GroupFilters* pGroupFilters)
         return;
     }
 
-    emscripten::val callbacks = emscripten::val::global("orbisCallbacks");
+    emscripten::val callbacks = emscripten::val::global("apsisCallbacks");
     if (callbacks.isUndefined() || callbacks.isNull())
     {
         return;

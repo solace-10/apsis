@@ -1,10 +1,10 @@
 /**
- * Svelte stores for Orbis game state.
+ * Svelte stores for Apsis game state.
  * Provides reactive access to game data from WASM module.
  */
 
 import { writable, derived, type Readable } from 'svelte/store';
-import type { SpaceObject, SpaceObjectGroup, OverlayState, OrbisModule } from '$lib/wasm/types';
+import type { SpaceObject, SpaceObjectGroup, OverlayState, ApsisModule } from '$lib/wasm/types';
 import {
 	getModule,
 	onStateChange,
@@ -15,7 +15,7 @@ import {
 } from '$lib/wasm/module';
 
 // Module instance store
-const moduleStore = writable<OrbisModule | null>(null);
+const moduleStore = writable<ApsisModule | null>(null);
 
 // Selected object store
 const selectedObjectStore = writable<SpaceObject | null>(null);

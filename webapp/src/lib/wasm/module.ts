@@ -7,7 +7,7 @@ import type {
 	SpaceObject,
 	SpaceObjectGroup,
 	OverlayState,
-	OrbisModule,
+	ApsisModule,
 	SpaceObjectInterop
 } from './types';
 import { fromInterop } from './types';
@@ -37,18 +37,18 @@ export function registerCallbacks(
 }
 
 /**
- * Initialize the global orbisCallbacks object that C++ will call into.
+ * Initialize the global apsisCallbacks object that C++ will call into.
  * Must be called before WASM module loads.
  */
 export function initializeCallbacks(): void {
-	interface OrbisCallbacks {
+	interface ApsisCallbacks {
 		onSpaceObjectSelected: (interop: SpaceObjectInterop) => void;
 		onSpaceObjectDeselected: () => void;
 		onSpaceObjectUpdated: (interop: SpaceObjectInterop) => void;
 		onGroupFiltersChanged: (groups: SpaceObjectGroup[]) => void;
 	}
 
-	const callbacks: OrbisCallbacks = {
+	const callbacks: ApsisCallbacks = {
 		onSpaceObjectSelected: (interop: SpaceObjectInterop) => {
 			const spaceObject = fromInterop(interop);
 			if (onSelectionChange) {
@@ -73,7 +73,7 @@ export function initializeCallbacks(): void {
 		}
 	};
 
-	(window as unknown as { orbisCallbacks: OrbisCallbacks }).orbisCallbacks = callbacks;
+	(window as unknown as { apsisCallbacks: ApsisCallbacks }).apsisCallbacks = callbacks;
 }
 
 let overlayState: OverlayState = {
@@ -95,10 +95,10 @@ function notifyStateChange(): void {
 }
 
 /**
- * Mock implementation of OrbisModule.
+ * Mock implementation of ApsisModule.
  * Replace with actual WASM module when C++ embind bindings are ready.
  */
-export const mockModule: OrbisModule = {
+export const mockModule: ApsisModule = {
 	getOverlayState(): OverlayState {
 		return { ...overlayState };
 	},
@@ -151,7 +151,7 @@ export function callSetGroupFilterEnabled(groupId: string, enabled: boolean): vo
  * Get the current module instance.
  * In production, this would load and return the actual WASM module.
  */
-export function getModule(): OrbisModule {
+export function getModule(): ApsisModule {
 	return mockModule;
 }
 
@@ -159,7 +159,7 @@ export function getModule(): OrbisModule {
  * Load the WASM module asynchronously.
  * For now, returns the mock module immediately.
  */
-export async function loadModule(): Promise<OrbisModule> {
+export async function loadModule(): Promise<ApsisModule> {
 	// TODO: Replace with actual WASM loading:
 	// const module = await import('/game.js');
 	// return await module.default();

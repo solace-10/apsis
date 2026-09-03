@@ -14,7 +14,7 @@
 </script>
 
 <svelte:head>
-	<title>Orbis - Space Object Tracker</title>
+	<title>Apsis - Space Object Tracker</title>
 </svelte:head>
 
 <main class="app">

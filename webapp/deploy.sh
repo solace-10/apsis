@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build"
 REMOTE_USER="cpe0004521"
 REMOTE_HOST="51.159.140.42"
-REMOTE_PATH="/home/cpe0004521/orbistracker.eu"
+REMOTE_PATH="/home/cpe0004521/apsis.earth"
 
 if [[ ! -d "${BUILD_DIR}" ]]; then
     echo "Error: build directory not found at ${BUILD_DIR}" >&2

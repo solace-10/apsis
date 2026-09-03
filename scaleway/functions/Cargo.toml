@@ -1,5 +1,5 @@
 [package]
-name = "orbis-scaleway-serverless-functions"
+name = "apsis-scaleway-serverless-functions"
 version = "0.1.0"
 edition = "2024"
 

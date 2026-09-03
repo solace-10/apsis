@@ -1,5 +1,5 @@
 /**
- * TypeScript interfaces for Orbis game bindings.
+ * TypeScript interfaces for Apsis game bindings.
  * These will be implemented via C++ embind later.
  */
 
@@ -104,7 +104,7 @@ export interface GameState {
  * Interface for the WASM module bindings.
  * Will be implemented by embind in C++.
  */
-export interface OrbisModule {
+export interface ApsisModule {
 	// Query functions
 	getOverlayState(): OverlayState;
 

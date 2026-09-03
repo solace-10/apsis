@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Idempotent per-worktree setup for Orbis.
+# Idempotent per-worktree setup for Apsis.
 #
 # Run from anywhere inside a checkout (fresh worktrees especially):
 #   ./scripts/worktree-setup.sh
 #
 # Creates only what's missing, borrowing gitignored prerequisites from the
-# canonical checkout at ~/dev/orbis. Safe to re-run at any time; also
+# canonical checkout at ~/dev/apsis. Safe to re-run at any time; also
 # re-attaches pandora's HEAD if a submodule update left it detached.
 #
 # Kept deliberately in step with the sibling danus_garden script of the same
@@ -13,7 +13,7 @@
 # the setup behaviour should not drift between them.
 set -euo pipefail
 
-MAIN_CHECKOUT="${ORBIS_MAIN_CHECKOUT:-$HOME/dev/orbis}"
+MAIN_CHECKOUT="${APSIS_MAIN_CHECKOUT:-$HOME/dev/apsis}"
 
 cd "$(git rev-parse --show-toplevel)"
 
@@ -58,7 +58,7 @@ if [ ! -f .env ]; then
 fi
 
 # --- 4. game/bin/manifest.json (gitignored, generated) ------------------------
-# Unlike danus_garden, Orbis's `add_custom_command` in game/CMakeLists.txt
+# Unlike danus_garden, Apsis's `add_custom_command` in game/CMakeLists.txt
 # declares OUTPUT "${MANIFEST_OUTPUT}", so CMake can generate this itself and a
 # fresh worktree does not hard-fail without it. Bootstrapping anyway keeps the
 # two repos' setup behaviour identical and costs one cheap forge invocation.

@@ -4,17 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Orbis (Wings of Steel) is a cross-platform space object tracking and visualization application. It renders satellite orbits (ISS, Starlink, GPS, debris) with interactive controls. The project consists of a C++20 game engine (Pandora), the main application (game), a web frontend (webapp), and a Python data ingestion pipeline.
+Apsis (Wings of Steel) is a cross-platform space object tracking and visualization application. It renders satellite orbits (ISS, Starlink, GPS, debris) with interactive controls. The project consists of a C++20 game engine (Pandora), the main application (game), a web frontend (webapp), and a Python data ingestion pipeline.
 
 ## Build Commands
 
 ### First-time setup (per worktree — do this automatically before the first build)
 
-We develop in git worktrees under `~/.herdr/worktrees/orbis/<branch>`. A fresh worktree is
+We develop in git worktrees under `~/.herdr/worktrees/apsis/<branch>`. A fresh worktree is
 missing several gitignored build prerequisites that are NOT carried across from `main`.
 **Before the first build in a worktree, run `./scripts/worktree-setup.sh` without asking.**
 It is idempotent (creates only what's absent, borrowing from the canonical checkout at
-`~/dev/orbis`) and safe to re-run at any time — also useful later to re-attach pandora's HEAD
+`~/dev/apsis`) and safe to re-run at any time — also useful later to re-attach pandora's HEAD
 after a `submodule update` detaches it. It handles:
 
 1. **Engine submodule** — `git submodule update --init pandora`
@@ -29,7 +29,7 @@ after a `submodule update` detaches it. It handles:
    copied from the canonical checkout.
 4. **`game/bin/manifest.json`** (gitignored, generated per checkout) — bootstrapped via
    `./pandora/tools/forge/bin/forge manifest`. Unlike the sibling `danus_garden` repo this is
-   not strictly required, because Orbis's `add_custom_command` in `game/CMakeLists.txt`
+   not strictly required, because Apsis's `add_custom_command` in `game/CMakeLists.txt`
    declares `OUTPUT "${MANIFEST_OUTPUT}"` and CMake can therefore generate it itself; the
    script does it anyway to keep both repos' setup behaviour identical.
 5. **Git config guardrails** (shared by all worktrees of this repo):

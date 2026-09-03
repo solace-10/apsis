@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Build and run Orbis's test suite.
+# Build and run Apsis's test suite.
 #
 # Usage: ./scripts/test.sh [ctest arguments...]
 #   ./scripts/test.sh                       # everything
