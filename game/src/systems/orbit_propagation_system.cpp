@@ -15,7 +15,7 @@
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "space/earth_frame.hpp"
-#include "systems/orbit_simulation_system.hpp"
+#include "systems/orbit_propagation_system.hpp"
 
 namespace WingsOfSteel
 {
@@ -23,11 +23,11 @@ namespace WingsOfSteel
 // Earth's gravitational parameter (km³/s²)
 static constexpr double kMu = 398600.4418;
 
-OrbitSimulationSystem::OrbitSimulationSystem()
+OrbitPropagationSystem::OrbitPropagationSystem()
 {
 }
 
-OrbitSimulationSystem::~OrbitSimulationSystem()
+OrbitPropagationSystem::~OrbitPropagationSystem()
 {
     // The pass list belongs to the RenderSystem and outlives any individual scene, so a
     // pass registered by this system has to be withdrawn by it as well.
@@ -38,13 +38,13 @@ OrbitSimulationSystem::~OrbitSimulationSystem()
     }
 }
 
-void OrbitSimulationSystem::Initialize(Scene* pScene)
+void OrbitPropagationSystem::Initialize(Scene* pScene)
 {
     m_pComputePass = std::make_shared<SGP4ComputePass>();
     GetRenderSystem()->AddPass(m_pComputePass);
 }
 
-void OrbitSimulationSystem::Update(float delta)
+void OrbitPropagationSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
@@ -74,7 +74,7 @@ void OrbitSimulationSystem::Update(float delta)
 // and a stable mapping from readback index back to entity - the results arrive a couple
 // of frames after the dispatch that produced them, by which point this view's ordering
 // may no longer be the ordering they were computed in.
-void OrbitSimulationSystem::UpdateGPU(entt::registry& registry)
+void OrbitPropagationSystem::UpdateGPU(entt::registry& registry)
 {
     auto view = registry.view<const OrbitalElementsComponent>();
 
@@ -94,7 +94,7 @@ void OrbitSimulationSystem::UpdateGPU(entt::registry& registry)
     m_pComputePass->SetOrbitalElements(m_OrbitalElements);
 }
 
-void OrbitSimulationSystem::UpdateCPU(entt::registry& registry, double gmst)
+void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, double gmst)
 {
     auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
@@ -129,7 +129,7 @@ void OrbitSimulationSystem::UpdateCPU(entt::registry& registry, double gmst)
 // Only the surface needs this. A rotation about the polar axis maps the oblate
 // spheroid exactly onto itself, so the atmosphere shell and the wireframe overlay
 // carry no longitude to be wrong about and are deliberately left in world space.
-void OrbitSimulationSystem::OrientPlanets(entt::registry& registry, double gmst)
+void OrbitPropagationSystem::OrientPlanets(entt::registry& registry, double gmst)
 {
     const glm::mat4 rotation(CalculatePlanetRotation(gmst));
 
@@ -141,7 +141,7 @@ void OrbitSimulationSystem::OrientPlanets(entt::registry& registry, double gmst)
 
 // Calculate Cartesian position (in km) from Keplerian orbital elements
 // Propagates the position to the current system time
-glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements)
+glm::dvec3 OrbitPropagationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements)
 {
     // Convert mean motion from rev/day to rad/s
     const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
@@ -209,7 +209,7 @@ glm::dvec3 OrbitSimulationSystem::CalculateCartesianPosition(const OrbitalElemen
 // Solve Kepler's equation: M = E - e*sin(E)
 // Returns Eccentric Anomaly E given Mean Anomaly M and eccentricity e
 // Uses Newton-Raphson iteration
-double OrbitSimulationSystem::SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations, double tolerance)
+double OrbitPropagationSystem::SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations, double tolerance)
 {
     double E = meanAnomaly; // Initial guess
     for (int i = 0; i < maxIterations; ++i)

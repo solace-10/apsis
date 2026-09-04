@@ -15,11 +15,11 @@ namespace WingsOfSteel
 
 class OrbitalElementsComponent;
 
-class OrbitSimulationSystem : public System
+class OrbitPropagationSystem : public System
 {
 public:
-    OrbitSimulationSystem();
-    ~OrbitSimulationSystem();
+    OrbitPropagationSystem();
+    ~OrbitPropagationSystem();
 
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;

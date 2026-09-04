@@ -28,7 +28,7 @@
 #include "space/earth_frame.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
-#include "systems/orbit_simulation_system.hpp"
+#include "systems/orbit_propagation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_picking_system.hpp"
 #include "systems/space_object_render_system.hpp"
@@ -56,7 +56,7 @@ void Sector::Initialize()
     AddSystem<ModelRenderSystem>();
     AddSystem<PhysicsSimulationSystem>();
     AddSystem<PlanetRenderSystem>();
-    AddSystem<OrbitSimulationSystem>();
+    AddSystem<OrbitPropagationSystem>();
     AddSystem<SunSystem>();
     AddSystem<SpaceObjectPickingSystem>();
 

@@ -75,7 +75,7 @@ would show up as the Sun visibly not being where the daylight is.
 
 Known gaps, in rough order of how much they'd be worth:
 
-- **The orbital propagation itself.** `OrbitSimulationSystem::CalculateCartesianPosition()` treats
+- **The orbital propagation itself.** `OrbitPropagationSystem::CalculateCartesianPosition()` treats
   SGP4 mean elements as classical Keplerian and propagates two-body, so the secular J2 drifts are
   missing (~-5 deg/day of nodal regression for an ISS-like orbit). This is known and deferred — see
   `[5]` in TODO.txt — but it is now *reachable*: the suite links game_lib, so a test can construct
