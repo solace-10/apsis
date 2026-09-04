@@ -19,11 +19,16 @@ SGP4ComputePass::SGP4ComputePass()
     GetResourceSystem()->RequestResource("/shaders/sgp4.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
         CreateComputePipeline();
+        HandleShaderInjection();
     });
 }
 
 SGP4ComputePass::~SGP4ComputePass()
 {
+    if (GetResourceSystem() && m_ShaderInjectionSignalId.has_value())
+    {
+        GetResourceSystem()->GetShaderInjectedSignal().Disconnect(m_ShaderInjectionSignalId.value());
+    }
 }
 
 void SGP4ComputePass::CreateComputePipeline()
@@ -85,6 +90,21 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
     };
     m_pReadback->buffer = device.CreateBuffer(&readbackBufferDescriptor);
 
+    CreateBindGroup();
+}
+
+// Separate from the buffers it binds, because the two are rebuilt for different reasons: the
+// buffers when the roster changes size, the bind group additionally whenever the pipeline is
+// replaced. Its layout comes from the pipeline, so a bind group outliving the pipeline it was
+// built against is a bind group built against a layout that no longer exists.
+void SGP4ComputePass::CreateBindGroup()
+{
+    if (!m_OrbitalElementsBuffer || !m_PropagatedPositionsBuffer)
+    {
+        m_BindGroup = nullptr;
+        return;
+    }
+
     // clang-format off
     std::array<wgpu::BindGroupEntry, 2> entries = {
         wgpu::BindGroupEntry{
@@ -104,7 +124,7 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
         .entryCount = entries.size(),
         .entries = entries.data()
     };
-    m_BindGroup = device.CreateBindGroup(&bindGroupDescriptor);
+    m_BindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
 void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>& orbitalElements, EntityRosterSharedPtr pRoster)
@@ -213,6 +233,25 @@ void SGP4ComputePass::RequestReadbackMap()
             }
 
             pReadback->state = Readback::State::Idle;
+        });
+}
+
+void SGP4ComputePass::HandleShaderInjection()
+{
+    if (m_ShaderInjectionSignalId.has_value())
+    {
+        return;
+    }
+
+    m_ShaderInjectionSignalId = GetResourceSystem()->GetShaderInjectedSignal().Connect(
+        [this](ResourceShader* pResourceShader) {
+            if (m_pShader.get() != pResourceShader)
+            {
+                return;
+            }
+
+            CreateComputePipeline();
+            CreateBindGroup();
         });
 }
 

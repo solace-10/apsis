@@ -2,11 +2,13 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <glm/vec3.hpp>
 #include <webgpu/webgpu_cpp.h>
 
+#include <core/signal.hpp>
 #include <render/pass/pass.hpp>
 #include <resources/resource_shader.hpp>
 #include <scene/entity.hpp>
@@ -108,7 +110,9 @@ private:
 
     void CreateComputePipeline();
     void CreateStorageBuffers(size_t numOrbitalElements);
+    void CreateBindGroup();
     void RequestReadbackMap();
+    void HandleShaderInjection();
 
     static constexpr uint32_t kWorkgroupSize = 64;
 
@@ -117,6 +121,7 @@ private:
     wgpu::Buffer m_OrbitalElementsBuffer;
     wgpu::Buffer m_PropagatedPositionsBuffer;
     wgpu::BindGroup m_BindGroup;
+    std::optional<SignalId> m_ShaderInjectionSignalId;
     std::shared_ptr<Readback> m_pReadback;
 
     // Never replaced, only written to, and captured by every map callback: results
