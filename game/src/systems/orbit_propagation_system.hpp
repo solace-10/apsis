@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -14,6 +15,7 @@ namespace WingsOfSteel
 {
 
 class OrbitalElementsComponent;
+class OrbitalStateComponent;
 
 class OrbitPropagationSystem : public System
 {
@@ -30,12 +32,23 @@ public:
 
 private:
     void UpdateGPU(entt::registry& registry);
+    void UpdateRoster(entt::registry& registry);
+    void ApplyPropagatedPositions(entt::registry& registry);
     void UpdateCPU(entt::registry& registry, double gmst);
+    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst);
 
     bool m_UseSGP4 = true;
 
     SGP4ComputePassSharedPtr m_pComputePass;
+
+    // The roster currently uploaded, and the scratch buffers it is rebuilt into each
+    // frame so that the comparison against it does not allocate.
+    EntityRosterSharedPtr m_pRoster;
+    EntityRoster m_RosterScratch;
     std::vector<OrbitalElementsInput> m_OrbitalElements;
+
+    // Results are applied once, when they land, rather than rewritten every frame.
+    std::chrono::system_clock::time_point m_LastAppliedResultsTime;
 };
 
 } // namespace WingsOfSteel

@@ -14,6 +14,7 @@ SGP4ComputePass::SGP4ComputePass()
     : Pass("SGP4 compute pass")
 {
     m_pReadback = std::make_shared<Readback>();
+    m_pResults = std::make_shared<PropagationResults>();
 
     GetResourceSystem()->RequestResource("/shaders/sgp4.wgsl", [this](ResourceSharedPtr pResource) {
         m_pShader = std::dynamic_pointer_cast<ResourceShader>(pResource);
@@ -106,7 +107,7 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
     m_BindGroup = device.CreateBindGroup(&bindGroupDescriptor);
 }
 
-void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>& orbitalElements)
+void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>& orbitalElements, EntityRosterSharedPtr pRoster)
 {
     // The bind group layout comes from the pipeline, so there is nothing to build until
     // the shader has loaded.
@@ -123,6 +124,8 @@ void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>
         CreateStorageBuffers(orbitalElements.size());
         m_NumOrbitalElements = orbitalElements.size();
     }
+
+    m_pRoster = std::move(pRoster);
 
     if (m_NumOrbitalElements == 0)
     {
@@ -166,6 +169,7 @@ void SGP4ComputePass::Execute(wgpu::CommandEncoder& encoder)
     {
         encoder.CopyBufferToBuffer(m_PropagatedPositionsBuffer, 0, m_pReadback->buffer, 0, m_pReadback->sizeInBytes);
         m_pReadback->dispatchTime = std::chrono::system_clock::now();
+        m_pReadback->pDispatchRoster = m_pRoster;
         m_pReadback->state = Readback::State::CopyRecorded;
     }
 }
@@ -175,26 +179,30 @@ void SGP4ComputePass::RequestReadbackMap()
     // Both captures are by value and independently keep their target alive, so the
     // callback remains safe if this pass is destroyed before it fires.
     std::shared_ptr<Readback> pReadback = m_pReadback;
+    std::shared_ptr<PropagationResults> pResults = m_pResults;
     wgpu::Buffer buffer = m_pReadback->buffer;
 
     m_pReadback->state = Readback::State::MapPending;
 
     buffer.MapAsync(
         wgpu::MapMode::Read, 0, pReadback->sizeInBytes, wgpu::CallbackMode::AllowSpontaneous,
-        [pReadback, buffer](wgpu::MapAsyncStatus status, wgpu::StringView message) {
+        [pReadback, pResults, buffer](wgpu::MapAsyncStatus status, wgpu::StringView message) {
             if (status == wgpu::MapAsyncStatus::Success)
             {
-                const OrbitalElementsOutput* pResults = static_cast<const OrbitalElementsOutput*>(
+                const OrbitalElementsOutput* pMappedResults = static_cast<const OrbitalElementsOutput*>(
                     buffer.GetConstMappedRange(0, pReadback->sizeInBytes));
 
                 const size_t numResults = pReadback->sizeInBytes / sizeof(OrbitalElementsOutput);
-                pReadback->positions.resize(numResults);
+                pResults->positions.resize(numResults);
                 for (size_t i = 0; i < numResults; i++)
                 {
-                    pReadback->positions[i] = pResults[i].position;
+                    pResults->positions[i] = pMappedResults[i].position;
                 }
 
-                pReadback->positionsTime = pReadback->dispatchTime;
+                // Assigned together with the positions, so a consumer can never pair
+                // them with the wrong roster.
+                pResults->pEntities = pReadback->pDispatchRoster;
+                pResults->time = pReadback->dispatchTime;
                 buffer.Unmap();
             }
             // A cancelled callback means the device is going away, in which case the

@@ -66,22 +66,42 @@ void OrbitPropagationSystem::Update(float delta)
     }
 }
 
-// Feeds this frame's elements to the compute pass, which dispatches later in the frame
-// as part of the RenderSystem's pass list.
-//
-// Nothing is read back into TransformComponent yet. Doing so needs two things that are
-// not in place: an SGP4 propagator in sgp4.wgsl rather than the current placeholder,
-// and a stable mapping from readback index back to entity - the results arrive a couple
-// of frames after the dispatch that produced them, by which point this view's ordering
-// may no longer be the ordering they were computed in.
+// Feeds the compute pass the objects to propagate, then applies whatever results have
+// come back from an earlier frame's dispatch.
 void OrbitPropagationSystem::UpdateGPU(entt::registry& registry)
 {
-    auto view = registry.view<const OrbitalElementsComponent>();
+    if (!m_pComputePass->IsReady())
+    {
+        return;
+    }
 
+    UpdateRoster(registry);
+    ApplyPropagatedPositions(registry);
+
+    Log::Info() << "Compute pass: " << m_pComputePass->GetResults().positions.size() << " values.";
+}
+
+// Builds the set of objects to propagate, and uploads it only when it has changed.
+//
+// OrbitalStateComponent is present on exactly the objects the user can currently see:
+// SpaceObjectRenderSystem::NotifyGroupFiltersChanged() adds and removes it as group
+// filters are toggled, and keeps the selected object in the set even when its own group
+// has been switched off. Propagating that view rather than the whole catalogue is the
+// difference between ~23 objects and ~30000 when only the stations group is enabled.
+//
+// Rebuilding the roster every frame costs a walk over the tracked objects alone, which
+// is by construction the number being propagated. The upload is what gets skipped, and
+// it can be: orbital elements are static per object, so an unchanged roster has nothing
+// new to send.
+void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
+{
+    auto view = registry.view<const OrbitalElementsComponent, const OrbitalStateComponent>();
+
+    m_RosterScratch.clear();
     m_OrbitalElements.clear();
-    m_OrbitalElements.reserve(view.size());
 
-    view.each([this](const OrbitalElementsComponent& orbitalElements) {
+    view.each([this](const EntityHandle entityHandle, const OrbitalElementsComponent& orbitalElements, const OrbitalStateComponent&) {
+        m_RosterScratch.push_back(entityHandle);
         m_OrbitalElements.push_back(OrbitalElementsInput{
             .meanMotion = orbitalElements.GetMeanMotion(),
             .eccentricity = orbitalElements.GetEccentricity(),
@@ -91,34 +111,96 @@ void OrbitPropagationSystem::UpdateGPU(entt::registry& registry)
             .meanAnomaly = orbitalElements.GetMeanAnomaly() });
     });
 
-    m_pComputePass->SetOrbitalElements(m_OrbitalElements);
+    if (m_pRoster && *m_pRoster == m_RosterScratch)
+    {
+        return;
+    }
+
+    // A new roster rather than a mutated one, so that a readback still in flight keeps
+    // the roster it was dispatched with and stays able to say whose positions it holds.
+    m_pRoster = std::make_shared<const EntityRoster>(m_RosterScratch);
+    m_pComputePass->SetOrbitalElements(m_OrbitalElements, m_pRoster);
+}
+
+// Writes back the positions of the last completed readback.
+//
+// The results describe the roster they were dispatched with, which need not be the one
+// currently uploaded - a group filter toggled in the intervening frames does not
+// invalidate them, as where an object is has nothing to do with which groups are
+// enabled. Objects that have since left the tracked set are skipped rather than the
+// whole batch being discarded.
+void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
+{
+    const PropagationResults& results = m_pComputePass->GetResults();
+    if (!results.pEntities || results.time == m_LastAppliedResultsTime)
+    {
+        return;
+    }
+    m_LastAppliedResultsTime = results.time;
+
+    // The instant the positions are valid for, not the current one: the dispatch that
+    // produced them is a couple of frames old, and the ground underneath has turned
+    // since.
+    const double gmst = CalculateGMST(results.time);
+
+    const EntityRoster& entities = *results.pEntities;
+    for (size_t i = 0; i < entities.size(); i++)
+    {
+        const EntityHandle entityHandle = entities[i];
+
+        // entt recycles entity indices, so an object destroyed while the readback was in
+        // flight can have handed its index to a different object entirely. The handle
+        // carries a version, which is what makes this a real identity check rather than
+        // a bounds test.
+        if (!registry.valid(entityHandle))
+        {
+            continue;
+        }
+
+        OrbitalStateComponent* pOrbitalState = registry.try_get<OrbitalStateComponent>(entityHandle);
+        TransformComponent* pTransform = registry.try_get<TransformComponent>(entityHandle);
+        const OrbitalElementsComponent* pOrbitalElements = registry.try_get<OrbitalElementsComponent>(entityHandle);
+        if (!pOrbitalState || !pTransform || !pOrbitalElements)
+        {
+            continue;
+        }
+
+        const glm::dvec3 position(results.positions[i]); // Position is in km, in ECI coordinates
+        pTransform->transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
+        UpdateOrbitalState(*pOrbitalState, *pOrbitalElements, position, gmst);
+    }
 }
 
 void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, double gmst)
 {
     auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
-    view.each([&registry, gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+    view.each([gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
         const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
         transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
-
-        // Update orbital state component
-        orbitalState.m_PositionECI = position;
-
-        // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
-        const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
-        orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
-
-        const double r = glm::length(position);
-
-        // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
-        orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
-
-        const glm::dvec3 geodetic = ECIToGeodetic(position, gmst);
-        orbitalState.m_Latitude = geodetic.x;
-        orbitalState.m_Longitude = geodetic.y;
-        orbitalState.m_Altitude = geodetic.z;
+        UpdateOrbitalState(orbitalState, orbitalElements, position, gmst);
     });
+}
+
+// The state that follows from a position, whichever path produced it. Shared so the two
+// cannot drift: the readouts they feed are the same readouts.
+void OrbitPropagationSystem::UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst)
+{
+    orbitalState.m_PositionECI = positionECI;
+
+    // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
+    const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
+    orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
+
+    const double r = glm::length(positionECI);
+
+    // Calculate velocity from vis-viva equation: v² = μ(2/r - 1/a)
+    orbitalState.m_Velocity = std::sqrt(kMu * (2.0 / r - 1.0 / orbitalState.m_SemiMajorAxis));
+
+    const glm::dvec3 geodetic = ECIToGeodetic(positionECI, gmst);
+    orbitalState.m_Latitude = geodetic.x;
+    orbitalState.m_Longitude = geodetic.y;
+    orbitalState.m_Altitude = geodetic.z;
 }
 
 // Turns every planet mesh so that its prime meridian sits at the current Greenwich
