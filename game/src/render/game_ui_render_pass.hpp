@@ -1,17 +1,17 @@
 #pragma once
 
-#include <render/render_pass/render_pass.hpp>
+#include <render/pass/pass.hpp>
 
 namespace WingsOfSteel
 {
 
 DECLARE_SMART_PTR(GameUIRenderPass);
-class GameUIRenderPass : public RenderPass
+class GameUIRenderPass : public Pass
 {
 public:
     GameUIRenderPass();
 
-    void Render(wgpu::CommandEncoder& encoder) override;
+    void Execute(wgpu::CommandEncoder& encoder) override;
 };
 
 } // namespace WingsOfSteel

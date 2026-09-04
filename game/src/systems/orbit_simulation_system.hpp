@@ -1,12 +1,14 @@
 #pragma once
 
+#include <vector>
+
 #include <entt/entt.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <webgpu/webgpu_cpp.h>
 
-#include <resources/resource_shader.hpp>
 #include <scene/systems/system.hpp>
+
+#include "render/sgp4_compute_pass.hpp"
 
 namespace WingsOfSteel
 {
@@ -27,19 +29,13 @@ public:
     static double SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations = 10, double tolerance = 1e-10);
 
 private:
-    void CreateComputePipeline();
-    void CreateStorageBuffers(size_t numOrbitalElements);
-    
-    bool m_UseSGP4 = true;
-    bool m_Initialized = false;
+    void UpdateGPU(entt::registry& registry);
+    void UpdateCPU(entt::registry& registry, double gmst);
 
-    ResourceShaderSharedPtr m_pShader;
-    wgpu::ComputePipeline m_ComputePipeline;
-    wgpu::Buffer m_OrbitalElementsBuffer;
-    wgpu::Buffer m_PropagatedPositionsBuffer;
-    wgpu::Buffer m_PropagatedPositionsReadbackBuffer;
-    wgpu::BindGroup m_BindGroup;
-    size_t m_NumOrbitalElements = 0;
+    bool m_UseSGP4 = true;
+
+    SGP4ComputePassSharedPtr m_pComputePass;
+    std::vector<OrbitalElementsInput> m_OrbitalElements;
 };
 
 } // namespace WingsOfSteel

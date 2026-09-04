@@ -2,7 +2,7 @@
 #include <imgui/imgui_system.hpp>
 #include <input/input_system.hpp>
 #include <pandora.hpp>
-#include <render/render_pass/ui_render_pass.hpp>
+#include <render/pass/ui_render_pass.hpp>
 #include <render/rendersystem.hpp>
 #include <scene/camera.hpp>
 #include <scene/entity.hpp>
@@ -47,10 +47,10 @@ void Game::Initialize()
 #endif
 
     RenderSystem* pRenderSystem = GetRenderSystem();
-    pRenderSystem->ClearRenderPasses();
-    pRenderSystem->AddRenderPass(std::make_shared<SectorRenderPass>());
-    pRenderSystem->AddRenderPass(std::make_shared<GameUIRenderPass>());
-    pRenderSystem->AddRenderPass(std::make_shared<UIRenderPass>());
+    pRenderSystem->ClearPasses();
+    pRenderSystem->AddPass(std::make_shared<SectorRenderPass>());
+    pRenderSystem->AddPass(std::make_shared<GameUIRenderPass>());
+    pRenderSystem->AddPass(std::make_shared<UIRenderPass>());
 
     GetImGuiSystem()->SetGameMenuBarCallback([this]() { DrawImGuiMenuBar(); });
 

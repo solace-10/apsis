@@ -12,11 +12,11 @@ namespace WingsOfSteel
 {
 
 GameUIRenderPass::GameUIRenderPass()
-    : RenderPass("Game UI render pass")
+    : Pass("Game UI render pass")
 {
 }
 
-void GameUIRenderPass::Render(wgpu::CommandEncoder& encoder)
+void GameUIRenderPass::Execute(wgpu::CommandEncoder& encoder)
 {
     wgpu::SurfaceTexture surfaceTexture;
     GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
