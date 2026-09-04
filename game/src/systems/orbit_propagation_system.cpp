@@ -82,17 +82,7 @@ void OrbitPropagationSystem::UpdateGPU(entt::registry& registry)
 }
 
 // Builds the set of objects to propagate, and uploads it only when it has changed.
-//
-// OrbitalStateComponent is present on exactly the objects the user can currently see:
-// SpaceObjectRenderSystem::NotifyGroupFiltersChanged() adds and removes it as group
-// filters are toggled, and keeps the selected object in the set even when its own group
-// has been switched off. Propagating that view rather than the whole catalogue is the
-// difference between ~23 objects and ~30000 when only the stations group is enabled.
-//
-// Rebuilding the roster every frame costs a walk over the tracked objects alone, which
-// is by construction the number being propagated. The upload is what gets skipped, and
-// it can be: orbital elements are static per object, so an unchanged roster has nothing
-// new to send.
+// OrbitalStateComponent is only present on the objects the user can currently see.
 void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
 {
     auto view = registry.view<const OrbitalElementsComponent, const OrbitalStateComponent>();
