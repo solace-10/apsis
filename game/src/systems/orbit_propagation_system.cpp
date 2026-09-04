@@ -48,11 +48,13 @@ void OrbitPropagationSystem::Update(float delta)
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
 
-    // One GMST for the whole frame, shared by the planet's orientation and by every
-    // ground track. Sampling the clock per satellite would put objects resolved early
-    // in the frame in a fractionally different frame to those resolved late, and -
-    // far more importantly - in a different frame to the planet they are drawn over.
-    const double gmst = CalculateGMST(std::chrono::system_clock::now());
+    // One instant for the whole frame, and one GMST derived from it, shared by the
+    // planet's orientation and by every ground track. Sampling the clock per satellite
+    // would put objects resolved early in the frame in a fractionally different frame to
+    // those resolved late, and - far more importantly - in a different frame to the planet
+    // they are drawn over.
+    const std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    const double gmst = CalculateGMST(now);
 
     OrientPlanets(registry, gmst);
 
@@ -62,7 +64,7 @@ void OrbitPropagationSystem::Update(float delta)
     }
     else
     {
-        UpdateCPU(registry, gmst);
+        UpdateCPU(registry, now, gmst);
     }
 }
 
@@ -161,12 +163,12 @@ void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
     }
 }
 
-void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, double gmst)
+void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst)
 {
     auto view = registry.view<const OrbitalElementsComponent, OrbitalStateComponent, TransformComponent>();
 
-    view.each([gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
-        const glm::dvec3 position = CalculateCartesianPosition(orbitalElements); // Position is in km, in ECI coordinates
+    view.each([&instant, gmst](const OrbitalElementsComponent& orbitalElements, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+        const glm::dvec3 position = CalculateCartesianPosition(orbitalElements, instant); // Position is in km, in ECI coordinates
         transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
         UpdateOrbitalState(orbitalState, orbitalElements, position, gmst);
     });
@@ -211,9 +213,13 @@ void OrbitPropagationSystem::OrientPlanets(entt::registry& registry, double gmst
     });
 }
 
-// Calculate Cartesian position (in km) from Keplerian orbital elements
-// Propagates the position to the current system time
-glm::dvec3 OrbitPropagationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements)
+// Calculate Cartesian position (in km) from Keplerian orbital elements, propagated to the
+// given instant.
+//
+// The instant is a parameter rather than a call to the clock inside here, so that every
+// satellite in a frame is propagated to the same one - and to the same one the planet is
+// oriented with - and so that the result is something a test can predict.
+glm::dvec3 OrbitPropagationSystem::CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements, const std::chrono::system_clock::time_point& instant)
 {
     // Convert mean motion from rev/day to rad/s
     const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
@@ -229,10 +235,9 @@ glm::dvec3 OrbitPropagationSystem::CalculateCartesianPosition(const OrbitalEleme
     const double w = glm::radians(static_cast<double>(orbitalElements.GetArgumentOfPericenter())); // Argument of pericenter (ω)
     const double M_epoch = glm::radians(static_cast<double>(orbitalElements.GetMeanAnomaly()));
 
-    // Propagate mean anomaly to current time
-    const auto now = std::chrono::system_clock::now();
+    // Propagate mean anomaly to the given time
     const auto epoch = orbitalElements.GetEpoch();
-    const double deltaSeconds = std::chrono::duration<double>(now - epoch).count();
+    const double deltaSeconds = std::chrono::duration<double>(instant - epoch).count();
     double M = M_epoch + n * deltaSeconds;
 
     // Normalize to [0, 2π]

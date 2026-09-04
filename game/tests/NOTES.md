@@ -71,28 +71,80 @@ The last of these is the one worth keeping honest. The direction is handed to th
 planet's terminator and the sun disc are drawn — so a quarter turn lost between the two frames
 would show up as the Sun visibly not being where the daylight is.
 
+## The reference propagator is the yardstick, and it is checked first
+
+`game/tests/reference/sgp4/` holds Vallado's SGP4 unmodified, and everything the suite says about
+propagation is measured against it. That is only worth anything if the copy in this tree behaves
+like the one he published, so `The vendored SGP4 reference reproduces Vallado's published
+verification output` runs all 33 element sets of `SGP4-VER.TLE` over the ranges the file itself
+asks for and compares against `tcppver.out`. It agrees to the last digit the file prints —
+5e-9 km, 5e-10 km/s — everywhere except the 3.5-year propagation of 20413, which reaches 1.2e-7 km.
+The assertions sit an order of magnitude above that, so they measure our build against Vallado's
+rather than the printing.
+
+Two details of that comparison are easy to mistake for noise and are not. The row count is asserted
+as well as the rows, because it is where the propagation gave up — 33333 stops after five steps with
+error 4, and pinning that pins the point at which an element set starts failing. And 33334 has one
+row in the file that is stale output from the previous satellite: it fails at its own epoch, so it
+has no results of its own, and it is covered by a case about the error code instead.
+
+- Recorded by: `The vendored SGP4 reference reproduces Vallado's published verification output`,
+  `A satellite whose orbit decays partway through the range stops there`, `An element set that fails
+  at its own epoch produces no positions at all`, `The near-circular case labelled an error attempt
+  in fact propagates` (sgp4_tests.cpp).
+
+## What today's propagation costs, as a number
+
+`Two-body propagation of SGP4 mean elements drifts by a known amount` measures
+`CalculateCartesianPosition()` against the reference for 06251, a real 377 km-perigee low Earth
+orbit: about 13 km wrong at the epoch, and 416 km at worst over the following day.
+
+The bounds are a band rather than a ceiling, deliberately. If the propagation is ever made correct
+without this case being revisited it will fail, rather than pass more comfortably and say nothing —
+which is the only way a test like this can act as a before-and-after for the SGP4 work.
+
+## The compute path is reachable from the suite
+
+`gpu/compute_harness.{hpp,cpp}` brings up a Dawn device with no window, compiles a `.wgsl` file
+through the engine's own preprocessor, dispatches it and blocks until the results are back. It
+restates `SGP4ComputePass`'s sequencing — the pass spreads its readback over several frames because
+`RenderSystem::Update()` owns the encoder — but deliberately not its data: the input and output
+structs come from `render/sgp4_compute_pass.hpp`, so a test cannot disagree with production about
+the layout it is checking.
+
+`The compute shader receives the orbital elements it was given` dispatches `sgp4.wgsl` itself, from
+the tree the game ships from, and checks the echo it currently writes. That covers the struct
+layout, the binding indices, the guard on the tail of a rounded-up dispatch and the readback, all
+without needing the propagator to exist. When the propagation lands the echo goes with it, and this
+case becomes the comparison against the reference.
+
+The harness skips rather than fails where there is no adapter, and it is native-only: the readback
+blocks on `ProcessEvents`, and there is nothing on the web to block with.
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
 
-- **The orbital propagation itself.** `OrbitPropagationSystem::CalculateCartesianPosition()` treats
-  SGP4 mean elements as classical Keplerian and propagates two-body, so the secular J2 drifts are
-  missing (~-5 deg/day of nodal regression for an ISS-like orbit). This is known and deferred — see
-  `[5]` in TODO.txt — but it is now *reachable*: the suite links game_lib, so a test can construct
-  an `OrbitalElementsComponent` and pin positions against a reference propagator. Worth doing
-  before the SGP4 work lands, so the change has something to move against.
-- **`CalculateCartesianPosition()` reads the clock per satellite.** It calls
-  `system_clock::now()` inside itself, once per object, so satellites in a single frame are
-  propagated at fractionally different instants and at a different instant from the GMST the
-  planet is oriented with. The discrepancy is microseconds and therefore sub-millimetre, but it is
-  the same class of mistake as the GMST bug, and taking the instant as a parameter — the way
-  `CalculateGMST()` now does — would both fix it and make the propagation testable deterministically.
-- **Nothing pins the shader side.** `planet.wgsl` consumes the model matrix and must apply it to
-  both position and normal; the atmosphere and wireframe pipelines deliberately do not. That is
-  WGSL running on a GPU, so the suite cannot see it. The check is visual. `sun.wgsl` is in the same
-  position and adds a second thing to look at: the disc is built from the same light direction the
-  terminator is, so a screenshot showing the Sun off to one side of the daylight would mean the
-  billboard's camera basis is wrong rather than the ephemeris.
+- **SGP4 itself, in the shader.** `sgp4.wgsl` does not propagate anything yet, so the comparison
+  against the reference is not written. Two things will shape it. WGSL has no f64 and SGP4 is a
+  double-precision algorithm, so the tolerance is an outcome to be measured rather than a number to
+  be chosen — and running `sgp4init` on the CPU in double, uploading its coefficients and leaving
+  only the time-varying step to the GPU, is what keeps that outcome small. And the near-Earth and
+  deep-space branches are separate algorithms: 9 of the 33 verification cases are near-Earth, and
+  the partition the test uses should come from `satrec.method` rather than from a period threshold
+  restated in the test.
+- **The shader does not have SGP4's inputs yet.** `OrbitalElementsInput` carries six mean elements
+  and no BSTAR, no mean-motion derivatives and nothing conveying the epoch or the time since it.
+  `OrbitalElementsComponent` is missing the same three (`orbital_elements_component.hpp` has two of
+  them commented out), and they are ingested into the database but absent from the `SELECT` that
+  serves the client, so they do not reach the game at all.
+- **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
+  both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
+  compute path, which the harness can now drive, these run inside a render pass against a swapchain
+  and the check is visual. `sun.wgsl` is in the same position and adds a second thing to look at:
+  the disc is built from the same light direction the terminator is, so a screenshot showing the Sun
+  off to one side of the daylight would mean the billboard's camera basis is wrong rather than the
+  ephemeris.
 - **`CalculateGMST()` uses UTC where the series wants UT1.** Unix time ignores leap seconds, so the
   argument can be up to a second out — under a hundredth of a degree, and so far below
   anything else in this file. Recorded here so it is a known approximation rather than a latent surprise.

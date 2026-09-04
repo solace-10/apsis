@@ -1,2 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Vendored verbatim from upstream, checksums recorded in game/tests/reference/sgp4/README.md.
+# Excluded from line-ending normalisation so the checked-out bytes stay identical to the
+# published ones and the copy remains diffable against them.
+game/tests/reference/sgp4/SGP4.cpp -text
+game/tests/reference/sgp4/SGP4.h -text
+game/tests/data/SGP4-VER.TLE -text
+game/tests/data/tcppver.out -text

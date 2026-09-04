@@ -28,16 +28,37 @@ include(Catch)
 # can run the suite. That is a cost you pay anyway to run the game. It is not paid per test run:
 # libpandora.a and Dawn are static archives, so a test binary only drags in the objects whose
 # symbols it actually references.
+# Vallado's SGP4, vendored unmodified under reference/sgp4 - see the README beside it. Its
+# own target, so that it is never linked into game_lib and so never reaches a shipped binary,
+# and so that its warnings and its formatting stay off this project's books.
+add_library(sgp4_reference STATIC reference/sgp4/SGP4.cpp)
+target_include_directories(sgp4_reference SYSTEM PUBLIC reference/sgp4)
+target_compile_options(sgp4_reference PRIVATE -w)
+
 add_executable(tests
+    gpu/compute_harness.cpp
+    reference/sgp4_reference.cpp
     space/earth_frame_tests.cpp
+    space/sgp4_shader_tests.cpp
+    space/sgp4_tests.cpp
     test_main.cpp
 )
 
 target_include_directories(tests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
+# Absolute paths rather than relative ones: catch_discover_tests runs each case with its
+# working directory at the binary's, so nothing relative to this list file would resolve.
+# The shader path deliberately points at the tree the game ships from, so that the tests
+# compile the very file that runs in the application rather than a copy of it.
+target_compile_definitions(tests PRIVATE
+    APSIS_TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/data"
+    APSIS_SHADER_DIR="${CMAKE_CURRENT_LIST_DIR}/../bin/data/core/shaders"
+)
+
 target_link_libraries(tests PRIVATE
     Catch2::Catch2
     game_lib
+    sgp4_reference
 )
 
 # One CTest entry per Catch2 test case, rather than one for the whole binary. A failing
