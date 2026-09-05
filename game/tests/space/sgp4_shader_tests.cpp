@@ -1,64 +1,107 @@
+#include <cmath>
 #include <string>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <glm/geometric.hpp>
+
 #include "gpu/compute_harness.hpp"
+#include "reference/sgp4_reference.hpp"
 #include "render/sgp4_compute_pass.hpp"
+#include "space/sgp4.hpp"
 
 using namespace WingsOfSteel;
-using Catch::Matchers::WithinAbs;
 
 namespace
 {
 
 const std::string kShaderFile = std::string(APSIS_SHADER_DIR) + "/sgp4.wgsl";
+const std::string kTleFile = std::string(APSIS_TEST_DATA_DIR) + "/SGP4-VER.TLE";
 
-// Must match @workgroup_size in sgp4.wgsl, which is also what SGP4ComputePass rounds its
-// dispatch up to. If the two disagree the elements past the end of the short dispatch are
-// never written, which the cases below see as zeroed positions rather than as a wrong
-// number - so the disagreement is caught either way.
+// Must match @workgroup_size in sgp4.wgsl, which is also what SGP4ComputePass rounds its dispatch
+// up to. If the two disagree the elements past the end of the short dispatch are never written,
+// which shows up below as a position of zero rather than as a wrong one.
 constexpr uint32_t kWorkgroupSize = 64;
 
-// Not a multiple of the workgroup size, on purpose: the dispatch is rounded up, so the last
-// workgroup runs threads past the end of the array and the shader has to say so.
-constexpr size_t kElementCount = 100;
+// Measured, not chosen.
+//
+// The worst observed across the whole set is 295 m and 2.3e-4 km/s, on 00005 at t = 1800 minutes.
+// The bounds sit a little over three times above that rather than the order of magnitude this
+// suite usually allows, because unlike everything else here the number is the point: a tolerance
+// loose enough to be comfortable would be loose enough to hide the regression it exists to catch.
+// If it ever fails on different hardware, the margin is the thing to revisit - f32 results are not
+// required to agree between drivers.
+constexpr double kPositionToleranceKm = 1.0;
+constexpr double kVelocityToleranceKmPerSecond = 0.001;
 
-std::vector<OrbitalElementsInput> MakeElements()
+// One element of the dispatch, and what the CPU makes of the same inputs.
+struct Sample
 {
-    std::vector<OrbitalElementsInput> elements;
-    elements.reserve(kElementCount);
+    std::string satnum;
+    double tsince{ 0.0 };
+    SGP4StepInput input;
+    float time{ 0.0f };
+    SGP4Position expected;
+};
 
-    // Values chosen only so that every field of every element is distinct: an element that
-    // read its neighbour's slot, or read the right slot at the wrong offset, would land on
-    // a number belonging to something else rather than on a plausible one.
-    for (size_t i = 0; i < kElementCount; i++)
+// Every near-earth element set in the verification file, at every time it asks to be propagated
+// to, stopping where the propagation does. The same walk sgp4_step_tests.cpp makes, flattened into
+// one dispatch so that the shader answers for all of them at once.
+std::vector<Sample> MakeSamples()
+{
+    std::vector<Sample> samples;
+
+    for (const Test::VerificationCase& verificationCase : Test::LoadVerificationCases(kTleFile))
     {
-        const float index = static_cast<float>(i);
-        elements.push_back(OrbitalElementsInput{
-            .meanMotion = 1.0f + index * 0.125f,
-            .eccentricity = 2.0f + index * 0.125f,
-            .inclination = 3.0f + index * 0.125f,
-            .raan = 4.0f + index * 0.125f,
-            .argumentOfPericenter = 5.0f + index * 0.125f,
-            .meanAnomaly = 6.0f + index * 0.125f });
+        if (verificationCase.satrec.method != 'n')
+        {
+            continue;
+        }
+
+        const SGP4ElementSet elementSet = SGP4Initialise(Test::AsElements(verificationCase.satrec));
+
+        for (const double tsince : Test::VerificationTimes(verificationCase))
+        {
+            // Both sides are given the same f32-representable time, so that what is measured is
+            // the arithmetic rather than the rounding of the time going in. That rounding is a
+            // real effect and a real hazard - at ten days from epoch an f32 tsince is worth
+            // several hundred metres of along-track error - but it is a separate one, and it
+            // belongs to whoever decides how time reaches the GPU.
+            const float tsinceFloat = static_cast<float>(tsince);
+            const SGP4Position expected = SGP4Step(elementSet, static_cast<double>(tsinceFloat));
+
+            samples.push_back(Sample{
+                verificationCase.satnum,
+                tsince,
+                MakeSGP4StepInput(elementSet),
+                tsinceFloat,
+                expected });
+
+            if (expected.error != SGP4Error::None)
+            {
+                break;
+            }
+        }
     }
 
-    return elements;
+    return samples;
 }
 
 } // namespace
 
-// The propagator itself is not written yet. What can be pinned now is everything around it:
-// that the shader compiles, that the struct C++ uploads is the struct WGSL reads, that the
-// bindings the pass declares are the bindings the shader declares, that the tail of a
-// rounded-up dispatch is guarded, and that what the GPU wrote comes back intact.
+// What f32 costs, which is the one thing none of the rest of this suite can say.
 //
-// sgp4.wgsl echoes three of its inputs into the output for exactly this reason. When the
-// propagation lands the echo goes with it, and this case is replaced by the comparison
-// against the reference propagator in sgp4_tests.cpp.
-TEST_CASE("The compute shader receives the orbital elements it was given", "[space][sgp4][gpu]")
+// Both halves of SGP4 now exist in double and both agree with Vallado exactly, so the shader is
+// the only place precision can be lost - and it is compared against SGP4Step() rather than against
+// the reference for exactly that reason. A comparison against the reference would be measuring
+// transcription mistakes and precision together; this one has already had the first ruled out.
+//
+// It also carries everything the echo case it replaced used to: the struct C++ uploads is the
+// struct WGSL reads, the bindings agree, and the tail of a rounded-up dispatch is guarded - 162
+// samples is not a multiple of 64, so the last workgroup runs threads past the end.
+TEST_CASE("The compute shader propagates as accurately as f32 allows", "[space][sgp4][gpu]")
 {
     Test::ComputeHarness harness;
     if (!harness.IsAvailable())
@@ -66,21 +109,58 @@ TEST_CASE("The compute shader receives the orbital elements it was given", "[spa
         SKIP("No WebGPU device on this machine: " << harness.GetUnavailableReason());
     }
 
-    const wgpu::ShaderModule shaderModule = harness.CompileFromFile(kShaderFile);
-    const std::vector<OrbitalElementsInput> elements = MakeElements();
-    const std::vector<OrbitalElementsOutput> positions = harness.Dispatch<OrbitalElementsOutput>(shaderModule, "computeSGP4", elements, kWorkgroupSize);
+    const std::vector<Sample> samples = MakeSamples();
+    REQUIRE(samples.size() == 162);
+    REQUIRE(samples.size() % kWorkgroupSize != 0);
 
-    REQUIRE(positions.size() == elements.size());
-
-    for (size_t i = 0; i < positions.size(); i++)
+    // The same two buffers the pass uploads, bound the same way: coefficients that would change
+    // only when the roster does, and one time per object.
+    std::vector<SGP4StepInput> inputs;
+    std::vector<float> times;
+    inputs.reserve(samples.size());
+    times.reserve(samples.size());
+    for (const Sample& sample : samples)
     {
-        INFO("element " << i);
-
-        // Exact rather than approximate: these values went to the GPU as f32 and came back
-        // as f32 without arithmetic in between, so anything but equality is a plumbing
-        // fault rather than a precision one.
-        REQUIRE(positions[i].position.x == elements[i].meanMotion);
-        REQUIRE(positions[i].position.y == elements[i].eccentricity);
-        REQUIRE(positions[i].position.z == elements[i].inclination);
+        inputs.push_back(sample.input);
+        times.push_back(sample.time);
     }
+
+    const wgpu::ShaderModule shaderModule = harness.CompileFromFile(kShaderFile);
+    const std::vector<SGP4StepOutput> states = harness.Dispatch<SGP4StepOutput>(shaderModule, "computeSGP4", inputs, times, kWorkgroupSize);
+    REQUIRE(states.size() == samples.size());
+
+    double worstPosition = 0.0;
+    double worstVelocity = 0.0;
+    std::string worstAt;
+
+    for (size_t i = 0; i < samples.size(); i++)
+    {
+        const Sample& sample = samples[i];
+        INFO("satellite " << sample.satnum << " at t = " << sample.tsince << " minutes");
+
+        // Where the propagation gives up has to agree as well as where the object is. The shader
+        // has no way to return an enum, so it writes the number instead.
+        REQUIRE(states[i].error == static_cast<uint32_t>(sample.expected.error));
+
+        // A decayed orbit still has a position; the other failures give up before there is one.
+        if (sample.expected.error != SGP4Error::None && sample.expected.error != SGP4Error::Decayed)
+        {
+            continue;
+        }
+
+        const double positionError = glm::length(glm::dvec3(states[i].position) - sample.expected.position);
+        const double velocityError = glm::length(glm::dvec3(states[i].velocity) - sample.expected.velocity);
+
+        if (positionError > worstPosition)
+        {
+            worstPosition = positionError;
+            worstAt = sample.satnum + " at t = " + std::to_string(sample.tsince);
+        }
+        worstVelocity = std::max(worstVelocity, velocityError);
+    }
+
+    UNSCOPED_INFO("worst position error " << worstPosition << " km, worst velocity error " << worstVelocity << " km/s, worst at " << worstAt);
+
+    CHECK(worstPosition < kPositionToleranceKm);
+    CHECK(worstVelocity < kVelocityToleranceKmPerSecond);
 }

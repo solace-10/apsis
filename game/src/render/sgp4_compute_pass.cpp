@@ -10,6 +10,47 @@
 namespace WingsOfSteel
 {
 
+SGP4StepInput MakeSGP4StepInput(const SGP4ElementSet& elementSet)
+{
+    // clang-format off
+    return SGP4StepInput{
+        .simplifiedDrag = elementSet.simplifiedDrag ? 1u : 0u,
+        .deepSpace = elementSet.method == SGP4Method::DeepSpace ? 1u : 0u,
+        .bstar = static_cast<float>(elementSet.bstar),
+        .ecco = static_cast<float>(elementSet.ecco),
+        .inclo = static_cast<float>(elementSet.inclo),
+        .nodeo = static_cast<float>(elementSet.nodeo),
+        .argpo = static_cast<float>(elementSet.argpo),
+        .mo = static_cast<float>(elementSet.mo),
+        .no_unkozai = static_cast<float>(elementSet.no_unkozai),
+        .aycof = static_cast<float>(elementSet.aycof),
+        .con41 = static_cast<float>(elementSet.con41),
+        .cc1 = static_cast<float>(elementSet.cc1),
+        .cc4 = static_cast<float>(elementSet.cc4),
+        .cc5 = static_cast<float>(elementSet.cc5),
+        .d2 = static_cast<float>(elementSet.d2),
+        .d3 = static_cast<float>(elementSet.d3),
+        .d4 = static_cast<float>(elementSet.d4),
+        .delmo = static_cast<float>(elementSet.delmo),
+        .eta = static_cast<float>(elementSet.eta),
+        .argpdot = static_cast<float>(elementSet.argpdot),
+        .omgcof = static_cast<float>(elementSet.omgcof),
+        .sinmao = static_cast<float>(elementSet.sinmao),
+        .t2cof = static_cast<float>(elementSet.t2cof),
+        .t3cof = static_cast<float>(elementSet.t3cof),
+        .t4cof = static_cast<float>(elementSet.t4cof),
+        .t5cof = static_cast<float>(elementSet.t5cof),
+        .x1mth2 = static_cast<float>(elementSet.x1mth2),
+        .x7thm1 = static_cast<float>(elementSet.x7thm1),
+        .mdot = static_cast<float>(elementSet.mdot),
+        .nodedot = static_cast<float>(elementSet.nodedot),
+        .xlcof = static_cast<float>(elementSet.xlcof),
+        .xmcof = static_cast<float>(elementSet.xmcof),
+        .nodecf = static_cast<float>(elementSet.nodecf)
+    };
+    // clang-format on
+}
+
 SGP4ComputePass::SGP4ComputePass()
     : Pass("SGP4 compute pass")
 {
@@ -54,6 +95,7 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
     if (numOrbitalElements == 0)
     {
         m_OrbitalElementsBuffer = nullptr;
+        m_TimesBuffer = nullptr;
         m_PropagatedPositionsBuffer = nullptr;
         m_BindGroup = nullptr;
         m_pReadback = std::make_shared<Readback>();
@@ -65,21 +107,28 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
     wgpu::BufferDescriptor inputBufferDescriptor{
         .label = "SGP4 orbital elements buffer",
         .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst,
-        .size = numOrbitalElements * sizeof(OrbitalElementsInput)
+        .size = numOrbitalElements * sizeof(SGP4StepInput)
     };
     m_OrbitalElementsBuffer = device.CreateBuffer(&inputBufferDescriptor);
+
+    wgpu::BufferDescriptor timesBufferDescriptor{
+        .label = "SGP4 times buffer",
+        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst,
+        .size = numOrbitalElements * sizeof(float)
+    };
+    m_TimesBuffer = device.CreateBuffer(&timesBufferDescriptor);
 
     wgpu::BufferDescriptor outputBufferDescriptor{
         .label = "SGP4 propagated positions buffer",
         .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc,
-        .size = numOrbitalElements * sizeof(OrbitalElementsOutput)
+        .size = numOrbitalElements * sizeof(SGP4StepOutput)
     };
     m_PropagatedPositionsBuffer = device.CreateBuffer(&outputBufferDescriptor);
 
     // A fresh Readback rather than a resized one: any map still in flight holds the old
     // object alive and will complete against the old buffer, harmlessly.
     m_pReadback = std::make_shared<Readback>();
-    m_pReadback->sizeInBytes = numOrbitalElements * sizeof(OrbitalElementsOutput);
+    m_pReadback->sizeInBytes = numOrbitalElements * sizeof(SGP4StepOutput);
 
     // MapRead may only be paired with CopyDst, which is why the results cannot be read
     // out of the storage buffer directly and need this staging copy.
@@ -99,20 +148,24 @@ void SGP4ComputePass::CreateStorageBuffers(size_t numOrbitalElements)
 // built against is a bind group built against a layout that no longer exists.
 void SGP4ComputePass::CreateBindGroup()
 {
-    if (!m_OrbitalElementsBuffer || !m_PropagatedPositionsBuffer)
+    if (!m_OrbitalElementsBuffer || !m_TimesBuffer || !m_PropagatedPositionsBuffer)
     {
         m_BindGroup = nullptr;
         return;
     }
 
     // clang-format off
-    std::array<wgpu::BindGroupEntry, 2> entries = {
+    std::array<wgpu::BindGroupEntry, 3> entries = {
         wgpu::BindGroupEntry{
             .binding = 0,
             .buffer = m_OrbitalElementsBuffer
         },
         wgpu::BindGroupEntry{
             .binding = 1,
+            .buffer = m_TimesBuffer
+        },
+        wgpu::BindGroupEntry{
+            .binding = 2,
             .buffer = m_PropagatedPositionsBuffer
         }
     };
@@ -127,7 +180,7 @@ void SGP4ComputePass::CreateBindGroup()
     m_BindGroup = GetRenderSystem()->GetDevice().CreateBindGroup(&bindGroupDescriptor);
 }
 
-void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>& orbitalElements, EntityRosterSharedPtr pRoster)
+void SGP4ComputePass::SetOrbitalElements(const std::vector<SGP4StepInput>& orbitalElements, EntityRosterSharedPtr pRoster)
 {
     // The bind group layout comes from the pipeline, so there is nothing to build until
     // the shader has loaded.
@@ -153,7 +206,22 @@ void SGP4ComputePass::SetOrbitalElements(const std::vector<OrbitalElementsInput>
     }
 
     GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(
-        m_OrbitalElementsBuffer, 0, orbitalElements.data(), orbitalElements.size() * sizeof(OrbitalElementsInput));
+        m_OrbitalElementsBuffer, 0, orbitalElements.data(), orbitalElements.size() * sizeof(SGP4StepInput));
+}
+
+void SGP4ComputePass::SetTimes(const std::vector<float>& tsinceMinutes, std::chrono::system_clock::time_point instant)
+{
+    // A count that disagrees with the uploaded roster would silently propagate objects to each
+    // other's times, so it is refused rather than clamped.
+    if (!IsReady() || m_NumOrbitalElements == 0 || tsinceMinutes.size() != m_NumOrbitalElements)
+    {
+        return;
+    }
+
+    m_TimesInstant = instant;
+
+    GetRenderSystem()->GetDevice().GetQueue().WriteBuffer(
+        m_TimesBuffer, 0, tsinceMinutes.data(), tsinceMinutes.size() * sizeof(float));
 }
 
 void SGP4ComputePass::Execute(wgpu::CommandEncoder& encoder)
@@ -188,7 +256,7 @@ void SGP4ComputePass::Execute(wgpu::CommandEncoder& encoder)
     if (m_pReadback->state == Readback::State::Idle)
     {
         encoder.CopyBufferToBuffer(m_PropagatedPositionsBuffer, 0, m_pReadback->buffer, 0, m_pReadback->sizeInBytes);
-        m_pReadback->dispatchTime = std::chrono::system_clock::now();
+        m_pReadback->dispatchTime = m_TimesInstant;
         m_pReadback->pDispatchRoster = m_pRoster;
         m_pReadback->state = Readback::State::CopyRecorded;
     }
@@ -209,15 +277,11 @@ void SGP4ComputePass::RequestReadbackMap()
         [pReadback, pResults, buffer](wgpu::MapAsyncStatus status, wgpu::StringView message) {
             if (status == wgpu::MapAsyncStatus::Success)
             {
-                const OrbitalElementsOutput* pMappedResults = static_cast<const OrbitalElementsOutput*>(
+                const SGP4StepOutput* pMappedResults = static_cast<const SGP4StepOutput*>(
                     buffer.GetConstMappedRange(0, pReadback->sizeInBytes));
 
-                const size_t numResults = pReadback->sizeInBytes / sizeof(OrbitalElementsOutput);
-                pResults->positions.resize(numResults);
-                for (size_t i = 0; i < numResults; i++)
-                {
-                    pResults->positions[i] = pMappedResults[i].position;
-                }
+                const size_t numResults = pReadback->sizeInBytes / sizeof(SGP4StepOutput);
+                pResults->states.assign(pMappedResults, pMappedResults + numResults);
 
                 // Assigned together with the positions, so a consumer can never pair
                 // them with the wrong roster.

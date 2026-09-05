@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -31,11 +32,13 @@ public:
     static double SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations = 10, double tolerance = 1e-10);
 
 private:
-    void UpdateGPU(entt::registry& registry);
+    void UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
     void UpdateRoster(entt::registry& registry);
+    void UpdateTimes(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void ApplyPropagatedPositions(entt::registry& registry);
+    void UpdateDeepSpace(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
     void UpdateCPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
-    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst);
+    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, std::optional<double> speed = std::nullopt);
 
     bool m_UseSGP4 = true;
 
@@ -45,7 +48,12 @@ private:
     // frame so that the comparison against it does not allocate.
     EntityRosterSharedPtr m_pRoster;
     EntityRoster m_RosterScratch;
-    std::vector<OrbitalElementsInput> m_OrbitalElements;
+    std::vector<SGP4StepInput> m_OrbitalElements;
+
+    // Minutes from each object's epoch, in roster order, rebuilt every frame. One float per
+    // object against the coefficients' hundred and forty-four bytes, which is why they are
+    // uploaded separately.
+    std::vector<float> m_Times;
 
     // Results are applied once, when they land, rather than rewritten every frame.
     std::chrono::system_clock::time_point m_LastAppliedResultsTime;

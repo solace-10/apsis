@@ -112,11 +112,10 @@ restates `SGP4ComputePass`'s sequencing — the pass spreads its readback over s
 structs come from `render/sgp4_compute_pass.hpp`, so a test cannot disagree with production about
 the layout it is checking.
 
-`The compute shader receives the orbital elements it was given` dispatches `sgp4.wgsl` itself, from
-the tree the game ships from, and checks the echo it currently writes. That covers the struct
-layout, the binding indices, the guard on the tail of a rounded-up dispatch and the readback, all
-without needing the propagator to exist. When the propagation lands the echo goes with it, and this
-case becomes the comparison against the reference.
+`The compute shader propagates as accurately as f32 allows` dispatches `sgp4.wgsl` itself, from the
+tree the game ships from. It covers the struct layout, the binding indices, the guard on the tail
+of a rounded-up dispatch and the readback, as the echo case it replaced did — and now the
+propagation as well.
 
 The harness skips rather than fails where there is no adapter, and it is native-only: the readback
 blocks on `ProcessEvents`, and there is nothing on the web to block with.
@@ -250,21 +249,57 @@ run all ten passes. Bounded and correct, but it should be a decision.
   orbit stops where the reference stops`, `A deep-space element set cannot be stepped`
   (sgp4_step_tests.cpp).
 
+## What f32 costs, measured
+
+`sgp4.wgsl` propagates. It is a transcription of `SGP4Step()` and it is compared against that
+rather than against Vallado, which is the whole reason the step was written twice: both CPU halves
+agree with the reference exactly, so every difference the shader shows is precision and nothing
+else.
+
+**295 metres, and 2.3e-4 km/s.** Worst across 162 samples — every near-Earth element set in the
+verification file at every time it asks to be propagated to. That is the answer to the question
+this design has been resting on from the start, and it is a comfortable one: SGP4's own accuracy is
+on the order of a kilometre at epoch and grows by kilometres a day, so f32 in the step costs
+considerably less than the model being evaluated.
+
+Where the error is *not*, both established rather than assumed:
+
+- **Not the coefficient narrowing.** Running the double step with its coefficients round-tripped
+  through f32 accounts for 32 m of the 295. The other ninety per cent is arithmetic inside the
+  shader.
+- **Not accumulation over elapsed time.** 29141 is 200 m out at t = 180 minutes while 22312 is
+  25 m out at t = 274. The error tracks the orbit rather than the time, which is what argues
+  against trigonometric argument reduction being the dominant term — that would grow with t.
+
+So the lever, if this ever needs improving, is the step's own f32 arithmetic; finding which part of
+it is a matter of attributing further rather than guessing.
+
+Two things worth knowing before going looking:
+
+- The Kepler solve's convergence tolerance is 1e-12, below f32 epsilon, so the shader cannot use
+  the CPU's early exit and always runs all ten passes. It converges long before that, so what this
+  costs is iterations rather than accuracy.
+- **The measurement deliberately excludes the time going in.** Both sides are given the same
+  f32-representable `tsince`, so this is the cost of the arithmetic alone. At ten days from epoch an
+  f32 `tsince` is worth several hundred metres of along-track error by itself — comparable to
+  everything measured here — which makes how time reaches the GPU a real decision rather than a
+  detail of the upload.
+
+- Recorded by: `The compute shader propagates as accurately as f32 allows` (sgp4_shader_tests.cpp).
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
 
-- **The step in the shader.** `sgp4.wgsl` still only echoes its inputs. Both halves now exist in
-  double and both are pinned against the reference, so what is left is the port and the one number
-  none of this can supply: what f32 costs. That is an outcome to be measured against `SGP4Step()`,
-  not a tolerance to be chosen.
-- **The coefficients have nowhere to go.** `OrbitalElementsInput` still carries six mean elements
-  and nothing else, at 32 bytes, where the near-Earth step reads around thirty scalars — so this is
-  a redesign of the buffer rather than an extension of it, and it takes the `static_assert`,
-  `sgp4.wgsl`'s mirrored struct and `sgp4_shader_tests.cpp` with it. The time is the other half and
-  has no representation anywhere on the GPU side at all: `SGP4ComputePass::Execute()` writes
-  nothing per frame, and a `tsince` uniform means a third bind group entry in
-  `ComputeHarness::DispatchRaw()` as well, which currently hard-codes two.
+- **Nothing tells the GPU what time it is.** `UpdateRoster` uploads the coefficients and a `tsince`
+  of zero, so every object is propagated to its own epoch and sits there, and
+  `ApplyPropagatedPositions` still writes numbers nobody should believe. The coefficients only need
+  re-uploading when the roster changes but the time changes every frame, so the two probably want
+  separate buffers — which is a third bind group entry, and `ComputeHarness::DispatchRaw()`
+  hard-codes two. Whatever carries it has to answer the f32 `tsince` hazard above.
+- **The velocity comes back and is thrown away.** The shader computes it and `SGP4StepOutput`
+  carries it, but `PropagationResults` keeps only positions and `UpdateOrbitalState` still derives
+  speed from vis-viva on a two-body semi-major axis. The real one is already paid for.
 - **Deep space.** `SGP4Initialise()` reports `SGP4Method::DeepSpace` and stops. Those objects stay
   on the two-body path, which is where they already were, but they are not a rounding error in this
   catalogue: `celestrak.py` curates `geo`, `gnss` and `gps-ops`, and the served query is unfiltered.

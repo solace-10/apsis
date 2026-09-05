@@ -144,19 +144,22 @@ SGP4ElementSet SGP4Initialise(const SGP4Elements& elements);
 // The numbering is Vallado's, minus the two that cannot occur here: his 3 is raised inside dpper,
 // which only the deep-space path calls, and his 5 is commented out at initialisation in the
 // reference itself.
+//
+// The values are stated rather than left implicit because sgp4.wgsl mirrors them: the shader has
+// no way to return an enum, so it writes one of these numbers alongside the position.
 enum class SGP4Error
 {
-    None,
+    None = 0,
 
     // The element set was never initialised, because it is deep space and SDP4 is not implemented.
     // Its coefficients are zero, and stepping them would divide by zero rather than be merely
     // wrong, so this is refused before any arithmetic happens.
-    DeepSpaceNotSupported,
+    DeepSpaceNotSupported = 1,
 
-    MeanMotionNotPositive, // Vallado 2
-    MeanElementsOutOfRange, // Vallado 1: eccentricity has left [-0.001, 1)
-    NegativeSemiLatusRectum, // Vallado 4
-    Decayed, // Vallado 6: the orbit has come down inside the Earth
+    MeanMotionNotPositive = 2, // Vallado 2
+    MeanElementsOutOfRange = 3, // Vallado 1: eccentricity has left [-0.001, 1)
+    NegativeSemiLatusRectum = 4, // Vallado 4
+    Decayed = 5, // Vallado 6: the orbit has come down inside the Earth
 };
 
 // Where an object is, and how fast, at one instant.

@@ -213,6 +213,7 @@ wgpu::ShaderModule ComputeHarness::CompileFromFile(const std::filesystem::path& 
 
 void ComputeHarness::DispatchRaw(const wgpu::ShaderModule& shaderModule, const char* pEntryPoint,
     const void* pInput, size_t inputSizeInBytes,
+    const void* pTimes, size_t timesSizeInBytes,
     void* pOutput, size_t outputSizeInBytes,
     size_t elementCount, uint32_t workgroupSize)
 {
@@ -242,6 +243,13 @@ void ComputeHarness::DispatchRaw(const wgpu::ShaderModule& shaderModule, const c
     };
     wgpu::Buffer inputBuffer = m_Device.CreateBuffer(&inputBufferDescriptor);
 
+    wgpu::BufferDescriptor timesBufferDescriptor{
+        .label = "Test compute times buffer",
+        .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst,
+        .size = timesSizeInBytes
+    };
+    wgpu::Buffer timesBuffer = m_Device.CreateBuffer(&timesBufferDescriptor);
+
     wgpu::BufferDescriptor outputBufferDescriptor{
         .label = "Test compute output buffer",
         .usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc,
@@ -259,15 +267,20 @@ void ComputeHarness::DispatchRaw(const wgpu::ShaderModule& shaderModule, const c
     wgpu::Buffer readbackBuffer = m_Device.CreateBuffer(&readbackBufferDescriptor);
 
     m_Device.GetQueue().WriteBuffer(inputBuffer, 0, pInput, inputSizeInBytes);
+    m_Device.GetQueue().WriteBuffer(timesBuffer, 0, pTimes, timesSizeInBytes);
 
     // clang-format off
-    std::array<wgpu::BindGroupEntry, 2> entries = {
+    std::array<wgpu::BindGroupEntry, 3> entries = {
         wgpu::BindGroupEntry{
             .binding = 0,
             .buffer = inputBuffer
         },
         wgpu::BindGroupEntry{
             .binding = 1,
+            .buffer = timesBuffer
+        },
+        wgpu::BindGroupEntry{
+            .binding = 2,
             .buffer = outputBuffer
         }
     };

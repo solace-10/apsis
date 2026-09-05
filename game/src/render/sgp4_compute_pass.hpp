@@ -13,32 +13,83 @@
 #include <resources/resource_shader.hpp>
 #include <scene/entity.hpp>
 
+#include "space/sgp4.hpp"
+
 namespace WingsOfSteel
 {
 
-// One satellite's mean orbital elements, as uploaded to the GPU.
-// Mirrors OrbitalElements in sgp4.wgsl - the two must be kept in step.
-struct OrbitalElementsInput
+// One satellite's SGP4 coefficients and the time to propagate them to, as uploaded to the GPU.
+// Mirrors SGP4ElementSet in sgp4.wgsl - the two must be kept in step.
+//
+// This is SGP4ElementSet narrowed to f32 and with a time attached. The narrowing is deliberate and
+// is the thing being measured: initialisation runs in double on the CPU precisely so that only the
+// step has to survive f32, and these are the values it survives with.
+//
+// The time lives in its own buffer rather than in here: these are fixed for the life of the object
+// and are uploaded when the roster changes, where the times change every frame. The coefficient
+// names are Vallado's, as they are everywhere else.
+struct SGP4StepInput
 {
-    float meanMotion;
-    float eccentricity;
-    float inclination;
-    float raan;
-    float argumentOfPericenter;
-    float meanAnomaly;
-    float padding[2];
+    // Vallado's isimp, and whether SGP4Initialise() declined the element set as deep space. Both
+    // are flags rather than bools because WGSL has no bool in host-shareable memory.
+    uint32_t simplifiedDrag;
+    uint32_t deepSpace;
+
+    float bstar;
+    float ecco;
+    float inclo;
+    float nodeo;
+    float argpo;
+    float mo;
+    float no_unkozai;
+    float aycof;
+    float con41;
+    float cc1;
+    float cc4;
+    float cc5;
+    float d2;
+    float d3;
+    float d4;
+    float delmo;
+    float eta;
+    float argpdot;
+    float omgcof;
+    float sinmao;
+    float t2cof;
+    float t3cof;
+    float t4cof;
+    float t5cof;
+    float x1mth2;
+    float x7thm1;
+    float mdot;
+    float nodedot;
+    float xlcof;
+    float xmcof;
+    float nodecf;
+
+    float padding[3];
 };
 
-// Mirrors PropagatedPosition in sgp4.wgsl. The trailing float is not slack: a vec3
-// aligns to 16 bytes in WGSL, so the struct occupies 16 either way.
-struct OrbitalElementsOutput
+// Mirrors PropagatedState in sgp4.wgsl. A vec3 aligns to 16 bytes there, so the two trailing
+// slots are space the struct would occupy regardless - and the first of them is spent on the
+// error, which a shader has no other way to report.
+struct SGP4StepOutput
 {
-    glm::vec3 position;
+    glm::vec3 position; // km, TEME
+    uint32_t error; // an SGP4Error
+    glm::vec3 velocity; // km/s, TEME
     float padding;
 };
 
-static_assert(sizeof(OrbitalElementsInput) == 32, "OrbitalElementsInput must match its WGSL counterpart");
-static_assert(sizeof(OrbitalElementsOutput) == 16, "OrbitalElementsOutput must match its WGSL counterpart");
+static_assert(sizeof(SGP4StepInput) == 144, "SGP4StepInput must match its WGSL counterpart");
+static_assert(sizeof(SGP4StepOutput) == 32, "SGP4StepOutput must match its WGSL counterpart");
+
+// Packs an initialised element set for the GPU.
+//
+// Lives here, beside the struct it fills, so that the shader tests upload through exactly the same
+// code the pass does. A test that packed its own inputs could agree with the shader perfectly
+// while production disagreed with both.
+SGP4StepInput MakeSGP4StepInput(const SGP4ElementSet& elementSet);
 
 // Which entity each element in a dispatch belongs to. Held by shared_ptr and handed to
 // the pass alongside the elements, so that a roster stays alive for as long as the
@@ -47,13 +98,16 @@ static_assert(sizeof(OrbitalElementsOutput) == 16, "OrbitalElementsOutput must m
 using EntityRoster = std::vector<EntityHandle>;
 using EntityRosterSharedPtr = std::shared_ptr<const EntityRoster>;
 
-// The outcome of one completed readback. positions[i] belongs to (*pEntities)[i], and
-// the two are only ever assigned together, so they cannot fall out of step.
+// The outcome of one completed readback. states[i] belongs to (*pEntities)[i], and the two are
+// only ever assigned together, so they cannot fall out of step.
+//
+// The whole output is kept rather than just the positions: the error says whether a position is
+// worth believing at all, and the velocity is already paid for by the time it arrives.
 struct PropagationResults
 {
-    std::vector<glm::vec3> positions;
+    std::vector<SGP4StepOutput> states;
     EntityRosterSharedPtr pEntities;
-    std::chrono::system_clock::time_point time; // The instant the positions are valid for.
+    std::chrono::system_clock::time_point time; // The instant the states are valid for.
 };
 
 // Propagates the position of every tracked space object on the GPU and copies the
@@ -80,10 +134,19 @@ public:
     // Uploads a new set of objects to propagate. Only needed when the roster changes:
     // orbital elements are static per object, so re-uploading an unchanged set achieves
     // nothing.
-    void SetOrbitalElements(const std::vector<OrbitalElementsInput>& orbitalElements, EntityRosterSharedPtr pRoster);
+    void SetOrbitalElements(const std::vector<SGP4StepInput>& orbitalElements, EntityRosterSharedPtr pRoster);
 
-    // Positions in km, in ECI, from the most recent completed readback. Empty until the
-    // first one lands, and not necessarily the roster most recently uploaded.
+    // Uploads the time to propagate each object to, in minutes from its own epoch, in roster
+    // order. Unlike the coefficients this changes every frame, which is why the two are separate
+    // buffers: the times are one float per object against the coefficients' hundred and forty.
+    //
+    // The instant is carried through to the results rather than re-read when the dispatch is
+    // recorded. Those are the same frame but not the same moment, and a sixteen-millisecond frame
+    // is a hundred and twenty metres of orbit.
+    void SetTimes(const std::vector<float>& tsinceMinutes, std::chrono::system_clock::time_point instant);
+
+    // The most recent completed readback. Empty until the first one lands, and not
+    // necessarily describing the roster most recently uploaded.
     const PropagationResults& GetResults() const { return *m_pResults; }
 
 private:
@@ -119,6 +182,10 @@ private:
     ResourceShaderSharedPtr m_pShader;
     wgpu::ComputePipeline m_ComputePipeline;
     wgpu::Buffer m_OrbitalElementsBuffer;
+    wgpu::Buffer m_TimesBuffer;
+
+    // The instant the times currently in m_TimesBuffer were computed for.
+    std::chrono::system_clock::time_point m_TimesInstant;
     wgpu::Buffer m_PropagatedPositionsBuffer;
     wgpu::BindGroup m_BindGroup;
     std::optional<SignalId> m_ShaderInjectionSignalId;

@@ -46,13 +46,18 @@ public:
     // One thread per input element, with the dispatch rounded up to whole workgroups
     // exactly as SGP4ComputePass does - so a shader that forgets to guard its tail fails
     // here for the same reason it would fail in the application.
-    template <typename OutputT, typename InputT>
+    //
+    // Two input buffers rather than one, bound at 0 and 1 with the output at 2, because that is
+    // what the pass binds: the coefficients change when the roster does and the times change every
+    // frame, so they are uploaded separately.
+    template <typename OutputT, typename InputT, typename TimeT>
     std::vector<OutputT> Dispatch(const wgpu::ShaderModule& shaderModule, const char* pEntryPoint,
-        const std::vector<InputT>& input, uint32_t workgroupSize)
+        const std::vector<InputT>& input, const std::vector<TimeT>& times, uint32_t workgroupSize)
     {
         std::vector<OutputT> output(input.size());
         DispatchRaw(shaderModule, pEntryPoint,
             input.data(), input.size() * sizeof(InputT),
+            times.data(), times.size() * sizeof(TimeT),
             output.data(), output.size() * sizeof(OutputT),
             input.size(), workgroupSize);
         return output;
@@ -61,6 +66,7 @@ public:
 private:
     void DispatchRaw(const wgpu::ShaderModule& shaderModule, const char* pEntryPoint,
         const void* pInput, size_t inputSizeInBytes,
+        const void* pTimes, size_t timesSizeInBytes,
         void* pOutput, size_t outputSizeInBytes,
         size_t elementCount, uint32_t workgroupSize);
 
