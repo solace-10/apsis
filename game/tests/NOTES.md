@@ -210,14 +210,54 @@ being propagated says as much on itself rather than by being missing from someth
   near-Earth and deep-space partition matches the reference`, `An element set converts into the
   units SGP4 initialises from` (sgp4_init_tests.cpp).
 
+## The step is written twice, and the first one is exact
+
+`SGP4Step()` propagates an initialised element set to a time in minutes from its epoch. It is the
+other half of the algorithm, and unlike the initialisation it does eventually have to run in f32 on
+the GPU — which is exactly why it exists in double here first.
+
+A WGSL step compared against Vallado's would be measuring two things at once: whether the algorithm
+was transcribed correctly, and what f32 costs. A failure would not say which. This version settles
+the first question separately, and settles it the strongest way available — **exact equality**,
+position and velocity, over every near-Earth element set in the verification file at every time it
+asks to be propagated to. 160 positions across 9 cases, bit for bit. Whatever the shader turns out
+to differ by is then precision and nothing else.
+
+Four of those nine give up before the end of the range they ask for — 22312, 28350, 28872 and
+29141 — and the agreement covers that too: the same failure, at the same step. Where a propagation
+stops being valid is a separate thing to be right about from where the object is, and only one of
+the two is visible in a position.
+
+Two asymmetries the cases pin rather than tidy away:
+
+- **A decayed orbit still has a position.** The reference gives up before writing one for the
+  eccentricity, mean motion and semi-latus-rectum failures, but the decay check is made *from* the
+  position, so that one is written first and then rejected. `SGP4Position` does the same, which is
+  why the comparison runs one step past the last row `tcppver.out` prints for two of these cases —
+  160 positions against 158 published.
+- **Deep space is refused rather than attempted.** `SGP4Initialise()` zeroes everything for those
+  element sets, so `no_unkozai` is zero and an unguarded step's first act would be to divide by it.
+  `SGP4Step()` checks the branch before any arithmetic and returns `DeepSpaceNotSupported`. That is
+  what makes a zeroed block safe for `SGP4Component` to carry on every geostationary object in the
+  catalogue.
+
+One thing to settle before the shader rather than discover during it: the Kepler solve is
+Newton-Raphson capped at ten passes with each correction clamped to 0.95, and its convergence
+tolerance is 1e-12. That is below f32 epsilon, so the WGSL version cannot reach it and will always
+run all ten passes. Bounded and correct, but it should be a decision.
+
+- Recorded by: `Our step reproduces the reference propagator over the near-Earth cases`, `A decaying
+  orbit stops where the reference stops`, `A deep-space element set cannot be stepped`
+  (sgp4_step_tests.cpp).
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
 
-- **The step itself, in the shader.** `sgp4.wgsl` does not propagate anything yet, so the
-  comparison against the reference is not written. The initialisation half is now done and stays in
-  double on the CPU, which is what keeps the eventual f32 error small; what is left is the step,
-  whose tolerance is an outcome to be measured rather than a number to be chosen.
+- **The step in the shader.** `sgp4.wgsl` still only echoes its inputs. Both halves now exist in
+  double and both are pinned against the reference, so what is left is the port and the one number
+  none of this can supply: what f32 costs. That is an outcome to be measured against `SGP4Step()`,
+  not a tolerance to be chosen.
 - **The coefficients have nowhere to go.** `OrbitalElementsInput` still carries six mean elements
   and nothing else, at 32 bytes, where the near-Earth step reads around thirty scalars — so this is
   a redesign of the buffer rather than an extension of it, and it takes the `static_assert`,

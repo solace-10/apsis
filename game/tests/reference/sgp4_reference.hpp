@@ -7,6 +7,7 @@
 #include <SGP4.h>
 
 #include "components/orbital_elements_component.hpp"
+#include "space/sgp4.hpp"
 
 namespace WingsOfSteel::Test
 {
@@ -54,5 +55,22 @@ std::vector<VerificationBlock> LoadVerificationOutput(const std::filesystem::pat
 // The conversion back out of SGP4's units is Vallado's own, inverted: it is what makes this a
 // check of MakeSGP4Elements() rather than a restatement of it.
 OrbitalElementsComponent AsComponent(const elsetrec& satrec);
+
+// The times a verification case asks to be propagated to, in the order tcppver.out prints them.
+//
+// The awkward parts are load bearing rather than stylistic. The leading zero is there because the
+// published first row is always at the epoch regardless of where the range starts - which is why
+// the negative ranges (04632, 09998) still open with one. The step back before the loop is what
+// stops a range starting at zero printing its first row twice. And the clamp to the stop time is
+// why a range that does not divide evenly by its step still ends exactly on it.
+std::vector<double> VerificationTimes(const VerificationCase& verificationCase);
+
+// The mean elements the reference was initialised from, taken back out of the initialised record.
+//
+// Initialisation does not disturb them: dpper's writes to the elements are guarded on init == 'n',
+// and the t = 0 step sgp4init ends with works on copies. So these are still exactly what
+// twoline2rv parsed, and feeding them to our own initialisation makes the comparison a
+// measurement of the arithmetic rather than of the parsing.
+SGP4Elements AsElements(const elsetrec& satrec);
 
 } // namespace WingsOfSteel::Test

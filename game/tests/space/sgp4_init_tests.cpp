@@ -17,31 +17,6 @@ namespace
 
 const std::string kTleFile = std::string(APSIS_TEST_DATA_DIR) + "/SGP4-VER.TLE";
 
-// The mean elements the reference was initialised from, taken back out of the initialised record.
-//
-// Initialisation does not disturb them: dpper's writes to the elements are guarded on
-// init == 'n', and the t = 0 step sgp4init ends with works on copies. So these are still exactly
-// what twoline2rv parsed, which is the whole point - feeding our initialisation the same doubles
-// makes the comparison a measurement of the arithmetic rather than of the parsing, and keeps the
-// component's float storage out of a test that is not about it.
-SGP4Elements AsElements(const elsetrec& satrec)
-{
-    SGP4Elements elements;
-    elements.bstar = satrec.bstar;
-    elements.ecco = satrec.ecco;
-    elements.argpo = satrec.argpo;
-    elements.inclo = satrec.inclo;
-    elements.mo = satrec.mo;
-    elements.nodeo = satrec.nodeo;
-    elements.noKozai = satrec.no_kozai;
-
-    // The reference's own definition of the epoch it initialises from. JD 2433281.5 is
-    // 1950 January 0.0.
-    elements.epochDaysSince1950 = (satrec.jdsatepoch + satrec.jdsatepochF) - 2433281.5;
-
-    return elements;
-}
-
 Test::VerificationCase FindCase(const std::string& satnum)
 {
     for (const Test::VerificationCase& verificationCase : Test::LoadVerificationCases(kTleFile))
@@ -92,7 +67,7 @@ TEST_CASE("Our initialisation reproduces the reference's near-Earth coefficients
         ++nearEarthCases;
         INFO("satellite " << verificationCase.satnum);
 
-        const SGP4ElementSet elementSet = SGP4Initialise(AsElements(satrec));
+        const SGP4ElementSet elementSet = SGP4Initialise(Test::AsElements(satrec));
 
         auto check = [](const char* name, double ours, double theirs) {
             INFO("coefficient " << name);
@@ -158,7 +133,7 @@ TEST_CASE("The near-Earth and deep-space partition matches the reference", "[spa
         const elsetrec& satrec = verificationCase.satrec;
         INFO("satellite " << verificationCase.satnum);
 
-        const SGP4ElementSet elementSet = SGP4Initialise(AsElements(satrec));
+        const SGP4ElementSet elementSet = SGP4Initialise(Test::AsElements(satrec));
         const SGP4Method expected = satrec.method == 'd' ? SGP4Method::DeepSpace : SGP4Method::NearEarth;
         CHECK(elementSet.method == expected);
 

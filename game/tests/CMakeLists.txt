@@ -42,6 +42,7 @@ add_executable(tests
     space/earth_frame_tests.cpp
     space/sgp4_init_tests.cpp
     space/sgp4_shader_tests.cpp
+    space/sgp4_step_tests.cpp
     space/sgp4_tests.cpp
     test_main.cpp
 )

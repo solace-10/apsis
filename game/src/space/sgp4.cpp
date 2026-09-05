@@ -196,6 +196,200 @@ SGP4ElementSet SGP4Initialise(const SGP4Elements& elements)
     return elementSet;
 }
 
+SGP4Position SGP4Step(const SGP4ElementSet& elementSet, double tsinceMinutes)
+{
+    SGP4Position result;
+
+    // Refused rather than attempted. SGP4Initialise() zeroes everything for a deep-space element
+    // set, so no_unkozai is zero here and the first thing this would do with it is divide.
+    if (elementSet.method == SGP4Method::DeepSpace)
+    {
+        result.error = SGP4Error::DeepSpaceNotSupported;
+        return result;
+    }
+
+    const double twopi = glm::two_pi<double>();
+
+    // Earth radii per minute into km per second, which is the only place the velocity's units
+    // come from.
+    const double vkmpersec = kSGP4EarthRadius * kSGP4Xke / 60.0;
+
+    const double t = tsinceMinutes;
+
+    // --- Secular gravity and atmospheric drag ---
+
+    const double xmdf = elementSet.mo + elementSet.mdot * t;
+    const double argpdf = elementSet.argpo + elementSet.argpdot * t;
+    const double nodedf = elementSet.nodeo + elementSet.nodedot * t;
+    double argpm = argpdf;
+    double mm = xmdf;
+    const double t2 = t * t;
+    double nodem = nodedf + elementSet.nodecf * t2;
+    double tempa = 1.0 - elementSet.cc1 * t;
+    double tempe = elementSet.bstar * elementSet.cc4 * t;
+    double templ = elementSet.t2cof * t2;
+
+    // The higher order drag terms, which the coefficients only exist for when the orbit was not
+    // decaying fast enough to have them dropped at initialisation.
+    if (!elementSet.simplifiedDrag)
+    {
+        const double delomg = elementSet.omgcof * t;
+        const double delmtemp = 1.0 + elementSet.eta * std::cos(xmdf);
+        const double delm = elementSet.xmcof * (delmtemp * delmtemp * delmtemp - elementSet.delmo);
+        const double temp = delomg + delm;
+        mm = xmdf + temp;
+        argpm = argpdf - temp;
+        const double t3 = t2 * t;
+        const double t4 = t3 * t;
+        tempa = tempa - elementSet.d2 * t2 - elementSet.d3 * t3 - elementSet.d4 * t4;
+        tempe = tempe + elementSet.bstar * elementSet.cc5 * (std::sin(mm) - elementSet.sinmao);
+        templ = templ + elementSet.t3cof * t3 + t4 * (elementSet.t4cof + t * elementSet.t5cof);
+    }
+
+    double nm = elementSet.no_unkozai;
+    double em = elementSet.ecco;
+    const double inclm = elementSet.inclo;
+
+    if (nm <= 0.0)
+    {
+        result.error = SGP4Error::MeanMotionNotPositive;
+        return result;
+    }
+
+    const double am = std::pow((kSGP4Xke / nm), kTwoThirds) * tempa * tempa;
+    nm = kSGP4Xke / std::pow(am, 1.5);
+    em = em - tempe;
+
+    // Drag has taken the eccentricity somewhere an orbit cannot be. The small negative bound is
+    // the reference's tolerance rather than a physical statement.
+    if ((em >= 1.0) || (em < -0.001))
+    {
+        result.error = SGP4Error::MeanElementsOutOfRange;
+        return result;
+    }
+
+    if (em < 1.0e-6)
+    {
+        em = 1.0e-6;
+    }
+
+    mm = mm + elementSet.no_unkozai * templ;
+    double xlm = mm + argpm + nodem;
+
+    nodem = std::fmod(nodem, twopi);
+    argpm = std::fmod(argpm, twopi);
+    xlm = std::fmod(xlm, twopi);
+    mm = std::fmod(xlm - argpm - nodem, twopi);
+
+    const double sinim = std::sin(inclm);
+    const double cosim = std::cos(inclm);
+
+    // Where the deep-space path would add the lunar-solar periodics, which is the only thing that
+    // makes these copies rather than the values themselves.
+    const double ep = em;
+    const double xincp = inclm;
+    const double argpp = argpm;
+    const double nodep = nodem;
+    const double mp = mm;
+    const double sinip = sinim;
+    const double cosip = cosim;
+
+    // --- Long period periodics ---
+
+    const double axnl = ep * std::cos(argpp);
+    double temp = 1.0 / (am * (1.0 - ep * ep));
+    const double aynl = ep * std::sin(argpp) + temp * elementSet.aycof;
+    const double xl = mp + argpp + nodep + temp * elementSet.xlcof * axnl;
+
+    // --- Kepler's equation ---
+    //
+    // Newton-Raphson, capped at ten passes and with each correction clamped, because this is
+    // solved for thirty thousand objects a frame and an orbit that converges slowly must cost a
+    // bounded amount rather than an unbounded one.
+    const double u = std::fmod(xl - nodep, twopi);
+    double eo1 = u;
+    double tem5 = 9999.9;
+    double sineo1 = 0.0;
+    double coseo1 = 0.0;
+    int ktr = 1;
+    while ((std::fabs(tem5) >= 1.0e-12) && (ktr <= 10))
+    {
+        sineo1 = std::sin(eo1);
+        coseo1 = std::cos(eo1);
+        tem5 = 1.0 - coseo1 * axnl - sineo1 * aynl;
+        tem5 = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
+        if (std::fabs(tem5) >= 0.95)
+        {
+            tem5 = tem5 > 0.0 ? 0.95 : -0.95;
+        }
+        eo1 = eo1 + tem5;
+        ktr = ktr + 1;
+    }
+
+    // --- Short period periodics ---
+
+    const double ecose = axnl * coseo1 + aynl * sineo1;
+    const double esine = axnl * sineo1 - aynl * coseo1;
+    const double el2 = axnl * axnl + aynl * aynl;
+    const double pl = am * (1.0 - el2);
+
+    if (pl < 0.0)
+    {
+        result.error = SGP4Error::NegativeSemiLatusRectum;
+        return result;
+    }
+
+    const double rl = am * (1.0 - ecose);
+    const double rdotl = std::sqrt(am) * esine / rl;
+    const double rvdotl = std::sqrt(pl) / rl;
+    const double betal = std::sqrt(1.0 - el2);
+    temp = esine / (1.0 + betal);
+    const double sinu = am / rl * (sineo1 - aynl - axnl * temp);
+    const double cosu = am / rl * (coseo1 - axnl + aynl * temp);
+    double su = std::atan2(sinu, cosu);
+    const double sin2u = (cosu + cosu) * sinu;
+    const double cos2u = 1.0 - 2.0 * sinu * sinu;
+    temp = 1.0 / pl;
+    const double temp1 = 0.5 * kSGP4J2 * temp;
+    const double temp2 = temp1 * temp;
+
+    const double mrt = rl * (1.0 - 1.5 * temp2 * betal * elementSet.con41) + 0.5 * temp1 * elementSet.x1mth2 * cos2u;
+    su = su - 0.25 * temp2 * elementSet.x7thm1 * sin2u;
+    const double xnode = nodep + 1.5 * temp2 * cosip * sin2u;
+    const double xinc = xincp + 1.5 * temp2 * cosip * sinip * cos2u;
+    const double mvt = rdotl - nm * temp1 * elementSet.x1mth2 * sin2u / kSGP4Xke;
+    const double rvdot = rvdotl + nm * temp1 * (elementSet.x1mth2 * cos2u + 1.5 * elementSet.con41) / kSGP4Xke;
+
+    // --- Orientation vectors ---
+
+    const double sinsu = std::sin(su);
+    const double cossu = std::cos(su);
+    const double snod = std::sin(xnode);
+    const double cnod = std::cos(xnode);
+    const double sini = std::sin(xinc);
+    const double cosi = std::cos(xinc);
+    const double xmx = -snod * cosi;
+    const double xmy = cnod * cosi;
+    const double ux = xmx * sinsu + cnod * cossu;
+    const double uy = xmy * sinsu + snod * cossu;
+    const double uz = sini * sinsu;
+    const double vx = xmx * cossu - cnod * sinsu;
+    const double vy = xmy * cossu - snod * sinsu;
+    const double vz = sini * cossu;
+
+    result.position = glm::dvec3(mrt * ux, mrt * uy, mrt * uz) * kSGP4EarthRadius;
+    result.velocity = glm::dvec3(mvt * ux + rvdot * vx, mvt * uy + rvdot * vy, mvt * uz + rvdot * vz) * vkmpersec;
+
+    // Below one earth radius, so the orbit has come down. Reported after the position rather than
+    // instead of it, because the position is how it was noticed.
+    if (mrt < 1.0)
+    {
+        result.error = SGP4Error::Decayed;
+    }
+
+    return result;
+}
+
 SGP4Elements MakeSGP4Elements(const OrbitalElementsComponent& orbitalElements)
 {
     // 1950 January 0.0 - JD 2433281.5, and the day count SGP4 initialises from - is 7306 days

@@ -3,6 +3,8 @@
 #include <chrono>
 #include <cmath>
 
+#include <glm/vec3.hpp>
+
 namespace WingsOfSteel
 {
 
@@ -135,6 +137,54 @@ struct SGP4ElementSet
 // the step instead, where it can be raised against a particular time. An element set this cannot
 // make sense of comes back with its coefficients zeroed rather than flagged.
 SGP4ElementSet SGP4Initialise(const SGP4Elements& elements);
+
+// Why a step failed. SGP4 raises these against a particular time rather than against the element
+// set, which is why initialisation has no failure mode of its own and this does.
+//
+// The numbering is Vallado's, minus the two that cannot occur here: his 3 is raised inside dpper,
+// which only the deep-space path calls, and his 5 is commented out at initialisation in the
+// reference itself.
+enum class SGP4Error
+{
+    None,
+
+    // The element set was never initialised, because it is deep space and SDP4 is not implemented.
+    // Its coefficients are zero, and stepping them would divide by zero rather than be merely
+    // wrong, so this is refused before any arithmetic happens.
+    DeepSpaceNotSupported,
+
+    MeanMotionNotPositive, // Vallado 2
+    MeanElementsOutOfRange, // Vallado 1: eccentricity has left [-0.001, 1)
+    NegativeSemiLatusRectum, // Vallado 4
+    Decayed, // Vallado 6: the orbit has come down inside the Earth
+};
+
+// Where an object is, and how fast, at one instant.
+//
+// TEME - the frame the mean elements are expressed in and the one CalculateGMST() pairs with.
+// See the note above ECIToECEF() in earth_frame.hpp about why positions are labelled ECI anyway.
+struct SGP4Position
+{
+    glm::dvec3 position{ 0.0 }; // km
+    glm::dvec3 velocity{ 0.0 }; // km/s
+    SGP4Error error{ SGP4Error::None };
+};
+
+// Propagates an initialised element set to a time, in minutes from its epoch.
+//
+// The other half of SGP4, and the half that will end up in the shader: on the near-earth path it
+// reads nothing but the coefficients and the time, writes nothing back, and carries nothing
+// between calls. Negative times propagate backwards and are as valid as positive ones.
+//
+// This exists in double, on the CPU, so that the shader has something of ours to be compared
+// against. A WGSL step measured against the reference would be measuring transcription mistakes
+// and f32 precision loss at once, with no way to tell which; measured against this, everything
+// left is precision. See game/tests/NOTES.md.
+//
+// A failed step still returns whatever it had computed. That distinction is the reference's:
+// eccentricity, mean motion and semi-latus rectum failures give up before there is a position to
+// give, but a decayed orbit is detected from the position, which is therefore present.
+SGP4Position SGP4Step(const SGP4ElementSet& elementSet, double tsinceMinutes);
 
 // Converts a served GP record into the algorithm's units: degrees to radians, revolutions per day
 // to radians per minute, and an epoch to days since 1950.

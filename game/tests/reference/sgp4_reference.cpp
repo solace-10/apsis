@@ -1,6 +1,7 @@
 #include "reference/sgp4_reference.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -172,6 +173,49 @@ OrbitalElementsComponent AsComponent(const elsetrec& satrec)
     OrbitalElementsComponent component;
     component.Deserialize(nullptr, json);
     return component;
+}
+
+std::vector<double> VerificationTimes(const VerificationCase& verificationCase)
+{
+    std::vector<double> times;
+    times.push_back(0.0);
+
+    double tsince = verificationCase.startMinutes;
+    if (std::abs(tsince) > 1.0e-8)
+    {
+        tsince -= verificationCase.stepMinutes;
+    }
+
+    while (tsince < verificationCase.stopMinutes)
+    {
+        tsince += verificationCase.stepMinutes;
+        if (tsince > verificationCase.stopMinutes)
+        {
+            tsince = verificationCase.stopMinutes;
+        }
+
+        times.push_back(tsince);
+    }
+
+    return times;
+}
+
+SGP4Elements AsElements(const elsetrec& satrec)
+{
+    SGP4Elements elements;
+    elements.bstar = satrec.bstar;
+    elements.ecco = satrec.ecco;
+    elements.argpo = satrec.argpo;
+    elements.inclo = satrec.inclo;
+    elements.mo = satrec.mo;
+    elements.nodeo = satrec.nodeo;
+    elements.noKozai = satrec.no_kozai;
+
+    // The reference's own definition of the epoch it initialises from. JD 2433281.5 is
+    // 1950 January 0.0.
+    elements.epochDaysSince1950 = (satrec.jdsatepoch + satrec.jdsatepochF) - 2433281.5;
+
+    return elements;
 }
 
 } // namespace WingsOfSteel::Test

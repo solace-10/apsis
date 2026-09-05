@@ -31,15 +31,8 @@ struct PropagationRun
     int error{ 0 };
 };
 
-// Reproduces the exact sequence of calls that produced tcppver.out: one at the epoch, then
-// the range the element set asks for, stopping the moment sgp4 reports an error.
-//
-// The awkward parts are load bearing rather than stylistic. The epoch call is separate
-// because the published first row is always at t=0 regardless of where the range starts -
-// which is why the negative ranges (04632, 09998) still open with one. The step back before
-// the loop is what stops a range starting at zero printing its first row twice. And the
-// clamp to the stop time is why a range that does not divide evenly by its step still ends
-// exactly on it.
+// Reproduces the exact sequence of calls that produced tcppver.out: the times the case asks
+// for, stopping the moment sgp4 reports an error.
 PropagationRun Propagate(const Test::VerificationCase& verificationCase)
 {
     elsetrec satrec = verificationCase.satrec;
@@ -48,33 +41,14 @@ PropagationRun Propagate(const Test::VerificationCase& verificationCase)
     double r[3];
     double v[3];
 
-    SGP4Funcs::sgp4(satrec, 0.0, r, v);
-    if (satrec.error != 0)
+    for (const double tsince : Test::VerificationTimes(verificationCase))
     {
-        // The published row at this point is stale output left over from the previous
-        // element set, not a result for this one, so there is nothing here to compare.
-        run.error = satrec.error;
-        return run;
-    }
-    run.steps.push_back(Test::VerificationStep{ 0.0, { r[0], r[1], r[2] }, { v[0], v[1], v[2] } });
-
-    double tsince = verificationCase.startMinutes;
-    if (std::abs(tsince) > 1.0e-8)
-    {
-        tsince -= verificationCase.stepMinutes;
-    }
-
-    while (tsince < verificationCase.stopMinutes)
-    {
-        tsince += verificationCase.stepMinutes;
-        if (tsince > verificationCase.stopMinutes)
-        {
-            tsince = verificationCase.stopMinutes;
-        }
-
         SGP4Funcs::sgp4(satrec, tsince, r, v);
         if (satrec.error != 0)
         {
+            // A failure at the epoch means the published row at that point is stale output left
+            // over from the previous element set, not a result for this one, so there is nothing
+            // there to compare either.
             run.error = satrec.error;
             break;
         }
