@@ -28,10 +28,7 @@ public:
         m_RightAscensionOfAscendingNode = Json::DeserializeFloat(pContext, json, "raan");
         m_ArgumentOfPericenter = Json::DeserializeFloat(pContext, json, "arg_of_pericenter");
         m_MeanAnomaly = Json::DeserializeFloat(pContext, json, "mean_anomaly");
-
-        // Not implemented yet.
-        //m_MeanMotionFirstDerivative = Json::DeserializeFloat(pContext, json, "mean_motion_dot");
-        //m_MeanMotionSecondDerivative = Json::DeserializeFloat(pContext, json, "mean_motion_ddot");
+        m_BStar = Json::DeserializeFloat(pContext, json, "bstar");
     }
 
     int32_t GetNoradId() const { return m_NoradId; }
@@ -42,8 +39,7 @@ public:
     float GetRightAscensionOfAscendingNode() const { return m_RightAscensionOfAscendingNode; }
     float GetArgumentOfPericenter() const { return m_ArgumentOfPericenter; }
     float GetMeanAnomaly() const { return m_MeanAnomaly; }
-    float GetMeanMotionFirstDerivative() const { return m_MeanMotionFirstDerivative; }
-    float GetMeanMotionSecondDerivative() const { return m_MeanMotionSecondDerivative; }
+    float GetBStar() const { return m_BStar; }
 
 private:
     static std::chrono::system_clock::time_point ParseEpoch(const std::string& epochStr)
@@ -75,14 +71,13 @@ private:
 
     int32_t m_NoradId{ 0 };
     std::chrono::system_clock::time_point m_Epoch;
-    float m_MeanMotion{ 0.0f };            // rev/day
+    float m_MeanMotion{ 0.0f }; // rev/day
     float m_Eccentricity{ 0.0f };
-    float m_Inclination{ 0.0f };           // degrees
+    float m_Inclination{ 0.0f }; // degrees
     float m_RightAscensionOfAscendingNode{ 0.0f }; // degrees
-    float m_ArgumentOfPericenter{ 0.0f };  // degrees
-    float m_MeanAnomaly{ 0.0f };           // degrees
-    float m_MeanMotionFirstDerivative{ 0.0f };
-    float m_MeanMotionSecondDerivative{ 0.0f };
+    float m_ArgumentOfPericenter{ 0.0f }; // degrees
+    float m_MeanAnomaly{ 0.0f }; // degrees
+    float m_BStar{ 0.0f }; // 1 / earth radii
 };
 
 REGISTER_COMPONENT(OrbitalElementsComponent, "orbital_elements")

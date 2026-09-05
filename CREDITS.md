@@ -25,6 +25,20 @@ the colour map above.
   and imagery data.
 - **Licence**: CC BY 4.0 (Attribution 4.0 International).
 
+## Algorithms
+
+### game/src/space/sgp4.{hpp,cpp}
+
+The SGP4 initialisation, written from the published algorithm rather than adapted from anyone's
+source: *Spacetrack Report #3* (Hoots and Roehrich, 1980), as corrected and restated by David
+Vallado, Paul Crawford, Richard Hujsak and T.S. Kelso in *Revisiting Spacetrack Report #3*
+(AIAA 2006-6753). The coefficient names are those papers' and are kept unchanged so the code can be
+read alongside them.
+
+This is deliberately not a copy of the reference implementation below, whose licence position is
+unresolved and which is therefore confined to the test suite. The tests check the two agree
+coefficient by coefficient; only ours is built into anything that ships.
+
 ## Test-only third-party code
 
 ### game/tests/reference/sgp4/

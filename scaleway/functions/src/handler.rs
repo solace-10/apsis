@@ -33,6 +33,7 @@ struct ObjectEntry {
     raan: f64,
     arg_of_pericenter: f64,
     mean_anomaly: f64,
+    bstar: f64,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -134,7 +135,8 @@ async fn get_all_objects(conn: &mut sqlx::PgConnection) -> Result<Vec<ObjectEntr
             inclination,
             raan,
             arg_of_pericenter,
-            mean_anomaly
+            mean_anomaly,
+            bstar
         FROM public.objects",
     )
     .fetch_all(conn)

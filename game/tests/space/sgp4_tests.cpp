@@ -93,43 +93,6 @@ std::string StripLeadingZeroes(const std::string& satnum)
     return first == std::string::npos ? "0" : satnum.substr(first);
 }
 
-// Restates an initialised element set as the JSON the game receives from the server, so that
-// the two-body path can be measured against the reference on identical inputs. Going through
-// Deserialize() rather than adding setters keeps the component's only entry point the one
-// production uses - and its context pointer is null-safe throughout, so nothing else has to
-// be brought up to do it.
-OrbitalElementsComponent AsComponent(const elsetrec& satrec)
-{
-    constexpr double kRadiansToDegrees = 180.0 / 3.14159265358979323846;
-    constexpr double kRadiansPerMinuteToRevsPerDay = 1440.0 / (2.0 * 3.14159265358979323846);
-
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    double seconds = 0.0;
-    SGP4Funcs::invjday_SGP4(satrec.jdsatepoch, satrec.jdsatepochF, year, month, day, hour, minute, seconds);
-
-    char epoch[32];
-    std::snprintf(epoch, sizeof(epoch), "%04d-%02d-%02dT%02d:%02d:%09.6f", year, month, day, hour, minute, seconds);
-
-    const Json::Data json = {
-        { "norad_id", std::atoi(satrec.satnum) },
-        { "epoch", epoch },
-        { "mean_motion", satrec.no_kozai * kRadiansPerMinuteToRevsPerDay },
-        { "eccentricity", satrec.ecco },
-        { "inclination", satrec.inclo * kRadiansToDegrees },
-        { "raan", satrec.nodeo * kRadiansToDegrees },
-        { "arg_of_pericenter", satrec.argpo * kRadiansToDegrees },
-        { "mean_anomaly", satrec.mo * kRadiansToDegrees }
-    };
-
-    OrbitalElementsComponent component;
-    component.Deserialize(nullptr, json);
-    return component;
-}
-
 // The verification file is small enough that re-reading it per case costs nothing and
 // keeps each one able to run on its own.
 Test::VerificationCase FindCase(const std::string& satnum)
@@ -254,7 +217,7 @@ TEST_CASE("The near-circular case labelled an error attempt in fact propagates",
 TEST_CASE("Two-body propagation of SGP4 mean elements drifts by a known amount", "[space][sgp4]")
 {
     const Test::VerificationCase verificationCase = FindCase("06251");
-    const OrbitalElementsComponent component = AsComponent(verificationCase.satrec);
+    const OrbitalElementsComponent component = Test::AsComponent(verificationCase.satrec);
 
     elsetrec satrec = verificationCase.satrec;
 

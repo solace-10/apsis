@@ -121,23 +121,109 @@ case becomes the comparison against the reference.
 The harness skips rather than fails where there is no adapter, and it is native-only: the readback
 blocks on `ProcessEvents`, and there is nothing on the web to block with.
 
+## BSTAR is the only drag term carried, and it is required
+
+A GP record carries three drag terms. Only BSTAR is selected, served or stored: SGP4 consumes it
+when initialising an element set and again at every step, while `MEAN_MOTION_DOT` and
+`MEAN_MOTION_DDOT` are the Taylor coefficients of the SGP model SGP4 replaced — which is why the
+TLE names them pre-divided by 2 and 6 — and Vallado's `sgp4init` takes them only to store them,
+never reading them again. So passing zero for both when an element set is initialised is correct
+rather than a placeholder. They remain in the database, where they cost nothing and keep the
+ingested record whole.
+
+BSTAR is required, exactly like the six mean elements beside it. The OMM standard marks it
+conditional rather than mandatory — CCSDS 502.0-B-3 table 4-3, where `C` means mandatory once a
+stated condition holds — but that condition is `MEAN_ELEMENT_THEORY = SGP/SGP4`, which is what
+every record in this catalogue is, and Space-Track populates it for all of them. A row without one
+is not a producer exercising the latitude the standard gives it; it is a fault.
+
+Nothing along the path softens that, deliberately. `get_all_objects` selects the column raw and
+decodes it into a non-optional `f64`, so a NULL fails the query rather than arriving as a number,
+and `OrbitalElementsComponent::Deserialize` asks for the key with no default, so an absent one is
+an error like any other missing element.
+
+Reading an absent drag term as zero is the dangerous alternative rather than the safe one. Zero is
+a value SGP4 accepts and propagates perfectly happily — it is what an unmodelled drag term is — so
+a broken deployment would present as a whole catalogue sitting slightly in the wrong place, with
+nothing anywhere saying why. An error at the point the field goes missing is louder and cheaper.
+
+- Recorded by: `An element set carries the drag term SGP4 needs`
+  (orbital_elements_component_tests.cpp).
+
+## Initialisation is ours, and it is checked coefficient by coefficient
+
+SGP4 divides into a part that depends only on the element set and a part that depends on time.
+`game/src/space/sgp4.{hpp,cpp}` is the first of those: one element set in, about thirty
+coefficients out, run once per object rather than once per object per frame. The step is what will
+eventually run in the shader, and keeping the initialisation in double on the CPU is what stops
+WGSL's lack of `f64` mattering more than it has to.
+
+The implementation is our own rather than Vallado's file moved across. `reference/sgp4/README.md`
+firewalls that copy to the `tests` target because its licence position is unresolved, and a
+rewrite is worth exactly what its comparison against the original is worth — so the comparison is
+every coefficient, over every near-Earth element set in the verification file, at **exact
+equality**. The expressions are written in the reference's own operation order for that reason. A
+tolerance here would be somewhere for a rearrangement to hide, and there is nothing to hide: the
+two agree bit for bit.
+
+The partition between the branches is read from `satrec.method` rather than from a 225-minute
+threshold restated in the test, which would only check the test against itself. It comes out at
+9 near-Earth cases and 24 deep-space ones.
+
+Deep space initialises to nothing at all. The reference computes the near-Earth coefficients for
+those orbits too and then adds the lunar-solar and resonance terms on top, so stopping at the
+partition and returning a zeroed block is the difference between an obviously unusable result and
+one that looks usable and is half missing. The partition case asserts those zeroes rather than
+merely tolerating them.
+
+Two things the tests established rather than assumed:
+
+- **The epoch offset is 7306 days, not the 7305 the reference subtracts.** Both appear in the same
+  arithmetic and they are a day apart: SGP4 initialises from 1950 January 0.0, while `initl` counts
+  back to 1970 January 0.0 — the last day of 1969 — on its way to the sidereal time at epoch. The
+  conversion case caught this, off by exactly one day.
+- **The gravity constants are WGS72**, the model TLEs are fitted with; propagating an element set
+  with any other set of constants uses constants its own fit did not. That leaves three Earth radii
+  in the tree: `kSGP4EarthRadius` at 6378.135, `kEarthSemiMajorAxis` at WGS84's 6378.137, and
+  `kMu = 398600.4418` in `orbit_propagation_system.cpp`, which is neither. The first two are
+  deliberate and answer different questions — where the propagator's arithmetic is defined, and
+  where the ground is. The third feeds the two-body path and the vis-viva velocity and is simply
+  unexamined; it leaves with the propagation it belongs to.
+
+The one place a float sits in the way is `MakeSGP4Elements()`. `OrbitalElementsComponent` stores
+floats, so about seven significant digits reach an algorithm written in double — dominated by mean
+motion, worth roughly twenty metres of along-track error after a day, two orders of magnitude
+inside SGP4's own accuracy and far inside what an f32 step will contribute. That case is held to
+float precision rather than to the arithmetic's exactness, and says so.
+
+Nothing consumes the coefficients yet. `OrbitPropagationSystem` computes them alongside the roster
+it already rebuilds, and only when that roster changes — initialising the whole visible set every
+frame would cost orders of magnitude more than the six floats it copies today.
+
+- Recorded by: `Our initialisation reproduces the reference's near-Earth coefficients`, `The
+  near-Earth and deep-space partition matches the reference`, `An element set converts into the
+  units SGP4 initialises from` (sgp4_init_tests.cpp).
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
 
-- **SGP4 itself, in the shader.** `sgp4.wgsl` does not propagate anything yet, so the comparison
-  against the reference is not written. Two things will shape it. WGSL has no f64 and SGP4 is a
-  double-precision algorithm, so the tolerance is an outcome to be measured rather than a number to
-  be chosen — and running `sgp4init` on the CPU in double, uploading its coefficients and leaving
-  only the time-varying step to the GPU, is what keeps that outcome small. And the near-Earth and
-  deep-space branches are separate algorithms: 9 of the 33 verification cases are near-Earth, and
-  the partition the test uses should come from `satrec.method` rather than from a period threshold
-  restated in the test.
-- **The shader does not have SGP4's inputs yet.** `OrbitalElementsInput` carries six mean elements
-  and no BSTAR, no mean-motion derivatives and nothing conveying the epoch or the time since it.
-  `OrbitalElementsComponent` is missing the same three (`orbital_elements_component.hpp` has two of
-  them commented out), and they are ingested into the database but absent from the `SELECT` that
-  serves the client, so they do not reach the game at all.
+- **The step itself, in the shader.** `sgp4.wgsl` does not propagate anything yet, so the
+  comparison against the reference is not written. The initialisation half is now done and stays in
+  double on the CPU, which is what keeps the eventual f32 error small; what is left is the step,
+  whose tolerance is an outcome to be measured rather than a number to be chosen.
+- **The coefficients have nowhere to go.** `OrbitalElementsInput` still carries six mean elements
+  and nothing else, at 32 bytes, where the near-Earth step reads around thirty scalars — so this is
+  a redesign of the buffer rather than an extension of it, and it takes the `static_assert`,
+  `sgp4.wgsl`'s mirrored struct and `sgp4_shader_tests.cpp` with it. The time is the other half and
+  has no representation anywhere on the GPU side at all: `SGP4ComputePass::Execute()` writes
+  nothing per frame, and a `tsince` uniform means a third bind group entry in
+  `ComputeHarness::DispatchRaw()` as well, which currently hard-codes two.
+- **Deep space.** `SGP4Initialise()` reports `SGP4Method::DeepSpace` and stops. Those objects stay
+  on the two-body path, which is where they already were, but they are not a rounding error in this
+  catalogue: `celestrak.py` curates `geo`, `gnss` and `gps-ops`, and the served query is unfiltered.
+  SDP4's step also carries integrator state between calls, so it does not fit the split the
+  near-Earth path was built around and needs its own answer on the GPU.
 - **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
   compute path, which the harness can now drive, these run inside a render pass against a swapchain

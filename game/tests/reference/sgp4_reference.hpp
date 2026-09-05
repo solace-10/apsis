@@ -6,6 +6,8 @@
 
 #include <SGP4.h>
 
+#include "components/orbital_elements_component.hpp"
+
 namespace WingsOfSteel::Test
 {
 
@@ -42,5 +44,15 @@ struct VerificationBlock
 // twice, propagated over two different ranges, so a map would silently drop a case.
 std::vector<VerificationCase> LoadVerificationCases(const std::filesystem::path& path);
 std::vector<VerificationBlock> LoadVerificationOutput(const std::filesystem::path& path);
+
+// Restates an initialised element set as the JSON the game receives from the server, so that
+// our own code can be measured against the reference on identical inputs. Going through
+// Deserialize() rather than adding setters keeps the component's only entry point the one
+// production uses - and its context pointer is null-safe throughout, so nothing else has to
+// be brought up to do it.
+//
+// The conversion back out of SGP4's units is Vallado's own, inverted: it is what makes this a
+// check of MakeSGP4Elements() rather than a restatement of it.
+OrbitalElementsComponent AsComponent(const elsetrec& satrec);
 
 } // namespace WingsOfSteel::Test

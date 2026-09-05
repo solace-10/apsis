@@ -36,9 +36,11 @@ target_include_directories(sgp4_reference SYSTEM PUBLIC reference/sgp4)
 target_compile_options(sgp4_reference PRIVATE -w)
 
 add_executable(tests
+    components/orbital_elements_component_tests.cpp
     gpu/compute_harness.cpp
     reference/sgp4_reference.cpp
     space/earth_frame_tests.cpp
+    space/sgp4_init_tests.cpp
     space/sgp4_shader_tests.cpp
     space/sgp4_tests.cpp
     test_main.cpp
