@@ -15,7 +15,6 @@
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "space/earth_frame.hpp"
-#include "space/sgp4.hpp"
 #include "systems/orbit_propagation_system.hpp"
 
 namespace WingsOfSteel
@@ -100,14 +99,12 @@ void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
         return;
     }
 
-    // Everything below here runs only when the roster has actually changed, which is what makes
-    // it affordable: initialising SGP4 costs orders of magnitude more than copying six floats,
-    // and doing it for the whole visible set every frame would not be. A group filter toggled
-    // over thirty thousand objects pays for it once, in single-digit milliseconds.
+    // Everything below here runs only when the roster has actually changed. Rebuilding thirty
+    // thousand upload structs every frame to hand back a buffer identical to the one already on
+    // the GPU is work for nothing, and the coefficient upload that will replace this wants the
+    // same shape: read the components once, when the set of them changes.
     m_OrbitalElements.clear();
-    m_ElementSets.clear();
     m_OrbitalElements.reserve(m_RosterScratch.size());
-    m_ElementSets.reserve(m_RosterScratch.size());
 
     for (const EntityHandle entityHandle : m_RosterScratch)
     {
@@ -120,10 +117,6 @@ void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
             .raan = orbitalElements.GetRightAscensionOfAscendingNode(),
             .argumentOfPericenter = orbitalElements.GetArgumentOfPericenter(),
             .meanAnomaly = orbitalElements.GetMeanAnomaly() });
-
-        // Parallel to the roster rather than cached against the entity: entt recycles handles, so
-        // a map keyed on one would eventually answer for an object that no longer exists.
-        m_ElementSets.push_back(SGP4Initialise(MakeSGP4Elements(orbitalElements)));
     }
 
     // A new roster rather than a mutated one, so that a readback still in flight keeps

@@ -10,7 +10,6 @@
 #include <scene/systems/system.hpp>
 
 #include "render/sgp4_compute_pass.hpp"
-#include "space/sgp4.hpp"
 
 namespace WingsOfSteel
 {
@@ -47,10 +46,6 @@ private:
     EntityRosterSharedPtr m_pRoster;
     EntityRoster m_RosterScratch;
     std::vector<OrbitalElementsInput> m_OrbitalElements;
-
-    // The time-independent half of SGP4, one entry per roster slot. Nothing consumes it yet:
-    // the shader still needs somewhere to put it and a time to step it to.
-    std::vector<SGP4ElementSet> m_ElementSets;
 
     // Results are applied once, when they land, rather than rewritten every frame.
     std::chrono::system_clock::time_point m_LastAppliedResultsTime;

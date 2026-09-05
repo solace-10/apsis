@@ -219,3 +219,31 @@ TEST_CASE("An element set converts into the units SGP4 initialises from", "[spac
     const double expectedEpoch = (satrec.jdsatepoch + satrec.jdsatepochF) - 2433281.5;
     CHECK_THAT(elements.epochDaysSince1950, WithinAbs(expectedEpoch, 1.0e-8));
 }
+
+// The partition decided on the numbers the game actually carries, rather than the reference's.
+//
+// `Sector::InitializeSpaceObjects` derives an element set from an `OrbitalElementsComponent` the
+// moment an object is created, which is the float-and-degrees path rather than the doubles every
+// case above feeds in. A geostationary orbit sits some twelve hundred minutes past the threshold,
+// so nothing float precision could do to it would move it across - but this is the one place the
+// two paths could part company, and it is the shape SGP4Component now depends on.
+TEST_CASE("A geostationary element set reaches the deep-space branch through the component", "[space][sgp4]")
+{
+    // 25954, at 0.0004 degrees of inclination and 1.00271289 revolutions a day: a real
+    // geostationary satellite rather than one of the file's constructed cases.
+    const elsetrec satrec = FindCase("25954").satrec;
+    REQUIRE(satrec.method == 'd');
+
+    const OrbitalElementsComponent component = Test::AsComponent(satrec);
+    const SGP4ElementSet elementSet = SGP4Initialise(MakeSGP4Elements(component));
+
+    CHECK(elementSet.method == SGP4Method::DeepSpace);
+
+    // Stopped at the partition rather than half initialised. Every geostationary object in the
+    // catalogue now carries one of these, so what an unusable one looks like has to be obvious.
+    CHECK(elementSet.no_unkozai == 0.0);
+    CHECK(elementSet.cc1 == 0.0);
+    CHECK(elementSet.mdot == 0.0);
+    CHECK(elementSet.aycof == 0.0);
+    CHECK(elementSet.simplifiedDrag == false);
+}

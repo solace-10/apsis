@@ -21,11 +21,13 @@
 #include "components/orbital_elements_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/sector_camera_component.hpp"
+#include "components/sgp4_component.hpp"
 #include "game.hpp"
 #include "sector/database.hpp"
 #include "sector/group_filters.hpp"
 #include "sector/sector.hpp"
 #include "space/earth_frame.hpp"
+#include "space/sgp4.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
 #include "systems/orbit_propagation_system.hpp"
@@ -206,9 +208,12 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         OrbitalElementsComponent& orbitalElementsComponent = pEntity->AddComponent<OrbitalElementsComponent>();
         orbitalElementsComponent.Deserialize(nullptr, objectData);
 
+        SGP4Component& sgp4Component = pEntity->AddComponent<SGP4Component>();
+        sgp4Component.m_ElementSet = SGP4Initialise(MakeSGP4Elements(orbitalElementsComponent));
+
         MetadataComponent& metadataComponent = pEntity->AddComponent<MetadataComponent>();
         metadataComponent.Deserialize(nullptr, objectData);
-        
+
         pEntity->AddComponent<TransformComponent>();
 
         m_NoradIdIndex[orbitalElementsComponent.GetNoradId()] = pEntity;
@@ -223,7 +228,7 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
         {
             continue;
         }
-        
+
         if (!groupsData.contains(groupFilterName))
         {
             Log::Warning() << "Group '" << groupFilterName << "': no data found in server response.";
@@ -266,7 +271,7 @@ void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::D
                 Log::Warning() << "Group '" << groupFilterName << "': NORAD ID " << id << " not found in loaded object data.";
                 continue;
             }
-            
+
             MetadataComponent& metadataComponent = pEntity->GetComponent<MetadataComponent>();
             metadataComponent.AddToGroupFilter(pGroupFilter);
             idsInGroup++;

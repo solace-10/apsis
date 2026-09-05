@@ -196,9 +196,15 @@ motion, worth roughly twenty metres of along-track error after a day, two orders
 inside SGP4's own accuracy and far inside what an f32 step will contribute. That case is held to
 float precision rather than to the arithmetic's exactness, and says so.
 
-Nothing consumes the coefficients yet. `OrbitPropagationSystem` computes them alongside the roster
-it already rebuilds, and only when that roster changes — initialising the whole visible set every
-frame would cost orders of magnitude more than the six floats it copies today.
+Nothing consumes the coefficients yet, but they are derived once and then held on the entity.
+`SGP4Component` is added beside `OrbitalElementsComponent` in `Sector::InitializeSpaceObjects`,
+which is the last moment its inputs can change: everything afterwards only decides which objects
+are visible. `NotifyGroupFiltersChanged` clears four components and leaves this one alone, so a
+filter toggle costs nothing here — and because entt owns the lifetime, the handle-recycling hazard
+that rules out keying a cache on an entity never arises.
+
+Deep-space objects carry the component too, holding the zeroed block, so an object that is not
+being propagated says as much on itself rather than by being missing from something.
 
 - Recorded by: `Our initialisation reproduces the reference's near-Earth coefficients`, `The
   near-Earth and deep-space partition matches the reference`, `An element set converts into the
