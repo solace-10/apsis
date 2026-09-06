@@ -14,6 +14,7 @@
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
+#include "components/propagation_failure_component.hpp"
 #include "components/sgp4_component.hpp"
 #include "space/earth_frame.hpp"
 #include "systems/orbit_propagation_system.hpp"
@@ -227,13 +228,17 @@ void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
 
         // An element set the propagator could not make sense of - drag has taken its eccentricity
         // out of range, or the orbit has come down - reports as much rather than returning a
-        // position. Leaving the object where it was is the right answer: moving it to the origin
-        // because the shader declined to guess would be worse than not moving it at all. A decayed
-        // orbit still has a position and is still drawn, because it is still up there until the
-        // next element set says otherwise.
+        // position. This is not something SGP4Initialise() could have flagged, as these all propagate
+        // cleanly at their own epoch.
         const SGP4StepOutput& state = results.states[i];
-        if (state.error != static_cast<uint32_t>(SGP4Error::None) && state.error != static_cast<uint32_t>(SGP4Error::Decayed))
+        if (state.error != static_cast<uint32_t>(SGP4Error::None))
         {
+            // The first failure is the one kept: a readback dispatched before the object was
+            // retired can land after it and report the same failure again.
+            if (!registry.all_of<PropagationFailureComponent>(entityHandle))
+            {
+                registry.emplace<PropagationFailureComponent>(entityHandle, static_cast<SGP4Error>(state.error), results.time);
+            }
             continue;
         }
 

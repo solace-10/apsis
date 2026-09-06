@@ -40,6 +40,7 @@ private:
     void RegenerateLabel(EntityHandle entityHandle);
     void UpdateHoveredSpaceObject(EntityHandle hoveredEntityHandle);
     void UpdateSelectedSpaceObject();
+    void RetireFailedSpaceObjects();
     bool ShouldDisplayAllLabels() const;
     bool ShouldDisplayFullLabel(EntityHandle entityHandle) const;
     size_t MakeOrbitalKey(const OrbitalElementsComponent& orbitalElements) const;

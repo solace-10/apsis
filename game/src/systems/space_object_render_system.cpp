@@ -29,6 +29,7 @@
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
+#include "components/propagation_failure_component.hpp"
 #include "components/space_object_group_component.hpp"
 #include "game.hpp"
 #include "sector/group_filter.hpp"
@@ -167,6 +168,9 @@ void SpaceObjectRenderSystem::Update(float delta)
     {
         return;
     }
+
+    // First, so that the deselection this can cause is seen by the poll below.
+    RetireFailedSpaceObjects();
 
     // Polled rather than pushed from Sector::SetSelectedSpaceObject(), as the selection can change
     // before any labels exist. Done before the rebuild below so a rebuild sees the current selection.
@@ -373,7 +377,10 @@ void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
     view.each([&registry, &currentVisibleMask, currentlySelectedEntityHandle](const EntityHandle entityHandle, MetadataComponent& metadataComponent) {
         const bool isInVisibleGroupFilter = (currentVisibleMask & metadataComponent.GetGroupFilterMask()) != 0;
         const bool isSelected = (currentlySelectedEntityHandle == entityHandle);
-        const bool isVisible = (isInVisibleGroupFilter || isSelected);
+
+        // A retired object stays retired, whatever the filters or the selection say.
+        const bool hasFailed = registry.all_of<PropagationFailureComponent>(entityHandle);
+        const bool isVisible = !hasFailed && (isInVisibleGroupFilter || isSelected);
         metadataComponent.SetVisible(isVisible);
 
         if (isVisible)
@@ -551,6 +558,36 @@ void SpaceObjectRenderSystem::UpdateSelectedSpaceObject()
     // The labels also carry the selection colour, so both of them change appearance here.
     RegenerateLabel(previouslySelectedEntityHandle);
     RegenerateLabel(selectedEntityHandle);
+}
+
+void SpaceObjectRenderSystem::RetireFailedSpaceObjects()
+{
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    auto view = registry.view<const PropagationFailureComponent, MetadataComponent>();
+
+    view.each([this, &registry](const EntityHandle entityHandle, const PropagationFailureComponent&, MetadataComponent& metadataComponent) {
+        // Already retired: the component is a latch, so there is work here only on the frame an
+        // object first fails.
+        if (!metadataComponent.IsVisible())
+        {
+            return;
+        }
+
+        metadataComponent.SetVisible(false);
+        registry.remove<OrbitalStateComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>(entityHandle);
+
+        if (entityHandle == m_HoveredEntityHandle)
+        {
+            m_HoveredEntityHandle = NullEntityHandle;
+        }
+
+        // Sector::Update() hands the selected object's OrbitalStateComponent to the webapp every
+        // frame, and it has just been taken away. m_SelectedEntityHandle is left to the poll.
+        if (entityHandle == m_SelectedEntityHandle)
+        {
+            Game::Get()->GetSector()->SetSelectedSpaceObject(nullptr);
+        }
+    });
 }
 
 /*
