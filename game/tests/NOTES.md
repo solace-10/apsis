@@ -93,6 +93,31 @@ has no results of its own, and it is covered by a case about the error code inst
   at its own epoch produces no positions at all`, `The near-circular case labelled an error attempt
   in fact propagates` (sgp4_tests.cpp).
 
+## One check ours makes that the reference does not
+
+`SGP4Step()` rejects a negative `tempa` as `SGP4Error::DragModelDiverged`, and `sgp4.wgsl` mirrors
+it. This is the only place the propagator deliberately departs from Vallado, so it is worth being
+able to say what it costs and what it buys — the enum's own comment covers why the reference does
+not make the check, which is not the same as it having been missed.
+
+It costs nothing against the verification file. Across all nine near-earth cases, over each one's
+full published range, the minimum `tempa` is 0.9514 and the minimum `am` is 0.9956 — so neither
+this check nor the re-enabled `am < 0.95` fires on any verification case, and `Our step reproduces
+the reference propagator over the near-Earth cases` still pins our error codes to the reference's
+exactly. That also means neither is exercised by the sweep, which is why they have a case of their
+own.
+
+What it buys is visible by taking 29141 past the 440 minutes the file asks for. Its drag polynomial
+crosses zero at 1392 minutes, where the reference happens to object for its own reasons (error 4,
+the semi-latus rectum). By 2784 minutes — still under two days from epoch — it does not object at
+all: it returns success, a radius of 1.09 million km and a velocity of 0.6 km/s. The existing
+checks are all downstream of `am = a0*tempa²`, which recovers as the divergence worsens; `tempa`
+does not.
+
+- Recorded by: `A diverged drag model is rejected where the reference reports success`
+  (sgp4_step_tests.cpp), and the 29141 sample in `The compute shader propagates as accurately as
+  f32 allows` (sgp4_shader_tests.cpp), which is the only thing covering the shader's copy.
+
 ## What today's propagation costs, as a number
 
 `Two-body propagation of SGP4 mean elements drifts by a known amount` measures

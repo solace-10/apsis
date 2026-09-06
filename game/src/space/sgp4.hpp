@@ -157,9 +157,64 @@ enum class SGP4Error
     DeepSpaceNotSupported = 1,
 
     MeanMotionNotPositive = 2, // Vallado 2
-    MeanElementsOutOfRange = 3, // Vallado 1: eccentricity has left [-0.001, 1)
+    MeanElementsOutOfRange = 3, // Vallado 1: eccentricity has left [-0.001, 1), or am below 0.95
     NegativeSemiLatusRectum = 4, // Vallado 4
     Decayed = 5, // Vallado 6: the orbit has come down inside the Earth
+
+    // Ours, with no counterpart in the reference: the drag correction to the semi-major axis has
+    // changed sign.
+    //
+    //   tempa = 1 - cc1*t - d2*t^2 - d3*t^3 - d4*t^4
+    //   am    = (xke/no_unkozai)^(2/3) * tempa^2
+    //
+    // tempa is a truncated polynomial. Near epoch it is about 1, but far enough out on a high-drag
+    // orbit the t^4 term takes over and drives it negative - and because am squares it, the sign
+    // disappears. A wildly negative tempa becomes a wildly LARGE semi-major axis rather than a
+    // small one, so the object is flung outwards; nm is then recomputed from that same huge am and
+    // comes out small, which is why the symptom is an object crossing the screen at an impossible
+    // speed while reporting a plausible velocity.
+    //
+    // The checks already here catch it only by accident, and only briefly. Just past the sign
+    // change am is still small, so the semi-latus rectum or mrt can trip on it - 29141 crossing
+    // zero at t = 1392 minutes does raise the reference's error 4. But am is a0*tempa^2 and climbs
+    // back up through healthy values as the correction keeps growing, and the checks lose it
+    // again: by t = 2784 the same element set returns success from the reference, at a radius of
+    // 1.09 million km and a velocity of 0.6 km/s. Over the live catalogue at 2026-09-06 exactly
+    // two of 28,531 near-earth objects were past the sign change, at tempa -9.24 and -2.99 - well
+    // outside that window, and exactly the two that were visibly wrong on screen.
+    //
+    // Why the reference does not test for this is worth setting down, because adding a check the
+    // reference does not make is the kind of thing that is usually a misreading on our part rather
+    // than a gap in a model this well used. Three things are visible in his code, and none of them
+    // need him to have got anything wrong.
+    //
+    // A check on the neighbouring failure exists and is disabled. His documented error 1 reads
+    // "ecc >= 1.0 or ecc < -0.001 or a < 0.95 er", but the a < 0.95 half is commented out, noted
+    // "sgp4fix am is fixed from the previous nm check". Taken literally the nm checked there is
+    // no_unkozai, a constant from initialisation, and we cannot see how it constrains tempa - but
+    // that may well be shorthand for something established elsewhere in work we have not read, and
+    // it is a potential oversight at most rather than a fault we are in a position to call. It
+    // would not catch this case in any event: it is a floor, and this failure sends am upwards.
+    //
+    // The sgp4fix series is also deliberately permissive, letting element sets "process until they
+    // are actually below earth surface" rather than refusing early - which leaves judging the
+    // output to the caller, and this check is us doing that.
+    //
+    // And the regime sits outside the envelope the model is verified over: across every near-earth
+    // case in SGP4-VER.TLE, over each one's full published range, tempa never falls below 0.951.
+    // Reaching here takes a stale element set on a decaying object, and the operational answer to
+    // that is a fresher element set rather than an error code. We do not have that option, since
+    // the catalogue is whatever the server last ingested, so the check falls to us.
+    //
+    // Zero is the threshold because it is the only one that needs no justification - the correction
+    // has changed sign - and because everything above it is already covered. am is a0*tempa^2 with
+    // a0 about 1.065 in low earth orbit, so a collapsing tempa drops mrt below one earth radius at
+    // about 0.97 and Decayed catches it from there down. Testing tempa rather than what tempa
+    // produces is the point: am, mrt and the semi-latus rectum all recover as the divergence
+    // worsens, and tempa does not.
+    //
+    // Mirrored in sgp4.wgsl as kErrorDragModelDiverged.
+    DragModelDiverged = 6,
 };
 
 // Where an object is, and how fast, at one instant.

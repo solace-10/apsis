@@ -84,6 +84,24 @@ std::vector<Sample> MakeSamples()
                 break;
             }
         }
+
+        // The divergence check has nowhere else to be exercised: no case in the file reaches it
+        // within the range the file asks for. 29141 taken past that range does, and the shader's
+        // copy of the check has to agree with ours about it. It contributes an error code and
+        // nothing else - a diverged step has no position to compare.
+        if (verificationCase.satnum == "29141")
+        {
+            const float tsinceFloat = 2784.0f;
+            const SGP4Position expected = SGP4Step(elementSet, static_cast<double>(tsinceFloat));
+            REQUIRE(expected.error == SGP4Error::DragModelDiverged);
+
+            samples.push_back(Sample{
+                verificationCase.satnum,
+                static_cast<double>(tsinceFloat),
+                MakeSGP4StepInput(elementSet),
+                tsinceFloat,
+                expected });
+        }
     }
 
     return samples;
@@ -99,7 +117,7 @@ std::vector<Sample> MakeSamples()
 // transcription mistakes and precision together; this one has already had the first ruled out.
 //
 // It also carries everything the echo case it replaced used to: the struct C++ uploads is the
-// struct WGSL reads, the bindings agree, and the tail of a rounded-up dispatch is guarded - 162
+// struct WGSL reads, the bindings agree, and the tail of a rounded-up dispatch is guarded - 163
 // samples is not a multiple of 64, so the last workgroup runs threads past the end.
 TEST_CASE("The compute shader propagates as accurately as f32 allows", "[space][sgp4][gpu]")
 {
@@ -110,7 +128,7 @@ TEST_CASE("The compute shader propagates as accurately as f32 allows", "[space][
     }
 
     const std::vector<Sample> samples = MakeSamples();
-    REQUIRE(samples.size() == 162);
+    REQUIRE(samples.size() == 163);
     REQUIRE(samples.size() % kWorkgroupSize != 0);
 
     // The same two buffers the pass uploads, bound the same way: coefficients that would change

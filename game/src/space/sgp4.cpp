@@ -256,13 +256,30 @@ SGP4Position SGP4Step(const SGP4ElementSet& elementSet, double tsinceMinutes)
         return result;
     }
 
+    // The drag correction has changed sign, which is meaningless - and dangerous rather than
+    // merely wrong, because am squares it and so turns it into a large semi-major axis rather
+    // than a small one. See SGP4Error::DragModelDiverged for why the reference does not make this
+    // check and why the threshold is zero. Placed after the mean motion check rather than before
+    // it so that an element set failing both still reports what the reference reports.
+    if (tempa < 0.0)
+    {
+        result.error = SGP4Error::DragModelDiverged;
+        return result;
+    }
+
     const double am = std::pow((kSGP4Xke / nm), kTwoThirds) * tempa * tempa;
     nm = kSGP4Xke / std::pow(am, 1.5);
     em = em - tempe;
 
-    // Drag has taken the eccentricity somewhere an orbit cannot be. The small negative bound is
-    // the reference's tolerance rather than a physical statement.
-    if ((em >= 1.0) || (em < -0.001))
+    // Drag has taken the eccentricity somewhere an orbit cannot be, or the semi-major axis below
+    // the ground. The small negative bound is the reference's tolerance rather than a physical
+    // statement. The 0.95 earth radii is Vallado's own - documented as part of his error 1, though
+    // commented out in his code for reasons noted at SGP4Error::DragModelDiverged - and is enabled
+    // here because, unlike the mrt < 1 test at the end of the step, it does not depend on where in
+    // its orbit the object happens to be: an eccentric orbit whose semi-major axis has collapsed
+    // cannot slip past it by being near apogee. It costs nothing against the verification file,
+    // where the lowest am any near-earth case reaches is 0.9956.
+    if ((em >= 1.0) || (em < -0.001) || (am < 0.95))
     {
         result.error = SGP4Error::MeanElementsOutOfRange;
         return result;

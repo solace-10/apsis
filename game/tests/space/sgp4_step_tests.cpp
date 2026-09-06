@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -165,6 +166,48 @@ TEST_CASE("A decaying orbit stops where the reference stops", "[space][sgp4]")
 
     CHECK(lastGoodTime == 420.0);
     CHECK(decayTime == 440.0);
+}
+
+// The one check ours makes that the reference does not, and the case that shows why.
+//
+// 29141 is the verification file's own fast-decaying object, and no element set in that file
+// reaches this within the range it asks to be propagated over - the minimum tempa across all nine
+// near-earth cases is 0.951. Taken past its published range, though, its drag polynomial changes
+// sign, and what the reference does with that is the whole argument for the check: at 2784 minutes
+// from epoch, under two days, it returns success at nearly three times the distance to the Moon
+// while reporting a velocity no orbit out there could have. That is exactly the symptom this was
+// found by - an object crossing the screen at an impossible speed while claiming a plausible one.
+//
+// See SGP4Error::DragModelDiverged for why the reference does not object to it.
+TEST_CASE("A diverged drag model is rejected where the reference reports success", "[space][sgp4]")
+{
+    const Test::VerificationCase verificationCase = FindCase("29141");
+    REQUIRE(verificationCase.satrec.method == 'n');
+
+    elsetrec satrec = verificationCase.satrec;
+    const SGP4ElementSet elementSet = SGP4Initialise(Test::AsElements(verificationCase.satrec));
+
+    // Where tempa has reached about -12.8. Well past the sign change rather than at it, which is
+    // the regime the two objects that prompted the check were in.
+    constexpr double kDivergedTime = 2784.0;
+
+    double r[3];
+    double v[3];
+    REQUIRE(SGP4Funcs::sgp4(satrec, kDivergedTime, r, v));
+    REQUIRE(satrec.error == 0);
+    CHECK(std::sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]) > 1.0e6);
+    CHECK(std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < 1.0);
+
+    CHECK(SGP4Step(elementSet, kDivergedTime).error == SGP4Error::DragModelDiverged);
+
+    // And at the crossing itself, where the reference does object - to the semi-latus rectum,
+    // having reached it by a different route. Pinned because it is the reason the check is on
+    // tempa rather than on what tempa produces: this is the narrow window in which the existing
+    // checks happen to work, and kDivergedTime above is what lies past it.
+    satrec = verificationCase.satrec;
+    SGP4Funcs::sgp4(satrec, 1392.0, r, v);
+    CHECK(satrec.error == 4);
+    CHECK(SGP4Step(elementSet, 1392.0).error == SGP4Error::DragModelDiverged);
 }
 
 // The contract that makes a zeroed element set safe to hold. SGP4Component carries one of these

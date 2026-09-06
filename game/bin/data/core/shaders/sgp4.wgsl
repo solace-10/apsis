@@ -68,6 +68,7 @@ const kErrorMeanMotionNotPositive: u32 = 2u;
 const kErrorMeanElementsOutOfRange: u32 = 3u;
 const kErrorNegativeSemiLatusRectum: u32 = 4u;
 const kErrorDecayed: u32 = 5u;
+const kErrorDragModelDiverged: u32 = 6u;
 
 // WGS72, the model TLEs are fitted with. Written out to the precision of the double the CPU side
 // uses, so that the compiler rounds the same value rather than rounding a different one.
@@ -139,11 +140,18 @@ fn propagate(e: SGP4ElementSet, t: f32) -> PropagatedState {
         return failed(kErrorMeanMotionNotPositive);
     }
 
+    // The drag correction has changed sign. This is the one check here the reference does not
+    // make, and the only one that can see an object flung outwards by a truncated polynomial
+    // rather than collapsing inwards - see SGP4Error::DragModelDiverged in sgp4.hpp.
+    if (tempa < 0.0) {
+        return failed(kErrorDragModelDiverged);
+    }
+
     let am = pow((kXke / nm), kTwoThirds) * tempa * tempa;
     nm = kXke / pow(am, 1.5);
     em = em - tempe;
 
-    if ((em >= 1.0) || (em < -0.001)) {
+    if ((em >= 1.0) || (em < -0.001) || (am < 0.95)) {
         return failed(kErrorMeanElementsOutOfRange);
     }
 
