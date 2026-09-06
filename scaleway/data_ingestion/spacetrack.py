@@ -155,9 +155,15 @@ def insert_batch(conn, records):
     # Deduplicate within batch to avoid "cannot affect row a second time" error
     records = deduplicate_batch(records)
 
-    columns = ", ".join(DB_COLUMNS)
+    # last_seen records when we last saw the object in the source data, and is what
+    # clear_stale_objects() trims on. It comes from NOW() rather than from the record, because
+    # Space-Track's CREATION_DATE says when the element set was published: for objects that are
+    # observed rarely that lags by days even though the row is being refreshed every run.
+    insert_columns = DB_COLUMNS + ["last_seen"]
+    columns = ", ".join(insert_columns)
+    template = "(" + ", ".join(["%s"] * len(DB_COLUMNS)) + ", NOW())"
     # Build the SET clause for ON CONFLICT UPDATE (exclude 'norad_id' which is the conflict key)
-    update_columns = [col for col in DB_COLUMNS if col != "norad_id"]
+    update_columns = [col for col in insert_columns if col != "norad_id"]
     update_set = ", ".join([f"{col} = EXCLUDED.{col}" for col in update_columns])
 
     query = f"""
@@ -167,7 +173,7 @@ def insert_batch(conn, records):
     """
 
     with conn.cursor() as cur:
-        execute_values(cur, query, records, page_size=BATCH_SIZE)
+        execute_values(cur, query, records, template=template, page_size=BATCH_SIZE)
     conn.commit()
     return len(records)
 
@@ -204,10 +210,16 @@ def clear_analyst_objects(conn):
 
 
 def clear_stale_objects(conn):
-    """Delete objects where creation_date is more than 3 days in the past."""
+    """Delete objects we have not seen in the source data for more than 3 days.
+
+    Must run after the inserts, so that everything in the current run has had its last_seen
+    refreshed. A null last_seen therefore means the object was absent from this run and has not
+    been seen since the column was added, which is equally stale.
+    """
     with conn.cursor() as cur:
         cur.execute(
-            "DELETE FROM public.objects WHERE creation_date < NOW() - INTERVAL '3 days'"
+            "DELETE FROM public.objects "
+            "WHERE last_seen IS NULL OR last_seen < NOW() - INTERVAL '3 days'"
         )
         deleted = cur.rowcount
     conn.commit()
@@ -249,19 +261,22 @@ def main():
 
     try:
         """
-        Well-tracked analyst objects are rather volatile - they don't get updated every time, and their
-        creation_date can be several days in the past. So we remove them from the table with every ingestion,
-        then trim the stale objects (objects with creation dates older than 3 days), and finally add all the
-        analyst objects again.  
+        Well-tracked analyst objects are rather volatile - they don't get updated every time. So we
+        remove them from the table with every ingestion, and then add back whatever the current
+        query returns.
+
+        Stale objects are trimmed after the inserts rather than before, because insert_batch() is
+        what sets last_seen: an object is only stale once a run has completed without it.
         """
         clear_analyst_objects(conn)
-        clear_stale_objects(conn)
 
         gp_count = process_records(conn, gp_data, "GP")
         analyst_count = process_records(conn, analyst_data, "Analyst")
 
         analyst_ids = [record.get("NORAD_CAT_ID") for record in analyst_data if record.get("NORAD_CAT_ID")]
         insert_groups_batch(conn, analyst_ids, "analyst")
+
+        clear_stale_objects(conn)
 
         logger.info(f"Ingestion complete. GP: {gp_count}, Analyst: {analyst_count}")
         hc.success()
