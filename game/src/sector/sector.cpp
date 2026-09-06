@@ -161,7 +161,9 @@ void Sector::InitializeDatabase()
 
             pSector->InitializeSpaceObjects(data["objects"], data["groups"]);
         },
-        [](const std::string& error) {});
+        [](const std::string& error) {
+            Log::Warning() << "Failed to retrieve space object data from the database: " << error;
+        });
 }
 
 void Sector::InitializeGroupFilters()
