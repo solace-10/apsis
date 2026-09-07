@@ -29,11 +29,13 @@ the colour map above.
 
 ### game/src/space/sgp4.{hpp,cpp}
 
-The SGP4 initialisation, written from the published algorithm rather than adapted from anyone's
-source: *Spacetrack Report #3* (Hoots and Roehrich, 1980), as corrected and restated by David
-Vallado, Paul Crawford, Richard Hujsak and T.S. Kelso in *Revisiting Spacetrack Report #3*
-(AIAA 2006-6753). The coefficient names are those papers' and are kept unchanged so the code can be
-read alongside them.
+SGP4 and SDP4, initialisation and step, written from the published algorithm rather than adapted
+from anyone's source: *Spacetrack Report #3* (Hoots and Roehrich, 1980), as corrected and restated
+by David Vallado, Paul Crawford, Richard Hujsak and T.S. Kelso in *Revisiting Spacetrack Report #3*
+(AIAA 2006-6753). The deep-space half is the same two papers - the lunar-solar periodics and the
+Earth resonance terms are Spacetrack Report #3's own, and the corrections applied to them are the
+AIAA paper's. The coefficient names throughout are those papers' and are kept unchanged so the code
+can be read alongside them.
 
 This is deliberately not a copy of the reference implementation below, whose licence position is
 unresolved and which is therefore confined to the test suite. The tests check the two agree

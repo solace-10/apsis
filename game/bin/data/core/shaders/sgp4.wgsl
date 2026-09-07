@@ -79,6 +79,11 @@ const kJ2: f32 = 0.001082616;
 const kTwoPi: f32 = 6.283185307179586;
 const kTwoThirds: f32 = 0.6666666666666666;
 
+// Where the Kepler solve below stops. Deliberately not the CPU's 1e-12: eo1 runs to 2*pi, so its
+// f32 ULP is around 5e-7 and a correction below that cannot move it. A tolerance under the ULP is
+// one the loop stalls above rather than reaches, which is what kept it running all ten passes.
+const kKeplerTolerance: f32 = 1e-6;
+
 @group(0) @binding(0) var<storage, read> elementSets: array<SGP4ElementSet>;
 
 // Minutes from each element set's own epoch. Its own buffer because it is the only thing here that
@@ -184,9 +189,18 @@ fn propagate(e: SGP4ElementSet, t: f32) -> PropagatedState {
 
     // --- Kepler's equation ---
     //
-    // The CPU version stops when the correction falls below 1e-12, which f32 cannot reach: the
-    // loop here always runs all ten passes. That is bounded and it converges long before the tenth,
-    // so the cost is wasted iterations rather than accuracy - but it is why there is no early out.
+    // Newton-Raphson, capped at ten passes and with each correction clamped, as in SGP4Step(). It
+    // exits on kKeplerTolerance rather than the CPU's 1e-12, which f32 cannot reach: measured over
+    // the near-earth cases in SGP4-VER.TLE, 1e-6 is crossed on the second pass for 126 of 160
+    // samples and the third for the other 34, so the cap is there for an orbit that converges
+    // slowly rather than for the ordinary case.
+    //
+    // The test breaks after the correction is applied because that is what the CPU loop does: its
+    // while condition tests the correction the previous pass applied, so both leave sineo1/coseo1
+    // one step behind eo1, and both stop on the same pass given the same tolerance.
+    //
+    // The saving is per wave rather than per object - lanes that converge early wait for the
+    // slowest in their group - so this is worth less than the iteration counts suggest.
     let u = (xl - nodep) % kTwoPi;
     var eo1 = u;
     var sineo1 = 0.0;
@@ -198,6 +212,9 @@ fn propagate(e: SGP4ElementSet, t: f32) -> PropagatedState {
         tem5 = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
         tem5 = clamp(tem5, -0.95, 0.95);
         eo1 = eo1 + tem5;
+        if (abs(tem5) < kKeplerTolerance) {
+            break;
+        }
     }
 
     // --- Short period periodics ---

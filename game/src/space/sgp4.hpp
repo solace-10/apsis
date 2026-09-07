@@ -22,10 +22,12 @@ class OrbitalElementsComponent;
 // for. Initialisation is also the part that pays off least on the GPU - it runs once per object
 // rather than once per object per frame.
 //
-// Deep space is not implemented. Element sets with a period of 225 minutes or more are reported as
-// SGP4Method::DeepSpace and their coefficients left zeroed, because SDP4 adds lunar-solar
-// periodics and resonance terms whose step carries state between calls and so does not fit the
-// split above. Roughly a twentieth of the catalogue - see game/tests/NOTES.md.
+// Deep space fits the same split, which is not obvious and is why it went unimplemented for so
+// long. Element sets with a period of 225 minutes or more are SGP4Method::DeepSpace and carry an
+// SDP4Terms block as well as the one below; SDP4 adds lunar-solar periodics and Earth resonance
+// terms, and the two parts of it that look like they need state carried between calls turn out
+// not to. SDP4Terms says which and why. Just under an eighth of the catalogue - see
+// game/tests/NOTES.md.
 //
 // Written from the published algorithm (Spacetrack Report #3, and Vallado, Crawford, Hujsak and
 // Kelso, Revisiting Spacetrack Report #3, AIAA 2006-6753) rather than adapted from Vallado's own
@@ -78,6 +80,119 @@ struct SGP4Elements
     double epochDaysSince1950{ 0.0 };
 };
 
+// Which Earth resonance a deep-space orbit is in, if any.
+//
+// Vallado's irez, with his values kept because sgp4.wgsl mirrors them the way it mirrors
+// SGP4Error's. The two arms share nothing: they are different sets of coefficients, computed by
+// different arithmetic, and the step integrates one or the other.
+enum class SDP4Resonance
+{
+    None = 0,
+
+    // One turn a day, so the same longitudes pass beneath the object on every orbit and the
+    // Earth's tesseral harmonics accumulate instead of averaging away. Geostationary.
+    Synchronous = 1,
+
+    // Two turns a day, on an orbit eccentric enough for it to matter. Molniya and Tundra.
+    HalfDay = 2,
+};
+
+// The rest of the coefficient block, for the element sets SDP4 owns.
+//
+// Zero throughout unless method is DeepSpace. Nested rather than flattened into SGP4ElementSet so
+// that the near-earth block stays the length it was and can still be read against the papers
+// alongside the near-earth half of the step.
+//
+// The names are Vallado's, for the reason given below SGP4ElementSet.
+//
+// TWO THINGS THE REFERENCE STORES AND THIS DOES NOT, both of which are why deep space was thought
+// not to fit the CPU-initialise / GPU-step split at all.
+//
+// atime, xli and xni - the resonance integrator's position. The reference carries them in its
+// element record between calls, which would make the step stateful and so unable to run on the
+// GPU. They are a cache rather than a semantic: the integration restarts from atime = 0 whenever
+// the time changes sign or moves nearer the epoch, and otherwise walks fixed 720 minute steps
+// towards the time asked for. The states reachable from zero are therefore a fixed sequence, and
+// stopping at any one of them is the same arithmetic in the same order however you got there.
+// Restarting on every call is bit-identical and costs |t| / 720 iterations, which is three at the
+// catalogue's median object age and five at its ninetieth percentile - and nothing at all for a
+// non-resonant orbit, which is most of them. sgp4_step_tests.cpp measures this rather than
+// assuming it: the reference walks each verification case with its cache warm while ours restarts
+// at every time, and the two still agree exactly.
+//
+// peo, pgho, pho, pinco and plo. dscom sets all five to zero and dpper only ever subtracts them,
+// so they are identically zero in the reference as well - five dead doubles per object in a block
+// that gets uploaded to the GPU for the whole catalogue. sgp4_init_tests.cpp asserts the
+// reference's own five are zero, so this is checked rather than believed.
+struct SDP4Terms
+{
+    SDP4Resonance resonance{ SDP4Resonance::None };
+
+    // The rates at which the Sun and Moon move the mean elements, radians per minute. These are
+    // secular: the step multiplies them by the elapsed time.
+    double dedt{ 0.0 };
+    double didt{ 0.0 };
+    double dmdt{ 0.0 };
+    double dnodt{ 0.0 };
+    double domdt{ 0.0 };
+
+    // The lunar-solar periodics. Amplitudes of terms in the Sun's and Moon's own positions, which
+    // the step evaluates afresh at every call rather than accumulating - which is what makes them
+    // periodic rather than secular.
+    double e3{ 0.0 };
+    double ee2{ 0.0 };
+    double se2{ 0.0 };
+    double se3{ 0.0 };
+    double sgh2{ 0.0 };
+    double sgh3{ 0.0 };
+    double sgh4{ 0.0 };
+    double sh2{ 0.0 };
+    double sh3{ 0.0 };
+    double si2{ 0.0 };
+    double si3{ 0.0 };
+    double sl2{ 0.0 };
+    double sl3{ 0.0 };
+    double sl4{ 0.0 };
+    double xgh2{ 0.0 };
+    double xgh3{ 0.0 };
+    double xgh4{ 0.0 };
+    double xh2{ 0.0 };
+    double xh3{ 0.0 };
+    double xi2{ 0.0 };
+    double xi3{ 0.0 };
+    double xl2{ 0.0 };
+    double xl3{ 0.0 };
+    double xl4{ 0.0 };
+
+    // Where the Moon and the Sun were at the epoch. The periodics above are evaluated against
+    // these advanced to the time asked for.
+    double zmol{ 0.0 };
+    double zmos{ 0.0 };
+
+    // The Earth resonance terms. HalfDay uses the ten d-coefficients and Synchronous the three
+    // del-coefficients, so at most one group is ever non-zero; not worth a union, since the whole
+    // block is uploaded as one either way.
+    double d2201{ 0.0 };
+    double d2211{ 0.0 };
+    double d3210{ 0.0 };
+    double d3222{ 0.0 };
+    double d4410{ 0.0 };
+    double d4422{ 0.0 };
+    double d5220{ 0.0 };
+    double d5232{ 0.0 };
+    double d5421{ 0.0 };
+    double d5433{ 0.0 };
+    double del1{ 0.0 };
+    double del2{ 0.0 };
+    double del3{ 0.0 };
+
+    // Greenwich sidereal time at the epoch, which is what ties a resonance to a place on the
+    // ground rather than to a direction in space, and the two values the integration starts from.
+    double gsto{ 0.0 };
+    double xfact{ 0.0 };
+    double xlamo{ 0.0 };
+};
+
 // Everything the step reads, and nothing else.
 //
 // The coefficient names are Vallado's, unchanged and deliberately so. They are the names used by
@@ -128,6 +243,9 @@ struct SGP4ElementSet
     double xlcof{ 0.0 };
     double xmcof{ 0.0 };
     double nodecf{ 0.0 };
+
+    // Zero unless method is DeepSpace. The step reads it only on that branch.
+    SDP4Terms deepSpace;
 };
 
 // Turns an element set into the coefficients the step needs.
@@ -141,9 +259,8 @@ SGP4ElementSet SGP4Initialise(const SGP4Elements& elements);
 // Why a step failed. SGP4 raises these against a particular time rather than against the element
 // set, which is why initialisation has no failure mode of its own and this does.
 //
-// The numbering is Vallado's, minus the two that cannot occur here: his 3 is raised inside dpper,
-// which only the deep-space path calls, and his 5 is commented out at initialisation in the
-// reference itself.
+// The numbering is Vallado's, minus his 5, which is commented out at initialisation in the
+// reference itself. Ours continue from where his stop.
 //
 // The values are stated rather than left implicit because sgp4.wgsl mirrors them: the shader has
 // no way to return an enum, so it writes one of these numbers alongside the position.
@@ -151,9 +268,14 @@ enum class SGP4Error
 {
     None = 0,
 
-    // The element set was never initialised, because it is deep space and SDP4 is not implemented.
-    // Its coefficients are zero, and stepping them would divide by zero rather than be merely
-    // wrong, so this is refused before any arithmetic happens.
+    // Deep space reached something that cannot step it. SGP4Step() no longer raises this, because
+    // it can now step deep space; sgp4.wgsl still does, because its deep-space branch has not been
+    // written yet and refusing is better than propagating an element set it only half understands.
+    // So this currently means "not supported here" rather than "not supported", and it goes when
+    // the shader catches up.
+    //
+    // The value would stay even then. sgp4.wgsl mirrors these numbers and PropagationFailureComponent
+    // latches them, so renumbering would silently relabel every error either of them has recorded.
     DeepSpaceNotSupported = 1,
 
     MeanMotionNotPositive = 2, // Vallado 2
@@ -215,6 +337,15 @@ enum class SGP4Error
     //
     // Mirrored in sgp4.wgsl as kErrorDragModelDiverged.
     DragModelDiverged = 6,
+
+    // Vallado 3, raised inside dpper and so only reachable on the deep-space branch: the
+    // lunar-solar periodics have moved the eccentricity outside [0, 1], which is not an orbit.
+    //
+    // Numbered 7 rather than 3 because 3 is already taken. His error codes are an enumeration of
+    // failures, not an ordering of them, and ours has to stay compatible with what sgp4.wgsl and
+    // PropagationFailureComponent have already written down; sgp4_step_tests.cpp maps between the
+    // two, which is the only place the difference matters.
+    PerturbedEccentricityOutOfRange = 7,
 };
 
 // Where an object is, and how fast, at one instant.
@@ -230,9 +361,10 @@ struct SGP4Position
 
 // Propagates an initialised element set to a time, in minutes from its epoch.
 //
-// The other half of SGP4, and the half that will end up in the shader: on the near-earth path it
-// reads nothing but the coefficients and the time, writes nothing back, and carries nothing
-// between calls. Negative times propagate backwards and are as valid as positive ones.
+// The other half of SGP4, and the half that will end up in the shader: it reads nothing but the
+// coefficients and the time, writes nothing back, and carries nothing between calls. That holds on
+// the deep-space branch too, which is not free - see SDP4Terms - and is what keeps both branches
+// able to run anywhere. Negative times propagate backwards and are as valid as positive ones.
 //
 // This exists in double, on the CPU, so that the shader has something of ours to be compared
 // against. A WGSL step measured against the reference would be measuring transcription mistakes

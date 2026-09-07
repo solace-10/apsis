@@ -16,9 +16,9 @@ namespace WingsOfSteel
 // - see SpaceObjectRenderSystem::NotifyGroupFiltersChanged() - and deriving these again alongside
 // it would be re-deriving an answer that could not have moved.
 //
-// Present on every space object, including the deep space ones SGP4Initialise() declines to
-// initialise. Those carry SGP4Method::DeepSpace and a zeroed coefficient block, so why an object
-// is not being propagated is readable off the object rather than inferred from what it is missing.
+// Present on every space object. The deep space ones carry SGP4Method::DeepSpace and an SDP4Terms
+// block on top of the near-earth coefficients rather than instead of them, so which algorithm an
+// object is propagated by is readable off the object rather than inferred from what it is missing.
 class SGP4Component : public IComponent
 {
 public:

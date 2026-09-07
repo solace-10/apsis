@@ -185,8 +185,7 @@ WGSL's lack of `f64` mattering more than it has to.
 The implementation is our own rather than Vallado's file moved across. `reference/sgp4/README.md`
 firewalls that copy to the `tests` target because its licence position is unresolved, and a
 rewrite is worth exactly what its comparison against the original is worth — so the comparison is
-every coefficient, over every near-Earth element set in the verification file, at **exact
-equality**. The expressions are written in the reference's own operation order for that reason. A
+every coefficient, over every element set in the verification file, at **exact equality**. The expressions are written in the reference's own operation order for that reason. A
 tolerance here would be somewhere for a rearrangement to hide, and there is nothing to hide: the
 two agree bit for bit.
 
@@ -194,11 +193,22 @@ The partition between the branches is read from `satrec.method` rather than from
 threshold restated in the test, which would only check the test against itself. It comes out at
 9 near-Earth cases and 24 deep-space ones.
 
-Deep space initialises to nothing at all. The reference computes the near-Earth coefficients for
-those orbits too and then adds the lunar-solar and resonance terms on top, so stopping at the
-partition and returning a zeroed block is the difference between an obviously unusable result and
-one that looks usable and is half missing. The partition case asserts those zeroes rather than
-merely tolerating them.
+Deep space gets the near-Earth coefficients as well, and an `SDP4Terms` block on top — which is
+what the reference does, and what SDP4 steps with. The comparison covers that block field for
+field at the same exact equality: the fifty-odd coefficients `dscom` and `dsinit` produce, over all
+24 deep-space cases, including both resonances and both arms of the eccentricity fits inside the
+half-day one.
+
+**Five coefficients are compared only on the near-Earth cases, and the reason is a trap.**
+`aycof`, `xlcof`, `con41`, `x1mth2` and `x7thm1` are all functions of the inclination, and the
+lunar-solar periodics move the inclination — so the deep-space *step* works them out again from the
+perturbed value. The reference does that by writing them back into its element record, and its
+`sgp4init` ends by stepping to `tsince = 0`. So for a deep-space `satrec` those five fields hold
+what its **step** produced at the epoch, not what its **initialisation** produced; comparing ours
+against them compares two different quantities that share a name. Initialisation's own values are
+not observable in the reference at all. Nothing is lost by stopping there: ours are locals inside
+the step rather than fields, so a wrong recomputation would move every deep-space position, and the
+step case compares those bit for bit over every published row.
 
 Two things the tests established rather than assumed:
 
@@ -227,12 +237,13 @@ are visible. `NotifyGroupFiltersChanged` clears four components and leaves this 
 filter toggle costs nothing here — and because entt owns the lifetime, the handle-recycling hazard
 that rules out keying a cache on an entity never arises.
 
-Deep-space objects carry the component too, holding the zeroed block, so an object that is not
-being propagated says as much on itself rather than by being missing from something.
+Deep-space objects carry the component too, holding both halves of the block, so which algorithm
+propagates an object is readable off the object.
 
-- Recorded by: `Our initialisation reproduces the reference's near-Earth coefficients`, `The
-  near-Earth and deep-space partition matches the reference`, `An element set converts into the
-  units SGP4 initialises from` (sgp4_init_tests.cpp).
+- Recorded by: `Our initialisation reproduces the reference's coefficients`, `The near-Earth and
+  deep-space partition matches the reference`, `An element set converts into the units SGP4
+  initialises from`, `A geostationary element set reaches the deep-space branch through the
+  component` (sgp4_init_tests.cpp).
 
 ## The step is written twice, and the first one is exact
 
@@ -259,20 +270,66 @@ Two asymmetries the cases pin rather than tidy away:
   position, so that one is written first and then rejected. `SGP4Position` does the same, which is
   why the comparison runs one step past the last row `tcppver.out` prints for two of these cases —
   160 positions against 158 published.
-- **Deep space is refused rather than attempted.** `SGP4Initialise()` zeroes everything for those
-  element sets, so `no_unkozai` is zero and an unguarded step's first act would be to divide by it.
-  `SGP4Step()` checks the branch before any arithmetic and returns `DeepSpaceNotSupported`. That is
-  what makes a zeroed block safe for `SGP4Component` to carry on every geostationary object in the
-  catalogue.
+- **One case never yields a position at all.** 33334 fails at its own epoch, so the single row
+  `tcppver.out` prints for it is never reached — and that row is stale output from the satellite
+  before it rather than a position for 33334, as the reference-propagator section records.
 
-One thing to settle before the shader rather than discover during it: the Kepler solve is
-Newton-Raphson capped at ten passes with each correction clamped to 0.95, and its convergence
-tolerance is 1e-12. That is below f32 epsilon, so the WGSL version cannot reach it and will always
-run all ten passes. Bounded and correct, but it should be a decision.
+Which is why the count comes out at **669 positions against 667 published rows**: three cases end
+on a decayed orbit and contribute one comparison each past their last published row (28872, 29141,
+and 20413 three and a half years into its long run), while 33334 contributes none.
 
-- Recorded by: `Our step reproduces the reference propagator over the near-Earth cases`, `A decaying
-  orbit stops where the reference stops`, `A deep-space element set cannot be stepped`
-  (sgp4_step_tests.cpp).
+- Recorded by: `Our step reproduces the reference propagator`, `A decaying orbit stops where the
+  reference stops`, `A diverged drag model is rejected where the reference reports success`, `A
+  deep-space step depends on nothing but its arguments` (sgp4_step_tests.cpp).
+
+## Deep space keeps no state, which is the whole reason it can be stepped anywhere
+
+SDP4 adds two things to SGP4: the periodic pull of the Sun and Moon, which every deep-space orbit
+gets, and a resonance with the Earth's own tesseral harmonics, which only a few are in. Twelve of
+the 24 deep-space verification cases are resonant — seven synchronous (one turn a day) and five
+half-day (two turns a day on an eccentric orbit) — so both arms are covered, and the other twelve
+cover the path where the resonance terms are all zero.
+
+The reason this went unimplemented for so long is that it looks like it cannot fit the
+CPU-initialise / GPU-step split the near-Earth path was built around. Two things looked like state:
+
+- **The five coefficients the step recomputes.** `aycof`, `xlcof`, `con41`, `x1mth2` and `x7thm1`
+  are functions of the inclination, which the periodics move, so the deep-space step needs them
+  again from the perturbed value. The reference writes them back into the element record, which
+  would make a step mutate its own input. They are locals in `SGP4Step()` instead, seeded from the
+  block and overwritten on the branch — the same arithmetic, and nothing written back.
+- **The resonance integrator's position.** The reference carries `atime`, `xli` and `xni` between
+  calls, resuming the integration from wherever the last one stopped. That really would be state.
+  It is a cache: the integration restarts from `atime = 0` whenever the time changes sign or moves
+  nearer the epoch, and otherwise walks fixed 720-minute steps towards the time asked for, so the
+  states reachable from zero are a fixed sequence and stopping at any one of them is the same
+  arithmetic in the same order however you arrived. Restarting every call is bit-identical.
+
+**The exact comparison is what establishes the second claim, not an argument.** The reference is
+used the way it is meant to be — one element record walked forward through its range, its
+integrator warm — while ours is handed a `const` coefficient block and restarts from the epoch at
+every single time. If those were not the same arithmetic the twelve resonant cases would disagree,
+and they do not, over every published row. `A deep-space step depends on nothing but its arguments`
+then asks 25954 for the same times out of order, backwards and twice over, which is the ordering a
+stateful integrator would get wrong and a forward sweep would not.
+
+What it costs is `|t| / 720` iterations for a resonant orbit and nothing for the rest: three at the
+catalogue's median object age and five at its ninetieth percentile, by the numbers in TODO item 10.
+
+Two smaller things the tests pin rather than assume:
+
+- **`dpper` at initialisation does nothing, so there is no equivalent of it here.** The reference
+  calls it from `sgp4init` with an `init` flag that skips every write it makes. What it would have
+  subtracted is `peo`, `pgho`, `pho`, `pinco` and `plo`, which `dscom` sets to zero and nothing
+  else ever writes — so they are identically zero, and `SDP4Terms` does not carry them. The
+  initialisation case asserts the reference's own five are zero rather than taking that on trust.
+- **`gsto` is not `CalculateGMST()`.** Both answer "where is Greenwich pointing", but
+  `earth_frame.hpp`'s is the two-term form and this is the full IAU-82 series in Julian centuries.
+  Two terms is right for turning the Earth under the camera, where a hundredth of a degree is
+  invisible; `gsto` is the phase a resonance is measured against and feeds `xlamo`, which the
+  integrator then carries for months. They are meant to differ, and unifying them would break the
+  exact comparison — which is the note's whole purpose, because the duplication otherwise looks
+  like something to tidy.
 
 ## What f32 costs, measured
 
@@ -325,11 +382,12 @@ Known gaps, in rough order of how much they'd be worth:
 - **The velocity comes back and is thrown away.** The shader computes it and `SGP4StepOutput`
   carries it, but `PropagationResults` keeps only positions and `UpdateOrbitalState` still derives
   speed from vis-viva on a two-body semi-major axis. The real one is already paid for.
-- **Deep space.** `SGP4Initialise()` reports `SGP4Method::DeepSpace` and stops. Those objects stay
-  on the two-body path, which is where they already were, but they are not a rounding error in this
-  catalogue: `celestrak.py` curates `geo`, `gnss` and `gps-ops`, and the served query is unfiltered.
-  SDP4's step also carries integrator state between calls, so it does not fit the split the
-  near-Earth path was built around and needs its own answer on the GPU.
+- **Deep space is implemented but not yet reached.** `SGP4Initialise()` and `SGP4Step()` both do
+  SDP4 now, exactly, but `UpdateRoster()` still excludes those objects from the GPU roster and
+  `UpdateDeepSpace()` still puts them where two-body says. `sgp4.wgsl` has no deep-space branch and
+  refuses them, so the roster filter cannot simply be dropped. They are not a rounding error in
+  this catalogue: `celestrak.py` curates `geo`, `gnss` and `gps-ops`, and the served query is
+  unfiltered.
 - **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
   compute path, which the harness can now drive, these run inside a render pass against a swapchain
