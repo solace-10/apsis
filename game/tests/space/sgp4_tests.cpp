@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <chrono>
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -9,12 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include <glm/geometric.hpp>
-#include <glm/vec3.hpp>
-
-#include "components/orbital_elements_component.hpp"
 #include "reference/sgp4_reference.hpp"
-#include "systems/orbit_propagation_system.hpp"
 
 using namespace WingsOfSteel;
 using Catch::Matchers::WithinAbs;
@@ -176,55 +168,4 @@ TEST_CASE("The near-circular case labelled an error attempt in fact propagates",
 {
     const PropagationRun run = RunCase("33335");
     REQUIRE(run.error == 0);
-}
-
-// What the compute shader is being written to replace, measured rather than asserted about.
-//
-// CalculateCartesianPosition() takes SGP4 mean elements and propagates them as if they were
-// classical Keplerian ones, so everything SGP4 exists to model - the J2 secular drifts above
-// all - is simply absent. 06251 is a real low Earth orbit at 377 km perigee, which is where
-// that costs the most.
-//
-// The bounds are a band rather than a ceiling on purpose. The lower one is what makes this a
-// before-and-after marker: if the propagation is ever made correct without this case being
-// revisited, it fails and says so, rather than passing more comfortably and saying nothing.
-TEST_CASE("Two-body propagation of SGP4 mean elements drifts by a known amount", "[space][sgp4]")
-{
-    const Test::VerificationCase verificationCase = FindCase("06251");
-    const OrbitalElementsComponent component = Test::AsComponent(verificationCase.satrec);
-
-    elsetrec satrec = verificationCase.satrec;
-
-    double errorAtEpoch = 0.0;
-    double maxErrorOverADay = 0.0;
-
-    for (int minutes = 0; minutes <= 1440; minutes += 10)
-    {
-        double r[3];
-        double v[3];
-        REQUIRE(SGP4Funcs::sgp4(satrec, static_cast<double>(minutes), r, v));
-
-        const glm::dvec3 expected(r[0], r[1], r[2]);
-        const glm::dvec3 actual = OrbitPropagationSystem::CalculateCartesianPosition(
-            component, component.GetEpoch() + std::chrono::minutes(minutes));
-
-        const double error = glm::length(actual - expected);
-        if (minutes == 0)
-        {
-            errorAtEpoch = error;
-        }
-        maxErrorOverADay = std::max(maxErrorOverADay, error);
-    }
-
-    INFO("error at epoch " << errorAtEpoch << " km, worst over a day " << maxErrorOverADay << " km");
-
-    // At the epoch itself only the short-period terms are missing, and they currently cost
-    // about 13 km.
-    REQUIRE(errorAtEpoch > 5.0);
-    REQUIRE(errorAtEpoch < 30.0);
-
-    // A day later the secular drift dominates: about 416 km, or a quarter of the way round
-    // the Earth in ground track terms. That is the whole case for doing this properly.
-    REQUIRE(maxErrorOverADay > 200.0);
-    REQUIRE(maxErrorOverADay < 800.0);
 }

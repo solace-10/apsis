@@ -1,11 +1,9 @@
 #pragma once
 
 #include <chrono>
-#include <optional>
 #include <vector>
 
 #include <entt/entt.hpp>
-#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include <scene/systems/system.hpp>
@@ -27,19 +25,13 @@ public:
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
-    static glm::dvec3 CalculateCartesianPosition(const OrbitalElementsComponent& orbitalElements, const std::chrono::system_clock::time_point& instant);
     static void OrientPlanets(entt::registry& registry, double gmst);
-    static double SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations = 10, double tolerance = 1e-10);
 
 private:
-    void UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void UpdateRoster(entt::registry& registry);
     void UpdateTimes(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void ApplyPropagatedPositions(entt::registry& registry);
-    void UpdateCPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
-    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, std::optional<double> speed = std::nullopt);
-
-    bool m_UseSGP4 = true;
+    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, double speed);
 
     SGP4ComputePassSharedPtr m_pComputePass;
 

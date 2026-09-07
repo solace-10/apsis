@@ -18,7 +18,7 @@ include(Catch)
 
 # The suite links the whole game, as a library, rather than naming individual sources under test.
 #
-# That means the tests can reach code which touches components and scenes - CalculateCartesianPosition()
+# That means the tests can reach code which touches components and scenes - MakeSGP4Elements()
 # takes an OrbitalElementsComponent, and the orbital propagation is the most correctness-critical
 # thing in the project - instead of being confined to whatever has already been extracted into
 # engine-free translation units. The alternative costs a hand-maintained source list which silently

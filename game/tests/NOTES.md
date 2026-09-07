@@ -118,15 +118,18 @@ does not.
   (sgp4_step_tests.cpp), and the 29141 sample in `The compute shader propagates as accurately as
   f32 allows` (sgp4_shader_tests.cpp), which is the only thing covering the shader's copy.
 
-## What today's propagation costs, as a number
+## What the propagation used to cost — retired, but recorded
 
-`Two-body propagation of SGP4 mean elements drifts by a known amount` measures
+`Two-body propagation of SGP4 mean elements drifts by a known amount` measured the old
 `CalculateCartesianPosition()` against the reference for 06251, a real 377 km-perigee low Earth
-orbit: about 13 km wrong at the epoch, and 416 km at worst over the following day.
+orbit: about **13 km** wrong at the epoch, and **416 km** at worst over the following day. That is
+what propagating SGP4 mean elements as if they were classical Keplerian ones cost, and it is the
+whole case for having done this properly.
 
-The bounds are a band rather than a ceiling, deliberately. If the propagation is ever made correct
-without this case being revisited it will fail, rather than pass more comfortably and say nothing —
-which is the only way a test like this can act as a before-and-after for the SGP4 work.
+Its bounds were a band rather than a ceiling, deliberately: the lower ones were there so the case
+would **fail** once the propagation was made correct, rather than pass more comfortably and say
+nothing. It duly did, and the case was deleted along with the two-body code it was the last caller
+of. The numbers are kept here so that what the before looked like does not have to be re-derived.
 
 ## The compute path is reachable from the suite
 
@@ -221,8 +224,10 @@ Two things the tests established rather than assumed:
   in the tree: `kSGP4EarthRadius` at 6378.135, `kEarthSemiMajorAxis` at WGS84's 6378.137, and
   `kMu = 398600.4418` in `orbit_propagation_system.cpp`, which is neither. The first two are
   deliberate and answer different questions — where the propagator's arithmetic is defined, and
-  where the ground is. The third feeds the two-body path and the vis-viva velocity and is simply
-  unexamined; it leaves with the propagation it belongs to.
+  where the ground is. The third is simply unexamined. It fed the two-body path and the vis-viva
+  velocity, both of which are gone, but it did not leave with them: it still turns a mean motion
+  into the semi-major axis the UI displays, which is the one quantity SGP4's own constants are not
+  used for. TODO item 11.
 
 The one place a float sits in the way is `MakeSGP4Elements()`. `OrbitalElementsComponent` stores
 floats, so about seven significant digits reach an algorithm written in double — dominated by mean
@@ -427,9 +432,6 @@ Known gaps, in rough order of how much they'd be worth:
   re-uploading when the roster changes but the time changes every frame, so the two probably want
   separate buffers — which is a third bind group entry, and `ComputeHarness::DispatchRaw()`
   hard-codes two. Whatever carries it has to answer the f32 `tsince` hazard above.
-- **The velocity comes back and is thrown away.** The shader computes it and `SGP4StepOutput`
-  carries it, but `PropagationResults` keeps only positions and `UpdateOrbitalState` still derives
-  speed from vis-viva on a two-body semi-major axis. The real one is already paid for.
 - **`SGP4Error::ResonanceStepLimitExceeded` has a case but no sweep coverage.** By construction —
   no verification element set gets within 58 steps of the limit, so the only thing exercising it is
   the dedicated case, at a time chosen to sit either side of the boundary. The live catalogue does
