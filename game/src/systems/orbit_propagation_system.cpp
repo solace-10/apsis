@@ -90,8 +90,9 @@ void OrbitPropagationSystem::UpdateGPU(entt::registry& registry, const std::chro
 // Builds the set of objects to propagate, and uploads it only when it has changed.
 //
 // OrbitalStateComponent is only present on the objects the user can currently see, and deep-space
-// objects are left out entirely: SGP4Initialise() declines them, so their coefficients are zeroed
-// and the shader would only hand back a refusal. UpdateDeepSpace() has them instead.
+// objects are left out entirely: SGP4Initialise() does initialise them fully now, but sgp4.wgsl
+// has no deep-space branch and would only hand back a refusal. UpdateDeepSpace() steps those on
+// the CPU instead, with the same SGP4Step() this roster's objects reach through the shader.
 void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
 {
     auto view = registry.view<const SGP4Component, const OrbitalStateComponent>();
@@ -162,25 +163,47 @@ void OrbitPropagationSystem::UpdateTimes(entt::registry& registry, const std::ch
     m_pComputePass->SetTimes(m_Times, instant);
 }
 
-// Propagates the objects the GPU does not: the deep-space ones, which SDP4 would handle and
-// nothing here implements yet.
+// Propagates the objects the GPU does not: the deep-space ones, which sgp4.wgsl has no branch for.
 //
-// They get the two-body approximation, which is what every object had before SGP4 landed. It is
-// wrong by kilometres, but far less wrong for these than it would be for low orbits - the secular
-// J2 drift that dominates the error falls away with altitude, and these are the high ones.
+// SDP4, through the same SGP4Step() the near-earth objects go through - the deep-space branch is
+// inside it. So the two populations now differ in where they are stepped rather than in what steps
+// them, where before this one got the two-body approximation and was wrong by kilometres.
+//
+// Being on the CPU makes this the more accurate of the two paths rather than the fallback it looks
+// like, in three ways worth having written down:
+//   - the time stays in double, so item 10's f32 narrowing does not apply here at all;
+//   - the velocity is SGP4's own rather than the vis-viva estimate - item 12, for this half;
+//   - the position is for this frame's instant, not for a readback a couple of frames old.
 void OrbitPropagationSystem::UpdateDeepSpace(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst)
 {
     auto view = registry.view<const OrbitalElementsComponent, const SGP4Component, OrbitalStateComponent, TransformComponent>();
 
-    view.each([&instant, gmst](const OrbitalElementsComponent& orbitalElements, const SGP4Component& sgp4Component, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
+    view.each([&registry, &instant, gmst](const EntityHandle entityHandle, const OrbitalElementsComponent& orbitalElements, const SGP4Component& sgp4Component, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
         if (sgp4Component.m_ElementSet.method != SGP4Method::DeepSpace)
         {
             return;
         }
 
-        const glm::dvec3 position = CalculateCartesianPosition(orbitalElements, instant); // Position is in km, in ECI coordinates
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
-        UpdateOrbitalState(orbitalState, orbitalElements, position, gmst);
+        // At full width, unlike UpdateTimes()' f32: an epoch is an absolute instant and only the
+        // difference matters, and here there is no buffer to narrow it for.
+        const double tsinceMinutes = std::chrono::duration<double, std::ratio<60>>(instant - orbitalElements.GetEpoch()).count();
+        const SGP4Position propagated = SGP4Step(sgp4Component.m_ElementSet, tsinceMinutes);
+
+        // Latched exactly as ApplyPropagatedPositions() latches the GPU path's failures, and for
+        // the reason PropagationFailureComponent gives: the verdict is per step, so deciding frame
+        // by frame would blink the object rather than retire it. Adding a component the view does
+        // not name is safe to do while iterating it.
+        if (propagated.error != SGP4Error::None)
+        {
+            if (!registry.all_of<PropagationFailureComponent>(entityHandle))
+            {
+                registry.emplace<PropagationFailureComponent>(entityHandle, propagated.error, instant);
+            }
+            return;
+        }
+
+        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(propagated.position)));
+        UpdateOrbitalState(orbitalState, orbitalElements, propagated.position, gmst, glm::length(propagated.velocity));
     });
 }
 
@@ -262,10 +285,11 @@ void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, const std::chro
 // The state that follows from a position, whichever path produced it. Shared so the two
 // cannot drift: the readouts they feed are the same readouts.
 //
-// The speed is optional because only one of the paths has a real one. SGP4 computes velocity
-// alongside position and the shader sends it back, so the GPU path passes it; the two-body path
-// has nothing better than the vis-viva estimate below, which assumes a circular-orbit energy the
-// object does not necessarily have.
+// The speed is optional because one path still has no real one. SGP4 computes velocity alongside
+// position, so both propagating paths pass it - the shader sends it back for near-earth objects and
+// UpdateDeepSpace() has it directly. Only UpdateCPU()'s two-body fallback falls through to the
+// vis-viva estimate below, which assumes a circular-orbit energy the object does not necessarily
+// have.
 void OrbitPropagationSystem::UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, std::optional<double> speed)
 {
     orbitalState.m_PositionECI = positionECI;
