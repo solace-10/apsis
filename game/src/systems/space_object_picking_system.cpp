@@ -4,6 +4,7 @@
 
 #include "components/metadata_component.hpp"
 #include "components/mouse_picking_component.hpp"
+#include "components/propagation_pending_component.hpp"
 #include "game.hpp"
 #include "sector/sector.hpp"
 #include "systems/camera_system.hpp"
@@ -66,7 +67,7 @@ void SpaceObjectPickingSystem::PerformPick(const glm::vec2& screenPos)
     }
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<MousePickingComponent, MetadataComponent>();
+    auto view = registry.view<MousePickingComponent, MetadataComponent>(entt::exclude<PropagationPendingComponent>);
 
     const float pickRadiusSquared = kPickRadiusPixels * kPickRadiusPixels;
 

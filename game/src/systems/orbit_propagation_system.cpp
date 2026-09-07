@@ -12,6 +12,7 @@
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/propagation_failure_component.hpp"
+#include "components/propagation_pending_component.hpp"
 #include "components/sgp4_component.hpp"
 #include "space/earth_frame.hpp"
 #include "systems/orbit_propagation_system.hpp"
@@ -180,6 +181,7 @@ void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
         const glm::dvec3 position(state.position); // Position is in km, in ECI coordinates
         pTransform->transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
         UpdateOrbitalState(*pOrbitalState, position, gmst, glm::length(glm::dvec3(state.velocity)));
+        registry.remove<PropagationPendingComponent>(entityHandle);
     }
 }
 

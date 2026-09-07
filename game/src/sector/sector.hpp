@@ -59,6 +59,7 @@ private:
     bool m_ShowCameraDebugUI{ false };
     bool m_ShowGrid{ false };
     EntityWeakPtr m_pSelectedSpaceObject;
+    bool m_SelectionNotificationPending{ false };
     std::vector<EntitySharedPtr> m_NoradIdIndex;
     GroupFiltersUniquePtr m_pGroupFilters;
 };

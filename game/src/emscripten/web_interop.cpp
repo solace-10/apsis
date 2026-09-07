@@ -12,6 +12,7 @@
 #include "components/metadata_component.hpp"
 #include "components/orbital_elements_component.hpp"
 #include "components/orbital_state_component.hpp"
+#include "components/propagation_pending_component.hpp"
 #include "emscripten/web_interop.hpp"
 #include "game.hpp"
 #include "sector/group_filters.hpp"
@@ -100,6 +101,11 @@ void WebInterop::NotifySpaceObjectDeselected()
 void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
 {
     if (!pEntity)
+    {
+        return;
+    }
+
+    if (pEntity->HasComponent<PropagationPendingComponent>())
     {
         return;
     }

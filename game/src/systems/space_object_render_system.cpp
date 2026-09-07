@@ -30,6 +30,7 @@
 #include "components/orbital_state_component.hpp"
 #include "components/planet_component.hpp"
 #include "components/propagation_failure_component.hpp"
+#include "components/propagation_pending_component.hpp"
 #include "components/space_object_group_component.hpp"
 #include "game.hpp"
 #include "sector/group_filter.hpp"
@@ -195,7 +196,7 @@ void SpaceObjectRenderSystem::Update(float delta)
     const float planetRadiusSquared = planetRadius * planetRadius;
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<LabelComponent, MousePickingComponent, const TransformComponent>();
+    auto view = registry.view<LabelComponent, MousePickingComponent, const TransformComponent>(entt::exclude<PropagationPendingComponent>);
     const CameraComponent& cameraComponent = GetActiveScene()->GetCamera()->GetComponent<CameraComponent>();
     const uint32_t windowWidth = GetWindow()->GetWidth();
     const uint32_t windowHeight = GetWindow()->GetHeight();
@@ -304,7 +305,7 @@ void SpaceObjectRenderSystem::Render(wgpu::RenderPassEncoder& renderPass)
     m_LabelsVertexData.clear();
 
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    auto view = registry.view<LabelComponent>();
+    auto view = registry.view<LabelComponent>(entt::exclude<PropagationPendingComponent>);
 
     view.each([this](const auto entity, const LabelComponent& labelComponent) {
         if (labelComponent.IsOccluded())
@@ -360,7 +361,7 @@ bool SpaceObjectRenderSystem::ShouldDisplayFullLabel(EntityHandle entityHandle) 
 void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
 {
     entt::registry& registry = GetActiveScene()->GetRegistry();
-    registry.clear<OrbitalStateComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>();
+    registry.clear<LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>();
     m_HoveredEntityHandle = NullEntityHandle;
 
     Sector* pSector = Game::Get()->GetSector();
@@ -385,7 +386,15 @@ void SpaceObjectRenderSystem::NotifyGroupFiltersChanged()
 
         if (isVisible)
         {
-            registry.emplace<OrbitalStateComponent>(entityHandle);
+            if (!registry.all_of<OrbitalStateComponent>(entityHandle))
+            {
+                registry.emplace<OrbitalStateComponent>(entityHandle);
+                registry.emplace<PropagationPendingComponent>(entityHandle);
+            }
+        }
+        else
+        {
+            registry.remove<OrbitalStateComponent, PropagationPendingComponent>(entityHandle);
         }
     });
     GenerateLabels();
@@ -574,7 +583,7 @@ void SpaceObjectRenderSystem::RetireFailedSpaceObjects()
         }
 
         metadataComponent.SetVisible(false);
-        registry.remove<OrbitalStateComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>(entityHandle);
+        registry.remove<OrbitalStateComponent, PropagationPendingComponent, LabelComponent, MousePickingComponent, SpaceObjectGroupComponent>(entityHandle);
 
         if (entityHandle == m_HoveredEntityHandle)
         {

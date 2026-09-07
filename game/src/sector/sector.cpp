@@ -20,6 +20,7 @@
 #include "components/metadata_component.hpp"
 #include "components/orbital_elements_component.hpp"
 #include "components/planet_component.hpp"
+#include "components/propagation_pending_component.hpp"
 #include "components/sector_camera_component.hpp"
 #include "components/sgp4_component.hpp"
 #include "game.hpp"
@@ -128,8 +129,14 @@ void Sector::Update(float delta)
 #if defined(TARGET_PLATFORM_WEB)
     if (EntitySharedPtr pSelected = m_pSelectedSpaceObject.lock())
     {
-        if (WebInterop* pWebInterop = WebInterop::GetInstance())
+        if (WebInterop* pWebInterop = WebInterop::GetInstance(); pWebInterop && !pSelected->HasComponent<PropagationPendingComponent>())
         {
+            if (m_SelectionNotificationPending)
+            {
+                m_SelectionNotificationPending = false;
+                pWebInterop->NotifySpaceObjectSelected(pSelected);
+            }
+
             pWebInterop->NotifySpaceObjectUpdated(pSelected);
         }
     }
@@ -392,15 +399,21 @@ void Sector::SetSelectedSpaceObject(EntitySharedPtr pEntity)
     m_pSelectedSpaceObject = pEntity;
 
 #if defined(TARGET_PLATFORM_WEB)
+    m_SelectionNotificationPending = false;
+
     if (WebInterop* pWebInterop = WebInterop::GetInstance())
     {
-        if (pEntity)
+        if (!pEntity)
         {
-            pWebInterop->NotifySpaceObjectSelected(pEntity);
+            pWebInterop->NotifySpaceObjectDeselected();
+        }
+        else if (pEntity->HasComponent<PropagationPendingComponent>())
+        {
+            m_SelectionNotificationPending = true;
         }
         else
         {
-            pWebInterop->NotifySpaceObjectDeselected();
+            pWebInterop->NotifySpaceObjectSelected(pEntity);
         }
     }
 #endif
