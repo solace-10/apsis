@@ -430,15 +430,14 @@ Known gaps, in rough order of how much they'd be worth:
 - **The velocity comes back and is thrown away.** The shader computes it and `SGP4StepOutput`
   carries it, but `PropagationResults` keeps only positions and `UpdateOrbitalState` still derives
   speed from vis-viva on a two-body semi-major axis. The real one is already paid for.
-- **Deep space runs on the CPU while the shader can now take it.** `sgp4.wgsl` has the branch and
-  is measured above, but `UpdateRoster()` still filters those objects out and `UpdateDeepSpace()`
-  still steps them on the CPU — correctly, in double, but one object at a time. Dropping the filter
-  and deleting that function is all that is left, and nothing blocks it now that the refusal is
-  gone. They are not a rounding error in this catalogue: `celestrak.py` curates `geo`, `gnss` and
-  `gps-ops`, and the served query is unfiltered.
 - **`SGP4Error::ResonanceStepLimitExceeded` has a case but no sweep coverage.** By construction —
   no verification element set gets within 58 steps of the limit, so the only thing exercising it is
-  the dedicated case, at a time chosen to sit either side of the boundary.
+  the dedicated case, at a time chosen to sit either side of the boundary. The live catalogue does
+  not reach it either: its worst resonant object needs 60.3 steps of the 72 allowed.
+- **Nothing covers `OrbitPropagationSystem` itself.** The roster, the times and
+  `ApplyPropagatedPositions` are all untested, which now matters more than it did — every object in
+  the catalogue goes through that one path, and the roster no longer has a branch a test could
+  check indirectly. TODO item 2.
 - **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
   compute path, which the harness can now drive, these run inside a render pass against a swapchain

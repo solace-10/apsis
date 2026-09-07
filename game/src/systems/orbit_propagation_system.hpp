@@ -32,11 +32,10 @@ public:
     static double SolveKeplerEquation(double meanAnomaly, double eccentricity, int maxIterations = 10, double tolerance = 1e-10);
 
 private:
-    void UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
+    void UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void UpdateRoster(entt::registry& registry);
     void UpdateTimes(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void ApplyPropagatedPositions(entt::registry& registry);
-    void UpdateDeepSpace(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
     void UpdateCPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst);
     static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, std::optional<double> speed = std::nullopt);
 

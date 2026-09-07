@@ -62,7 +62,7 @@ void OrbitPropagationSystem::Update(float delta)
 
     if (m_UseSGP4)
     {
-        UpdateGPU(registry, now, gmst);
+        UpdateGPU(registry, now);
     }
     else
     {
@@ -72,7 +72,7 @@ void OrbitPropagationSystem::Update(float delta)
 
 // Feeds the compute pass the objects to propagate and the times to propagate them to, then
 // applies whatever results have come back from an earlier frame's dispatch.
-void OrbitPropagationSystem::UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst)
+void OrbitPropagationSystem::UpdateGPU(entt::registry& registry, const std::chrono::system_clock::time_point& instant)
 {
     if (!m_pComputePass->IsReady())
     {
@@ -82,27 +82,17 @@ void OrbitPropagationSystem::UpdateGPU(entt::registry& registry, const std::chro
     UpdateRoster(registry);
     UpdateTimes(registry, instant);
     ApplyPropagatedPositions(registry);
-
-    // Only the near-earth objects went to the GPU. The rest still have to be put somewhere.
-    UpdateDeepSpace(registry, instant, gmst);
 }
 
 // Builds the set of objects to propagate, and uploads it only when it has changed.
-//
-// OrbitalStateComponent is only present on the objects the user can currently see, and deep-space
-// objects are left out entirely: SGP4Initialise() does initialise them fully now, but sgp4.wgsl
-// has no deep-space branch and would only hand back a refusal. UpdateDeepSpace() steps those on
-// the CPU instead, with the same SGP4Step() this roster's objects reach through the shader.
+// Every object the user can currently see, which is what OrbitalStateComponent marks.
 void OrbitPropagationSystem::UpdateRoster(entt::registry& registry)
 {
     auto view = registry.view<const SGP4Component, const OrbitalStateComponent>();
 
     m_RosterScratch.clear();
-    view.each([this](const EntityHandle entityHandle, const SGP4Component& sgp4Component, const OrbitalStateComponent&) {
-        if (sgp4Component.m_ElementSet.method == SGP4Method::NearEarth)
-        {
-            m_RosterScratch.push_back(entityHandle);
-        }
+    view.each([this](const EntityHandle entityHandle, const SGP4Component&, const OrbitalStateComponent&) {
+        m_RosterScratch.push_back(entityHandle);
     });
 
     if (m_pRoster && *m_pRoster == m_RosterScratch)
@@ -161,50 +151,6 @@ void OrbitPropagationSystem::UpdateTimes(entt::registry& registry, const std::ch
     }
 
     m_pComputePass->SetTimes(m_Times, instant);
-}
-
-// Propagates the objects the GPU does not: the deep-space ones, which sgp4.wgsl has no branch for.
-//
-// SDP4, through the same SGP4Step() the near-earth objects go through - the deep-space branch is
-// inside it. So the two populations now differ in where they are stepped rather than in what steps
-// them, where before this one got the two-body approximation and was wrong by kilometres.
-//
-// Being on the CPU makes this the more accurate of the two paths rather than the fallback it looks
-// like, in three ways worth having written down:
-//   - the time stays in double, so item 10's f32 narrowing does not apply here at all;
-//   - the velocity is SGP4's own rather than the vis-viva estimate - item 12, for this half;
-//   - the position is for this frame's instant, not for a readback a couple of frames old.
-void OrbitPropagationSystem::UpdateDeepSpace(entt::registry& registry, const std::chrono::system_clock::time_point& instant, double gmst)
-{
-    auto view = registry.view<const OrbitalElementsComponent, const SGP4Component, OrbitalStateComponent, TransformComponent>();
-
-    view.each([&registry, &instant, gmst](const EntityHandle entityHandle, const OrbitalElementsComponent& orbitalElements, const SGP4Component& sgp4Component, OrbitalStateComponent& orbitalState, TransformComponent& transformComponent) {
-        if (sgp4Component.m_ElementSet.method != SGP4Method::DeepSpace)
-        {
-            return;
-        }
-
-        // At full width, unlike UpdateTimes()' f32: an epoch is an absolute instant and only the
-        // difference matters, and here there is no buffer to narrow it for.
-        const double tsinceMinutes = std::chrono::duration<double, std::ratio<60>>(instant - orbitalElements.GetEpoch()).count();
-        const SGP4Position propagated = SGP4Step(sgp4Component.m_ElementSet, tsinceMinutes);
-
-        // Latched exactly as ApplyPropagatedPositions() latches the GPU path's failures, and for
-        // the reason PropagationFailureComponent gives: the verdict is per step, so deciding frame
-        // by frame would blink the object rather than retire it. Adding a component the view does
-        // not name is safe to do while iterating it.
-        if (propagated.error != SGP4Error::None)
-        {
-            if (!registry.all_of<PropagationFailureComponent>(entityHandle))
-            {
-                registry.emplace<PropagationFailureComponent>(entityHandle, propagated.error, instant);
-            }
-            return;
-        }
-
-        transformComponent.transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(propagated.position)));
-        UpdateOrbitalState(orbitalState, orbitalElements, propagated.position, gmst, glm::length(propagated.velocity));
-    });
 }
 
 //
@@ -286,10 +232,9 @@ void OrbitPropagationSystem::UpdateCPU(entt::registry& registry, const std::chro
 // cannot drift: the readouts they feed are the same readouts.
 //
 // The speed is optional because one path still has no real one. SGP4 computes velocity alongside
-// position, so both propagating paths pass it - the shader sends it back for near-earth objects and
-// UpdateDeepSpace() has it directly. Only UpdateCPU()'s two-body fallback falls through to the
-// vis-viva estimate below, which assumes a circular-orbit energy the object does not necessarily
-// have.
+// position and the shader sends it back, so the GPU path passes it for every object it propagates.
+// Only UpdateCPU()'s two-body fallback falls through to the vis-viva estimate below, which assumes
+// a circular-orbit energy the object does not necessarily have.
 void OrbitPropagationSystem::UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, std::optional<double> speed)
 {
     orbitalState.m_PositionECI = positionECI;
