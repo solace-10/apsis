@@ -67,6 +67,72 @@ struct SGP4StepInput
     float xmcof;
     float nodecf;
 
+    // SDP4Terms, flattened. Deep-space element sets carry it and near-earth ones leave it zero;
+    // it is uploaded either way, because one struct for both branches is what lets the roster be
+    // one roster. Names and order are SDP4Terms' own, so the two can be read side by side.
+    //
+    // resonance mirrors SDP4Resonance rather than being a bool, because there are two arms and
+    // they share no arithmetic: 1 is synchronous, 2 is half-day, 0 integrates nothing at all.
+    uint32_t resonance;
+
+    // Secular rates from the Sun and Moon, radians per minute.
+    float dedt;
+    float didt;
+    float dmdt;
+    float dnodt;
+    float domdt;
+
+    // Lunar-solar periodic amplitudes, evaluated afresh each step rather than accumulated.
+    float e3;
+    float ee2;
+    float se2;
+    float se3;
+    float sgh2;
+    float sgh3;
+    float sgh4;
+    float sh2;
+    float sh3;
+    float si2;
+    float si3;
+    float sl2;
+    float sl3;
+    float sl4;
+    float xgh2;
+    float xgh3;
+    float xgh4;
+    float xh2;
+    float xh3;
+    float xi2;
+    float xi3;
+    float xl2;
+    float xl3;
+    float xl4;
+
+    // Where the Moon and Sun were at the epoch.
+    float zmol;
+    float zmos;
+
+    // Earth resonance terms: the ten d-coefficients for the half-day arm, the three del ones for
+    // synchronous. At most one group is ever non-zero.
+    float d2201;
+    float d2211;
+    float d3210;
+    float d3222;
+    float d4410;
+    float d4422;
+    float d5220;
+    float d5232;
+    float d5421;
+    float d5433;
+    float del1;
+    float del2;
+    float del3;
+
+    // The sidereal time the resonance is measured against, and what the integration starts from.
+    float gsto;
+    float xfact;
+    float xlamo;
+
     float padding[3];
 };
 
@@ -81,7 +147,7 @@ struct SGP4StepOutput
     float padding;
 };
 
-static_assert(sizeof(SGP4StepInput) == 144, "SGP4StepInput must match its WGSL counterpart");
+static_assert(sizeof(SGP4StepInput) == 336, "SGP4StepInput must match its WGSL counterpart");
 static_assert(sizeof(SGP4StepOutput) == 32, "SGP4StepOutput must match its WGSL counterpart");
 
 // Packs an initialised element set for the GPU.

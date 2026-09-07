@@ -338,7 +338,7 @@ rather than against Vallado, which is the whole reason the step was written twic
 agree with the reference exactly, so every difference the shader shows is precision and nothing
 else.
 
-**295 metres, and 2.3e-4 km/s.** Worst across 162 samples — every near-Earth element set in the
+**295 metres, and 2.3e-4 km/s.** Worst across 160 samples — every near-Earth element set in the
 verification file at every time it asks to be propagated to. That is the answer to the question
 this design has been resting on from the start, and it is a comfortable one: SGP4's own accuracy is
 on the order of a kilometre at epoch and grows by kilometres a day, so f32 in the step costs
@@ -358,16 +358,64 @@ it is a matter of attributing further rather than guessing.
 
 Two things worth knowing before going looking:
 
-- The Kepler solve's convergence tolerance is 1e-12, below f32 epsilon, so the shader cannot use
-  the CPU's early exit and always runs all ten passes. It converges long before that, so what this
-  costs is iterations rather than accuracy.
+- The Kepler solve exits on `kKeplerTolerance` = 1e-6 rather than the CPU's 1e-12, which f32 cannot
+  reach — below it the correction is smaller than `eo1`'s own ULP and the loop stalls rather than
+  converges. Measured over the near-Earth cases, 1e-6 is crossed on the second pass for 126 of 160
+  samples and the third for the rest, against ten passes before the early exit existed. It cost
+  nothing measurable: the worst position error is the same to every digit either way.
 - **The measurement deliberately excludes the time going in.** Both sides are given the same
   f32-representable `tsince`, so this is the cost of the arithmetic alone. At ten days from epoch an
   f32 `tsince` is worth several hundred metres of along-track error by itself — comparable to
   everything measured here — which makes how time reaches the GPU a real decision rather than a
   detail of the upload.
 
-- Recorded by: `The compute shader propagates as accurately as f32 allows` (sgp4_shader_tests.cpp).
+### Deep space costs more, and eccentricity is why
+
+The same comparison over the deep-space branch, across 509 samples, needs three numbers rather than
+one because the distribution has a long tail:
+
+| | samples | median | p90 | worst |
+|---|---|---|---|---|
+| near Earth | 160 | — | — | **295 m** |
+| deep space, within catalogue reach | 439 | 57 m | 557 m | **56.0 km** |
+| deep space, beyond it | 70 | — | — | **79.2 km** |
+
+The bulk of deep space is *better* than near Earth — 57 m median, and only 24 of 439 samples exceed
+a kilometre. The tail is two element sets and one property:
+
+- **It is not elapsed time.** The worst in-reach sample is 33333 at t = **20 minutes**, twenty
+  minutes from its own epoch. The eleven behind it are all 23333.
+- **It is eccentricity.** Those two are e = 0.995 and e = 0.973 — all but parabolic, where position
+  is violently sensitive to the eccentric anomaly and f32 has nothing left to give. 23333's own
+  comment in the verification file says Kepler fails past about 200 minutes. Nothing shaped like
+  that survives in an Earth-orbit catalogue in any number.
+- **It is not the resonance integrator**, which was the thing to be suspicious of. Its accumulation
+  is real but small next to this.
+
+"Within reach" is |t| ≤ 33 days, which is as far from its epoch as an element set in this catalogue
+can be: `spacetrack.py` admits nothing over 30 days old and `clear_stale_objects()` trims what stops
+being refreshed after 3. The one case beyond it is 20413's second entry, propagated three and a half
+years out to exercise Lyddane's choice; f32 error grows with t, so its 79 km is by construction.
+
+Because the worst case is set by an orbit nothing here will ever hold, the test pins **p90 as well
+as the maximum**. A wrong term in the transcription moves every sample; an awkward orbit moves one.
+
+### The resonance integrator is capped, on both sides
+
+`dspace` walks 720-minute steps from the epoch, so it needs |t|/720 of them, and the reference lets
+that run unbounded. `sgp4.wgsl` cannot — and a bound the shader kept that `SGP4Step()` did not would
+stop the two being comparable, which is what this whole section rests on. So `kResonanceMaxSteps`
+= 72 lives in both, and exceeding it raises `SGP4Error::ResonanceStepLimitExceeded`.
+
+72 comes from the same 33-day reach: 47,520 minutes is 66 steps, and 72 leaves a margin. It changes
+nothing the tests compare — across every case in the file at every published time the integrator's
+worst is **14** steps and its mean is 2.3 — so the limit is only reachable by an element set the
+ingestion should already have dropped. Refusing one beats the alternative, which is not a smaller
+error but a meaningless one: the unintegrated remainder of `t` goes into a quadratic.
+
+- Recorded by: `The compute shader propagates as accurately as f32 allows` (sgp4_shader_tests.cpp)
+  and `A resonance too far from its epoch is refused where the reference reports success`
+  (sgp4_step_tests.cpp), which reaches a limit the sweep cannot — the same shape as the drag case.
 
 ## Not covered yet
 
@@ -382,12 +430,15 @@ Known gaps, in rough order of how much they'd be worth:
 - **The velocity comes back and is thrown away.** The shader computes it and `SGP4StepOutput`
   carries it, but `PropagationResults` keeps only positions and `UpdateOrbitalState` still derives
   speed from vis-viva on a two-body semi-major axis. The real one is already paid for.
-- **Deep space is implemented but not yet reached.** `SGP4Initialise()` and `SGP4Step()` both do
-  SDP4 now, exactly, but `UpdateRoster()` still excludes those objects from the GPU roster and
-  `UpdateDeepSpace()` still puts them where two-body says. `sgp4.wgsl` has no deep-space branch and
-  refuses them, so the roster filter cannot simply be dropped. They are not a rounding error in
-  this catalogue: `celestrak.py` curates `geo`, `gnss` and `gps-ops`, and the served query is
-  unfiltered.
+- **Deep space runs on the CPU while the shader can now take it.** `sgp4.wgsl` has the branch and
+  is measured above, but `UpdateRoster()` still filters those objects out and `UpdateDeepSpace()`
+  still steps them on the CPU — correctly, in double, but one object at a time. Dropping the filter
+  and deleting that function is all that is left, and nothing blocks it now that the refusal is
+  gone. They are not a rounding error in this catalogue: `celestrak.py` curates `geo`, `gnss` and
+  `gps-ops`, and the served query is unfiltered.
+- **`SGP4Error::ResonanceStepLimitExceeded` has a case but no sweep coverage.** By construction —
+  no verification element set gets within 58 steps of the limit, so the only thing exercising it is
+  the dedicated case, at a time chosen to sit either side of the boundary.
 - **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
   compute path, which the harness can now drive, these run inside a render pass against a swapchain

@@ -346,6 +346,25 @@ enum class SGP4Error
     // PropagationFailureComponent have already written down; sgp4_step_tests.cpp maps between the
     // two, which is the only place the difference matters.
     PerturbedEccentricityOutOfRange = 7,
+
+    // Ours, with no counterpart in the reference: the deep-space resonance integration could not
+    // reach the time asked for inside kResonanceMaxSteps.
+    //
+    // Only resonant orbits integrate at all, and only they can raise this - a geostationary object,
+    // or a 12-hour one eccentric enough for the half-day arm. The integration walks 720-minute
+    // steps from the epoch, so the step count is |t|/720 and the limit is really a limit on how far
+    // from its epoch an element set may be propagated: about 36 days.
+    //
+    // The reference has no such limit because it does not have to run on a GPU. sgp4.wgsl needs a
+    // bounded loop, and a bound the shader keeps and SGP4Step() does not would stop the two being
+    // comparable - so the limit lives in both, and sgp4.cpp's kResonanceMaxSteps carries the
+    // arithmetic behind the number.
+    //
+    // In practice this means the ingestion has stopped: nothing that reaches 36 days from its epoch
+    // should still be in the catalogue, since the query only admits 30-day-old element sets and
+    // stale rows are trimmed after 3 days. Refusing beats the alternative, which is not a slightly
+    // worse position but a meaningless one - the unintegrated remainder of t goes into a quadratic.
+    ResonanceStepLimitExceeded = 8,
 };
 
 // Where an object is, and how fast, at one instant.

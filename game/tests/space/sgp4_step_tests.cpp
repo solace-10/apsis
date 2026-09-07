@@ -244,6 +244,55 @@ TEST_CASE("A diverged drag model is rejected where the reference reports success
 //
 // If SGP4Step() were not pure this is what would catch it - and being pure is the whole reason it
 // can be handed to a compute shader that runs thirty thousand of these in an arbitrary order.
+// The second check ours makes that the reference does not, and - like the drag one above - a case
+// the verification sweep cannot reach. Across every element set in the file at every published
+// time, the resonance integrator's worst is 14 steps of the 72 it is allowed.
+//
+// The limit is really a limit on how far from its epoch a resonant element set may be propagated.
+// The integrator walks 720-minute steps from the epoch, and it stops when the remaining time is
+// under one step, so it reaches any |t| below (72 + 1) * 720 = 52,560 minutes and no further. That
+// is about 36 days, against a catalogue that cannot hold an element set older than about 33 - see
+// kResonanceMaxSteps in sgp4.cpp for where those numbers come from.
+//
+// See SGP4Error::ResonanceStepLimitExceeded for why a limit exists at all: sgp4.wgsl cannot have an
+// unbounded loop, and a bound the shader kept and this did not would stop the two being comparable.
+TEST_CASE("A resonance too far from its epoch is refused where the reference reports success", "[space][sgp4]")
+{
+    // 25954 again: a real geostationary satellite, so the 1:1 resonance and the integrator running.
+    const Test::VerificationCase verificationCase = FindCase("25954");
+    const SGP4ElementSet elementSet = SGP4Initialise(Test::AsElements(verificationCase.satrec));
+    REQUIRE(elementSet.deepSpace.resonance == SDP4Resonance::Synchronous);
+
+    constexpr double kLastReachable = 52559.0;
+    constexpr double kFirstRefused = 52560.0;
+
+    // Either side of the boundary, and the reference propagating cleanly across both - it has no
+    // limit of its own, so this is our refusal rather than a failure either of us has detected.
+    double r[3];
+    double v[3];
+    for (const double tsince : { kLastReachable, kFirstRefused })
+    {
+        INFO("t = " << tsince << " minutes");
+        elsetrec satrec = verificationCase.satrec;
+        REQUIRE(SGP4Funcs::sgp4(satrec, tsince, r, v));
+        REQUIRE(satrec.error == 0);
+    }
+
+    CHECK(SGP4Step(elementSet, kLastReachable).error == SGP4Error::None);
+    CHECK(SGP4Step(elementSet, kFirstRefused).error == SGP4Error::ResonanceStepLimitExceeded);
+
+    // Backwards as well, since the step takes its sign from the time and the count is on |t|.
+    CHECK(SGP4Step(elementSet, -kLastReachable).error == SGP4Error::None);
+    CHECK(SGP4Step(elementSet, -kFirstRefused).error == SGP4Error::ResonanceStepLimitExceeded);
+
+    // And a non-resonant deep-space element set is untouched by any of it: nothing integrates, so
+    // there is no step count to exceed however far out it is asked for.
+    const SGP4ElementSet nonResonant = SGP4Initialise(Test::AsElements(FindCase("20413").satrec));
+    REQUIRE(nonResonant.method == SGP4Method::DeepSpace);
+    REQUIRE(nonResonant.deepSpace.resonance == SDP4Resonance::None);
+    CHECK(SGP4Step(nonResonant, kFirstRefused).error == SGP4Error::None);
+}
+
 TEST_CASE("A deep-space step depends on nothing but its arguments", "[space][sgp4]")
 {
     // 25954, a real geostationary satellite, so a 1:1 resonance and the integrator running.

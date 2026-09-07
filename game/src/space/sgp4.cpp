@@ -90,6 +90,26 @@ namespace
     constexpr double kResonanceStepMinutes = 720.0;
     constexpr double kResonanceHalfStepSquared = 259200.0; // 720^2 / 2
 
+    // How many of those steps the integration is allowed before it gives up. The reference has no
+    // such limit; this one exists because sgp4.wgsl cannot have an unbounded loop, and a bound the
+    // shader keeps and this does not would leave the two no longer comparable - which is the whole
+    // basis of sgp4_shader_tests.cpp.
+    //
+    // The number comes from how stale an element set can actually be. spacetrack.py queries
+    // EPOCH/>now-30, so nothing enters the catalogue with an epoch over 30 days old, and
+    // clear_stale_objects() removes anything not refreshed for 3 days - so |t| stays inside about
+    // 33 days, or 47,520 minutes, which is 66 steps. 72 leaves a little margin over that.
+    //
+    // No verification case comes close, so this changes nothing the tests compare: across every
+    // case in SGP4-VER.TLE at every published time, the integrator's worst is 14 steps, at
+    // |t| = 9,360 minutes on 26900, and it averages 2.3.
+    //
+    // Reaching the limit means an element set so far from its epoch that the ingestion should
+    // already have dropped it. Refusing it is better than the alternative, which is not a smaller
+    // error but a wild one: ft would be the whole unintegrated remainder, and nm is quadratic in
+    // it. Mirrored in sgp4.wgsl as kResonanceMaxSteps.
+    constexpr int kResonanceMaxSteps = 72;
+
     // An inclination this close to zero or to pi sends the node's periodic through a division by
     // sin i. The reference drops the term rather than letting it blow up; 5.2359877e-2 rad is 3
     // degrees.
@@ -675,7 +695,10 @@ namespace
     // the object already is, so it cannot be written down in closed form. That integration is
     // restarted from the epoch at every call rather than continued from the last one; SDP4Terms
     // explains why that is both correct and affordable.
-    void DeepSpaceSecular(const SGP4ElementSet& elementSet, double t, double& em, double& inclm, double& argpm, double& nodem, double& mm, double& nm)
+    // False when the integration could not reach t inside kResonanceMaxSteps, which is the caller's
+    // to turn into an error - the same division of labour DeepSpacePeriodics() and Vallado's error
+    // 3 already use.
+    bool DeepSpaceSecular(const SGP4ElementSet& elementSet, double t, double& em, double& inclm, double& argpm, double& nodem, double& mm, double& nm)
     {
         const SDP4Terms& terms = elementSet.deepSpace;
         const double twopi = glm::two_pi<double>();
@@ -690,7 +713,7 @@ namespace
 
         if (terms.resonance == SDP4Resonance::None)
         {
-            return;
+            return true;
         }
 
         // Euler-Maclaurin, in whole steps of twelve hours towards the time asked for and then a
@@ -707,7 +730,8 @@ namespace
         double xnddt = 0.0;
         double ft = 0.0;
 
-        while (true)
+        bool reached = false;
+        for (int step = 0; step <= kResonanceMaxSteps; step++)
         {
             if (terms.resonance == SDP4Resonance::Synchronous)
             {
@@ -737,12 +761,18 @@ namespace
             if (std::fabs(t - atime) < kResonanceStepMinutes)
             {
                 ft = t - atime;
+                reached = true;
                 break;
             }
 
             xli = xli + xldot * delt + xndt * kResonanceHalfStepSquared;
             xni = xni + xndt * delt + xnddt * kResonanceHalfStepSquared;
             atime = atime + delt;
+        }
+
+        if (!reached)
+        {
+            return false;
         }
 
         nm = xni + xndt * ft + xnddt * ft * ft * 0.5;
@@ -761,6 +791,7 @@ namespace
         // the same thing back again in floating point and the difference is measurable.
         const double dndt = nm - elementSet.no_unkozai;
         nm = elementSet.no_unkozai + dndt;
+        return true;
     }
 
 } // namespace
@@ -994,7 +1025,11 @@ SGP4Position SGP4Step(const SGP4ElementSet& elementSet, double tsinceMinutes)
     // mean motion, which is the thing being checked.
     if (elementSet.method == SGP4Method::DeepSpace)
     {
-        DeepSpaceSecular(elementSet, t, em, inclm, argpm, nodem, mm, nm);
+        if (!DeepSpaceSecular(elementSet, t, em, inclm, argpm, nodem, mm, nm))
+        {
+            result.error = SGP4Error::ResonanceStepLimitExceeded;
+            return result;
+        }
     }
 
     if (nm <= 0.0)
