@@ -92,10 +92,6 @@
 			{:else}
 				<div class="data-grid">
 					<div class="data-item">
-						<span class="data-label">Semi-Major</span>
-						<span class="data-value">{formatNumber($selectedObject.semiMajorAxis, 1)}<span class="data-unit">km</span></span>
-					</div>
-					<div class="data-item">
 						<span class="data-label">Eccentricity</span>
 						<span class="data-value">{formatNumber($selectedObject.eccentricity, 6)}</span>
 					</div>

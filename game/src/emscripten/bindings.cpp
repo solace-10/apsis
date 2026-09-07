@@ -20,7 +20,6 @@ struct SpaceObjectInterop
     float argumentOfPericenter{ 0.0f };
     float meanAnomaly{ 0.0f };
     uint32_t noradCatalogueId{ 0 };
-    float semiMajorAxis{ 0.0f };
     float altitude{ 0.0f };
     float velocity{ 0.0f };
     float latitude{ 0.0f };
@@ -38,7 +37,6 @@ EMSCRIPTEN_BINDINGS(apsis)
         .field("argumentOfPericenter", &SpaceObjectInterop::argumentOfPericenter)
         .field("meanAnomaly", &SpaceObjectInterop::meanAnomaly)
         .field("noradCatalogueId", &SpaceObjectInterop::noradCatalogueId)
-        .field("semiMajorAxis", &SpaceObjectInterop::semiMajorAxis)
         .field("altitude", &SpaceObjectInterop::altitude)
         .field("velocity", &SpaceObjectInterop::velocity)
         .field("latitude", &SpaceObjectInterop::latitude)

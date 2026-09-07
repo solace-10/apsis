@@ -220,14 +220,8 @@ Two things the tests established rather than assumed:
   back to 1970 January 0.0 — the last day of 1969 — on its way to the sidereal time at epoch. The
   conversion case caught this, off by exactly one day.
 - **The gravity constants are WGS72**, the model TLEs are fitted with; propagating an element set
-  with any other set of constants uses constants its own fit did not. That leaves three Earth radii
-  in the tree: `kSGP4EarthRadius` at 6378.135, `kEarthSemiMajorAxis` at WGS84's 6378.137, and
-  `kMu = 398600.4418` in `orbit_propagation_system.cpp`, which is neither. The first two are
-  deliberate and answer different questions — where the propagator's arithmetic is defined, and
-  where the ground is. The third is simply unexamined. It fed the two-body path and the vis-viva
-  velocity, both of which are gone, but it did not leave with them: it still turns a mean motion
-  into the semi-major axis the UI displays, which is the one quantity SGP4's own constants are not
-  used for. TODO item 11.
+  with any other set of constants uses constants its own fit did not. That leaves two Earth radii
+  in the tree: `kSGP4EarthRadius` at 6378.135 and `kEarthSemiMajorAxis` at WGS84's 6378.137.
 
 The one place a float sits in the way is `MakeSGP4Elements()`. `OrbitalElementsComponent` stores
 floats, so about seven significant digits reach an algorithm written in double — dominated by mean

@@ -1,8 +1,6 @@
 #include <chrono>
-#include <cmath>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <pandora.hpp>
@@ -20,13 +18,6 @@
 
 namespace WingsOfSteel
 {
-
-// Earth's gravitational parameter (km³/s²). Used only to turn a mean motion into the
-// semi-major axis the UI displays - the propagation itself runs on SGP4's own WGS72 constants.
-//
-// Which parameter this is meant to be is an open question: it is neither WGS72's 398600.8 nor
-// WGS84's 398600.5, and reads as unexamined rather than chosen. See item 11 in TODO.txt.
-static constexpr double kMu = 398600.4418;
 
 OrbitPropagationSystem::OrbitPropagationSystem()
 {
@@ -165,8 +156,7 @@ void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
 
         OrbitalStateComponent* pOrbitalState = registry.try_get<OrbitalStateComponent>(entityHandle);
         TransformComponent* pTransform = registry.try_get<TransformComponent>(entityHandle);
-        const OrbitalElementsComponent* pOrbitalElements = registry.try_get<OrbitalElementsComponent>(entityHandle);
-        if (!pOrbitalState || !pTransform || !pOrbitalElements)
+        if (!pOrbitalState || !pTransform)
         {
             continue;
         }
@@ -189,19 +179,14 @@ void OrbitPropagationSystem::ApplyPropagatedPositions(entt::registry& registry)
 
         const glm::dvec3 position(state.position); // Position is in km, in ECI coordinates
         pTransform->transform = glm::translate(glm::mat4(1.0f), glm::vec3(ECIToWorld(position)));
-        UpdateOrbitalState(*pOrbitalState, *pOrbitalElements, position, gmst, glm::length(glm::dvec3(state.velocity)));
+        UpdateOrbitalState(*pOrbitalState, position, gmst, glm::length(glm::dvec3(state.velocity)));
     }
 }
 
 // The readouts that follow from a propagated position, which the web interop reads straight off the component.
-void OrbitPropagationSystem::UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, double speed)
+void OrbitPropagationSystem::UpdateOrbitalState(OrbitalStateComponent& orbitalState, const glm::dvec3& positionECI, double gmst, double speed)
 {
     orbitalState.m_PositionECI = positionECI;
-
-    // Calculate semi-major axis from mean motion: n = sqrt(mu/a³) => a = (mu/n²)^(1/3)
-    const double n = orbitalElements.GetMeanMotion() * 2.0 * glm::pi<double>() / 86400.0;
-    orbitalState.m_SemiMajorAxis = std::cbrt(kMu / (n * n));
-
     orbitalState.m_Velocity = speed;
 
     const glm::dvec3 geodetic = ECIToGeodetic(positionECI, gmst);

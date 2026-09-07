@@ -16,7 +16,6 @@ export interface SpaceObjectInterop {
 	rightAscensionOfAscendingNode: number;
 	argumentOfPericenter: number;
 	meanAnomaly: number;
-	semiMajorAxis: number;
 	altitude: number;
 	velocity: number;
 	latitude: number;
@@ -33,7 +32,6 @@ export function fromInterop(interop: SpaceObjectInterop): SpaceObject {
 		noradId: interop.noradCatalogueId,
 		objectType: 'satellite', // TODO: Add object type to interop
 		group: { id: 'unknown', name: 'Unknown', color: '#888888', visible: true, count: 0 },
-		semiMajorAxis: interop.semiMajorAxis,
 		eccentricity: interop.eccentricity,
 		inclination: interop.inclination,
 		raan: interop.rightAscensionOfAscendingNode,
@@ -54,7 +52,6 @@ export interface SpaceObject {
 	group: SpaceObjectGroup;
 
 	// Orbital parameters
-	semiMajorAxis: number;      // km
 	eccentricity: number;
 	inclination: number;        // degrees
 	raan: number;               // Right Ascension of Ascending Node (degrees)

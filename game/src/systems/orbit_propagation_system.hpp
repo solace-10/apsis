@@ -13,7 +13,6 @@
 namespace WingsOfSteel
 {
 
-class OrbitalElementsComponent;
 class OrbitalStateComponent;
 
 class OrbitPropagationSystem : public System
@@ -31,7 +30,7 @@ private:
     void UpdateRoster(entt::registry& registry);
     void UpdateTimes(entt::registry& registry, const std::chrono::system_clock::time_point& instant);
     void ApplyPropagatedPositions(entt::registry& registry);
-    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const OrbitalElementsComponent& orbitalElements, const glm::dvec3& positionECI, double gmst, double speed);
+    static void UpdateOrbitalState(OrbitalStateComponent& orbitalState, const glm::dvec3& positionECI, double gmst, double speed);
 
     SGP4ComputePassSharedPtr m_pComputePass;
 

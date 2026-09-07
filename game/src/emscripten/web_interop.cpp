@@ -72,7 +72,6 @@ void WebInterop::NotifySpaceObjectSelected(EntitySharedPtr pEntity)
     interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());
     interop.set("argumentOfPericenter", orbitalElements.GetArgumentOfPericenter());
     interop.set("meanAnomaly", orbitalElements.GetMeanAnomaly());
-    interop.set("semiMajorAxis", static_cast<float>(orbitalState.m_SemiMajorAxis));
     interop.set("altitude", static_cast<float>(orbitalState.m_Altitude));
     interop.set("velocity", static_cast<float>(orbitalState.m_Velocity));
     interop.set("latitude", static_cast<float>(orbitalState.m_Latitude));
@@ -130,7 +129,6 @@ void WebInterop::NotifySpaceObjectUpdated(EntitySharedPtr pEntity)
     interop.set("rightAscensionOfAscendingNode", orbitalElements.GetRightAscensionOfAscendingNode());
     interop.set("argumentOfPericenter", orbitalElements.GetArgumentOfPericenter());
     interop.set("meanAnomaly", orbitalElements.GetMeanAnomaly());
-    interop.set("semiMajorAxis", static_cast<float>(orbitalState.m_SemiMajorAxis));
     interop.set("altitude", static_cast<float>(orbitalState.m_Altitude));
     interop.set("velocity", static_cast<float>(orbitalState.m_Velocity));
     interop.set("latitude", static_cast<float>(orbitalState.m_Latitude));
