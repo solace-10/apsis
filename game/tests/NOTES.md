@@ -416,6 +416,41 @@ error but a meaningless one: the unintegrated remainder of `t` goes into a quadr
   and `A resonance too far from its epoch is refused where the reference reports success`
   (sgp4_step_tests.cpp), which reaches a limit the sweep cannot — the same shape as the drag case.
 
+## The orbit path stops where the propagator does, walking outwards from the object
+
+`OrbitPathRenderSystem` draws half a period either side of the selected object, which is far enough
+for an element set to stop meaning anything: backwards past a recent launch the drag model diverges,
+forwards on a decaying orbit it goes into the ground.
+
+`TruncateAtPropagationErrors()` walks **outwards from the anchor** rather than inwards from the
+ends, so a failure ahead of the object does not shorten the half behind it and the nearest failure
+on each side is the one that bounds the run. `A path that fails on both sides keeps only the run
+around the object` puts two failures either side of the anchor and requires the innermost pair to be
+the bounds.
+
+`SGP4Error::Decayed` is the exception, and the reason the truncation cannot simply test for zero: it
+is the one error `sgp4.wgsl` raises *after* filling the position in. That sample is kept as the
+run's last point, so a re-entry ends the trail where the object meets the ground rather than one
+sample short of it. An anchor that is itself anything but `None` yields nothing at all — that object
+is one `PropagationFailureComponent` is about to retire.
+
+`kOrbitPathSampleCount` is odd so that the current instant is a sample rather than a point between
+two: it is the pivot the truncation walks from and the phase the dashes are anchored to, and an even
+count would put both half an interval out.
+
+## One render shader is compiled by the suite
+
+`The orbit path shader compiles` runs `orbit_path.wgsl` through `ComputeHarness::CompileFromFile()`.
+It draws nothing and cannot say whether what it draws is right.
+
+It is there because a render shader is only ever built at runtime, inside a resource callback, so a
+mistake in one is a feature that silently fails to appear rather than anything that stops the build.
+It earned its place immediately: `fwidth()` has to be reached from uniform control flow, and the
+dash calculation was first written inside the branch selecting the future half of the path. Without
+this case the first sign of that would have been an orbit that never showed up.
+
+Worth having for `planet.wgsl`, `sun.wgsl` and the rest too — see below.
+
 ## Not covered yet
 
 Known gaps, in rough order of how much they'd be worth:
@@ -434,7 +469,8 @@ Known gaps, in rough order of how much they'd be worth:
   `ApplyPropagatedPositions` are all untested, which now matters more than it did — every object in
   the catalogue goes through that one path, and the roster no longer has a branch a test could
   check indirectly. TODO item 2.
-- **Nothing pins the render shaders.** `planet.wgsl` consumes the model matrix and must apply it to
+- **Nothing pins what the render shaders draw.** `orbit_path.wgsl` is now at least
+  compiled by the suite, but that is all any of them get. `planet.wgsl` consumes the model matrix and must apply it to
   both position and normal; the atmosphere and wireframe pipelines deliberately do not. Unlike the
   compute path, which the harness can now drive, these run inside a render pass against a swapchain
   and the check is visual. `sun.wgsl` is in the same position and adds a second thing to look at:

@@ -31,6 +31,13 @@ public:
     void Render(wgpu::RenderPassEncoder& renderPass);
     void NotifyGroupFiltersChanged();
 
+    // Resolved here because this is the system that projects the objects into screen space.
+    EntityHandle GetHoveredSpaceObject() const { return m_HoveredEntityHandle; }
+
+    // The colour this object's marker is drawn in, so that anything drawn alongside a marker
+    // cannot disagree with it about which group an object belongs to.
+    const Color& GetSpaceObjectColor(EntityHandle entityHandle) const;
+
 private:
     void CreateRenderPipeline();
     void EnsureLabelsVertexBuffer();

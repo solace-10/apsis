@@ -7,6 +7,7 @@
 #include <scene/systems/landscape_render_system.hpp>
 #include <scene/systems/model_render_system.hpp>
 
+#include "systems/orbit_path_render_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/sun_system.hpp"
 
@@ -72,6 +73,13 @@ void SectorRenderPass::Execute(wgpu::CommandEncoder& encoder)
         if (pPlanetRenderSystem)
         {
             pPlanetRenderSystem->Render(renderPass);
+        }
+
+        // After the planet, so the depth buffer it tests against already holds the Earth.
+        OrbitPathRenderSystem* pOrbitPathRenderSystem = pScene->GetSystem<OrbitPathRenderSystem>();
+        if (pOrbitPathRenderSystem)
+        {
+            pOrbitPathRenderSystem->Render(renderPass);
         }
 
         // Glare is rendered last so it is not occluded by atmosphere or the planet itself.

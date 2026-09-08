@@ -639,6 +639,27 @@ size_t SpaceObjectRenderSystem::MakeOrbitalKey(const OrbitalElementsComponent& o
     return hash;
 }
 
+// For callers that have a handle rather than the pieces the rule below needs.
+const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(EntityHandle entityHandle) const
+{
+    static const Color sUnknownColor(Color::Red);
+
+    entt::registry& registry = GetActiveScene()->GetRegistry();
+    if (!registry.valid(entityHandle))
+    {
+        return sUnknownColor;
+    }
+
+    const MetadataComponent* pMetadataComponent = registry.try_get<MetadataComponent>(entityHandle);
+    if (pMetadataComponent == nullptr)
+    {
+        return sUnknownColor;
+    }
+
+    const GroupFilters::Mask currentMask = Game::Get()->GetSector()->GetGroupFilters()->GetCurrentMask();
+    return GetSpaceObjectColor(entityHandle == m_SelectedEntityHandle, currentMask, *pMetadataComponent);
+}
+
 // Calculate the color of the space object based on the most important group filter it belongs to.
 const Color& SpaceObjectRenderSystem::GetSpaceObjectColor(bool isCurrentlySelected, const GroupFilters::Mask& currentMask, const MetadataComponent& metadataComponent) const
 {

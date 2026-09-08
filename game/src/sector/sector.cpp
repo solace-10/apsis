@@ -31,6 +31,7 @@
 #include "space/sgp4.hpp"
 #include "systems/camera_system.hpp"
 #include "systems/debug_render_system.hpp"
+#include "systems/orbit_path_render_system.hpp"
 #include "systems/orbit_propagation_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/space_object_picking_system.hpp"
@@ -71,6 +72,9 @@ void Sector::Initialize()
     // SpaceObjectRenderSystem projects the space objects into screen space, so it has to run after
     // CameraSystem has moved the camera for this frame.
     AddSystem<SpaceObjectRenderSystem>();
+
+    // After SpaceObjectRenderSystem, which is what resolves the hover this reads.
+    AddSystem<OrbitPathRenderSystem>();
 
     m_pCamera = CreateEntity();
     // Near/far planes for orbital viewing (kilometers)

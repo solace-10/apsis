@@ -40,6 +40,7 @@ add_executable(tests
     gpu/compute_harness.cpp
     reference/sgp4_reference.cpp
     space/earth_frame_tests.cpp
+    space/orbit_path_tests.cpp
     space/sgp4_init_tests.cpp
     space/sgp4_shader_tests.cpp
     space/sgp4_step_tests.cpp
