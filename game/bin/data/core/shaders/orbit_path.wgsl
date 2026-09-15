@@ -30,11 +30,18 @@ const kTwoPi: f32 = 6.283185307179586;
 // Half lit, half gap - and what the dashes fade to once they are too small to resolve.
 const kDashDutyCycle: f32 = 0.5;
 
+// How much of the revolution each end of the ribbon is faded out over. The path's two ends meet
+// behind the object, where a solid edge running into a dashed one reads as a break in the orbit
+// rather than as the seam it is. A fraction rather than a distance, so LEO and GEO look the same.
+const kFadeFraction: f32 = 0.08;
+
 struct VertexOutput
 {
     @builtin(position) position: vec4f,
     // Measured from the object, so its sign says whether a fragment is past or future.
     @location(0) signedArcLength: f32,
+    // Zero at whichever end of the path is nearer, one once clear of the fade.
+    @location(1) endFade: f32,
 }
 
 @vertex fn vertexMain(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput
@@ -88,9 +95,15 @@ struct VertexOutput
     // Back through the perspective divide: a pixel is 2/viewport of NDC, and clip is NDC times w.
     let offsetClip = offsetPixels * (2.0 / viewport) * clip.w;
 
+    // arcLength is measured from the first point, so it is also the distance to that end.
+    let pathLength = uPoints[uOrbitPath.pointCount - 1u].arcLength;
+    let distanceToEnd = min(point.arcLength, pathLength - point.arcLength);
+    let fadeLength = max(pathLength * kFadeFraction, 1e-5);
+
     var out: VertexOutput;
     out.position = vec4f(clip.xy + offsetClip, clip.z, clip.w);
     out.signedArcLength = point.arcLength - uOrbitPath.anchorArcLength;
+    out.endFade = clamp(distanceToEnd / fadeLength, 0.0, 1.0);
     return out;
 }
 
@@ -113,7 +126,7 @@ struct VertexOutput
     let dashAlpha = mix(dash, kDashDutyCycle, unresolvable);
 
     // Where the object has been is solid; where it is going is dashed.
-    let alpha = uOrbitPath.color.a * select(1.0, dashAlpha, in.signedArcLength > 0.0);
+    let alpha = uOrbitPath.color.a * select(1.0, dashAlpha, in.signedArcLength > 0.0) * smoothstep(0.0, 1.0, in.endFade);
 
     return vec4f(uOrbitPath.color.rgb * alpha, alpha);
 }
