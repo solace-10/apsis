@@ -38,23 +38,17 @@
 {#if $selectedObject}
 	<div class="info-panel panel">
 		<header class="panel-header">
-			<span class="panel-title">Selected Object</span>
-			<div class="header-right">
-				<span class="badge badge-primary">{getOrbitType($selectedObject.altitude)}</span>
-				<button class="close-btn" onclick={handleClose} aria-label="Close panel">×</button>
-			</div>
+			<span class="panel-title">Selected object</span>
+			<span class="badge">{getOrbitType($selectedObject.altitude)}</span>
+			<button class="icon-btn" onclick={handleClose} aria-label="Close selected object">
+				<svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>
+			</button>
 		</header>
 
 		<div class="panel-body">
 			<div class="sat-header">
-				<div>
-					<div class="sat-name">{$selectedObject.name}</div>
-					<div class="sat-norad">NORAD {$selectedObject.noradId}</div>
-				</div>
-				<div class="sat-status">
-					<span class="status-dot active"></span>
-					<span class="status-text">Active</span>
-				</div>
+				<div class="sat-name">{$selectedObject.name}</div>
+				<div class="data-label">NORAD {$selectedObject.noradId}</div>
 			</div>
 
 			{#if viewMode === 'details'}
@@ -73,7 +67,7 @@
 					</div>
 					<div class="data-item">
 						<span class="data-label">Velocity</span>
-						<span class="data-value">{formatNumber($selectedObject.velocity * 3600, 0)}<span class="data-unit">km/h</span></span>
+						<span class="data-value">{Math.round($selectedObject.velocity * 3600).toLocaleString('en-US')}<span class="data-unit">km/h</span></span>
 					</div>
 					<div class="data-item">
 						<span class="data-label">Latitude</span>
@@ -116,7 +110,7 @@
 
 			<div class="btn-group">
 				<button class="btn" class:btn-primary={viewMode === 'details'} onclick={() => setViewMode('details')}>Details</button>
-				<button class="btn" class:btn-primary={viewMode === 'orbital'} onclick={() => setViewMode('orbital')}>Orbit Mean Elements</button>
+				<button class="btn" class:btn-primary={viewMode === 'orbital'} onclick={() => setViewMode('orbital')}>Orbit mean elements</button>
 			</div>
 		</div>
 	</div>
@@ -125,90 +119,31 @@
 <style>
 	.info-panel {
 		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		width: 340px;
-		max-height: calc(100vh - 2rem);
+		top: 16px;
+		right: 16px;
+		width: 360px;
+		max-height: calc(100vh - 32px);
 		overflow-y: auto;
-	}
-
-	.header-right {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.close-btn {
-		background: none;
-		border: none;
-		color: var(--text-dim);
-		font-size: 20px;
-		cursor: pointer;
-		padding: 0;
-		line-height: 1;
-		transition: color 0.15s ease;
-	}
-
-	.close-btn:hover {
-		color: var(--text-primary);
 	}
 
 	.sat-header {
 		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		margin-bottom: 1.25rem;
+		flex-direction: column;
+		gap: 8px;
+		margin-bottom: 14px;
 	}
 
 	.sat-name {
-		font-family: var(--font-mono);
-		font-size: 1.125rem;
-		font-weight: 600;
-		color: var(--text-primary);
-		margin-bottom: 0.25rem;
-	}
-
-	.sat-norad {
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--text-dim);
-	}
-
-	.sat-status {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.status-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		animation: pulse 2s ease-in-out infinite;
-	}
-
-	.status-dot.active {
-		background: var(--accent-success);
-	}
-
-	.status-text {
-		color: var(--accent-success);
-	}
-
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		font-size: 44px;
+		line-height: 44px;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		overflow-wrap: anywhere;
 	}
 
 	.btn-group {
 		display: flex;
-		gap: 0.5rem;
-		margin-top: 1.25rem;
-		padding-top: 1.25rem;
-		border-top: 1px solid var(--border-subtle);
+		gap: 8px;
+		margin-top: 14px;
 	}
 </style>

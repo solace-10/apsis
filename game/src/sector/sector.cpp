@@ -180,18 +180,18 @@ void Sector::InitializeDatabase()
 void Sector::InitializeGroupFilters()
 {
     m_pGroupFilters = std::make_unique<GroupFilters>();
-    m_pGroupFilters->RegisterGroupFilter("last-30-days", "Last 30 days' launches", "#CC6600", true);
-    m_pGroupFilters->RegisterGroupFilter("stations", "Space Stations", "#FFD700", true);
-    m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#4A90D9", false);
-    m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#7B68EE", true);
-    m_pGroupFilters->RegisterGroupFilter("gps-ops", "GPS", "#32CD32", true);
-    m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#FF6347", false);
-    m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#00CED1", false);
-    m_pGroupFilters->RegisterGroupFilter("science", "Science", "#87CEEB", true);
-    m_pGroupFilters->RegisterGroupFilter("fengyun-1c-debris", "Chinese ASAT test debris", "#880040", false);
-    m_pGroupFilters->RegisterGroupFilter("debris", "Debris", "#808080", false);
-    m_pGroupFilters->RegisterGroupFilter("analyst", "Well-tracked analyst", "#404040", false);
-    m_pGroupFilters->RegisterGroupFilter("other", "Other", "#DD8080", false);
+    m_pGroupFilters->RegisterGroupFilter("last-30-days", "Last 30 days' launches", "#FC3D21", true);
+    m_pGroupFilters->RegisterGroupFilter("stations", "Space stations", "#FFFFFF", true);
+    m_pGroupFilters->RegisterGroupFilter("starlink", "Starlink", "#5B8DEF", false);
+    m_pGroupFilters->RegisterGroupFilter("oneweb", "OneWeb", "#9BB4E6", true);
+    m_pGroupFilters->RegisterGroupFilter("gps-ops", "GPS", "#F5B700", true);
+    m_pGroupFilters->RegisterGroupFilter("gnss", "GNSS", "#E8833A", false);
+    m_pGroupFilters->RegisterGroupFilter("geo", "Active geosynchronous", "#2EC4B6", false);
+    m_pGroupFilters->RegisterGroupFilter("science", "Science", "#7FE0D0", true);
+    m_pGroupFilters->RegisterGroupFilter("fengyun-1c-debris", "Chinese ASAT test debris", "#C2185B", false);
+    m_pGroupFilters->RegisterGroupFilter("debris", "Debris", "#8C8C8C", false);
+    m_pGroupFilters->RegisterGroupFilter("analyst", "Well-tracked analyst", "#6B6B6B", false);
+    m_pGroupFilters->RegisterGroupFilter("other", "Other", "#D9A5A5", false);
 }
 
 void Sector::InitializeSpaceObjects(const Json::Data& objectsData, const Json::Data& groupsData)

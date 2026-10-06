@@ -83,7 +83,6 @@
 
 {#if showOverlay}
 	<div class="overlay">
-		<div class="spinner"></div>
 		<div class="status">{statusText}</div>
 	</div>
 {/if}
@@ -110,36 +109,16 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		background-color: rgba(0, 0, 0, 0.8);
+		background: var(--ground);
 		z-index: 10;
 		pointer-events: none;
 	}
 
-	.spinner {
-		height: 50px;
-		width: 50px;
-		animation: rotation 0.8s linear infinite;
-		border-left: 10px solid rgb(0, 150, 240);
-		border-right: 10px solid rgb(0, 150, 240);
-		border-bottom: 10px solid rgb(0, 150, 240);
-		border-top: 10px solid rgb(100, 0, 200);
-		border-radius: 100%;
-		background-color: rgb(200, 100, 250);
-	}
-
-	@keyframes rotation {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
 	.status {
-		color: white;
-		margin-top: 1em;
-		font-family: sans-serif;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 800;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
 	}
-
 </style>
