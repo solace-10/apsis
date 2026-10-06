@@ -33,6 +33,33 @@
 	function setViewMode(mode: ViewMode) {
 		viewMode = mode;
 	}
+
+	// Keeps the name on one line: condense the width first (down to 80%), then shrink the size.
+	// Text width scales roughly linearly with both, so each step is a single measurement.
+	function fitOneLine(node: HTMLElement, name: string) {
+		let fittedName = '';
+
+		async function fit(name: string) {
+			// The store re-emits on every position update, so only refit when the name changes.
+			if (name === fittedName) return;
+			fittedName = name;
+			node.style.fontStretch = '';
+			node.style.fontSize = '';
+			await document.fonts.ready;
+
+			let ratio = node.clientWidth / node.scrollWidth;
+			if (ratio >= 1) return;
+			node.style.fontStretch = `${Math.max(ratio, 0.8) * 100}%`;
+
+			ratio = node.clientWidth / node.scrollWidth;
+			if (ratio < 1) {
+				node.style.fontSize = `${Math.max(20, Math.floor(parseFloat(getComputedStyle(node).fontSize) * ratio))}px`;
+			}
+		}
+
+		fit(name);
+		return { update: fit };
+	}
 </script>
 
 {#if $selectedObject}
@@ -47,7 +74,7 @@
 
 		<div class="panel-body">
 			<div class="sat-header">
-				<div class="sat-name">{$selectedObject.name}</div>
+				<div class="sat-name" use:fitOneLine={$selectedObject.name}>{$selectedObject.name}</div>
 				<div class="data-label">NORAD {$selectedObject.noradId}</div>
 			</div>
 
@@ -138,7 +165,9 @@
 		line-height: 44px;
 		font-weight: 800;
 		letter-spacing: -0.01em;
-		overflow-wrap: anywhere;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.btn-group {
