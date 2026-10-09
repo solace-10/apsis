@@ -180,7 +180,7 @@ wgpu::RenderPipeline OrbitPathRenderSystem::CreateRenderPipeline(const char* pLa
     };
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat(),
+        .format = GetWindow()->GetSurfaceFormat(),
         .blend = &blendState
     };
 

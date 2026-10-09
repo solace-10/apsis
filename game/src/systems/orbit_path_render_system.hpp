@@ -36,7 +36,7 @@ public:
     void Initialize(Scene* pScene) override;
     void Update(float delta) override;
 
-    // Called from SectorRenderPass, after the planet has written its depth.
+    // Called from OrbitOverlayRenderPass, which tests against the depth the scene left behind.
     void Render(wgpu::RenderPassEncoder& renderPass);
 
 private:

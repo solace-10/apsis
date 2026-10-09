@@ -199,8 +199,5 @@ fn geometrySmith(N: vec3f, V: vec3f, L: vec3f, roughness: f32) -> f32
     
     //return vec4f(ambient.rgb, 1.0);
     
-    // Convert from linear to sRGB.
-    // This should be done by the post-processing chain, not this shader!
-    let output = pow(color.rgb, vec3f(1.0 / 2.2));
-    return vec4f(output.rgb, 1.0);
+    return vec4f(color, 1.0);
 }

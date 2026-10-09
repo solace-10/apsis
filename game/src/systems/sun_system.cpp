@@ -105,7 +105,7 @@ wgpu::RenderPipeline SunSystem::CreateRenderPipeline(const char* pLabel, const c
     };
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat(),
+        .format = GetWindow()->GetSceneFormat(),
         .blend = &blendState,
         .writeMask = wgpu::ColorWriteMask::All
     };

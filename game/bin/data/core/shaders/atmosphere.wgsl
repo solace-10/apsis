@@ -148,17 +148,6 @@ fn getFarIntersection(v3Pos: vec3f, v3Ray: vec3f, fRadius2: f32) -> f32
     return out;
 }
 
-// Convert linear color to sRGB (gamma correction)
-// Duplicated from planet.wgsl: the swap chain is BGRA8Unorm, so every shader
-// writing to it has to encode its own gamma.
-fn linearToSrgb(linear: vec3f) -> vec3f
-{
-    let cutoff = linear < vec3f(0.0031308);
-    let higher = vec3f(1.055) * pow(linear, vec3f(1.0/2.4)) - vec3f(0.055);
-    let lower = linear * vec3f(12.92);
-    return select(higher, lower, cutoff);
-}
-
 fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
 {
     let fCos2 = fCos * fCos;
@@ -263,10 +252,5 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
     let luminance = dot(color, vec3f(0.299, 0.587, 0.114));
     let alpha = clamp(luminance * 2.0, 0.0, 1.0);
 
-    // Gamma, without which everything faint disappears. The encoding lifts dim
-    // values far more than bright ones: 0.02 linear belongs at 0.149 and 0.80 at
-    // 0.91, so writing linear left the reddened terminator band about thirteen
-    // times too dark while the blue limb looked close enough to pass. That is why
-    // the atmosphere seemed to work everywhere except where it was interesting.
-    return vec4f(linearToSrgb(color), alpha);
+    return vec4f(color, alpha);
 }

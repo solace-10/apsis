@@ -45,6 +45,10 @@ const kSunAngularRadius: f32 = 0.004653;
 // How far out the glare is drawn, and with it the size of the quad. Nothing is drawn outside it.
 const kGlowAngularRadius: f32 = 0.0698; // 4 degrees, about 15 solar radii
 
+// The tonemapper rolls 1.0 off to a grey of about 0.88; four reaches 0.98. Any brighter and the
+// disc's partially covered edge pixels saturate too, which costs it its antialiasing.
+const kDiscRadiance: f32 = 4.0;
+
 // Peak of the glare, at the centre of the Sun and so underneath the disc.
 const kAureoleIntensity: f32 = 0.5;
 
@@ -136,24 +140,6 @@ fn sunVisibility(cameraPosition: vec3f, sunDirection: vec3f) -> f32
     return out;
 }
 
-// Convert linear color to sRGB (gamma correction)
-fn linearToSrgb(linear: vec3f) -> vec3f
-{
-    let cutoff = linear < vec3f(0.0031308);
-    let higher = vec3f(1.055) * pow(linear, vec3f(1.0/2.4)) - vec3f(0.055);
-    let lower = linear * vec3f(12.92);
-    return select(higher, lower, cutoff);
-}
-
-// The swap chain is BGRA8Unorm, so each shader encodes its own output. It is the coverage that is
-// encoded rather than the final colour: the alpha and the three channels then carry the same
-// curve, and the Sun keeps its hue instead of drifting towards white as the encoding lifts its
-// dim channels further than its bright one.
-fn encodeCoverage(coverage: f32) -> f32
-{
-    return linearToSrgb(vec3f(clamp(coverage, 0.0, 1.0))).r;
-}
-
 @fragment fn discMain(in: VertexOutput) -> @location(0) vec4f
 {
     let x = solarRadii(in.offset);
@@ -169,8 +155,7 @@ fn encodeCoverage(coverage: f32) -> f32
     // goes white and the tint survives only out in the glare, where the values are low enough to
     // still carry it. Tinting the disc as well makes it read as a coloured object rather than as
     // something too bright to look at.
-    let encoded = encodeCoverage(disc);
-    return vec4f(vec3f(encoded), encoded);
+    return vec4f(vec3f(disc * kDiscRadiance), disc);
 }
 
 @fragment fn aureoleMain(in: VertexOutput) -> @location(0) vec4f
@@ -192,6 +177,6 @@ fn encodeCoverage(coverage: f32) -> f32
     // to meet it. Without this the last tenth of a percent is still a visible straight line.
     let window = pow(max(1.0 - r, 0.0), 2.0);
 
-    let encoded = encodeCoverage(aureole * window * in.visibility);
-    return vec4f(uGlobalUniforms.directionalLightColor.rgb * encoded, encoded);
+    let coverage = aureole * window * in.visibility;
+    return vec4f(uGlobalUniforms.directionalLightColor.rgb * coverage, coverage);
 }

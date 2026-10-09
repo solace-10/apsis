@@ -108,7 +108,7 @@ void SpaceObjectRenderSystem::CreateRenderPipeline()
     };
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat(),
+        .format = GetWindow()->GetSurfaceFormat(),
         .blend = &blendState
     };
 

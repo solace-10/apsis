@@ -2,6 +2,7 @@
 #include <imgui/imgui_system.hpp>
 #include <input/input_system.hpp>
 #include <pandora.hpp>
+#include <render/pass/present_pass.hpp>
 #include <render/pass/ui_render_pass.hpp>
 #include <render/rendersystem.hpp>
 #include <scene/camera.hpp>
@@ -12,6 +13,7 @@
 
 #include "game.hpp"
 #include "render/game_ui_render_pass.hpp"
+#include "render/orbit_overlay_render_pass.hpp"
 #include "render/sector_render_pass.hpp"
 #include "sector/sector.hpp"
 #include "systems/planet_render_system.hpp"
@@ -49,6 +51,8 @@ void Game::Initialize()
     RenderSystem* pRenderSystem = GetRenderSystem();
     pRenderSystem->ClearPasses();
     pRenderSystem->AddPass(std::make_shared<SectorRenderPass>());
+    pRenderSystem->AddPass(std::make_shared<OrbitOverlayRenderPass>());
+    pRenderSystem->AddPass(std::make_shared<PresentPass>());
     pRenderSystem->AddPass(std::make_shared<GameUIRenderPass>());
     pRenderSystem->AddPass(std::make_shared<UIRenderPass>());
 

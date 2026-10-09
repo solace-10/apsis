@@ -7,7 +7,6 @@
 #include <scene/systems/landscape_render_system.hpp>
 #include <scene/systems/model_render_system.hpp>
 
-#include "systems/orbit_path_render_system.hpp"
 #include "systems/planet_render_system.hpp"
 #include "systems/sun_system.hpp"
 
@@ -21,12 +20,9 @@ SectorRenderPass::SectorRenderPass()
 
 void SectorRenderPass::Execute(wgpu::CommandEncoder& encoder)
 {
-    wgpu::SurfaceTexture surfaceTexture;
-    GetWindow()->GetSurface().GetCurrentTexture(&surfaceTexture);
-
     wgpu::RenderPassColorAttachment colorAttachment{
         .view = GetWindow()->GetMsaaColorTexture().GetTextureView(),
-        .resolveTarget = surfaceTexture.texture.CreateView(),
+        .resolveTarget = GetWindow()->GetSceneColorTexture().GetTextureView(),
         .loadOp = wgpu::LoadOp::Clear,
         .storeOp = wgpu::StoreOp::Store,
         .clearValue = wgpu::Color{ 0.0, 0.0, 0.0, 1.0 }
@@ -73,13 +69,6 @@ void SectorRenderPass::Execute(wgpu::CommandEncoder& encoder)
         if (pPlanetRenderSystem)
         {
             pPlanetRenderSystem->Render(renderPass);
-        }
-
-        // After the planet, so the depth buffer it tests against already holds the Earth.
-        OrbitPathRenderSystem* pOrbitPathRenderSystem = pScene->GetSystem<OrbitPathRenderSystem>();
-        if (pOrbitPathRenderSystem)
-        {
-            pOrbitPathRenderSystem->Render(renderPass);
         }
 
         // Glare is rendered last so it is not occluded by atmosphere or the planet itself.

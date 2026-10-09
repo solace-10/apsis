@@ -259,7 +259,7 @@ void PlanetRenderSystem::CreateRenderPipeline()
     }
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
+        .format = GetWindow()->GetSceneFormat()
     };
 
     wgpu::FragmentState fragmentState{
@@ -310,7 +310,7 @@ void PlanetRenderSystem::CreateWireframePipeline()
     }
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat()
+        .format = GetWindow()->GetSceneFormat()
     };
 
     wgpu::FragmentState fragmentState{
@@ -497,7 +497,7 @@ void PlanetRenderSystem::CreateAtmospherePipeline()
     };
 
     wgpu::ColorTargetState colorTargetState{
-        .format = GetWindow()->GetTextureFormat(),
+        .format = GetWindow()->GetSceneFormat(),
         .blend = &blendState,
         .writeMask = wgpu::ColorWriteMask::All
     };
