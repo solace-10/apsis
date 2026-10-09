@@ -18,7 +18,7 @@ It is idempotent (creates only what's absent, borrowing from the canonical check
 after a `submodule update` detaches it. It handles:
 
 1. **Engine submodule** — `git submodule update --init pandora`
-   (URL: `git@codeberg.org:pedronunes/pandora.git`), then attaches the detached HEAD to `main`
+   (URL: `git@github.com:solace-10/pandora.git`), then attaches the detached HEAD to `main`
    (tracking `origin/main`) so engine commits aren't dangling. Objects are cached in the shared
    `.git/modules/pandora`, so this is local and fast.
 2. **`pandora/ext/`** (emsdk + FetchContent deps, ~4.1 GB, gitignored via `ext/` in

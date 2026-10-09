@@ -17,7 +17,7 @@ A space object tracking and visualisation application. **Apsis** renders satelli
 ## Project Structure
 
 - `game/` - Main application (space object logic, rendering, components, systems)
-- `pandora/` - [C++20 game engine framework](https://codeberg.org/pedronunes/pandora/) (WebGPU, ECS, physics, resources)
+- `pandora/` - [C++20 game engine framework](https://github.com/solace-10/pandora) (WebGPU, ECS, physics, resources)
 - `webapp/` - SvelteKit frontend for web deployment
 
 ## Building

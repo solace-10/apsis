@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { selectedObject, selectObject } from '$lib/stores/game';
 
-	type ViewMode = 'details' | 'orbital';
-	let viewMode: ViewMode = $state('details');
-
 	function formatNumber(value: number, decimals: number = 2): string {
 		return value.toFixed(decimals);
 	}
@@ -30,185 +27,172 @@
 		selectObject(null);
 	}
 
-	function setViewMode(mode: ViewMode) {
-		viewMode = mode;
+	// Keeps the name on one line: condense the width first (down to 80%), then shrink the size.
+	// Text width scales roughly linearly with both, so each step is a single measurement.
+	function fitOneLine(node: HTMLElement, name: string) {
+		let fittedName = '';
+
+		async function fit(name: string) {
+			// The store re-emits on every position update, so only refit when the name changes.
+			if (name === fittedName) return;
+			fittedName = name;
+			node.style.fontStretch = '';
+			node.style.fontSize = '';
+			await document.fonts.ready;
+
+			let ratio = node.clientWidth / node.scrollWidth;
+			if (ratio >= 1) return;
+			node.style.fontStretch = `${Math.max(ratio, 0.8) * 100}%`;
+
+			ratio = node.clientWidth / node.scrollWidth;
+			if (ratio < 1) {
+				node.style.fontSize = `${Math.max(20, Math.floor(parseFloat(getComputedStyle(node).fontSize) * ratio))}px`;
+			}
+		}
+
+		fit(name);
+		return { update: fit };
 	}
 </script>
 
 {#if $selectedObject}
 	<div class="info-panel panel">
 		<header class="panel-header">
-			<span class="panel-title">Selected Object</span>
-			<div class="header-right">
-				<span class="badge badge-primary">{getOrbitType($selectedObject.altitude)}</span>
-				<button class="close-btn" onclick={handleClose} aria-label="Close panel">×</button>
-			</div>
+			<span class="panel-title">Selected object</span>
+			<span class="badge">{getOrbitType($selectedObject.altitude)}</span>
+			<button class="icon-btn" onclick={handleClose} aria-label="Close selected object">
+				<svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>
+			</button>
 		</header>
 
-		<div class="panel-body">
-			<div class="sat-header">
-				<div>
-					<div class="sat-name">{$selectedObject.name}</div>
-					<div class="sat-norad">NORAD {$selectedObject.noradId}</div>
-				</div>
-				<div class="sat-status">
-					<span class="status-dot active"></span>
-					<span class="status-text">Active</span>
-				</div>
+		<div class="sat-header">
+			<div class="sat-name" use:fitOneLine={$selectedObject.name}>{$selectedObject.name}</div>
+			<div class="data-label">NORAD {$selectedObject.noradId}</div>
+		</div>
+
+		<div class="data-grid">
+			<div class="data-item">
+				<span class="data-label">Intl. designator</span>
+				<span class="data-value">{$selectedObject.internationalDesignator}</span>
 			</div>
-
-			{#if viewMode === 'details'}
-				<div class="data-grid">
-					<div class="data-item">
-						<span class="data-label">Intl. designator</span>
-						<span class="data-value">{$selectedObject.internationalDesignator}</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Type</span>
-						<span class="data-value">{getObjectTypeLabel($selectedObject.objectType)}</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Altitude</span>
-						<span class="data-value">{formatNumber($selectedObject.altitude, 1)}<span class="data-unit">km</span></span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Velocity</span>
-						<span class="data-value">{formatNumber($selectedObject.velocity * 3600, 0)}<span class="data-unit">km/h</span></span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Latitude</span>
-						<span class="data-value">{formatNumber($selectedObject.latitude, 2)}°</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Longitude</span>
-						<span class="data-value">{formatNumber($selectedObject.longitude, 2)}°</span>
-					</div>
-				</div>
-				<!--
-				<div class="orbital-section">
-					<div class="section-title">Additional information</div>
-				</div>
-				-->
-			{:else}
-				<div class="data-grid">
-					<div class="data-item">
-						<span class="data-label">Eccentricity</span>
-						<span class="data-value">{formatNumber($selectedObject.eccentricity, 6)}</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Inclination</span>
-						<span class="data-value">{formatNumber($selectedObject.inclination, 2)}°</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">RAAN</span>
-						<span class="data-value">{formatNumber($selectedObject.raan, 2)}°</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Arg. Perigee</span>
-						<span class="data-value">{formatNumber($selectedObject.argOfPerigee, 2)}°</span>
-					</div>
-					<div class="data-item">
-						<span class="data-label">Mean Anomaly</span>
-						<span class="data-value">{formatNumber($selectedObject.meanAnomaly, 2)}°</span>
-					</div>
-				</div>
-			{/if}
-
-			<div class="btn-group">
-				<button class="btn" class:btn-primary={viewMode === 'details'} onclick={() => setViewMode('details')}>Details</button>
-				<button class="btn" class:btn-primary={viewMode === 'orbital'} onclick={() => setViewMode('orbital')}>Orbit Mean Elements</button>
+			<div class="data-item">
+				<span class="data-label">Type</span>
+				<span class="data-value">{getObjectTypeLabel($selectedObject.objectType)}</span>
+			</div>
+			<div class="data-item">
+				<span class="data-label">Altitude</span>
+				<span class="data-value">{formatNumber($selectedObject.altitude, 1)}<span class="data-unit">km</span></span>
+			</div>
+			<div class="data-item">
+				<span class="data-label">Velocity</span>
+				<span class="data-value">{Math.round($selectedObject.velocity * 3600).toLocaleString('en-US')}<span class="data-unit">km/h</span></span>
+			</div>
+			<div class="data-item">
+				<span class="data-label">Latitude</span>
+				<span class="data-value">{formatNumber($selectedObject.latitude, 2)}°</span>
+			</div>
+			<div class="data-item">
+				<span class="data-label">Longitude</span>
+				<span class="data-value">{formatNumber($selectedObject.longitude, 2)}°</span>
 			</div>
 		</div>
+
+		<!-- Disclosures sharing this name are exclusive: opening one closes the others. -->
+		<details class="disclosure" name="info-panel">
+			<summary>
+				<span class="disclosure-title">Orbit mean elements</span>
+				<svg class="icon chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+			</summary>
+			<div class="data-grid">
+				<div class="data-item">
+					<span class="data-label">Eccentricity</span>
+					<span class="data-value">{formatNumber($selectedObject.eccentricity, 6)}</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Inclination</span>
+					<span class="data-value">{formatNumber($selectedObject.inclination, 2)}°</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">RAAN</span>
+					<span class="data-value">{formatNumber($selectedObject.raan, 2)}°</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Arg. perigee</span>
+					<span class="data-value">{formatNumber($selectedObject.argOfPerigee, 2)}°</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Mean anomaly</span>
+					<span class="data-value">{formatNumber($selectedObject.meanAnomaly, 2)}°</span>
+				</div>
+			</div>
+		</details>
 	</div>
 {/if}
 
 <style>
 	.info-panel {
 		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		width: 340px;
-		max-height: calc(100vh - 2rem);
+		top: 16px;
+		right: 16px;
+		width: 360px;
+		max-height: calc(100vh - 32px);
 		overflow-y: auto;
-	}
-
-	.header-right {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.close-btn {
-		background: none;
-		border: none;
-		color: var(--text-dim);
-		font-size: 20px;
-		cursor: pointer;
-		padding: 0;
-		line-height: 1;
-		transition: color 0.15s ease;
-	}
-
-	.close-btn:hover {
-		color: var(--text-primary);
 	}
 
 	.sat-header {
 		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		margin-bottom: 1.25rem;
+		flex-direction: column;
+		gap: 8px;
+		padding: 16px 14px 14px;
 	}
 
 	.sat-name {
-		font-family: var(--font-mono);
-		font-size: 1.125rem;
-		font-weight: 600;
-		color: var(--text-primary);
-		margin-bottom: 0.25rem;
+		font-size: 44px;
+		line-height: 44px;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.sat-norad {
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--text-dim);
+	.disclosure {
+		border-top: 1px solid var(--line);
 	}
 
-	.sat-status {
+	.disclosure summary {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
+		gap: 10px;
+		min-height: 44px;
+		padding: 0 14px;
+		list-style: none;
+		cursor: pointer;
+	}
+
+	.disclosure summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.disclosure summary:hover {
+		background: var(--surface-raised);
+	}
+
+	.disclosure-title {
+		flex: 1;
+		font-size: 11px;
+		line-height: 16px;
+		font-weight: 800;
+		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
 	}
 
-	.status-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		animation: pulse 2s ease-in-out infinite;
+	.disclosure[open] .chevron {
+		transform: rotate(180deg);
 	}
 
-	.status-dot.active {
-		background: var(--accent-success);
-	}
-
-	.status-text {
-		color: var(--accent-success);
-	}
-
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
-	}
-
-	.btn-group {
-		display: flex;
-		gap: 0.5rem;
-		margin-top: 1.25rem;
-		padding-top: 1.25rem;
-		border-top: 1px solid var(--border-subtle);
+	.disclosure .data-grid {
+		border-top: none;
+		padding-top: 0;
 	}
 </style>
