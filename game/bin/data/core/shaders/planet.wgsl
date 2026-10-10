@@ -101,6 +101,37 @@ const kCloudTint = vec3f(1.0, 1.0, 1.0);
 // and the deck should not end on the same hard line the ground does.
 const kCloudTerminatorLift: f32 = 0.15;
 
+// Heights in planet radii. Both are exaggerated: real decks sit 2-12km up, which
+// casts a shadow narrower than a texel at any sun angle short of the terminator.
+// kCloudBaseHeight is how far shadows fall from their clouds; kCloudThickness is
+// how tall a fully opaque texel stands, which drives both relief and self shadow.
+const kCloudBaseHeight: f32 = 0.003;
+const kCloudThickness: f32 = 0.002;
+
+// How much sunlight a fully opaque cloud keeps off the ground below. Below 1
+// because real cloud lets some light through, and a black shadow reads as a hole.
+const kCloudShadowStrength: f32 = 0.7;
+
+// Floor on the sun's elevation (as dot(N, L)) when stretching shadows, so their
+// length - height / tan(elevation) - stops at 10x the height instead of running
+// off to infinity at the terminator, where there is no direct light left anyway.
+const kCloudShadowMinRise: f32 = 0.1;
+
+// Scales the slope taken from the coverage gradient, like kNormalStrength.
+const kCloudReliefStrength: f32 = 1.0;
+
+// Self shadowing marches towards the sun over the coverage heightfield. Steps are
+// in texels at the equator; more steps or longer ones reach further.
+const kCloudMarchSteps: i32 = 4;
+const kCloudMarchStepTexels: f32 = 2.0;
+
+// How dark a cloud gets in the lee of a taller one, and over what height deficit,
+// as a fraction of kCloudThickness, the shadow ramps in.
+const kCloudSelfShadowStrength: f32 = 0.6;
+const kCloudSelfShadowSoftness: f32 = 0.25;
+
+const kPi: f32 = 3.141592653589793;
+
 @vertex fn vertexMain(in: VertexInput) -> VertexOutput
 {
     var out: VertexOutput;
@@ -136,20 +167,21 @@ const kCloudTerminatorLift: f32 = 0.15;
 // carries the same 1/a^2 on x and z, so cross(polar, N) is parallel to (z, 0, -x)
 // on the spheroid just as it is on a sphere, and any mapping that runs south
 // monotonically gives the same basis.
-fn perturbNormal(Ngeom: vec3f, uv: vec2f) -> vec3f
+fn perturbNormal(Ngeom: vec3f, T: vec3f, B: vec3f, uv: vec2f) -> vec3f
 {
     let packed = textureSample(normalTexture, textureSampler, uv).rg;
     let xy = (packed * 2.0 - 1.0) * kNormalStrength;
     let z = sqrt(clamp(1.0 - dot(xy, xy), 0.0, 1.0));
 
-    // cross(polar, N) vanishes at the poles, where longitude is degenerate and
-    // any tangent will do.
-    let polar = vec3f(0.0, 1.0, 0.0);
-    let tangentSource = select(polar, vec3f(1.0, 0.0, 0.0), abs(Ngeom.y) > 0.999);
-    let T = normalize(cross(tangentSource, Ngeom));
-    let B = cross(T, Ngeom);
-
     return normalize(xy.x * T + xy.y * B + z * Ngeom);
+}
+
+// A tangent plane offset in planet radii, as the uv shift that covers it. One
+// unit of u spans the circumference of the parallel, which shrinks with latitude;
+// one unit of v spans pole to pole.
+fn tangentToUv(offset: vec3f, T: vec3f, B: vec3f, cosLat: f32) -> vec2f
+{
+    return vec2f(dot(offset, T) / (2.0 * kPi * cosLat), dot(offset, B) / kPi);
 }
 
 @fragment fn fragmentMain(in: VertexOutput) -> @location(0) vec4f 
@@ -161,14 +193,41 @@ fn perturbNormal(Ngeom: vec3f, uv: vec2f) -> vec3f
     // relief would let a mountain range switch the city lights on and give the
     // terminator a ragged edge that tracks topography rather than the sun.
     let Ngeom = normalize(in.worldNormal);
-    let N = perturbNormal(Ngeom, in.uv);
+
+    // cross(polar, N) vanishes at the poles, where longitude is degenerate and
+    // any tangent will do.
+    let polar = vec3f(0.0, 1.0, 0.0);
+    let tangentSource = select(polar, vec3f(1.0, 0.0, 0.0), abs(Ngeom.y) > 0.999);
+    let T = normalize(cross(tangentSource, Ngeom));
+    let B = cross(T, Ngeom);
+    let cosLat = max(length(Ngeom.xz), 0.05);
+
+    let N = perturbNormal(Ngeom, T, B, in.uv);
     let L = normalize(uGlobalUniforms.directionalLightDirection.xyz);
     let NdotL = dot(N, L);
     let NdotLGeom = dot(Ngeom, L);
     let diffuse = max(NdotL, 0.0);
     let lightColor = uGlobalUniforms.directionalLightColor.rgb;
     let ambient = uGlobalUniforms.ambientLightColor.rgb;
-    let litColor = baseColor * (ambient + lightColor * diffuse);
+
+    // Following the sun's ray a distance s up from the surface moves Lt * s across
+    // the tangent plane and NdotLGeom * s up from it.
+    let Lt = L - Ngeom * NdotLGeom;
+
+    let cloudScroll = fract(uGlobalUniforms.time * kCloudScrollSpeed);
+    let cloudUv = in.uv - vec2f(cloudScroll, 0.0);
+    let cloudTexel = 1.0 / vec2f(textureDimensions(cloudsTexture));
+    let cloudCoverage = textureSample(cloudsTexture, textureSampler, cloudUv).r;
+    let cloudAlpha = cloudCoverage * kCloudOpacity;
+
+    // The cloud shading this point is the one where its ray to the sun crosses
+    // the deck, sunward by height / tan(elevation).
+    let shadowRise = max(NdotLGeom, kCloudShadowMinRise);
+    let shadowUv = cloudUv + tangentToUv(Lt * (kCloudBaseHeight / shadowRise), T, B, cosLat);
+    let cloudShadow = 1.0 - kCloudShadowStrength * kCloudOpacity
+        * textureSample(cloudsTexture, textureSampler, shadowUv).r;
+
+    let litColor = baseColor * (ambient + lightColor * diffuse * cloudShadow);
 
     // City lights are emissive, so they are added rather than lit - multiplying
     // them by the light would switch them off exactly where they should be seen.
@@ -189,16 +248,36 @@ fn perturbNormal(Ngeom: vec3f, uv: vec2f) -> vec3f
     let oceanMask = textureSample(specularTexture, textureSampler, in.uv).r;
     let sunVisibility = smoothstep(0.0, kOceanSunCutoff, NdotLGeom);
     let oceanSpecular = lightColor * pow(NdotH, kOceanShininess) * fresnel
-        * oceanMask * kOceanSpecularIntensity * sunVisibility;
-    let oceanColorContribution = vec3(0.001, 0.005, 0.012) * oceanMask * sunVisibility;
+        * oceanMask * kOceanSpecularIntensity * sunVisibility * cloudShadow;
+    let oceanColorContribution = vec3(0.001, 0.005, 0.012) * oceanMask * sunVisibility * cloudShadow;
 
-    let cloudScroll = fract(uGlobalUniforms.time * kCloudScrollSpeed);
-    let cloudUv = in.uv - vec2f(cloudScroll, 0.0);
-    let cloudAlpha = textureSample(cloudsTexture, textureSampler, cloudUv).r * kCloudOpacity;
+    // Clouds take no part in the ground's relief; their own comes from treating
+    // coverage as a heightfield, so dense cores bulge and thin edges roll off.
+    let cloudTop = cloudCoverage * kCloudThickness;
+    let cloudDu = textureSample(cloudsTexture, textureSampler, cloudUv + vec2f(cloudTexel.x, 0.0)).r - cloudCoverage;
+    let cloudDv = textureSample(cloudsTexture, textureSampler, cloudUv + vec2f(0.0, cloudTexel.y)).r - cloudCoverage;
+    let cloudSlopeT = cloudDu * kCloudThickness / (2.0 * kPi * cosLat * cloudTexel.x);
+    let cloudSlopeB = cloudDv * kCloudThickness / (kPi * cloudTexel.y);
+    let Ncloud = normalize(Ngeom - kCloudReliefStrength * (cloudSlopeT * T + cloudSlopeB * B));
 
-    // Clouds are lit from the geometric normal, not the mapped one: the clouds float
-    // above the planetary relief.
-    let cloudDiffuse = max((NdotLGeom + kCloudTerminatorLift) / (1.0 + kCloudTerminatorLift), 0.0);
+    // Marches the sun ray over the heightfield, keeping the deepest any taller
+    // neighbour rises above it. The rise is held at zero past the terminator, so
+    // the lifted band is shadowed by taller clouds rather than by all of them.
+    let marchStep = kCloudMarchStepTexels * 2.0 * kPi * cloudTexel.x;
+    let marchUv = tangentToUv(Lt * marchStep, T, B, cosLat);
+    let marchRise = max(NdotLGeom, 0.0) * marchStep;
+    var cloudOcclusion = 0.0;
+    for (var i = 1; i <= kCloudMarchSteps; i++)
+    {
+        let s = f32(i);
+        let occluder = textureSample(cloudsTexture, textureSampler, cloudUv + marchUv * s).r * kCloudThickness;
+        cloudOcclusion = max(cloudOcclusion, occluder - (cloudTop + marchRise * s));
+    }
+    let cloudSelfShadow = 1.0 - kCloudSelfShadowStrength
+        * saturate(cloudOcclusion / (kCloudThickness * kCloudSelfShadowSoftness));
+
+    let NdotLCloud = dot(Ncloud, L);
+    let cloudDiffuse = max((NdotLCloud + kCloudTerminatorLift) / (1.0 + kCloudTerminatorLift), 0.0) * cloudSelfShadow;
     let cloudColor = kCloudTint * (ambient + lightColor * cloudDiffuse) * cloudAlpha;
 
     // An over operator, written out because the surface contributions are
