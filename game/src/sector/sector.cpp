@@ -108,7 +108,7 @@ void Sector::Initialize()
     AtmosphereComponent& atmosphereComponent = m_pEarth->AddComponent<AtmosphereComponent>();
     atmosphereComponent.Kr = 0.0015f; // Rayleigh scattering constant (reduced for thinner atmosphere)
     atmosphereComponent.Km = 0.0005f; // Mie scattering constant
-    atmosphereComponent.ESun = 2.0f; // Sun brightness
+    atmosphereComponent.ESun = 5.0f; // Sun brightness
     atmosphereComponent.g = -0.950f; // Mie phase asymmetry
     atmosphereComponent.wavelength = glm::vec3(0.650f, 0.570f, 0.475f); // RGB wavelengths (micrometers)
     atmosphereComponent.scaleDepth = 0.25f; // Scale height

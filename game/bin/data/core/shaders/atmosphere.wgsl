@@ -247,10 +247,24 @@ fn getMiePhase(fCos: f32, g: f32, g2: f32) -> f32
     
     var color = v3RayleighColor + mie;
 
-    // Alpha is how much of the planet behind is hidden, not a scale on the colour
-    // - the blend is premultiplied, so the scattering adds at full strength.
-    let luminance = dot(color, vec3f(0.299, 0.587, 0.114));
-    let alpha = clamp(luminance * 2.0, 0.0, 1.0);
+    // Alpha is how much of the planet the air in front of it hides: one minus the
+    // transmittance along the view ray. That depends on how much air the ray
+    // crosses, not on how bright the sun is, so ESun brightens the haze without
+    // thickening it. Transmittance is per channel, but one alpha can carry only its
+    // luminance; per channel would need dual-source blending. The blend is
+    // premultiplied, so the scattering adds at full strength regardless.
+    // Rays that miss the planet have only space behind them.
+    var alpha = 0.0;
+    if (fPlanetHit > 0.0)
+    {
+        let v3Ground = v3Pos + v3Ray * fRayLength;
+        let fGroundDepth = exp(uAtmosphere.fScaleOverScaleDepth * (uAtmosphere.fInnerRadius - length(v3Ground)));
+        let fGroundAngle = clamp(dot(-v3Ray, normalize(v3Ground)), 0.0, 1.0);
+        let fTopAngle = clamp(dot(-v3Ray, v3Pos) / fStartHeight, 0.0, 1.0);
+        let fOpticalDepth = max(0.0, fGroundDepth * scale(fGroundAngle) - fStartDepth * scale(fTopAngle));
+        let v3Transmittance = exp(-fOpticalDepth * (uAtmosphere.v3InvWavelength * uAtmosphere.fKr4PI + uAtmosphere.fKm4PI));
+        alpha = 1.0 - dot(v3Transmittance, vec3f(0.2126, 0.7152, 0.0722));
+    }
 
     return vec4f(color, alpha);
 }

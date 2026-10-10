@@ -45,9 +45,10 @@ const kSunAngularRadius: f32 = 0.004653;
 // How far out the glare is drawn, and with it the size of the quad. Nothing is drawn outside it.
 const kGlowAngularRadius: f32 = 0.0698; // 4 degrees, about 15 solar radii
 
-// The tonemapper rolls 1.0 off to a grey of about 0.88; four reaches 0.98. Any brighter and the
-// disc's partially covered edge pixels saturate too, which costs it its antialiasing.
-const kDiscRadiance: f32 = 4.0;
+// Bright enough to bloom, which a disc at 1.0 would not, and dim enough that the saturated core stays
+// close to the Sun's true size; by 500 it visibly swells. The real Sun is about 10^4 times brighter
+// than the lit Earth, which at an exposure set for the Earth turns it into a white ball.
+const kDiscRadiance: f32 = 300.0;
 
 // Peak of the glare, at the centre of the Sun and so underneath the disc.
 const kAureoleIntensity: f32 = 0.5;
