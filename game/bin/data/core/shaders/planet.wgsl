@@ -106,7 +106,7 @@ const kCloudTerminatorLift: f32 = 0.15;
 // kCloudBaseHeight is how far shadows fall from their clouds; kCloudThickness is
 // how tall a fully opaque texel stands, which drives both relief and self shadow.
 const kCloudBaseHeight: f32 = 0.003;
-const kCloudThickness: f32 = 0.002;
+const kCloudThickness: f32 = 0.0015;
 
 // How much sunlight a fully opaque cloud keeps off the ground below. Below 1
 // because real cloud lets some light through, and a black shadow reads as a hole.
@@ -127,7 +127,7 @@ const kCloudMarchStepTexels: f32 = 2.0;
 
 // How dark a cloud gets in the lee of a taller one, and over what height deficit,
 // as a fraction of kCloudThickness, the shadow ramps in.
-const kCloudSelfShadowStrength: f32 = 0.6;
+const kCloudSelfShadowStrength: f32 = 0.3;
 const kCloudSelfShadowSoftness: f32 = 0.25;
 
 const kPi: f32 = 3.141592653589793;
