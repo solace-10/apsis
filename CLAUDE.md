@@ -28,18 +28,13 @@ after a `submodule update` detaches it. It handles:
 3. **`.env`** at the repo root (holds `FORGE_AUTH_KEY_SECRET` for `forge upload`, gitignored) —
    copied from the canonical checkout.
 4. **`game/bin/manifest.json`** (gitignored, generated per checkout) — bootstrapped via
-   `./pandora/tools/forge/bin/forge manifest`. Unlike the sibling `danus_garden` repo this is
-   not strictly required, because Apsis's `add_custom_command` in `game/CMakeLists.txt`
-   declares `OUTPUT "${MANIFEST_OUTPUT}"` and CMake can therefore generate it itself; the
-   script does it anyway to keep both repos' setup behaviour identical.
+   `./pandora/tools/forge/bin/forge-<os>-<arch> manifest`. This is not strictly required,
+   because the `add_custom_command` in `game/CMakeLists.txt` declares
+   `OUTPUT "${MANIFEST_OUTPUT}"` and CMake can therefore generate it itself.
 5. **Git config guardrails** (shared by all worktrees of this repo):
    `push.recurseSubmodules=on-demand` and `submodule.recurse=true`.
 
 After this, `./build.sh linux debug` works.
-
-The script is deliberately kept in step with `danus_garden/scripts/worktree-setup.sh` — both
-repos share the pandora engine and the same worktree layout, so the setup behaviour should not
-drift between them.
 
 Note that `forge manifest` ships **everything** under `game/bin/data/core/` and has no exclude
 mechanism, so don't put documentation or other non-runtime files in that tree — see

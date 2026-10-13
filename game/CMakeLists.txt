@@ -52,10 +52,12 @@ elseif(TARGET_PLATFORM_WEB)
     )
 
     # Generate asset manifest using forge tool
-if(WIN32)
-    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge.exe")
+if(CMAKE_HOST_WIN32)
+    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge-windows-amd64.exe")
+elseif(CMAKE_HOST_APPLE)
+    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge-darwin-arm64")
 else()
-    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge")
+    set(FORGE_EXECUTABLE "${CMAKE_SOURCE_DIR}/pandora/tools/forge/bin/forge-linux-amd64")
 endif()
     set(MANIFEST_OUTPUT "${CMAKE_CURRENT_LIST_DIR}/bin/manifest.json")
 

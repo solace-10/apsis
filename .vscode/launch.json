@@ -42,8 +42,8 @@
             "name": "Launch Forge (Windows)",
             "type":"cppvsdbg",
             "request":"launch",
-            "program": "${workspaceRoot}/forge/bin/forge.exe",
-            "cwd":"${workspaceRoot}/forge/bin"
+            "program": "${workspaceRoot}/pandora/tools/forge/bin/forge-windows-amd64.exe",
+            "cwd":"${workspaceRoot}/pandora/tools/forge/bin"
         },
     ]
 }

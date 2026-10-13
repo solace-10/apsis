@@ -7,10 +7,6 @@
 # Creates only what's missing, borrowing gitignored prerequisites from the
 # canonical checkout at ~/dev/apsis. Safe to re-run at any time; also
 # re-attaches pandora's HEAD if a submodule update left it detached.
-#
-# Kept deliberately in step with the sibling danus_garden script of the same
-# name — both repos share the pandora engine and the same worktree layout, so
-# the setup behaviour should not drift between them.
 set -euo pipefail
 
 MAIN_CHECKOUT="${APSIS_MAIN_CHECKOUT:-$HOME/dev/apsis}"
@@ -58,13 +54,17 @@ if [ ! -f .env ]; then
 fi
 
 # --- 4. game/bin/manifest.json (gitignored, generated) ------------------------
-# Unlike danus_garden, Apsis's `add_custom_command` in game/CMakeLists.txt
-# declares OUTPUT "${MANIFEST_OUTPUT}", so CMake can generate this itself and a
-# fresh worktree does not hard-fail without it. Bootstrapping anyway keeps the
-# two repos' setup behaviour identical and costs one cheap forge invocation.
+# The `add_custom_command` in game/CMakeLists.txt declares
+# OUTPUT "${MANIFEST_OUTPUT}", so CMake can generate this itself and a fresh
+# worktree does not hard-fail without it. Bootstrapping it here costs one cheap
+# forge invocation.
 if [ ! -f game/bin/manifest.json ]; then
     log "bootstrapping game/bin/manifest.json"
-    ./pandora/tools/forge/bin/forge manifest
+    FORGE=./pandora/tools/forge/bin/forge-linux-amd64
+    if [ "$(uname -s)" = "Darwin" ]; then
+        FORGE=./pandora/tools/forge/bin/forge-darwin-arm64
+    fi
+    "$FORGE" manifest
 fi
 
 # --- 5. git config guardrails (shared across all worktrees) -------------------
