@@ -1,0 +1,61 @@
+#pragma once
+
+#include <string>
+#include <unordered_map>
+
+#include "resources/resource_model.hpp"
+#include "resources/resource_system.hpp"
+#include "icomponent.hpp"
+#include "component_factory.hpp"
+#include "pandora.hpp"
+
+namespace WingsOfSteel
+{
+
+class ModelComponent : public IComponent
+{
+public:
+    ModelComponent() = default;
+    ~ModelComponent() {}
+
+    ResourceModelSharedPtr GetModel() const { return m_pResource; }
+
+    void SetModel(ResourceModelSharedPtr pModel)
+    {
+        m_pResource = pModel;
+        m_ResourcePath = pModel->GetPath();
+    }
+
+    void SetModel(const std::string& resourcePath)
+    {
+        m_ResourcePath = resourcePath;
+        GetResourceSystem()->RequestResource(m_ResourcePath, [this](ResourceSharedPtr pResource) {
+            m_pResource = std::dynamic_pointer_cast<ResourceModel>(pResource);
+        });
+    }
+
+    void Deserialize(const ResourceDataStore* pContext, const Json::Data& json) override
+    {
+        SetModel(Json::DeserializeString(pContext, json, "resource"));
+    }
+
+    // Shader parameter API
+    void SetShaderParameter(const std::string& name, float value)
+    {
+        m_ShaderParameters[name] = value;
+    }
+
+    const std::unordered_map<std::string, float>& GetShaderParameters() const
+    {
+        return m_ShaderParameters;
+    }
+
+private:
+    ResourceModelSharedPtr m_pResource;
+    std::string m_ResourcePath;
+    std::unordered_map<std::string, float> m_ShaderParameters;
+};
+
+REGISTER_COMPONENT(ModelComponent, "model")
+
+} // namespace WingsOfSteel
