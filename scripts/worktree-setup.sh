@@ -5,8 +5,7 @@
 #   ./scripts/worktree-setup.sh
 #
 # Creates only what's missing, borrowing gitignored prerequisites from the
-# canonical checkout at ~/dev/apsis. Safe to re-run at any time; also
-# re-attaches pandora's HEAD if a submodule update left it detached.
+# canonical checkout at ~/dev/apsis. Safe to re-run at any time.
 set -euo pipefail
 
 MAIN_CHECKOUT="${APSIS_MAIN_CHECKOUT:-$HOME/dev/apsis}"
@@ -15,22 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 log() { echo "[worktree-setup] $*"; }
 
-# --- 1. pandora submodule -----------------------------------------------------
-if [ ! -e pandora/CMakeLists.txt ]; then
-    log "initializing pandora submodule"
-    git submodule update --init pandora
-fi
-
-# Attach pandora's HEAD so commits made in it aren't dangling. `submodule
-# update` always leaves a detached HEAD; point main at it (a no-op or
-# fast-forward in the normal case) and track origin/main.
-if ! git -C pandora symbolic-ref -q HEAD >/dev/null; then
-    log "attaching pandora HEAD to main"
-    git -C pandora checkout -B main
-    git -C pandora branch --set-upstream-to=origin/main main 2>/dev/null || true
-fi
-
-# --- 2. pandora/ext (emsdk + FetchContent deps, ~4 GB, gitignored) ------------
+# --- 1. pandora/ext (emsdk + FetchContent deps, ~4 GB, gitignored) ------------
 # Shared with the canonical checkout rather than re-downloaded. Note the
 # consequence: a dependency bump or setup_emscripten.sh run in either tree is
 # seen by both.
@@ -43,7 +27,7 @@ if [ ! -e pandora/ext ]; then
     fi
 fi
 
-# --- 3. .env (FORGE_AUTH_KEY_SECRET, gitignored) ------------------------------
+# --- 2. .env (FORGE_AUTH_KEY_SECRET, gitignored) ------------------------------
 if [ ! -f .env ]; then
     if [ -f "$MAIN_CHECKOUT/.env" ]; then
         log "copying .env from $MAIN_CHECKOUT"
@@ -53,7 +37,7 @@ if [ ! -f .env ]; then
     fi
 fi
 
-# --- 4. game/bin/manifest.json (gitignored, generated) ------------------------
+# --- 3. game/bin/manifest.json (gitignored, generated) ------------------------
 # The `add_custom_command` in game/CMakeLists.txt declares
 # OUTPUT "${MANIFEST_OUTPUT}", so CMake can generate this itself and a fresh
 # worktree does not hard-fail without it. Bootstrapping it here costs one cheap
@@ -66,12 +50,5 @@ if [ ! -f game/bin/manifest.json ]; then
     fi
     "$FORGE" manifest
 fi
-
-# --- 5. git config guardrails (shared across all worktrees) -------------------
-# on-demand: `git push` in this repo pushes pandora's commits first, so the
-# outer pointer can never reference a SHA that isn't upstream.
-git config push.recurseSubmodules on-demand
-# Keep pandora in sync on checkout/pull without a manual `submodule update`.
-git config submodule.recurse true
 
 log "done"

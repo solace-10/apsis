@@ -29,9 +29,10 @@ CMake 3.24+, Ninja, a C++20 compiler and Emscripten SDK.
 ### First-time setup
 
 ```bash
-git submodule update --init pandora
 ./pandora/scripts/setup_emscripten.sh
 ```
+
+`pandora/` is a git subtree of the shared engine repository; `./scripts/pandora.sh` syncs it.
 
 Web builds also read `FORGE_AUTH_KEY_SECRET` from a `.env` file at the repository root; it is
 gitignored and not required for native builds.

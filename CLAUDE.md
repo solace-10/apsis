@@ -14,25 +14,18 @@ We develop in git worktrees under `~/.herdr/worktrees/apsis/<branch>`. A fresh w
 missing several gitignored build prerequisites that are NOT carried across from `main`.
 **Before the first build in a worktree, run `./scripts/worktree-setup.sh` without asking.**
 It is idempotent (creates only what's absent, borrowing from the canonical checkout at
-`~/dev/apsis`) and safe to re-run at any time — also useful later to re-attach pandora's HEAD
-after a `submodule update` detaches it. It handles:
+`~/dev/apsis`) and safe to re-run at any time. It handles:
 
-1. **Engine submodule** — `git submodule update --init pandora`
-   (URL: `git@github.com:solace-10/pandora.git`), then attaches the detached HEAD to `main`
-   (tracking `origin/main`) so engine commits aren't dangling. Objects are cached in the shared
-   `.git/modules/pandora`, so this is local and fast.
-2. **`pandora/ext/`** (emsdk + FetchContent deps, ~4.1 GB, gitignored via `ext/` in
+1. **`pandora/ext/`** (emsdk + FetchContent deps, ~4.1 GB, gitignored via `ext/` in
    `pandora/.gitignore`) — symlinked to the canonical checkout's populated `ext/` to avoid a
    4 GB re-download. Consequence: it is *shared*, so a dependency bump or
    `pandora/scripts/setup_emscripten.sh` run in either tree is seen by both.
-3. **`.env`** at the repo root (holds `FORGE_AUTH_KEY_SECRET` for `forge upload`, gitignored) —
+2. **`.env`** at the repo root (holds `FORGE_AUTH_KEY_SECRET` for `forge upload`, gitignored) —
    copied from the canonical checkout.
-4. **`game/bin/manifest.json`** (gitignored, generated per checkout) — bootstrapped via
+3. **`game/bin/manifest.json`** (gitignored, generated per checkout) — bootstrapped via
    `./pandora/tools/forge/bin/forge-<os>-<arch> manifest`. This is not strictly required,
    because the `add_custom_command` in `game/CMakeLists.txt` declares
    `OUTPUT "${MANIFEST_OUTPUT}"` and CMake can therefore generate it itself.
-5. **Git config guardrails** (shared by all worktrees of this repo):
-   `push.recurseSubmodules=on-demand` and `submodule.recurse=true`.
 
 After this, `./build.sh linux debug` works.
 
@@ -40,17 +33,20 @@ Note that `forge manifest` ships **everything** under `game/bin/data/core/` and 
 mechanism, so don't put documentation or other non-runtime files in that tree — see
 `CREDITS.md` at the repo root.
 
-### Committing pandora changes (submodule)
+### Pandora changes (git subtree)
 
-pandora's `main` tracks `origin/main`. To land engine changes:
-- Confirm pandora is on `main`, not detached (`git -C pandora status`) *before* committing —
-  a commit made while detached is dangling.
-- Commit in `pandora/`, then bump the pointer in the outer repo: `git add pandora && git commit`.
-- Push from the outer repo; `push.recurseSubmodules=on-demand` pushes pandora first. If pushing
-  pandora manually instead, push it *before* the outer repo, or other checkouts can't fetch the
-  referenced SHA.
-- If two worktree branches both change pandora, land one before starting or rebasing the other —
-  parallel engine work on the shared `main` races on push and produces gitlink conflicts.
+`pandora/` is a git subtree of `git@github.com:solace-10/pandora.git`, which other projects
+share. It is plain files in this repo: edit and commit engine and game changes together, in one
+commit if that's natural, on any branch. Sync with upstream via `./scripts/pandora.sh`:
+- `status` — engine commits not yet pushed upstream, and upstream commits not yet pulled.
+- `sync` — `pull` (squash-merge upstream `main` into `pandora/`), then `push` (split the
+  `pandora/` part of our commits out and push it to upstream `main`). Run after `git commit`,
+  then `git push` this repo last, since the pull may add a merge commit.
+- Only push from this repo's `main`: engine changes on a feature branch go upstream after the
+  branch merges, so unlanded experiments don't reach the other projects. The script enforces it.
+- Don't run `git subtree` by hand with a custom `-m` on `add`, and don't rewrite the
+  `Add pandora as a git subtree` commit: its `git-subtree-*` trailers stop `split` from treating
+  early history (when `pandora/` was a plain directory) as pandora's.
 
 ### Preferred build entry point
 ```bash
