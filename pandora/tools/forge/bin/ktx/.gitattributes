@@ -1,0 +1,4 @@
+# Vendored binaries: never line-ending normalize these.
+* binary
+*.md text
+*.txt text
