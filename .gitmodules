@@ -1,3 +1,0 @@
-[submodule "pandora"]
-	path = pandora
-	url = git@github.com:solace-10/pandora.git
